@@ -1,0 +1,16 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/calculadora-ia/page": "/calculadora-ia",
+  "/evaluador-chat/page": "/evaluador-chat",
+  "/favicon.ico/route": "/favicon.ico",
+  "/herramientas/page": "/herramientas",
+  "/horas-perdidas/page": "/horas-perdidas",
+  "/mi-voz/page": "/mi-voz",
+  "/page": "/",
+  "/robots.txt/route": "/robots.txt",
+  "/sitemap.xml/route": "/sitemap.xml",
+  "/skills/[slug]/page": "/skills/[slug]",
+  "/skills/page": "/skills",
+  "/solicitar-llamada/page": "/solicitar-llamada"
+}
