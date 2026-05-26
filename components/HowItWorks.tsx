@@ -150,6 +150,24 @@ export default function BPIProtocol() {
           El Test de Fit te dice en qué letra estás. Si no es la &laquo;I&raquo;, te lo
           decimos.
         </p>
+
+        <div className="text-center mt-6">
+          <a
+            href="/protocolo-bpi"
+            className="inline-flex items-center gap-2 text-xs transition-colors"
+            style={{
+              color: "var(--champagne)",
+              fontFamily: "var(--font-mono)",
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              borderBottom: "1px solid rgba(217,179,106,0.3)",
+              paddingBottom: 4,
+            }}
+          >
+            Ver el Protocolo BPI completo
+            <span aria-hidden="true">→</span>
+          </a>
+        </div>
       </div>
     </section>
   );
