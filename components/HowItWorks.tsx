@@ -1,179 +1,158 @@
-const STEPS = [
+const STAGES = [
   {
-    number: "01",
-    duration: "30 min",
-    title: "Revisamos tu operación",
-    description:
-      "Juntos, revisamos los 5 procesos que más tiempo consumen en tu negocio. Sin ventas, solo claridad.",
-    deliverable: "Obtienes claridad sobre si vale la pena seguir y en qué área enfocarte.",
+    letter: "B",
+    label: "Bases",
+    question: "¿Tu data está accesible? ¿Tu equipo entiende sus propios procesos?",
+    body: "Sin esto, ningún sistema de IA va a funcionar — porque no hay sobre qué construir. Las Bases son prerequisito de todo lo demás. Si tu empresa todavía está acá, lo más útil que podemos hacer es decírtelo y recomendarte por dónde empezar (que no somos necesariamente nosotros).",
   },
   {
-    number: "02",
-    duration: "2 semanas",
-    title: "Análisis y planificación",
-    description:
-      "Entrevistamos a tu equipo clave, mapeamos tus procesos y priorizamos según el retorno real de la inversión.",
-    deliverable: "Obtienes un mapa priorizado y un estimado del retorno de la inversión por área de impacto.",
+    letter: "P",
+    label: "Procesos",
+    question: "¿El proceso que quieres automatizar tiene sentido como está?",
+    body: "Muchas veces la &laquo;mejor IA&raquo; es rediseñar el proceso primero. Sin software adicional. Sin licencias nuevas. Sin pagar por capas de tecnología que tapan un problema operativo. Si tu proceso está roto, automatizarlo solo lo rompe más rápido.",
   },
   {
-    number: "03",
-    duration: "6–8 semanas",
-    title: "Implementación y adopción",
-    description:
-      "Instalamos el sistema, lo integramos con tus herramientas existentes, capacitamos a tu equipo y medimos la adopción.",
-    deliverable: "El sistema funciona y tienes métricas de adopción al cierre.",
+    letter: "I",
+    label: "IA",
+    question: "¿En qué procesos la IA realmente paga el costo total de propiedad?",
+    body: "Solo cuando las Bases y los Procesos están sanos, evaluamos qué procesos pagan con IA y cuáles no. La mayoría no — y eso te lo decimos antes de cobrarte un peso. Cuando hay caso, instalamos el sistema, lo integramos, capacitamos y medimos adopción.",
   },
 ];
 
-const TIMELINE_WEEKS = ["Semana 0", "Semana 2–3", "Semana 10–12"];
-
-export default function Process() {
+export default function BPIProtocol() {
   return (
     <section id="proceso" className="py-24 px-6">
       <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-12">
-          <p className="tag mb-5 inline-block">Proceso</p>
+        <div className="text-center mb-14">
+          <p className="tag mb-5 inline-block">Metodología propietaria</p>
           <h2
-            className="font-light leading-tight"
+            className="font-light leading-tight mb-4"
             style={{
               fontFamily: "var(--font-display)",
               fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
               color: "var(--bone)",
             }}
           >
-            Tres fases. Un solo objetivo:{" "}
-            <em className="gradient-text">que funcione.</em>
+            Protocolo BPI.{" "}
+            <em className="gradient-text">Bases, Procesos, IA — en ese orden.</em>
           </h2>
           <p
-            className="mt-4 text-base max-w-xl mx-auto leading-relaxed"
-            style={{ color: "var(--ash)", fontWeight: 300 }}
+            className="mt-4 text-base max-w-2xl mx-auto leading-relaxed"
+            style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
           >
-            Sin contratos complicados. Cada fase tiene objetivos claros y medibles.
-            Pagas por resultados, no por horas.
+            La mayoría de los proyectos de IA fallan porque saltan a la &laquo;I&raquo;
+            cuando la empresa todavía está en la &laquo;B&raquo; o en la &laquo;P&raquo;.
+            Antes de cobrarte por implementación, te decimos en qué letra estás.
           </p>
         </div>
 
-        {/* Timeline visual */}
-        <div className="hidden md:flex items-center justify-between mb-10 px-8 relative">
-          <div
-            className="absolute top-3 left-8 right-8 h-px"
-            style={{ background: "linear-gradient(90deg, transparent, rgba(217,179,106,0.3), rgba(217,179,106,0.3), transparent)" }}
-            aria-hidden="true"
-          />
-          {TIMELINE_WEEKS.map((week, i) => (
-            <div key={i} className="flex flex-col items-center gap-2 relative z-10">
+        {/* Flujo B → P → I visual */}
+        <div className="hidden md:flex items-center justify-center gap-4 mb-12">
+          {["B", "P", "I"].map((letter, i) => (
+            <div key={letter} className="flex items-center gap-4">
               <div
-                className="w-6 h-6 flex items-center justify-center"
+                className="flex items-center justify-center"
                 style={{
-                  background: "var(--carbon)",
-                  border: `1px solid ${i === 1 ? "var(--champagne)" : "rgba(217,179,106,0.3)"}`,
-                  borderRadius: 2,
+                  width: 56,
+                  height: 56,
+                  borderRadius: 4,
+                  border: `1px solid ${i === 2 ? "var(--champagne)" : "rgba(217,179,106,0.3)"}`,
+                  background:
+                    i === 2 ? "rgba(217,179,106,0.08)" : "rgba(255,255,255,0.02)",
+                  color: i === 2 ? "var(--champagne)" : "var(--bone)",
+                  fontFamily: "var(--font-display)",
+                  fontSize: "1.6rem",
+                  fontWeight: 300,
                 }}
               >
-                <div
-                  className="w-2 h-2"
-                  style={{
-                    background: i === 1 ? "var(--champagne)" : "rgba(217,179,106,0.4)",
-                    borderRadius: 1,
-                    transform: "rotate(45deg)",
-                  }}
-                />
+                {letter}
               </div>
-              <span
-                className="text-xs"
-                style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)", letterSpacing: "0.12em" }}
-              >
-                {week}
-              </span>
+              {i < 2 && (
+                <span
+                  style={{
+                    color: "var(--champagne)",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "1.1rem",
+                    opacity: 0.6,
+                  }}
+                >
+                  →
+                </span>
+              )}
             </div>
           ))}
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 relative">
-          {STEPS.map((step, idx) => (
+        <div className="flex flex-col gap-5">
+          {STAGES.map((stage, idx) => (
             <div
-              key={step.number}
-              className="card-hover border flex flex-col gap-4 overflow-hidden relative"
+              key={stage.letter}
+              className="card-hover border flex flex-col md:flex-row gap-6 p-7 relative overflow-hidden"
               style={{
                 borderRadius: 2,
-                borderColor: "rgba(30,30,31,0.9)",
+                borderColor:
+                  idx === 2 ? "rgba(217,179,106,0.3)" : "rgba(30,30,31,0.9)",
                 background: "var(--carbon)",
               }}
             >
-              {/* Borde superior champagne */}
+              {/* Letra grande */}
               <div
-                className="absolute top-0 left-0 right-0"
-                style={{
-                  height: 1,
-                  background:
-                    idx === 1
-                      ? "linear-gradient(90deg, transparent, var(--champagne), transparent)"
-                      : "linear-gradient(90deg, transparent, rgba(217,179,106,0.35), transparent)",
-                  opacity: idx === 1 ? 0.8 : 0.4,
-                }}
-              />
-
-              <div className="p-7 pt-8 flex flex-col gap-4 flex-1">
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="number-badge">{step.number}</div>
-                  <span
-                    className="text-xs px-3 py-1"
-                    style={{
-                      background: "var(--gold-soft)",
-                      color: "var(--champagne)",
-                      border: "1px solid rgba(217,179,106,0.18)",
-                      borderRadius: 2,
-                      fontFamily: "var(--font-mono)",
-                      letterSpacing: "0.12em",
-                    }}
-                  >
-                    {step.duration}
-                  </span>
-                </div>
-
-                <div>
-                  <h3
-                    className="font-light mb-2 leading-snug"
-                    style={{
-                      color: "var(--bone)",
-                      fontFamily: "var(--font-display)",
-                      fontSize: "1.15rem",
-                    }}
-                  >
-                    {step.title}
-                  </h3>
-                  <p
-                    className="text-sm leading-relaxed"
-                    style={{ color: "var(--ash)", fontWeight: 300 }}
-                  >
-                    {step.description}
-                  </p>
-                </div>
-
-                <div
-                  className="mt-auto px-4 py-3 text-xs leading-relaxed"
+                className="flex-shrink-0 flex md:flex-col items-center md:items-start gap-3 md:gap-1"
+                style={{ minWidth: 96 }}
+              >
+                <span
+                  className="leading-none"
                   style={{
-                    background: "var(--gold-soft)",
-                    border: "1px solid rgba(217,179,106,0.12)",
-                    borderRadius: 2,
-                    color: "var(--ash)",
+                    fontFamily: "var(--font-display)",
+                    fontSize: "3.6rem",
+                    fontWeight: 300,
+                    fontStyle: "italic",
+                    color:
+                      idx === 2 ? "var(--champagne)" : "rgba(231,229,221,0.85)",
                   }}
                 >
-                  <span style={{ color: "var(--champagne)", fontFamily: "var(--font-mono)", letterSpacing: "0.1em" }}>
-                    Resultado:{" "}
-                  </span>
-                  {step.deliverable}
-                </div>
+                  {stage.letter}
+                </span>
+                <span
+                  className="text-xs"
+                  style={{
+                    color: "var(--smoke)",
+                    fontFamily: "var(--font-mono)",
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {stage.label}
+                </span>
+              </div>
+
+              <div className="flex-1">
+                <p
+                  className="text-base font-light leading-snug mb-3"
+                  style={{ color: "var(--bone)", fontFamily: "var(--font-display)" }}
+                >
+                  {stage.question}
+                </p>
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.8 }}
+                  dangerouslySetInnerHTML={{ __html: stage.body }}
+                />
               </div>
             </div>
           ))}
         </div>
 
         <p
-          className="text-center text-xs mt-6"
-          style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)", letterSpacing: "0.12em" }}
+          className="text-center text-xs mt-10"
+          style={{
+            color: "var(--smoke)",
+            fontFamily: "var(--font-mono)",
+            letterSpacing: "0.12em",
+          }}
         >
-          Pagas por resultados · Factura desde Chile (USD/CLP) · Sin contrato anual
+          El Test de Fit te dice en qué letra estás. Si no es la &laquo;I&raquo;, te lo
+          decimos.
         </p>
       </div>
     </section>

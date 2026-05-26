@@ -1,37 +1,24 @@
-const PROBLEMS = [
+const BELIEFS = [
   {
     number: "01",
-    title: "Licencias pagadas que nadie abre.",
-    body: "Copilot, ChatGPT Enterprise, Gemini — activadas, pagadas, olvidadas. El problema no es la herramienta: es que nadie definió qué proceso específico iba a mejorar, quién lo opera y cómo se mide. Sin eso, cada licencia es gasto puro.",
-    stat: "73% de licencias SaaS tienen adopción menor al 30%",
-    source: "Gartner, 2024",
+    title: "La IA es una herramienta, no una estrategia.",
+    body: "La mayoría de las empresas que nos llaman querían IA para problemas que no requieren IA. Requieren ordenar data, mapear procesos rotos, o cambiar incentivos del equipo. Por eso aplicamos el Protocolo BPI — primero las Bases, después los Procesos, y solo entonces evaluamos la IA.",
   },
   {
     number: "02",
-    title: "Proyectos que mueren en la semana 4.",
-    body: "La primera semana es de demos y entusiasmo. La cuarta, nadie lo menciona. Las implementaciones no fallan por tecnología — fallan porque el sistema no entiende cómo trabaja tu equipo y tu equipo no entiende cómo funciona el sistema.",
-    stat: "85% de proyectos de IA no llegan a producción",
-    source: "McKinsey, 2023",
+    title: "La adopción es el único KPI real.",
+    body: "Una herramienta sin adopción es gasto, no inversión. Medimos adopción en la semana 3, no entregables en la semana 12. Si en la semana 3 el equipo no la está usando, iteramos sin costo hasta que lo hagan. No facturamos la fase de adopción si no se adoptó.",
   },
   {
     number: "03",
-    title: "20 candidatos y sin claridad por dónde empezar.",
-    body: "Cada gerente quiere automatizar su proceso. Sin priorización real, el presupuesto se fragmenta, los pilotos se multiplican y el impacto nunca justifica escalar. El costo no es solo dinero — es tiempo de tu equipo en cosas que no avanzan.",
-    stat: "Solo 16% de empresas mide el ROI de sus iniciativas de IA",
-    source: "Deloitte, 2024",
-  },
-  {
-    number: "04",
-    title: "El sistema funciona. El equipo no lo usa.",
-    body: "La resistencia al cambio no se resuelve con más capacitación — se resuelve con diseño. Si el flujo de trabajo no se rediseña alrededor de la herramienta y el equipo no la percibe como ayuda, el sistema muere aunque funcione perfectamente.",
-    stat: "70% de las fallas de IA son de adopción, no de tecnología",
-    source: "Harvard Business Review, 2024",
+    title: "Las medianas merecen jugar el juego de las grandes.",
+    body: "Las consultoras serias se dedican a Fortune 500 y a corporativos enormes. Las medianas quedan a merced de agencias que venden chatbots y promesas vagas. CrececonIA existe para llenar ese hueco: el mismo rigor técnico y operacional que reciben las grandes, sin el ruido y sin las horas facturadas a perpetuidad.",
   },
 ];
 
-export default function ProblemBar() {
+export default function Beliefs() {
   return (
-    <section id="problema" className="py-20 px-6">
+    <section id="manifiesto" className="py-24 px-6">
       <div className="max-w-3xl mx-auto">
         <p
           className="text-xs mb-4"
@@ -42,7 +29,7 @@ export default function ProblemBar() {
             textTransform: "uppercase",
           }}
         >
-          El patrón de fallo
+          Lo que creemos
         </p>
         <h2
           className="font-light mb-4 leading-tight"
@@ -52,69 +39,50 @@ export default function ProblemBar() {
             color: "var(--bone)",
           }}
         >
-          Si <em className="gradient-text">dos de estas cuatro</em> situaciones te resultan
-          familiares, podemos ayudarte.
+          Tres principios que <em className="gradient-text">no negociamos.</em>
         </h2>
         <p
-          className="text-base mb-12 leading-relaxed"
-          style={{ color: "var(--ash)", fontWeight: 300 }}
+          className="text-base mb-14 leading-relaxed"
+          style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
         >
-          No son errores técnicos. Son patrones de fallo que vemos en 9 de cada 10 empresas
-          que intentan adoptar IA sin una guía clara.
+          Cualquier proyecto que tomamos pasa por este filtro. Si no encajas en
+          los tres, te lo decimos en el Test de Fit y no avanzamos.
         </p>
 
-        <div className="flex flex-col gap-3">
-          {PROBLEMS.map((prob) => (
+        <div className="flex flex-col gap-8">
+          {BELIEFS.map((b) => (
             <div
-              key={prob.number}
-              className="border flex flex-col gap-3 px-6 py-5"
-              style={{
-                borderRadius: 2,
-                borderColor: "rgba(30,30,31,0.9)",
-                background: "var(--carbon)",
-              }}
+              key={b.number}
+              className="flex gap-6 pb-8"
+              style={{ borderBottom: "1px solid rgba(30,30,31,0.9)" }}
             >
-              <div className="flex items-start gap-4">
-                <span
-                  style={{
-                    color: "var(--champagne)",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "0.65rem",
-                    letterSpacing: "0.15em",
-                    marginTop: 3,
-                    flexShrink: 0,
-                  }}
-                >
-                  {prob.number}
-                </span>
-                <div className="flex-1">
-                  <p
-                    className="font-light text-base leading-snug mb-2"
-                    style={{ color: "var(--bone)" }}
-                  >
-                    {prob.title}
-                  </p>
-                  <p
-                    className="text-sm leading-relaxed"
-                    style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
-                  >
-                    {prob.body}
-                  </p>
-                </div>
-              </div>
-              <div
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-xs self-start"
+              <span
+                className="flex-shrink-0 pt-1"
                 style={{
-                  marginLeft: "1.6rem",
-                  background: "var(--gold-soft)",
-                  border: "1px solid rgba(217,179,106,0.18)",
-                  borderRadius: 2,
                   color: "var(--champagne)",
                   fontFamily: "var(--font-mono)",
+                  fontSize: "0.7rem",
+                  letterSpacing: "0.18em",
                 }}
               >
-                <span>{prob.stat}</span>
-                <span style={{ color: "var(--smoke)" }}>— {prob.source}</span>
+                {b.number}
+              </span>
+              <div className="flex-1">
+                <h3
+                  className="font-light text-xl mb-3 leading-snug"
+                  style={{
+                    color: "var(--bone)",
+                    fontFamily: "var(--font-display)",
+                  }}
+                >
+                  {b.title}
+                </h3>
+                <p
+                  className="text-base leading-relaxed"
+                  style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.8 }}
+                >
+                  {b.body}
+                </p>
               </div>
             </div>
           ))}

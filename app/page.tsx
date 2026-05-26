@@ -1,10 +1,11 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import ProblemBar from "@/components/ProblemBar";
-import HowItWorks from "@/components/HowItWorks";
+import Beliefs from "@/components/ProblemBar";
+import BPIProtocol from "@/components/HowItWorks";
+import AntiPositioning from "@/components/AntiPositioning";
 import SocialProof from "@/components/SocialProof";
-import Services from "@/components/Services";
-import UseCases from "@/components/UseCases";
+import SergioStory from "@/components/UseCases";
+import Investment from "@/components/Services";
 import FAQ from "@/components/FAQ";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
@@ -16,11 +17,12 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
-        <ProblemBar />
+        <Beliefs />
+        <BPIProtocol />
+        <AntiPositioning />
         <SocialProof />
-        <HowItWorks />
-        <Services />
-        <UseCases />
+        <SergioStory />
+        <Investment />
         <FAQ />
         <FinalCTA />
       </main>

@@ -4,24 +4,20 @@ import { useState } from "react";
 
 const FAQS = [
   {
-    q: "¿Cuánto tiempo pasa hasta ver impacto real?",
-    a: "En la mayoría de los casos el sistema empieza a usarse en las primeras 2–3 semanas de implementación. El ROI completo normalmente es visible al mes de uso sostenido.",
+    q: "¿Cómo sé si mi empresa necesita IA, o si todavía está en la «B» o en la «P» del Protocolo BPI?",
+    a: "Eso es exactamente lo que resolvemos en el Test de Fit. En 30 minutos identificamos en qué letra está tu empresa: si todavía tienes problemas de bases (data, equipo, sistemas) o de procesos (flujos rotos, incentivos desalineados), te lo decimos y te recomendamos qué arreglar primero. No nos metemos a vender una «I» que sabemos que va a fracasar.",
   },
   {
-    q: "¿Cuánto cuesta trabajar con ustedes?",
-    a: "El diagnóstico de 30 minutos es gratis, siempre. Si quieres ir más profundo, una Auditoría Express cuesta USD 500 (2 semanas, mapa + ROI). Una implementación end-to-end parte desde USD 1.500 según el proceso e integraciones. El monto exacto lo definimos después del diagnóstico — nada se confirma antes de que tú apruebes el presupuesto.",
+    q: "¿Por qué se especializan en empresas medianas y no en grandes corporativos?",
+    a: "Porque ahí está la brecha. Las consultoras serias se dedican a Fortune 500 y a corporativos enormes — las medianas quedan a merced de agencias que venden chatbots y promesas vagas. CrececonIA existe para que las medianas accedan al mismo rigor técnico y operacional que reciben las grandes, sin pagar las horas infinitas de una Big Four.",
   },
   {
-    q: "¿Qué pasa si en el diagnóstico me dicen que no hay fit?",
-    a: "Te lo decimos directo en la misma llamada. Si no hay un caso claro para IA en tu empresa ahora, no tiene sentido seguir. Te damos una recomendación honesta de qué hacer primero y quizás hablamos de nuevo en 6 meses.",
+    q: "Ya intentamos implementar IA antes y no vimos valor. ¿Qué hacen distinto ustedes?",
+    a: "Probablemente saltaste a la «I» sin que las Bases o los Procesos estuvieran listos. La mayoría de implementaciones fallidas que vemos no son problemas técnicos — son problemas de diseño operacional. En el Test de Fit revisamos qué pasó la vez anterior y te decimos honestamente si vale la pena retomar el proyecto o si todavía no es el momento.",
   },
   {
-    q: "¿Qué pasa si después de implementar no veo el ROI esperado?",
-    a: "Si en la semana 3 la adopción es menor al 30%, iteramos sin costo. Si el cambio es por una decisión de negocio que cambió (no por el sistema), te ayudamos a redireccionar el activo hacia otro proceso.",
-  },
-  {
-    q: "¿Necesito tener mis datos ordenados para empezar?",
-    a: "No para la fase 1. Para la implementación, parte del trabajo es estructurar lo mínimo necesario. No esperes tener un data warehouse perfecto: en el 80% de los casos trabajamos directamente sobre lo que ya tienes.",
+    q: "¿Cuánto cuesta? ¿Por qué no publican planes con precio?",
+    a: "El Test de Fit es gratuito. Si avanzamos, el rango va de USD 500 (auditoría profunda, 2 semanas) a USD 5.000+ (implementación completa con 90 días). No publicamos planes con precio porque no creemos en cobrar por SKU — el monto depende del alcance real de tu caso, no de un catálogo. Y nada se confirma hasta que tú apruebes el presupuesto.",
   },
 ];
 
@@ -83,11 +79,11 @@ export default function FAQ() {
 
                 <div
                   className="accordion-body px-6"
-                  style={{ maxHeight: isOpen ? 320 : 0 }}
+                  style={{ maxHeight: isOpen ? 420 : 0 }}
                 >
                   <p
                     className="text-sm leading-relaxed pb-5"
-                    style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
+                    style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.8 }}
                   >
                     {faq.a}
                   </p>

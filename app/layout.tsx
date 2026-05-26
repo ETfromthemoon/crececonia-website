@@ -28,14 +28,14 @@ const SITE_URL = "https://crececonia.cl";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "CrececonIA — Consultoría de IA para empresas medianas y grandes",
+  title: "CrececonIA — La mayoría no necesita IA. Necesita arreglar lo de antes.",
   description:
-    "Diagnóstico gratuito de 30 minutos. Identificamos los 3 procesos de mayor impacto en tu empresa e instalamos el sistema para que tu equipo lo use desde el día 1.",
+    "Consultoría de IA para empresas medianas. Aplicamos el Protocolo BPI: Bases, Procesos, IA — en ese orden. Test de Fit gratuito de 30 minutos: te decimos honestamente en qué letra está tu empresa.",
   authors: [{ name: "CrececonIA" }],
   openGraph: {
-    title: "CrececonIA — Consultoría de IA para empresas medianas y grandes",
+    title: "CrececonIA — La mayoría no necesita IA. Necesita arreglar lo de antes.",
     description:
-      "Diagnóstico gratuito de 30 minutos. Identificamos los 3 procesos de mayor impacto en tu empresa e instalamos el sistema para que tu equipo lo use desde el día 1.",
+      "Consultoría de IA para empresas medianas. Aplicamos el Protocolo BPI: Bases, Procesos, IA — en ese orden. Test de Fit gratuito de 30 minutos.",
     url: SITE_URL,
     siteName: "CrececonIA",
     locale: "es_CL",
@@ -45,15 +45,15 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "CrececonIA — Consultoría de IA para empresas",
+        alt: "CrececonIA — Protocolo BPI: Bases, Procesos, IA",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CrececonIA — Consultoría de IA para empresas",
+    title: "CrececonIA — La mayoría no necesita IA. Necesita arreglar lo de antes.",
     description:
-      "Diagnóstico gratuito de 30 minutos. Identificamos los 3 procesos de mayor impacto e instalamos el sistema para que tu equipo lo use desde el día 1.",
+      "Consultoría de IA para empresas medianas. Protocolo BPI: Bases, Procesos, IA — en ese orden. Test de Fit gratuito.",
     images: ["/og-image.png"],
   },
   alternates: {
@@ -72,28 +72,32 @@ const jsonLd = {
   name: "CrececonIA",
   url: SITE_URL,
   description:
-    "Consultoría de inteligencia artificial para empresas medianas y grandes. Diagnóstico gratuito + implementación con resultados medibles.",
+    "Consultoría de IA para empresas medianas. Aplicamos el Protocolo BPI: Bases, Procesos, IA — en ese orden. Si tu empresa no necesita IA, te lo decimos en el Test de Fit.",
   areaServed: ["CL", "ES", "MX", "CO", "AR", "PE"],
   serviceType: "Consultoría de Inteligencia Artificial",
+  slogan: "La mayoría no necesita IA. Necesita arreglar lo de antes.",
   offers: [
     {
       "@type": "Offer",
-      name: "Diagnóstico gratuito",
-      description: "Sesión de 30 minutos sin costo para identificar oportunidades de IA.",
+      name: "Test de Fit",
+      description:
+        "Sesión gratuita de 30 minutos para identificar en qué letra del Protocolo BPI está tu empresa (Bases, Procesos o IA).",
       price: "0",
       priceCurrency: "CLP",
     },
     {
       "@type": "Offer",
-      name: "Auditoría Express",
-      description: "Mapeo profundo de procesos y hoja de ruta priorizada por ROI. 2 semanas.",
+      name: "Auditoría profunda",
+      description:
+        "Mapeo de Bases y Procesos + hoja de ruta priorizada por ROI. 2 semanas.",
       price: "500",
       priceCurrency: "USD",
     },
     {
       "@type": "Offer",
       name: "Implementación completa",
-      description: "Instalación, integración, capacitación y medición de adopción. 6–8 semanas.",
+      description:
+        "Instalación, integración, capacitación y medición de adopción en semana 3. Garantía: si no se usa, iteramos sin costo.",
       price: "1500",
       priceCurrency: "USD",
     },

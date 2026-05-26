@@ -70,7 +70,21 @@ export default function Hero() {
 
       {/* Contenido central */}
       <div className="relative max-w-3xl mx-auto text-center">
-        {/* Headline */}
+        {/* Etiqueta superior — manifiesto */}
+        <motion.p
+          {...fadeUp(0.04)}
+          className="mb-6 text-xs"
+          style={{
+            color: "var(--champagne)",
+            fontFamily: "var(--font-mono)",
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+          }}
+        >
+          Consultoría de IA para empresas medianas
+        </motion.p>
+
+        {/* Headline manifesto */}
         <motion.h1
           {...fadeUp(0.08)}
           className="leading-none mb-5"
@@ -82,30 +96,32 @@ export default function Hero() {
             letterSpacing: "-0.025em",
           }}
         >
-          Los 3 procesos que más dinero te cuestan cada mes.{" "}
+          La mayoría no necesita IA.
+          <br />
           <em className="gradient-text" style={{ fontStyle: "italic" }}>
-            Los identificamos gratis, en 30 minutos.
+            Necesita arreglar lo de antes.
           </em>
         </motion.h1>
 
-        {/* Subtítulo */}
+        {/* Subtítulo — BPI thesis */}
         <motion.p
           {...fadeUp(0.16)}
-          className="text-lg max-w-xl mx-auto mb-10 leading-relaxed"
-          style={{ color: "var(--ash)", fontWeight: 300 }}
+          className="text-lg max-w-2xl mx-auto mb-10 leading-relaxed"
+          style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
         >
-          Si no hay un caso real para IA en tu empresa, te lo decimos en la misma llamada.
-          Sin pitch, sin venta.
+          Aplicamos el <strong style={{ color: "var(--bone)", fontWeight: 400 }}>Protocolo BPI</strong>:
+          Bases, Procesos, IA — en ese orden. Si tu empresa todavía está en la &laquo;B&raquo;
+          o en la &laquo;P&raquo;, te lo decimos antes de cobrarte un peso por la &laquo;I&raquo;.
         </motion.p>
 
         {/* CTA */}
         <motion.div {...fadeUp(0.24)} className="flex justify-center">
           <WAButton source="hero-primary" size="lg">
-            Quiero mi diagnóstico gratis
+            Solicitar Test de Fit
           </WAButton>
         </motion.div>
 
-        {/* Señales de confianza — una línea */}
+        {/* Señales — una línea sobria */}
         <motion.p
           {...fadeUp(0.34)}
           className="mt-8 text-xs"
@@ -115,7 +131,7 @@ export default function Hero() {
             letterSpacing: "0.12em",
           }}
         >
-          30 min · sin compromiso · si no hay fit, te lo decimos
+          30 min · conversación honesta · sin pitch de venta
         </motion.p>
       </div>
     </section>

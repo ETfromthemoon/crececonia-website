@@ -31,14 +31,14 @@ export default function StickyWABar() {
       >
         <div>
           <p className="font-semibold text-sm leading-tight" style={{ color: "var(--ink)" }}>
-            Diagnóstico gratuito · 30 min
+            Test de Fit · 30 min · gratuito
           </p>
           <p className="text-xs" style={{ color: "var(--muted)" }}>
-            Respondemos en menos de 2 horas hábiles
+            Te decimos en qué letra del BPI estás
           </p>
         </div>
         <WAButton source="sticky" size="md">
-          Diagnóstico gratis
+          Solicitar
         </WAButton>
       </div>
     </div>

@@ -197,14 +197,15 @@ export default function Results() {
               color: "var(--bone)",
             }}
           >
-            6 proyectos terminados con resultados medidos{" "}
-            <em className="gradient-text">(2024–2026).</em>
+            6 proyectos donde llegamos a la &laquo;I&raquo;.{" "}
+            <em className="gradient-text">Estos son los KPIs reales.</em>
           </h2>
           <p
             className="mt-4 text-sm max-w-xl mx-auto leading-relaxed"
-            style={{ color: "var(--smoke)", fontWeight: 300 }}
+            style={{ color: "var(--smoke)", fontWeight: 300, lineHeight: 1.7 }}
           >
-            KPIs reales de proyectos completados. Sin proyecciones inventadas.
+            Proyectos en los que las Bases y los Procesos ya estaban sanos.
+            Sin proyecciones inventadas — solo lo que se midió.
           </p>
         </div>
 
@@ -223,10 +224,10 @@ export default function Results() {
               letterSpacing: "0.12em",
             }}
           >
-            ¿Te muestro cómo se vería el tuyo?
+            ¿En qué letra del BPI está tu empresa?
           </p>
           <WAButton source="results-cta" size="lg">
-            Quiero mi diagnóstico gratis →
+            Solicitar Test de Fit →
           </WAButton>
         </div>
       </div>

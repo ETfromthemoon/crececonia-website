@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { WAButton } from "./GradientButton";
 
 const NAV_LINKS = [
-  { label: "Proceso", href: "/#proceso" },
-  { label: "Resultados", href: "/#resultados" },
+  { label: "Manifiesto", href: "/#manifiesto" },
+  { label: "Protocolo BPI", href: "/#proceso" },
+  { label: "Casos", href: "/#resultados" },
   { label: "Inversión", href: "/#servicios" },
-  { label: "Preguntas", href: "/#faq" },
 ];
 
 export default function Navbar() {
@@ -70,7 +70,7 @@ export default function Navbar() {
         {/* Desktop CTA */}
         <div className="hidden sm:block">
           <WAButton source="nav" size="md">
-            Postular al diagnóstico
+            Solicitar Test de Fit
           </WAButton>
         </div>
 
@@ -100,7 +100,7 @@ export default function Navbar() {
         {/* Mobile CTA */}
         <div className="sm:hidden">
           <WAButton source="nav-mobile" size="md">
-            Diagnóstico
+            Test de Fit
           </WAButton>
         </div>
       </div>

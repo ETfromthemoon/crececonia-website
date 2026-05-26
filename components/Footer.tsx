@@ -8,10 +8,10 @@ const COL_HERRAMIENTAS = [
 ];
 
 const COL_SERVICIOS = [
-  { label: "Auditoría · USD 500", href: "/#servicios" },
-  { label: "Implementación · desde USD 1.500", href: "/#servicios" },
-  { label: "Cómo trabajamos", href: "/#proceso" },
-  { label: "Resultados reales", href: "/#resultados" },
+  { label: "Protocolo BPI", href: "/#proceso" },
+  { label: "Lo que creemos", href: "/#manifiesto" },
+  { label: "Casos reales", href: "/#resultados" },
+  { label: "Inversión", href: "/#servicios" },
 ];
 
 const COL_RECURSOS = [
@@ -63,9 +63,10 @@ export default function Footer() {
             </a>
             <p
               className="text-sm leading-relaxed"
-              style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.6 }}
+              style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
             >
-              Consultoría IA para pymes y SaaS que quieren escalar sin sumar manos.
+              Consultoría de IA para empresas medianas. Aplicamos el Protocolo BPI:
+              Bases, Procesos, IA — en ese orden.
             </p>
             <p
               className="mt-4 text-xs"
