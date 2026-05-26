@@ -98,6 +98,24 @@ body {
 
 a { color: inherit; text-decoration: none; }
 
+/* ===== Focus rings globales (a11y WCAG) =====
+   Solo visibles cuando se navega con teclado (focus-visible),
+   no aparecen al click con mouse.
+*/
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+summary:focus-visible {
+  outline: 2px solid rgba(217,179,106,0.7);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.btn-evaluacion:focus-visible,
+.btn-primary:focus-visible {
+  outline-color: var(--champagne);
+  outline-offset: 4px;
+}
+
 /* ===== Botón WhatsApp ===== */
 .btn-wa {
   display: inline-flex;
@@ -181,12 +199,50 @@ a { color: inherit; text-decoration: none; }
   font-size: 1rem;
 }
 
-/* ===== Espaciado de secciones ===== */
+/* ===== Espaciado de secciones (sistema unificado) =====
+   3 tracks de ritmo vertical:
+   - section-y         → estándar (la mayoría de las secciones)
+   - section-y-narrow  → FAQ y secciones compactas
+   - section-y-spacious → cierre dramático (FinalCTA)
+*/
+.section-y {
+  padding-top: 5rem;          /* 80px mobile */
+  padding-bottom: 5rem;
+}
+@media (min-width: 768px) {
+  .section-y {
+    padding-top: 6.5rem;       /* 104px desktop */
+    padding-bottom: 6.5rem;
+  }
+}
+
+.section-y-narrow {
+  padding-top: 4rem;            /* 64px mobile */
+  padding-bottom: 4rem;
+}
+@media (min-width: 768px) {
+  .section-y-narrow {
+    padding-top: 5rem;          /* 80px desktop */
+    padding-bottom: 5rem;
+  }
+}
+
+.section-y-spacious {
+  padding-top: 6rem;            /* 96px mobile */
+  padding-bottom: 6rem;
+}
+@media (min-width: 768px) {
+  .section-y-spacious {
+    padding-top: 8rem;          /* 128px desktop */
+    padding-bottom: 8rem;
+  }
+}
+
+/* Mantengo .section-padding y .section-gap por compatibilidad */
 .section-padding {
   padding-top: 5rem;
   padding-bottom: 5rem;
 }
-
 @media (min-width: 768px) {
   .section-padding {
     padding-top: 6rem;
@@ -195,9 +251,23 @@ a { color: inherit; text-decoration: none; }
 }
 
 .section-gap { gap: 1.5rem; }
-
 @media (min-width: 768px) {
   .section-gap { gap: 2rem; }
+}
+
+/* ===== Eyebrow (label flat editorial) =====
+   Usar en secciones manifesto-style (Beliefs, AntiPositioning, Sergio, Hero).
+   Para pills con borde + background usar la clase .tag (más abajo).
+*/
+.eyebrow {
+  display: inline-block;
+  color: var(--champagne);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
 }
 
 /* ===== Tipografía ===== */
@@ -209,8 +279,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 { font-size: clamp(2.4rem, 5.5vw, 4.2rem); }
-h2 { font-size: clamp(1.8rem, 3.5vw, 2.8rem); }
-h3 { font-size: clamp(1.2rem, 2vw, 1.6rem); }
+h2 { font-size: clamp(1.8rem, 3.5vw, 2.4rem); }
+h3 { font-size: clamp(1.15rem, 1.9vw, 1.5rem); }
 
 p, span, li {
   font-weight: 300;

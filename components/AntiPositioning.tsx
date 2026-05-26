@@ -45,31 +45,16 @@ export default function AntiPositioning() {
   return (
     <section
       id="no-hacemos"
-      className="py-24 px-6 relative overflow-hidden"
-      style={{ background: "var(--obsidian)" }}
+      className="section-y px-6 relative overflow-hidden"
     >
       <div className="absolute inset-0 dot-pattern opacity-30" aria-hidden="true" />
 
       <div className="relative max-w-3xl mx-auto">
         <div className="mb-14">
-          <p
-            className="text-xs mb-4"
-            style={{
-              color: "var(--champagne)",
-              fontFamily: "var(--font-mono)",
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-            }}
-          >
-            Lo que NO hacemos
-          </p>
+          <p className="eyebrow">Lo que NO hacemos</p>
           <h2
             className="font-light leading-tight mb-4"
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
-              color: "var(--bone)",
-            }}
+            style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
           >
             Cinco cosas que <em className="gradient-text">no tomamos.</em>
           </h2>

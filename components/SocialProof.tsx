@@ -83,7 +83,7 @@ function ResultCard({ result }: { result: (typeof RESULTS)[0] }) {
   return (
     <div
       ref={ref}
-      className="card-hover-dark border flex flex-col gap-3 p-6"
+      className="card-hover-dark border flex flex-col gap-3 p-7"
       style={{
         borderRadius: 2,
         background: "var(--carbon)",
@@ -153,8 +153,8 @@ export default function Results() {
   return (
     <section
       id="resultados"
-      className="py-24 px-6 relative overflow-hidden"
-      style={{ background: "var(--obsidian)" }}
+      className="section-y px-6 relative overflow-hidden"
+      style={{ background: "var(--graphite)" }}
     >
       {/* Dot pattern */}
       <div className="absolute inset-0 dot-pattern opacity-40" aria-hidden="true" />
@@ -191,11 +191,7 @@ export default function Results() {
           <p className="tag mb-5 inline-block">Resultados</p>
           <h2
             className="font-light leading-tight"
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
-              color: "var(--bone)",
-            }}
+            style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
           >
             6 proyectos donde llegamos a la &laquo;I&raquo;.{" "}
             <em className="gradient-text">Estos son los KPIs reales.</em>

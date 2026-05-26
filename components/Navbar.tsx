@@ -77,8 +77,10 @@ export default function Navbar() {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 flex flex-col gap-1.5 justify-center items-center"
-          aria-label="Toggle menu"
+          className="md:hidden flex flex-col gap-1.5 justify-center items-center"
+          aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={mobileMenuOpen}
+          style={{ width: 44, height: 44 }}
         >
           <motion.span
             animate={{ rotate: mobileMenuOpen ? 45 : 0, y: mobileMenuOpen ? 8 : 0 }}

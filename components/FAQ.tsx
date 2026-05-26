@@ -25,17 +25,13 @@ export default function FAQ() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="py-20 px-6" style={{ background: "var(--graphite)" }}>
+    <section id="faq" className="section-y-narrow px-6">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-14">
           <p className="tag mb-5 inline-block">FAQ</p>
           <h2
             className="font-light leading-tight"
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
-              color: "var(--bone)",
-            }}
+            style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
           >
             Las que más{" "}
             <em className="gradient-text">nos preguntan.</em>

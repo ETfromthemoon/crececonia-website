@@ -6,7 +6,7 @@ export default function FinalCTA() {
   return (
     <section
       id="conversemos"
-      className="py-28 px-6 relative overflow-hidden"
+      className="section-y-spacious px-6 relative overflow-hidden"
       style={{ background: "var(--obsidian)" }}
     >
       {/* Dot pattern */}
@@ -56,7 +56,7 @@ export default function FinalCTA() {
           className="font-light mb-5 leading-tight"
           style={{
             fontFamily: "var(--font-display)",
-            fontSize: "clamp(1.8rem, 3.5vw, 2.6rem)",
+            fontSize: "clamp(2rem, 4vw, 2.8rem)",
             color: "var(--bone)",
             letterSpacing: "-0.02em",
           }}

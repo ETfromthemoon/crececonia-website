@@ -18,26 +18,12 @@ const BELIEFS = [
 
 export default function Beliefs() {
   return (
-    <section id="manifiesto" className="py-24 px-6">
+    <section id="manifiesto" className="section-y px-6">
       <div className="max-w-3xl mx-auto">
-        <p
-          className="text-xs mb-4"
-          style={{
-            color: "var(--champagne)",
-            fontFamily: "var(--font-mono)",
-            letterSpacing: "0.22em",
-            textTransform: "uppercase",
-          }}
-        >
-          Lo que creemos
-        </p>
+        <p className="eyebrow">Lo que creemos</p>
         <h2
           className="font-light mb-4 leading-tight"
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
-            color: "var(--bone)",
-          }}
+          style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
         >
           Tres principios que <em className="gradient-text">no negociamos.</em>
         </h2>

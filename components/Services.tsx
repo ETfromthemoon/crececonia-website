@@ -17,17 +17,13 @@ const PRINCIPLES = [
 
 export default function Investment() {
   return (
-    <section id="servicios" className="py-24 px-6">
+    <section id="servicios" className="section-y px-6" style={{ background: "var(--graphite)" }}>
       <div className="max-w-3xl mx-auto">
         <div className="mb-12">
           <p className="tag mb-5 inline-block">Inversión</p>
           <h2
             className="font-light leading-tight mb-5"
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
-              color: "var(--bone)",
-            }}
+            style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
           >
             El Test de Fit es gratuito.{" "}
             <em className="gradient-text">El resto depende del fit.</em>

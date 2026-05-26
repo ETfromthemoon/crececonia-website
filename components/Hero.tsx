@@ -71,16 +71,7 @@ export default function Hero() {
       {/* Contenido central */}
       <div className="relative max-w-3xl mx-auto text-center">
         {/* Etiqueta superior — manifiesto */}
-        <motion.p
-          {...fadeUp(0.04)}
-          className="mb-6 text-xs"
-          style={{
-            color: "var(--champagne)",
-            fontFamily: "var(--font-mono)",
-            letterSpacing: "0.22em",
-            textTransform: "uppercase",
-          }}
-        >
+        <motion.p {...fadeUp(0.04)} className="eyebrow" style={{ marginBottom: 24 }}>
           Consultoría de IA para empresas medianas
         </motion.p>
 

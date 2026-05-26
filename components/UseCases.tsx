@@ -9,7 +9,7 @@ const FACTS = [
 
 export default function SergioStory() {
   return (
-    <section id="sergio" className="py-24 px-6" style={{ background: "var(--surface)" }}>
+    <section id="sergio" className="section-y px-6">
       <div className="max-w-5xl mx-auto">
         <div className="grid md:grid-cols-[300px_1fr] gap-12 items-start">
           {/* Portrait */}
@@ -79,24 +79,10 @@ export default function SergioStory() {
 
           {/* Contenido */}
           <div>
-            <p
-              className="text-xs mb-4"
-              style={{
-                color: "var(--champagne)",
-                fontFamily: "var(--font-mono)",
-                letterSpacing: "0.22em",
-                textTransform: "uppercase",
-              }}
-            >
-              Quién está detrás
-            </p>
+            <p className="eyebrow">Quién está detrás</p>
             <h2
               className="font-light mb-6 leading-tight"
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(1.6rem, 3vw, 2.2rem)",
-                color: "var(--bone)",
-              }}
+              style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
             >
               Soy Sergio Astudillo.{" "}
               <em className="gradient-text">CrececonIA empezó por frustración.</em>

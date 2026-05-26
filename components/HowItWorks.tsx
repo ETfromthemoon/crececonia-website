@@ -21,17 +21,13 @@ const STAGES = [
 
 export default function BPIProtocol() {
   return (
-    <section id="proceso" className="py-24 px-6">
+    <section id="proceso" className="section-y px-6" style={{ background: "var(--graphite)" }}>
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-14">
           <p className="tag mb-5 inline-block">Metodología propietaria</p>
           <h2
             className="font-light leading-tight mb-4"
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
-              color: "var(--bone)",
-            }}
+            style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
           >
             Protocolo BPI.{" "}
             <em className="gradient-text">Bases, Procesos, IA — en ese orden.</em>
