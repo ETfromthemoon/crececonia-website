@@ -1,12 +1,10 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import LogoBar from "@/components/LogoBar";
 import ProblemBar from "@/components/ProblemBar";
-import UseCases from "@/components/UseCases";
 import HowItWorks from "@/components/HowItWorks";
 import SocialProof from "@/components/SocialProof";
 import Services from "@/components/Services";
-import Guarantee from "@/components/Guarantee";
+import UseCases from "@/components/UseCases";
 import FAQ from "@/components/FAQ";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
@@ -18,13 +16,11 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
-        {/* <LogoBar /> */}
         <ProblemBar />
-        <UseCases />
-        <HowItWorks />
         <SocialProof />
+        <HowItWorks />
         <Services />
-        <Guarantee />
+        <UseCases />
         <FAQ />
         <FinalCTA />
       </main>

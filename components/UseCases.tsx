@@ -71,7 +71,7 @@ export default function Authority() {
             <p className="text-base leading-relaxed mb-8" style={{ color: "var(--muted)" }}>
               Si en el diagnóstico no veo un caso claro para IA en tu empresa, te lo digo directamente y te recomiendo qué hacer primero.{" "}
               <EvaluacionLink source="usecases-inline" className="font-semibold" style={{ color: "var(--indigo)" }}>
-                Recibir mi evaluación AI →
+                Quiero mi diagnóstico gratis →
               </EvaluacionLink>
             </p>
 

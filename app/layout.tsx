@@ -31,15 +31,6 @@ export const metadata: Metadata = {
   title: "CrececonIA — Consultoría de IA para empresas medianas y grandes",
   description:
     "Diagnóstico gratuito de 30 minutos. Identificamos los 3 procesos de mayor impacto en tu empresa e instalamos el sistema para que tu equipo lo use desde el día 1.",
-  keywords: [
-    "consultoría IA empresas",
-    "implementación inteligencia artificial",
-    "automatización procesos empresariales",
-    "diagnóstico IA gratuito",
-    "IA para PYMES",
-    "adopción IA Chile",
-    "consultor inteligencia artificial",
-  ],
   authors: [{ name: "CrececonIA" }],
   openGraph: {
     title: "CrececonIA — Consultoría de IA para empresas medianas y grandes",
@@ -94,13 +85,17 @@ const jsonLd = {
     },
     {
       "@type": "Offer",
-      name: "Auditoría de IA",
+      name: "Auditoría Express",
       description: "Mapeo profundo de procesos y hoja de ruta priorizada por ROI. 2 semanas.",
+      price: "500",
+      priceCurrency: "USD",
     },
     {
       "@type": "Offer",
       name: "Implementación completa",
       description: "Instalación, integración, capacitación y medición de adopción. 6–8 semanas.",
+      price: "1500",
+      priceCurrency: "USD",
     },
   ],
 };

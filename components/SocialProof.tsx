@@ -60,8 +60,6 @@ const RESULTS = [
   },
 ];
 
-const ALL_SECTORS = ["Todos", "Construcción", "Distribución", "Manufactura", "Servicios profesionales", "Retail", "Logística"];
-
 function ResultCard({ result }: { result: (typeof RESULTS)[0] }) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -71,7 +69,10 @@ function ResultCard({ result }: { result: (typeof RESULTS)[0] }) {
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) { setVisible(true); obs.disconnect(); }
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
       },
       { threshold: 0.2 }
     );
@@ -125,7 +126,10 @@ function ResultCard({ result }: { result: (typeof RESULTS)[0] }) {
         />
       </div>
       <div className="flex items-center justify-between mt-1 gap-2 flex-wrap">
-        <span className="text-xs" style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)" }}>
+        <span
+          className="text-xs"
+          style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)" }}
+        >
           {result.clientSize}
         </span>
         <span
@@ -146,12 +150,6 @@ function ResultCard({ result }: { result: (typeof RESULTS)[0] }) {
 }
 
 export default function Results() {
-  const [activeFilter, setActiveFilter] = useState("Todos");
-
-  const filtered = activeFilter === "Todos"
-    ? RESULTS
-    : RESULTS.filter((r) => r.sector === activeFilter);
-
   return (
     <section
       id="resultados"
@@ -175,7 +173,6 @@ export default function Results() {
         }}
         aria-hidden="true"
       />
-      {/* Orbe champagne dim — inferior derecha */}
       <div
         className="absolute pointer-events-none"
         style={{
@@ -211,40 +208,25 @@ export default function Results() {
           </p>
         </div>
 
-        {/* Filtros por sector */}
-        <div className="flex flex-wrap justify-center gap-2 mb-8">
-          {ALL_SECTORS.map((sector) => (
-            <button
-              key={sector}
-              onClick={() => setActiveFilter(sector)}
-              className="text-xs px-3 py-1.5 transition-all"
-              style={{
-                borderRadius: 2,
-                background: activeFilter === sector ? "var(--gold-soft)" : "rgba(255,255,255,0.03)",
-                color: activeFilter === sector ? "var(--champagne)" : "var(--smoke)",
-                border: `1px solid ${activeFilter === sector ? "rgba(217,179,106,0.3)" : "rgba(30,30,31,0.9)"}`,
-                fontFamily: "var(--font-mono)",
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-              }}
-            >
-              {sector}
-            </button>
-          ))}
-        </div>
-
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map((r) => (
+          {RESULTS.map((r) => (
             <ResultCard key={r.sector} result={r} />
           ))}
         </div>
 
         <div className="text-center mt-12">
-          <p className="text-sm mb-4" style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)", letterSpacing: "0.12em" }}>
+          <p
+            className="text-sm mb-4"
+            style={{
+              color: "var(--smoke)",
+              fontFamily: "var(--font-mono)",
+              letterSpacing: "0.12em",
+            }}
+          >
             ¿Te muestro cómo se vería el tuyo?
           </p>
           <WAButton source="results-cta" size="lg">
-            Recibir mi evaluación AI →
+            Quiero mi diagnóstico gratis →
           </WAButton>
         </div>
       </div>

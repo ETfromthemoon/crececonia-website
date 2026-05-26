@@ -7,8 +7,6 @@ import { WAButton } from "./GradientButton";
 const NAV_LINKS = [
   { label: "Proceso", href: "/#proceso" },
   { label: "Resultados", href: "/#resultados" },
-  { label: "Herramientas", href: "/herramientas" },
-  { label: "Skills", href: "/skills" },
   { label: "Inversión", href: "/#servicios" },
   { label: "Preguntas", href: "/#faq" },
 ];

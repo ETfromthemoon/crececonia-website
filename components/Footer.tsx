@@ -8,16 +8,16 @@ const COL_HERRAMIENTAS = [
 ];
 
 const COL_SERVICIOS = [
-  { label: "Auditoría USD 500", href: "/#servicios" },
-  { label: "Implementación 90 días", href: "/#servicios" },
+  { label: "Auditoría · USD 500", href: "/#servicios" },
+  { label: "Implementación · desde USD 1.500", href: "/#servicios" },
   { label: "Cómo trabajamos", href: "/#proceso" },
   { label: "Resultados reales", href: "/#resultados" },
 ];
 
 const COL_RECURSOS = [
-  { label: "Skills para Claude Code", href: "/skills" },
+  { label: "Herramientas gratis", href: "/herramientas" },
   { label: "Preguntas frecuentes", href: "/#faq" },
-  { label: "Cómo pensamos", href: "/#problema" },
+  { label: "Skills para Claude Code", href: "/skills" },
 ];
 
 const linkStyle = {

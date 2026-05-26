@@ -3,20 +3,11 @@
 import { useEffect, useState } from "react";
 import { WAButton } from "./GradientButton";
 
-// TODO: actualizar N_CUPOS con el mismo valor que lib/availability.ts
-const N_CUPOS = 2;
-
 export default function StickyWABar() {
   const [visible, setVisible] = useState(false);
-  const [deepScroll, setDeepScroll] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => {
-      const y = window.scrollY;
-      setVisible(y > 520);
-      const totalHeight = document.body.scrollHeight - window.innerHeight;
-      setDeepScroll(totalHeight > 0 && y / totalHeight > 0.5);
-    };
+    const onScroll = () => setVisible(window.scrollY > 520);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -40,10 +31,10 @@ export default function StickyWABar() {
       >
         <div>
           <p className="font-semibold text-sm leading-tight" style={{ color: "var(--ink)" }}>
-            {deepScroll ? `Quedan ${N_CUPOS} cupos · Postula ahora` : "Postular al diagnóstico · 30 min"}
+            Diagnóstico gratuito · 30 min
           </p>
           <p className="text-xs" style={{ color: "var(--muted)" }}>
-            {deepScroll ? "Responde un humano en &lt;2h" : "Respondemos en < 2 horas hábiles"}
+            Respondemos en menos de 2 horas hábiles
           </p>
         </div>
         <WAButton source="sticky" size="md">

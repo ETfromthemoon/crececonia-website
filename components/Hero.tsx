@@ -10,7 +10,6 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.65, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
 });
 
-
 export default function Hero() {
   return (
     <section
@@ -19,13 +18,8 @@ export default function Hero() {
     >
       {/* Capas de fondo */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        {/* Animated paths */}
         <BackgroundPaths />
-
-        {/* Dot pattern */}
         <div className="absolute inset-0 dot-pattern opacity-60" />
-
-        {/* Orbe champagne principal */}
         <div
           className="orb-animate absolute rounded-full"
           style={{
@@ -39,7 +33,6 @@ export default function Hero() {
             filter: "blur(80px)",
           }}
         />
-        {/* Orbe champagne — esquina superior derecha */}
         <div
           className="absolute rounded-full"
           style={{
@@ -47,12 +40,10 @@ export default function Hero() {
             right: "8%",
             width: 420,
             height: 420,
-            background:
-              "radial-gradient(circle, rgba(217,179,106,0.08), transparent 70%)",
+            background: "radial-gradient(circle, rgba(217,179,106,0.08), transparent 70%)",
             filter: "blur(70px)",
           }}
         />
-        {/* Orbe verde WhatsApp — inferior izquierdo */}
         <div
           className="absolute rounded-full"
           style={{
@@ -60,12 +51,10 @@ export default function Hero() {
             left: "6%",
             width: 320,
             height: 320,
-            background:
-              "radial-gradient(circle, rgba(37,211,102,0.06), transparent 70%)",
+            background: "radial-gradient(circle, rgba(37,211,102,0.06), transparent 70%)",
             filter: "blur(60px)",
           }}
         />
-        {/* Orbe tenue — inferior derecho */}
         <div
           className="absolute rounded-full"
           style={{
@@ -73,8 +62,7 @@ export default function Hero() {
             right: "12%",
             width: 280,
             height: 280,
-            background:
-              "radial-gradient(circle, rgba(217,179,106,0.06), transparent 70%)",
+            background: "radial-gradient(circle, rgba(217,179,106,0.06), transparent 70%)",
             filter: "blur(55px)",
           }}
         />
@@ -85,7 +73,7 @@ export default function Hero() {
         {/* Headline */}
         <motion.h1
           {...fadeUp(0.08)}
-          className="leading-none mb-6"
+          className="leading-none mb-5"
           style={{
             fontFamily: "var(--font-display)",
             fontSize: "clamp(2.4rem, 5.5vw, 4.2rem)",
@@ -94,66 +82,41 @@ export default function Hero() {
             letterSpacing: "-0.025em",
           }}
         >
-          Mejoramos los 3 procesos que te cuestan más dinero cada mes con IA.
-          <br />
-          <em className="gradient-text not-italic" style={{ fontStyle: "italic" }}>
-            Identificamos dónde puedes ahorrar.
+          Los 3 procesos que más dinero te cuestan cada mes.{" "}
+          <em className="gradient-text" style={{ fontStyle: "italic" }}>
+            Los identificamos gratis, en 30 minutos.
           </em>
         </motion.h1>
 
         {/* Subtítulo */}
         <motion.p
           {...fadeUp(0.16)}
-          className="text-lg max-w-2xl mx-auto mb-10 leading-relaxed"
+          className="text-lg max-w-xl mx-auto mb-10 leading-relaxed"
           style={{ color: "var(--ash)", fontWeight: 300 }}
         >
-          En 30 minutos, te entregamos un mapa con los 3 procesos clave de tu operación,
-          el ROI estimado de cada uno y por dónde empezar. Sin ventas. Si no es para ti,
-          te lo decimos en la llamada.
+          Si no hay un caso real para IA en tu empresa, te lo decimos en la misma llamada.
+          Sin pitch, sin venta.
         </motion.p>
 
-        {/* CTAs */}
-        <motion.div
-          {...fadeUp(0.24)}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-        >
+        {/* CTA */}
+        <motion.div {...fadeUp(0.24)} className="flex justify-center">
           <WAButton source="hero-primary" size="lg">
-            Obtén tu evaluación de IA gratis
+            Quiero mi diagnóstico gratis
           </WAButton>
         </motion.div>
 
-        {/* Señales de confianza */}
-        <motion.div
+        {/* Señales de confianza — una línea */}
+        <motion.p
           {...fadeUp(0.34)}
-          className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-xs"
-          style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)", letterSpacing: "0.12em" }}
-          initial="hidden"
-          animate="visible"
-          variants={{
-            hidden: { opacity: 0 },
-            visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+          className="mt-8 text-xs"
+          style={{
+            color: "var(--smoke)",
+            fontFamily: "var(--font-mono)",
+            letterSpacing: "0.12em",
           }}
         >
-          {[
-            "Agenda tu reunión hoy",
-            "30 minutos, sin compromiso",
-            "Si no es para ti, te lo decimos",
-          ].map((text, i) => (
-            <motion.span
-              key={i}
-              className="flex items-center gap-2"
-              variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0 } }}
-            >
-              <span style={{ color: "var(--champagne)", fontSize: "0.5rem" }}>◆</span>
-              {text}
-              {i < 2 && (
-                <span className="hidden sm:inline" style={{ color: "var(--graphite)", marginLeft: 12 }}>
-                  |
-                </span>
-              )}
-            </motion.span>
-          ))}
-        </motion.div>
+          30 min · sin compromiso · si no hay fit, te lo decimos
+        </motion.p>
       </div>
     </section>
   );
