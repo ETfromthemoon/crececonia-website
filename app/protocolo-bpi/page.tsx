@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import StickyWABar from "@/components/StickyWABar";
 import { WAButton } from "@/components/GradientButton";
 
 const SITE_URL = "https://crececonia.cl";
@@ -711,7 +710,6 @@ export default function ProtocoloBPIPage() {
         </section>
       </main>
       <Footer />
-      <StickyWABar />
     </>
   );
 }
