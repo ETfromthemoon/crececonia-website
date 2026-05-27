@@ -76,6 +76,26 @@ export default function ChatWidget() {
     }
   }, [initDone]);
 
+  const resetChat = async () => {
+    if (loading) return;
+    setMessages([]);
+    setInput("");
+    setLoading(false);
+    setSessionId(null);
+    try {
+      const r = await fetch(`${API}/api/public/widget/inicio`, { method: "POST" });
+      const j = await r.json();
+      setSessionId(j.session_id);
+      setMessages([{ id: "init", role: "bot", content: j.mensaje }]);
+    } catch {
+      setMessages([{
+        id: "init",
+        role: "bot",
+        content: "¡Hola! Soy el asistente de CrececonIA 👋 ¿En qué te puedo ayudar hoy?",
+      }]);
+    }
+  };
+
   const handleOpen = () => {
     setOpen(true);
     if (!initDone) initSession();
@@ -176,14 +196,33 @@ export default function ChatWidget() {
                   Asistente
                 </span>
               </div>
-              <button
-                onClick={() => setOpen(false)}
-                className="w-7 h-7 flex items-center justify-center text-lg leading-none transition-opacity hover:opacity-60"
-                style={{ color: "var(--smoke)" }}
-                aria-label="Cerrar chat"
-              >
-                ×
-              </button>
+              <div className="flex items-center gap-1">
+                {/* Reiniciar — solo visible cuando hay conversación */}
+                {messages.length > 1 && (
+                  <button
+                    onClick={resetChat}
+                    disabled={loading}
+                    className="w-7 h-7 flex items-center justify-center transition-opacity hover:opacity-60 disabled:opacity-30"
+                    style={{ color: "var(--smoke)" }}
+                    aria-label="Nueva conversación"
+                    title="Nueva conversación"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                      <path d="M3 3v5h5" />
+                    </svg>
+                  </button>
+                )}
+                <button
+                  onClick={() => setOpen(false)}
+                  className="w-7 h-7 flex items-center justify-center text-lg leading-none transition-opacity hover:opacity-60"
+                  style={{ color: "var(--smoke)" }}
+                  aria-label="Cerrar chat"
+                >
+                  ×
+                </button>
+              </div>
             </div>
 
             {/* Mensajes */}
