@@ -1,12 +1,5 @@
 "use client";
 
-const COL_HERRAMIENTAS = [
-  { label: "Horas perdidas", href: "/horas-perdidas", icon: "📊" },
-  { label: "Mi voz, no IA", href: "/mi-voz", icon: "✏️" },
-  { label: "Calculadora ROI", href: "/calculadora-ia", icon: "🧠" },
-  { label: "Evaluador AI · chat", href: "/evaluador-chat", icon: "💬" },
-];
-
 const COL_SERVICIOS = [
   { label: "Protocolo BPI", href: "/#proceso" },
   { label: "Lo que creemos", href: "/#manifiesto" },
@@ -15,7 +8,6 @@ const COL_SERVICIOS = [
 ];
 
 const COL_RECURSOS = [
-  { label: "Herramientas gratis", href: "/herramientas" },
   { label: "Preguntas frecuentes", href: "/#faq" },
   { label: "Skills para Claude Code", href: "/skills" },
 ];
@@ -49,8 +41,8 @@ export default function Footer() {
       style={{ borderColor: "rgba(30,30,31,0.9)", background: "var(--obsidian)" }}
     >
       <div className="max-w-6xl mx-auto">
-        {/* 4 columnas — en mobile: brand a la izquierda + 2 cols apilados después */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 mb-12">
+        {/* 3 columnas — en mobile: brand a la izquierda + 2 cols apilados después */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10 mb-12">
 
           {/* Col 1 — Brand (full width en mobile pequeño) */}
           <div className="col-span-2 sm:col-span-2 lg:col-span-1">
@@ -76,28 +68,7 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Col 2 — Herramientas gratis */}
-          <div>
-            <p style={headerStyle}>Herramientas gratis</p>
-            <ul className="space-y-1.5">
-              {COL_HERRAMIENTAS.map((l) => (
-                <li key={l.href}>
-                  <a
-                    href={l.href}
-                    style={linkStyle}
-                    className="transition-colors"
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--champagne)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "var(--smoke)")}
-                  >
-                    <span style={{ fontSize: "13px" }}>{l.icon}</span>
-                    <span>{l.label}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Col 3 — Servicios */}
+          {/* Col 2 — Servicios */}
           <div>
             <p style={headerStyle}>Servicios</p>
             <ul className="space-y-1.5">
@@ -117,7 +88,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Col 4 — Recursos */}
+          {/* Col 3 — Recursos */}
           <div>
             <p style={headerStyle}>Recursos</p>
             <ul className="space-y-1.5">
