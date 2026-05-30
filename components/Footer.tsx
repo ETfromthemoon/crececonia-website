@@ -1,7 +1,7 @@
 "use client";
 
 const COL_SERVICIOS = [
-  { label: "Protocolo BPI", href: "/#proceso" },
+  { label: "Protocolo BPI", href: "/protocolo-bpi" },
   { label: "Lo que creemos", href: "/#manifiesto" },
   { label: "Casos reales", href: "/#resultados" },
   { label: "Inversión", href: "/#servicios" },
@@ -142,7 +142,7 @@ export default function Footer() {
               LinkedIn
             </a>
             <a
-              href="https://wa.me/56956123456"
+              href="https://wa.me/56961945206"
               target="_blank"
               rel="noopener noreferrer"
               style={linkStyle}

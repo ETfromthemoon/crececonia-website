@@ -32,7 +32,7 @@ export default function PromptDemoBox({ prompt, titulo }: { prompt: string; titu
             textTransform: "uppercase",
           }}
         >
-          Probala con Claude
+          Pruébalo con Claude
         </p>
         <button
           onClick={copy}
@@ -65,7 +65,7 @@ export default function PromptDemoBox({ prompt, titulo }: { prompt: string; titu
         className="mt-3 text-xs"
         style={{ color: "var(--smoke)", lineHeight: 1.5 }}
       >
-        Pegá esto en Claude (Claude Code, Claude.ai o tu API) reemplazando los placeholders <code style={{ color: "var(--champagne)" }}>{"{...}"}</code> con tus datos reales.
+        Pega esto en Claude (Claude Code, Claude.ai o tu API) reemplazando los placeholders <code style={{ color: "var(--champagne)" }}>{"{...}"}</code> con tus datos reales.
       </p>
     </div>
   );

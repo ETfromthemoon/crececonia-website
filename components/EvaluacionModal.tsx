@@ -182,19 +182,19 @@ export default function EvaluacionModal() {
                         borderRadius: 2,
                       }}
                     >
-                      Diagnóstico AI Gratuito
+                      Test de Fit · 30 min · gratuito
                     </p>
                     <h2
                       className="text-2xl sm:text-3xl font-light leading-tight mb-2"
                       style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
                     >
-                      Evalúa tu negocio en{" "}
+                      ¿En qué letra del{" "}
                       <em className="gradient-text" style={{ fontStyle: "italic" }}>
-                        2 minutos
+                        BPI estás?
                       </em>
                     </h2>
                     <p className="text-sm leading-relaxed mb-7" style={{ color: "var(--ash)" }}>
-                      Te enviamos un reporte personalizado por email con 3 oportunidades de IA para tu negocio + ROI estimado.
+                      Cuéntanos tu contexto en 3 pasos. Si hay fit, agendamos los 30 minutos para diagnosticar dónde está tu empresa hoy — y si no, te lo decimos sin cobrarte.
                     </p>
 
                     {/* Stepper */}
@@ -339,14 +339,14 @@ export default function EvaluacionModal() {
                         </div>
                         <div>
                           <label className={LABEL_CLASS}>
-                            ¿Qué resultado concreto buscas con IA?
+                            ¿Qué resultado concreto esperarías?
                           </label>
                           <textarea
                             className={INPUT_CLASS}
                             rows={2}
                             value={data.resultado_esperado}
                             onChange={(e) => set("resultado_esperado", e.target.value)}
-                            placeholder="Ej: reducir 50% el tiempo de facturación, mejorar atención..."
+                            placeholder="Ej: reducir 50% el tiempo de facturación, ordenar los procesos del equipo..."
                             style={{ resize: "vertical" }}
                           />
                         </div>
@@ -373,7 +373,7 @@ export default function EvaluacionModal() {
                           </div>
                         </div>
                         {error && (
-                          <p className="text-xs" style={{ color: "#EF4444" }}>{error}</p>
+                          <p className="text-xs" style={{ color: "var(--danger)" }}>{error}</p>
                         )}
                       </motion.div>
                     )}
@@ -426,10 +426,10 @@ export default function EvaluacionModal() {
                                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                                   className="w-3.5 h-3.5 border-2 border-obsidian border-t-transparent rounded-full inline-block"
                                 />
-                                Generando…
+                                Enviando…
                               </>
                             ) : (
-                              "Recibir mi evaluación →"
+                              "Solicitar Test de Fit →"
                             )}
                           </button>
                         )}
@@ -468,17 +468,16 @@ function SuccessScreen({ onClose, email }: { onClose: () => void; email: string 
         className="text-2xl font-light mb-3"
         style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
       >
-        Estamos generando tu evaluación
+        Recibí tu solicitud
       </h3>
       <p className="text-sm leading-relaxed max-w-sm mx-auto mb-2" style={{ color: "var(--ash)" }}>
-        En los próximos <strong style={{ color: "var(--champagne)" }}>2 minutos</strong> recibirás un email a:
+        Te respondo personalmente en menos de <strong style={{ color: "var(--champagne)" }}>24 horas hábiles</strong> al email:
       </p>
       <p className="text-sm mb-6 mono" style={{ color: "var(--bone)", fontFamily: "var(--font-mono)" }}>
         {email}
       </p>
       <p className="text-xs leading-relaxed max-w-sm mx-auto mb-8" style={{ color: "var(--smoke)" }}>
-        Tu reporte incluye 3 oportunidades concretas de IA para tu negocio + ROI estimado mensual + plan de siguiente paso.
-        Si tu negocio califica, recibirás también invitación a una llamada gratuita conmigo.
+        Si veo fit con el Protocolo BPI, te propongo los 30 minutos del Test de Fit con horarios concretos. Si no, también te lo digo — y te recomiendo qué hacer antes de pensar en IA.
       </p>
       <button
         type="button"

@@ -101,8 +101,9 @@ export default function Hero() {
           style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
         >
           Aplicamos el <strong style={{ color: "var(--bone)", fontWeight: 400 }}>Protocolo BPI</strong>:
-          Bases, Procesos, IA — en ese orden. Si tu empresa todavía está en la &laquo;B&raquo;
-          o en la &laquo;P&raquo;, te lo decimos antes de cobrarte un peso por la &laquo;I&raquo;.
+          Bases, Procesos, IA — en ese orden.
+          <br className="hidden sm:inline" />{" "}
+          Si todavía estás en la B o en la P, te lo decimos antes de cobrarte un peso.
         </motion.p>
 
         {/* CTA */}

@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const STORAGE_KEY = "crececonia_subscribed";
-const DELAY_MS = 12000; // 12 seconds
+const DISMISS_KEY = "crececonia_popup_dismissed_at";
+const DELAY_MS = 25_000; // 25 segundos — menos invasivo
+const DISMISS_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000; // 30 días
 
 export default function EmailPopup() {
   const [visible, setVisible] = useState(false);
@@ -13,14 +15,22 @@ export default function EmailPopup() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // Ya suscrito → nunca mostrar
     if (localStorage.getItem(STORAGE_KEY)) return;
+    // Dismiss reciente (< 30 días) → no mostrar
+    const dismissedAt = Number(localStorage.getItem(DISMISS_KEY) ?? 0);
+    if (dismissedAt && Date.now() - dismissedAt < DISMISS_COOLDOWN_MS) return;
+
     const timer = setTimeout(() => setVisible(true), DELAY_MS);
     return () => clearTimeout(timer);
   }, []);
 
   function dismiss() {
     setVisible(false);
-    // Dismiss for this session (not permanently)
+    // Persiste el dismiss por 30 días para no fatigar usuarios recurrentes
+    try {
+      localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    } catch {}
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -167,7 +177,7 @@ export default function EmailPopup() {
                       }}
                     />
                     {status === "error" && (
-                      <p className="text-xs" style={{ color: "#EF4444" }}>
+                      <p className="text-xs" style={{ color: "var(--danger)" }}>
                         Algo salió mal. Intenta de nuevo.
                       </p>
                     )}

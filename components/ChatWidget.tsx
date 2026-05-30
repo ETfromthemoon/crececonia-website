@@ -15,10 +15,10 @@ type Message = {
 };
 
 const QUICK_REPLIES = [
-  "¿Qué servicios ofrecen?",
-  "¿Cuánto cuesta?",
-  "¿Cómo funciona el diagnóstico?",
-  "Quiero evaluar mi empresa",
+  "¿Qué es el Protocolo BPI?",
+  "¿Cómo funciona el Test de Fit?",
+  "¿Para qué tipo de empresa son?",
+  "Quiero solicitar el Test de Fit",
 ];
 
 const TypingDots = () => (
@@ -177,7 +177,7 @@ export default function ChatWidget() {
               <div className="flex items-center gap-2.5">
                 <span
                   className="w-2 h-2 rounded-full"
-                  style={{ background: "#4ADE80", boxShadow: "0 0 6px #4ADE80" }}
+                  style={{ background: "var(--success)", boxShadow: "0 0 6px var(--success)" }}
                 />
                 <span className="text-sm font-medium" style={{ color: "var(--bone)" }}>
                   Crececon<em style={{ color: "var(--champagne)", fontStyle: "italic" }}>IA</em>
@@ -264,7 +264,7 @@ export default function ChatWidget() {
                         fontWeight: 500,
                       }}
                     >
-                      Hacer el diagnóstico gratuito →
+                      Solicitar Test de Fit →
                     </motion.button>
                   )}
 
@@ -400,7 +400,7 @@ export default function ChatWidget() {
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
               className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white font-bold"
-              style={{ background: "#EF4444", fontSize: 9 }}
+              style={{ background: "var(--danger)", fontSize: 9 }}
             >
               1
             </motion.span>

@@ -90,7 +90,7 @@ export default function SkillDownloadGate({
               Una cosa antes
             </h3>
             <p className="text-sm mb-5 leading-relaxed" style={{ color: "var(--ash)" }}>
-              Te mando este archivo + las próximas skills que publique. Sin spam, podés salir cuando quieras.
+              Te mando este archivo + las próximas skills que publique. Sin spam, puedes darte de baja cuando quieras.
             </p>
 
             <form onSubmit={descargar} className="space-y-3">

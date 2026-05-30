@@ -47,10 +47,10 @@ function SolicitarContent() {
       if (r.ok && j.ok) {
         setDone(true);
       } else {
-        setError(j.detail || "Algo salió mal. Intenta de nuevo o escríbenos a hola@crececonia.cl.");
+        setError(j.detail || "Algo salió mal. Intenta de nuevo o escríbenos a sergio@crececonia.cl.");
       }
     } catch {
-      setError("No pudimos enviar la solicitud. Por favor escríbenos a hola@crececonia.cl.");
+      setError("No pudimos enviar la solicitud. Por favor escríbenos a sergio@crececonia.cl.");
     } finally {
       setLoading(false);
     }
@@ -117,15 +117,15 @@ function SolicitarContent() {
             borderRadius: 2,
           }}
         >
-          Diagnóstico gratuito · 30 min
+          Test de Fit · 30 min · gratuito
         </p>
         <h1
           className="font-light leading-tight mb-4"
           style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.8rem, 4vw, 2.6rem)", color: "var(--bone)" }}
         >
-          Agendemos tu{" "}
+          Agendemos los{" "}
           <em className="gradient-text" style={{ fontStyle: "italic" }}>
-            llamada de 30 minutos.
+            30 minutos honestos.
           </em>
         </h1>
         <p className="text-base leading-relaxed mb-8" style={{ color: "var(--ash)" }}>
@@ -177,7 +177,7 @@ function SolicitarContent() {
           </div>
 
           {error && (
-            <p className="text-sm" style={{ color: "#EF4444" }}>
+            <p className="text-sm" style={{ color: "var(--danger)" }}>
               {error}
             </p>
           )}
