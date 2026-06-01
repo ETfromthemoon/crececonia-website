@@ -10,6 +10,7 @@ const COL_SERVICIOS = [
 const COL_RECURSOS = [
   { label: "Preguntas frecuentes", href: "/#faq" },
   { label: "Skills para Claude Code", href: "/skills" },
+  { label: "Guías", href: "/guias" },
 ];
 
 const linkStyle = {
