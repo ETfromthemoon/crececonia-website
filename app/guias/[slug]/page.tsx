@@ -5,6 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { marked } from "marked";
+import GuiaCodeCopy from "@/components/GuiaCodeCopy";
 
 const API_BASE = "https://autodrive.cl";
 
@@ -189,6 +190,7 @@ export default async function GuiaPage({
         <section className="px-6 pb-12">
           <div className="max-w-3xl mx-auto">
             <article className="skill-prose" dangerouslySetInnerHTML={{ __html: html }} />
+            <GuiaCodeCopy />
           </div>
         </section>
 
