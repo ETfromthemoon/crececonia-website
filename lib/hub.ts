@@ -66,23 +66,46 @@ function normGuia(g: Record<string, unknown>): HubItem {
   };
 }
 
+function normEnlace(e: Record<string, unknown>): HubItem {
+  const slug = String(e.slug ?? "");
+  const categoria = String(e.categoria ?? "");
+  const tags = Array.isArray(e.tags) ? (e.tags as string[]) : [];
+  const url = String(e.url ?? "");
+  return {
+    tipo: "enlace",
+    slug,
+    titulo: String(e.titulo ?? ""),
+    descripcion: String(e.descripcion ?? ""),
+    categoria,
+    tags,
+    href: url, // link externo directo
+    externo: true,
+    meta: e.fuente ? String(e.fuente) : undefined,
+    temas: temasDeItem({ slug, categoria, tags }),
+  };
+}
+
 /** Trae todos los items publicados de las fuentes activas, en paralelo. */
 export async function getHubItems(): Promise<HubItem[]> {
-  const [skillsRaw, recursosRaw] = await Promise.all([
+  const [skillsRaw, recursosRaw, enlacesRaw] = await Promise.all([
     getJSON("/api/public/skills"),
     getJSON("/api/public/recursos"),
+    getJSON("/api/public/enlaces"),
   ]);
 
   const skills = Array.isArray(skillsRaw) ? skillsRaw : [];
   const recursos = Array.isArray(recursosRaw)
     ? recursosRaw
     : ((recursosRaw as { recursos?: unknown[] } | null)?.recursos ?? []);
+  const enlacesArr = Array.isArray(enlacesRaw)
+    ? enlacesRaw
+    : ((enlacesRaw as { enlaces?: unknown[] } | null)?.enlaces ?? []);
 
   const items: HubItem[] = [
     ...skills.map((s) => normSkill(s as Record<string, unknown>)),
     ...recursos.map((g) => normGuia(g as Record<string, unknown>)),
+    ...enlacesArr.map((e) => normEnlace(e as Record<string, unknown>)),
   ];
-  // Fase 2: ...enlaces.map(normEnlace)
   return items;
 }
 

@@ -15,6 +15,7 @@ const TIPOS: { id: HubTipo | "todos"; label: string }[] = [
   { id: "todos", label: "Todos" },
   { id: "skill", label: "Skills" },
   { id: "guia", label: "Guías" },
+  { id: "enlace", label: "Links" },
 ];
 
 function getTema(id: string) {

@@ -26,6 +26,7 @@ export default function CentroBrowser({
     () => ({
       guia: items.filter((it) => it.tipo === "guia").length,
       skill: items.filter((it) => it.tipo === "skill").length,
+      enlace: items.filter((it) => it.tipo === "enlace").length,
     }),
     [items],
   );
@@ -169,6 +170,9 @@ export default function CentroBrowser({
               {[
                 { href: "/centro/guias", label: "Todas las guías", n: countByTipo.guia },
                 { href: "/centro/skills", label: "Todas las skills", n: countByTipo.skill },
+                ...(countByTipo.enlace > 0
+                  ? [{ href: "/centro/enlaces", label: "Todos los links", n: countByTipo.enlace }]
+                  : []),
               ].map((acc) => (
                 <Link
                   key={acc.href}
