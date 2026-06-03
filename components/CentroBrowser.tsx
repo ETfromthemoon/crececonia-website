@@ -22,6 +22,14 @@ export default function CentroBrowser({
 }) {
   const [q, setQ] = useState("");
 
+  const countByTipo = useMemo(
+    () => ({
+      guia: items.filter((it) => it.tipo === "guia").length,
+      skill: items.filter((it) => it.tipo === "skill").length,
+    }),
+    [items],
+  );
+
   const query = q.trim().toLowerCase();
   const resultados = useMemo(() => {
     if (!query) return [];
@@ -98,7 +106,7 @@ export default function CentroBrowser({
           )}
         </section>
       ) : (
-        /* Grilla de temas */
+        /* Grilla de temas + acceso por tipo */
         <section className="pb-24">
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {temas.map((t) => (
@@ -147,6 +155,58 @@ export default function CentroBrowser({
                 </div>
               </Link>
             ))}
+          </div>
+
+          {/* Explorar por tipo */}
+          <div className="mt-12">
+            <p
+              className="mb-4 text-xs text-center"
+              style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)", letterSpacing: "0.16em", textTransform: "uppercase" }}
+            >
+              O explorá por tipo
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              {[
+                { href: "/centro/guias", label: "Todas las guías", n: countByTipo.guia },
+                { href: "/centro/skills", label: "Todas las skills", n: countByTipo.skill },
+              ].map((acc) => (
+                <Link
+                  key={acc.href}
+                  href={acc.href}
+                  className="group inline-flex items-center gap-3 card-hover-dark"
+                  style={{
+                    background: "var(--carbon)",
+                    border: "1px solid rgba(30,30,31,0.9)",
+                    borderRadius: 4,
+                    padding: "14px 20px",
+                    transition: "border-color 0.2s, box-shadow 0.2s",
+                  }}
+                >
+                  <span
+                    style={{
+                      color: "var(--bone)",
+                      fontFamily: "var(--font-display)",
+                      fontSize: "1rem",
+                      fontWeight: 300,
+                    }}
+                  >
+                    {acc.label}
+                  </span>
+                  <span
+                    className="text-xs"
+                    style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)" }}
+                  >
+                    {acc.n}
+                  </span>
+                  <span
+                    className="text-xs"
+                    style={{ color: "var(--champagne)", fontFamily: "var(--font-mono)" }}
+                  >
+                    →
+                  </span>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
       )}

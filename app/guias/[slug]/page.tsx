@@ -94,7 +94,7 @@ export default async function GuiaPage({
         {/* Breadcrumb */}
         <div className="px-6 pt-10 pb-2 max-w-3xl mx-auto">
           <Link
-            href="/guias"
+            href="/centro/guias"
             className="text-xs inline-flex items-center gap-1.5 hover:opacity-80 transition-opacity"
             style={{
               color: "var(--smoke)",
