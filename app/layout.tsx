@@ -5,6 +5,7 @@ import SmoothScroll from "@/components/SmoothScroll";
 import { EvaluacionProvider } from "@/components/EvaluacionProvider";
 import EvaluacionModal from "@/components/EvaluacionModal";
 import ChatWidget from "@/components/ChatWidget";
+import SuscriptorPopup from "@/components/SuscriptorPopup";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -127,6 +128,7 @@ export default function RootLayout({
           {children}
           <EvaluacionModal />
           <ChatWidget />
+          <SuscriptorPopup />
         </EvaluacionProvider>
       </body>
     </html>
