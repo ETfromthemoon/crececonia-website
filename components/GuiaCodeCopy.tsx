@@ -3,24 +3,28 @@
 import { useEffect } from "react";
 
 /**
- * Agrega un botón "Copiar" a cada bloque de código dentro de las guías.
- * Firma del formato de guías (prompts y comandos copiables).
+ * Envuelve cada bloque de código de las guías en un contenedor con una barra
+ * superior y un botón "Copiar" (fuera del área de texto, no encima).
+ * El texto del código envuelve (pre-wrap) en vez de desbordarse.
  */
 export default function GuiaCodeCopy() {
   useEffect(() => {
     const pres = document.querySelectorAll<HTMLPreElement>(".skill-prose pre");
     pres.forEach((pre) => {
-      if (pre.querySelector(".copy-btn")) return;
-      pre.style.position = "relative";
+      // Idempotente: si ya está envuelto, no repetir.
+      if (pre.parentElement?.classList.contains("code-block")) return;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "code-block";
+
+      const bar = document.createElement("div");
+      bar.className = "code-block__bar";
+
       const btn = document.createElement("button");
+      btn.type = "button";
       btn.className = "copy-btn";
       btn.textContent = "Copiar";
-      btn.style.cssText =
-        "position:absolute;top:8px;right:8px;font-size:11px;font-family:var(--font-mono),ui-monospace,monospace;" +
-        "background:rgba(217,179,106,0.12);color:#e8cd97;border:1px solid rgba(217,179,106,0.3);" +
-        "border-radius:5px;padding:3px 10px;cursor:pointer;opacity:0.85;transition:opacity 0.15s";
-      btn.addEventListener("mouseenter", () => (btn.style.opacity = "1"));
-      btn.addEventListener("mouseleave", () => (btn.style.opacity = "0.85"));
+      btn.setAttribute("aria-label", "Copiar código");
       btn.addEventListener("click", () => {
         const code = pre.querySelector("code");
         const text = code ? code.innerText : pre.innerText;
@@ -30,7 +34,12 @@ export default function GuiaCodeCopy() {
           btn.textContent = "Copiar";
         }, 1500);
       });
-      pre.appendChild(btn);
+      bar.appendChild(btn);
+
+      // Insertar wrapper en el lugar del pre y mover el pre dentro.
+      pre.parentNode?.insertBefore(wrapper, pre);
+      wrapper.appendChild(bar);
+      wrapper.appendChild(pre);
     });
   }, []);
 

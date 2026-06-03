@@ -483,13 +483,60 @@ p, span, li {
   overflow-x: auto;
   margin: 1em 0;
   font-size: 0.85em;
+  /* Texto copiable: envolver en vez de desbordar horizontalmente */
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
 }
 .skill-prose pre code {
   background: transparent;
   border: none;
   padding: 0;
   color: var(--ash);
+  white-space: inherit;
+  word-break: inherit;
+  overflow-wrap: inherit;
 }
+
+/* ── Bloque de código con barra y botón Copiar (guías) ───────────────── */
+.skill-prose .code-block {
+  margin: 1.1em 0;
+  border: 1px solid rgba(217,179,106,0.18);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--obsidian);
+}
+.skill-prose .code-block__bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 6px 8px;
+  background: rgba(217,179,106,0.06);
+  border-bottom: 1px solid rgba(217,179,106,0.12);
+}
+.skill-prose .code-block > pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+.skill-prose .copy-btn {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  background: rgba(217,179,106,0.12);
+  color: #e8cd97;
+  border: 1px solid rgba(217,179,106,0.3);
+  border-radius: 5px;
+  padding: 4px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.skill-prose .copy-btn:hover { background: rgba(217,179,106,0.22); color: var(--bone); }
+.skill-prose .copy-btn:active { transform: translateY(1px); }
 .skill-prose blockquote {
   border-left: 3px solid rgba(217,179,106,0.4);
   padding-left: 1em;
