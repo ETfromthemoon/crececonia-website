@@ -9,7 +9,7 @@ const NAV_LINKS = [
   { label: "Protocolo BPI", href: "/#proceso" },
   { label: "Casos", href: "/#resultados" },
   { label: "Inversión", href: "/#servicios" },
-  { label: "Guías", href: "/guias" },
+  { label: "Conocimiento", href: "/centro" },
 ];
 
 export default function Navbar() {
