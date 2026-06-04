@@ -252,12 +252,10 @@ p, span, li {
 .text-semibold { font-weight: 500; }
 .text-bold   { font-weight: 600; }
 
-/* ===== Gradiente de texto (champagne) ===== */
+/* ===== Texto champagne enfatizado ===== */
+/* Antes usaba gradient-clip; reemplazado por color sólido (más legible, sin AI tell) */
 .gradient-text {
-  background: linear-gradient(135deg, var(--champagne) 0%, #F0D49A 50%, var(--champagne) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--champagne);
 }
 
 /* ===== Tag / label de sección ===== */
@@ -352,6 +350,18 @@ p, span, li {
 .float         { animation: float 5s ease-in-out infinite; }
 .float-reverse { animation: float-reverse 6s ease-in-out infinite; }
 
+/* ===== Typing dots (chat widget) — sin bounce ===== */
+@keyframes typing-dot {
+  0%, 100% { opacity: 0.35; transform: scale(0.72); }
+  50%       { opacity: 1;    transform: scale(1); }
+}
+.typing-dot {
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .typing-dot { animation: none; opacity: 0.7; }
+}
+
 /* ===== Reveal animation ===== */
 .reveal {
   opacity: 0;
@@ -363,13 +373,21 @@ p, span, li {
   transform: translateY(0);
 }
 
-/* ===== Accordion ===== */
+/* ===== Accordion — grid trick (sin layout-transition) ===== */
+/* grid-template-rows: 0fr → 1fr no fuerza reflow como max-height */
 .accordion-body {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.accordion-body.open { max-height: 400px; }
+.accordion-body.open {
+  grid-template-rows: 1fr;
+}
+/* El hijo directo necesita overflow:hidden para que el 0fr colapse correctamente */
+.accordion-body > * {
+  overflow: hidden;
+  min-height: 0;
+}
 
 /* ===== Slider ===== */
 .slider-track { animation-play-state: running; }

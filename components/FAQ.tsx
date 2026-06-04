@@ -73,16 +73,15 @@ export default function FAQ() {
                   </span>
                 </button>
 
-                <div
-                  className="accordion-body px-6"
-                  style={{ maxHeight: isOpen ? 420 : 0 }}
-                >
-                  <p
-                    className="text-sm leading-relaxed pb-5"
-                    style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.8 }}
-                  >
-                    {faq.a}
-                  </p>
+                <div className={`accordion-body${isOpen ? " open" : ""}`}>
+                  <div className="px-6">
+                    <p
+                      className="text-sm leading-relaxed pb-5"
+                      style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.8 }}
+                    >
+                      {faq.a}
+                    </p>
+                  </div>
                 </div>
               </div>
             );

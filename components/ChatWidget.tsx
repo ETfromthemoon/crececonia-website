@@ -23,10 +23,10 @@ const QUICK_REPLIES = [
 
 const TypingDots = () => (
   <div className="flex gap-1 items-center px-3 py-2.5">
-    {[0, 150, 300].map((d) => (
+    {[0, 160, 320].map((d) => (
       <span
         key={d}
-        className="w-1.5 h-1.5 rounded-full animate-bounce"
+        className="typing-dot w-1.5 h-1.5 rounded-full"
         style={{ background: "var(--ash)", animationDelay: `${d}ms` }}
       />
     ))}
