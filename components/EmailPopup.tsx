@@ -8,6 +8,14 @@ const DISMISS_KEY = "crececonia_popup_dismissed_at";
 const DELAY_MS = 25_000; // 25 segundos — menos invasivo
 const DISMISS_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000; // 30 días
 
+// Atribuye el suscriptor al recurso que estaba viendo: /guias/{slug} -> "guia:{slug}", /skills/{slug} -> "skill:{slug}"
+function resourceFromPath(): string {
+  if (typeof window === "undefined") return "";
+  const m = window.location.pathname.match(/^\/(guias|skills)\/([^/?#]+)/);
+  if (!m) return "";
+  return `${m[1] === "guias" ? "guia" : "skill"}:${m[2]}`;
+}
+
 export default function EmailPopup() {
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState("");
@@ -42,7 +50,7 @@ export default function EmailPopup() {
       const res = await fetch("https://autodrive.cl/api/public/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, source: "skills_page" }),
+        body: JSON.stringify({ email, source: "skills_page", resource: resourceFromPath() }),
         signal: AbortSignal.timeout(10000),
       });
 

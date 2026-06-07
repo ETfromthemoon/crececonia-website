@@ -8,6 +8,14 @@ const STORAGE_KEY = "crececonia_subscribed";
 
 const SOCIAL_SOURCES = ["instagram", "linkedin", "whatsapp", "tiktok", "twitter", "facebook", "youtube"];
 
+// Atribuye el suscriptor al recurso: /guias/{slug} -> "guia:{slug}", /skills/{slug} -> "skill:{slug}"
+function resourceFromPath(): string {
+  if (typeof window === "undefined") return "";
+  const m = window.location.pathname.match(/^\/(guias|skills)\/([^/?#]+)/);
+  if (!m) return "";
+  return `${m[1] === "guias" ? "guia" : "skill"}:${m[2]}`;
+}
+
 function SuscriptorPopupInner() {
   const searchParams = useSearchParams();
   const [visible, setVisible] = useState(false);
@@ -49,10 +57,11 @@ function SuscriptorPopupInner() {
     setStatus("loading");
 
     try {
+      const resource = searchParams.get("resource") || resourceFromPath();
       const res = await fetch("https://autodrive.cl/api/public/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, source }),
+        body: JSON.stringify({ email, source, resource }),
         signal: AbortSignal.timeout(10_000),
       });
 
