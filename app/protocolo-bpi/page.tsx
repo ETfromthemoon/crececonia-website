@@ -9,7 +9,7 @@ const SITE_URL = "https://crececonia.cl";
 export const metadata: Metadata = {
   title: "Protocolo BPI — Bases · Procesos · IA · CrececonIA",
   description:
-    "La metodología propietaria de CrececonIA para decidir si tu empresa necesita IA — o necesita arreglar lo de antes. Bases, Procesos, IA: en ese orden.",
+    "La metodología propietaria de CrececonIA: sistemas que tu equipo adopta de verdad, sin gastar en IA antes de tiempo. Bases, Procesos, IA: en ese orden.",
   alternates: { canonical: `${SITE_URL}/protocolo-bpi` },
   openGraph: {
     title: "Protocolo BPI — Bases · Procesos · IA",

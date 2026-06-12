@@ -72,7 +72,7 @@ export default function Hero() {
       <div className="relative max-w-3xl mx-auto text-center">
         {/* Etiqueta superior — manifiesto */}
         <motion.p {...fadeUp(0.04)} className="eyebrow" style={{ marginBottom: 24 }}>
-          Consultoría de IA para empresas medianas
+          Para empresas medianas que quieren resultados, no promesas
         </motion.p>
 
         {/* Headline manifesto */}
@@ -87,10 +87,10 @@ export default function Hero() {
             letterSpacing: "-0.025em",
           }}
         >
-          La mayoría no necesita IA.
+          Sistemas que tu equipo sí usa,
           <br />
           <em className="gradient-text" style={{ fontStyle: "italic" }}>
-            Necesita arreglar lo de antes.
+            sin gastar en IA que no necesitas.
           </em>
         </motion.h1>
 
@@ -100,16 +100,15 @@ export default function Hero() {
           className="text-lg max-w-2xl mx-auto mb-10 leading-relaxed"
           style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
         >
-          Aplicamos el <strong style={{ color: "var(--bone)", fontWeight: 400 }}>Protocolo BPI</strong>:
-          Bases, Procesos, IA — en ese orden.
+          No facturamos horas ni entregamos PDFs. Cada proyecto termina con un sistema en producción y métricas de adopción real.
           <br className="hidden sm:inline" />{" "}
-          Si todavía estás en la B o en la P, te lo decimos antes de cobrarte un peso.
+          Si tu empresa no está lista para IA, te lo decimos en 30 minutos, sin costo.
         </motion.p>
 
         {/* CTA */}
         <motion.div {...fadeUp(0.24)} className="flex justify-center">
           <WAButton source="hero-primary" size="lg">
-            Solicitar Test de Fit
+            Agendar Test de Fit
           </WAButton>
         </motion.div>
 

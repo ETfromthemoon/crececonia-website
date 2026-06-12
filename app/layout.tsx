@@ -30,12 +30,12 @@ const SITE_URL = "https://crececonia.cl";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "CrececonIA — La mayoría no necesita IA. Necesita arreglar lo de antes.",
+  title: "CrececonIA — Sistemas que tu equipo sí usa, sin gastar en IA que no necesitas.",
   description:
     "Consultoría de IA para empresas medianas. Aplicamos el Protocolo BPI: Bases, Procesos, IA — en ese orden. Test de Fit gratuito de 30 minutos: te decimos honestamente en qué letra está tu empresa.",
   authors: [{ name: "CrececonIA" }],
   openGraph: {
-    title: "CrececonIA — La mayoría no necesita IA. Necesita arreglar lo de antes.",
+    title: "CrececonIA — Sistemas que tu equipo sí usa, sin gastar en IA que no necesitas.",
     description:
       "Consultoría de IA para empresas medianas. Aplicamos el Protocolo BPI: Bases, Procesos, IA — en ese orden. Test de Fit gratuito de 30 minutos.",
     url: SITE_URL,
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "CrececonIA — La mayoría no necesita IA. Necesita arreglar lo de antes.",
+    title: "CrececonIA — Sistemas que tu equipo sí usa, sin gastar en IA que no necesitas.",
     description:
       "Consultoría de IA para empresas medianas. Protocolo BPI: Bases, Procesos, IA — en ese orden. Test de Fit gratuito.",
     images: ["/og-image.png"],
@@ -83,7 +83,7 @@ const jsonLd = {
     "Consultoría de IA para empresas medianas. Aplicamos el Protocolo BPI: Bases, Procesos, IA — en ese orden. Si tu empresa no necesita IA, te lo decimos en el Test de Fit.",
   areaServed: ["CL", "ES", "MX", "CO", "AR", "PE"],
   serviceType: "Consultoría de Inteligencia Artificial",
-  slogan: "La mayoría no necesita IA. Necesita arreglar lo de antes.",
+  slogan: "Sistemas que tu equipo sí usa, sin gastar en IA que no necesitas.",
   offers: [
     {
       "@type": "Offer",
