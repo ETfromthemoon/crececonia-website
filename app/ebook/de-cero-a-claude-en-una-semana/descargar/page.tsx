@@ -3,12 +3,21 @@
 import { useState } from "react";
 import Link from "next/link";
 
-type Status = "idle" | "loading" | "success" | "not-found" | "error";
+type Status = "idle" | "loading" | "found" | "not-found" | "error";
+
+const DownloadIcon = () => (
+  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
+  </svg>
+);
 
 export default function DescargarPage() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [verifiedEmail, setVerifiedEmail] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -18,20 +27,12 @@ export default function DescargarPage() {
 
     try {
       const res = await fetch(
-        `/api/ebook/download?email=${encodeURIComponent(email)}`
+        `/api/ebook/download?email=${encodeURIComponent(email)}&format=movil`
       );
 
       if (res.ok) {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "De-cero-a-Claude-en-una-semana.pdf";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        setStatus("success");
+        setVerifiedEmail(email);
+        setStatus("found");
       } else {
         const data = await res.json().catch(() => ({}));
         setErrorMsg(
@@ -69,8 +70,7 @@ export default function DescargarPage() {
               className="text-sm leading-relaxed"
               style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.8 }}
             >
-              Ingresá el email con el que compraste el ebook y descargamos
-              el PDF directamente.
+              Ingresá el email con el que compraste el ebook para acceder a tu descarga.
             </p>
           </div>
 
@@ -82,7 +82,7 @@ export default function DescargarPage() {
               padding: "28px 24px",
             }}
           >
-            {status === "success" ? (
+            {status === "found" ? (
               <div className="text-center">
                 <p
                   style={{
@@ -90,27 +90,68 @@ export default function DescargarPage() {
                     fontFamily: "var(--font-mono)",
                     fontSize: "0.8rem",
                     letterSpacing: "0.1em",
-                    marginBottom: 12,
+                    marginBottom: 8,
                   }}
                 >
-                  DESCARGA INICIADA
+                  COMPRA VERIFICADA
                 </p>
                 <p
                   className="text-sm"
-                  style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
+                  style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7, marginBottom: 24 }}
                 >
-                  El archivo se está descargando. Si no empieza automáticamente,
-                  revisá tu carpeta de descargas.
+                  Elegí el formato que querés descargar:
                 </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <a
+                    href={`/api/ebook/download?email=${encodeURIComponent(verifiedEmail)}&format=movil`}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      padding: "12px 20px",
+                      background: "var(--champagne)",
+                      color: "var(--obsidian)",
+                      borderRadius: 2,
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.78rem",
+                      letterSpacing: "0.08em",
+                      textDecoration: "none",
+                    }}
+                  >
+                    <DownloadIcon />
+                    Versión móvil (recomendada)
+                  </a>
+                  <a
+                    href={`/api/ebook/download?email=${encodeURIComponent(verifiedEmail)}&format=a4`}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      padding: "12px 20px",
+                      background: "transparent",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      color: "var(--ash)",
+                      borderRadius: 2,
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.78rem",
+                      letterSpacing: "0.08em",
+                      textDecoration: "none",
+                    }}
+                  >
+                    <DownloadIcon />
+                    Versión A4 (para imprimir)
+                  </a>
+                </div>
                 <button
-                  onClick={() => setStatus("idle")}
-                  className="text-sm"
+                  onClick={() => { setStatus("idle"); setEmail(""); setVerifiedEmail(""); }}
                   style={{
-                    color: "var(--champagne)",
+                    color: "var(--smoke)",
                     background: "none",
                     border: "none",
                     cursor: "pointer",
-                    marginTop: 16,
+                    marginTop: 20,
                     fontFamily: "var(--font-mono)",
                     fontSize: "0.72rem",
                     letterSpacing: "0.1em",

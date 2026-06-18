@@ -97,27 +97,73 @@ export default async function SuccessPage({
 
           {token ? (
             <div style={{ marginBottom: 32 }}>
-              <a
-                href={`/api/ebook/download?token=${encodeURIComponent(token)}`}
-                className="btn-monad-fill"
-                style={{ display: "inline-flex" }}
+              <p
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.68rem",
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  color: "#4e4d4d",
+                  marginBottom: 16,
+                }}
               >
-                <svg
-                  width="16"
-                  height="16"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                Elegí tu formato
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                <a
+                  href={`/api/ebook/download?token=${encodeURIComponent(token)}&format=movil`}
+                  className="btn-monad-fill"
+                  style={{ display: "inline-flex", gap: 8, alignItems: "center" }}
                 >
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                Descargar ebook (PDF)
-              </a>
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Versión móvil
+                </a>
+                <a
+                  href={`/api/ebook/download?token=${encodeURIComponent(token)}&format=a4`}
+                  style={{
+                    display: "inline-flex",
+                    gap: 8,
+                    alignItems: "center",
+                    padding: "14px 28px",
+                    borderRadius: 100,
+                    border: "1.5px solid #242424",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.78rem",
+                    letterSpacing: "0.08em",
+                    color: "#242424",
+                    textDecoration: "none",
+                    background: "transparent",
+                  }}
+                >
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Versión A4
+                </a>
+              </div>
+              <p
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.68rem",
+                  color: "#4e4d4d",
+                  marginTop: 12,
+                }}
+              >
+                Móvil: optimizado para leer en el teléfono · A4: para imprimir o leer en desktop
+              </p>
             </div>
           ) : (
             <div

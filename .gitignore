@@ -42,3 +42,6 @@ next-env.d.ts
 
 .vercel
 .netlify/
+
+# private assets (PDFs, etc.) — never commit
+/private

@@ -4,11 +4,18 @@ import path from "path";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { flowSign, getFlowBase } from "@/lib/flow";
 
-const PDF_PATH = path.join(
-  process.cwd(),
-  "private",
-  "de-cero-a-claude-en-una-semana.pdf"
-);
+const VALID_FORMATS = ["movil", "a4"] as const;
+type Format = (typeof VALID_FORMATS)[number];
+
+function getPdfPath(format: Format): string {
+  return path.join(process.cwd(), "private", `libro-${format}.pdf`);
+}
+
+function getDownloadFilename(format: Format): string {
+  return format === "a4"
+    ? "De-cero-a-Claude-en-una-semana-A4.pdf"
+    : "De-cero-a-Claude-en-una-semana.pdf";
+}
 
 async function verifyTokenWithFlow(token: string): Promise<boolean> {
   try {
@@ -31,6 +38,10 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const email = searchParams.get("email");
   const token = searchParams.get("token");
+  const rawFormat = searchParams.get("format") ?? "movil";
+  const format: Format = VALID_FORMATS.includes(rawFormat as Format)
+    ? (rawFormat as Format)
+    : "movil";
 
   if (!email && !token) {
     return NextResponse.json({ error: "Parámetros requeridos." }, { status: 400 });
@@ -46,7 +57,6 @@ export async function GET(request: Request) {
     .eq(filterKey, filterValue)
     .maybeSingle();
 
-  // If not in DB yet (webhook may be delayed), validate directly with Flow
   if (!data) {
     if (token) {
       const paid = await verifyTokenWithFlow(token);
@@ -56,7 +66,6 @@ export async function GET(request: Request) {
           { status: 404 }
         );
       }
-      // Flow confirms payment — serve PDF even before webhook processes
     } else {
       return NextResponse.json(
         { error: "No encontramos una compra con esos datos." },
@@ -65,14 +74,15 @@ export async function GET(request: Request) {
     }
   }
 
-  if (!fs.existsSync(PDF_PATH)) {
+  const pdfPath = getPdfPath(format);
+
+  if (!fs.existsSync(pdfPath)) {
     return NextResponse.json(
       { error: "El archivo está siendo preparado. Intenta en unos minutos." },
       { status: 503 }
     );
   }
 
-  // Update download stats (fire and forget, only if purchase is in DB)
   if (data) {
     db.from("ebook_purchases")
       .select("download_count")
@@ -89,13 +99,12 @@ export async function GET(request: Request) {
       });
   }
 
-  const buffer = fs.readFileSync(PDF_PATH);
+  const buffer = fs.readFileSync(pdfPath);
 
   return new Response(buffer, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition":
-        'attachment; filename="De-cero-a-Claude-en-una-semana.pdf"',
+      "Content-Disposition": `attachment; filename="${getDownloadFilename(format)}"`,
       "Content-Length": String(buffer.length),
       "Cache-Control": "private, no-store",
     },
