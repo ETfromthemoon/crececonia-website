@@ -48,19 +48,36 @@ export default function EbookBenefits() {
 
   return (
     <section className="section-y px-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-14">
-          <p className="eyebrow mb-4">Lo que vas a encontrar</p>
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 56 }}>
+          <p
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.68rem",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "#4e4d4d",
+              marginBottom: 16,
+            }}
+          >
+            Lo que vas a encontrar
+          </p>
           <h2
-            className="font-light leading-tight"
-            style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
+            style={{
+              fontFamily: "var(--font-serif-monad), Georgia, serif",
+              fontWeight: 400,
+              fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)",
+              lineHeight: 1.15,
+              letterSpacing: "-0.01em",
+              color: "#000",
+            }}
           >
             Todo lo que necesitás para{" "}
-            <em className="gradient-text">arrancar en serio.</em>
+            <em style={{ fontStyle: "italic" }}>arrancar en serio.</em>
           </h2>
         </div>
 
-        <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {BENEFITS.map((b, i) => (
             <motion.div
               key={i}
@@ -71,37 +88,35 @@ export default function EbookBenefits() {
                 delay: i * 0.08,
                 ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
               }}
-              className="card-hover-dark"
               style={{
-                background: "var(--carbon)",
-                border: "1px solid rgba(30,30,31,0.9)",
-                borderRadius: 2,
-                padding: "28px 24px",
+                background: "#cfdaf5",
+                borderRadius: 40,
+                padding: "40px",
+                boxShadow: "rgba(0,0,0,0.1) 0px 0px 10px 0px",
               }}
             >
-              <div
-                style={{
-                  color: "var(--champagne)",
-                  marginBottom: 16,
-                  opacity: 0.85,
-                }}
-              >
+              <div style={{ color: "#242424", marginBottom: 18 }}>
                 {b.icon}
               </div>
               <h3
-                className="font-light mb-3"
                 style={{
-                  fontFamily: "var(--font-display)",
-                  color: "var(--bone)",
-                  fontSize: "1.05rem",
+                  fontFamily: "var(--font-serif-monad), Georgia, serif",
+                  fontWeight: 400,
+                  fontSize: "1.1rem",
                   lineHeight: 1.35,
+                  color: "#000",
+                  marginBottom: 10,
                 }}
               >
                 {b.title}
               </h3>
               <p
-                className="text-sm leading-relaxed"
-                style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.75 }}
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.8rem",
+                  lineHeight: 1.75,
+                  color: "#4e4d4d",
+                }}
               >
                 {b.desc}
               </p>

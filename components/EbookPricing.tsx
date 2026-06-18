@@ -3,18 +3,10 @@
 import { useEffect, useState } from "react";
 import type { PriceInfo } from "@/lib/ebook-pricing";
 
-const TIER_LABELS: Record<string, { badge: string; discount: string; color: string }> = {
-  "super-early": {
-    badge: "Super Early",
-    discount: "60% OFF",
-    color: "rgba(217,179,106,1)",
-  },
-  early: {
-    badge: "Early Adopters",
-    discount: "33% OFF",
-    color: "rgba(217,179,106,0.75)",
-  },
-  regular: { badge: "", discount: "", color: "" },
+const TIER_LABELS: Record<string, { badge: string; discount: string }> = {
+  "super-early": { badge: "Super Early", discount: "60% OFF" },
+  early: { badge: "Early Adopters", discount: "33% OFF" },
+  regular: { badge: "", discount: "" },
 };
 
 function CheckIcon() {
@@ -85,71 +77,74 @@ export default function EbookPricing() {
   const hasDiscount = tier !== "regular";
 
   return (
-    <section
-      id="comprar"
-      className="section-y px-6"
-      style={{ background: "var(--graphite)" }}
-    >
-      <div className="max-w-md mx-auto">
-        <div className="text-center mb-10">
-          <p className="eyebrow mb-4">Precio</p>
+    <section id="comprar" className="section-y px-6">
+      <div style={{ maxWidth: 480, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <p
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.68rem",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "#4e4d4d",
+              marginBottom: 16,
+            }}
+          >
+            Precio
+          </p>
           <h2
-            className="font-light leading-tight"
-            style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
+            style={{
+              fontFamily: "var(--font-serif-monad), Georgia, serif",
+              fontWeight: 400,
+              fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
+              lineHeight: 1.15,
+              letterSpacing: "-0.01em",
+              color: "#000",
+            }}
           >
             Empezá hoy.{" "}
-            <em className="gradient-text">Sin excusas.</em>
+            <em style={{ fontStyle: "italic" }}>Sin excusas.</em>
           </h2>
         </div>
 
         <div
           style={{
-            background: "var(--carbon)",
-            border: "1px solid rgba(30,30,31,0.9)",
-            borderRadius: 4,
+            background: "#cfdaf5",
+            borderRadius: 40,
             overflow: "hidden",
+            boxShadow: "rgba(0,0,0,0.1) 0px 0px 10px 0px",
           }}
         >
           {/* Price header */}
           <div
             style={{
-              padding: "28px 28px 24px",
-              borderBottom: "1px solid rgba(30,30,31,0.9)",
+              padding: "36px 36px 28px",
+              borderBottom: "1px solid rgba(0,0,0,0.1)",
             }}
           >
             {hasDiscount && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 12,
-                }}
-              >
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                 <span
                   style={{
-                    background: "rgba(217,179,106,0.1)",
-                    border: `1px solid ${tierInfo.color}`,
-                    color: tierInfo.color,
-                    padding: "2px 8px",
-                    borderRadius: 2,
+                    background: "#242424",
+                    color: "#f6f3f1",
+                    padding: "3px 10px",
+                    borderRadius: 100,
                     fontSize: 11,
                     fontFamily: "var(--font-mono)",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
                   }}
                 >
                   {tierInfo.badge}
                 </span>
                 <span
                   style={{
-                    background: "rgba(217,179,106,0.15)",
-                    color: "var(--champagne)",
-                    padding: "2px 8px",
-                    borderRadius: 2,
+                    background: "rgba(0,0,0,0.08)",
+                    color: "#242424",
+                    padding: "3px 10px",
+                    borderRadius: 100,
                     fontSize: 11,
                     fontFamily: "var(--font-mono)",
-                    fontWeight: 500,
                   }}
                 >
                   {tierInfo.discount}
@@ -157,26 +152,20 @@ export default function EbookPricing() {
               </div>
             )}
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "baseline",
-                gap: 12,
-              }}
-            >
+            <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
               <span
                 style={{
-                  color: "var(--bone)",
-                  fontSize: "2.2rem",
-                  fontWeight: 300,
-                  fontFamily: "var(--font-mono)",
+                  color: "#000",
+                  fontSize: "2.4rem",
+                  fontWeight: 400,
+                  fontFamily: "var(--font-serif-monad), Georgia, serif",
                 }}
               >
                 ${formattedPrice}
               </span>
               <span
                 style={{
-                  color: "var(--smoke)",
+                  color: "#4e4d4d",
                   fontSize: "0.85rem",
                   fontFamily: "var(--font-mono)",
                 }}
@@ -186,7 +175,7 @@ export default function EbookPricing() {
               {hasDiscount && (
                 <span
                   style={{
-                    color: "var(--smoke)",
+                    color: "#4e4d4d",
                     fontSize: "0.9rem",
                     textDecoration: "line-through",
                     fontFamily: "var(--font-mono)",
@@ -200,11 +189,12 @@ export default function EbookPricing() {
             {priceInfo?.remaining !== null && priceInfo?.remaining !== undefined && (
               <p
                 style={{
-                  color: priceInfo.remaining <= 3 ? "rgba(217,179,106,0.9)" : "var(--smoke)",
+                  color: priceInfo.remaining <= 3 ? "#242424" : "#4e4d4d",
                   fontSize: "0.72rem",
                   fontFamily: "var(--font-mono)",
-                  letterSpacing: "0.08em",
+                  letterSpacing: "0.06em",
                   marginTop: 8,
+                  fontWeight: priceInfo.remaining <= 3 ? 500 : 400,
                 }}
               >
                 {priceInfo.remaining <= 3
@@ -215,13 +205,13 @@ export default function EbookPricing() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} style={{ padding: "24px 28px" }}>
+          <form onSubmit={handleSubmit} style={{ padding: "28px 36px" }}>
             <label
               htmlFor="ebook-email"
               style={{
                 display: "block",
-                color: "var(--ash)",
-                fontSize: "0.78rem",
+                color: "#4e4d4d",
+                fontSize: "0.75rem",
                 fontFamily: "var(--font-mono)",
                 letterSpacing: "0.08em",
                 marginBottom: 8,
@@ -238,26 +228,27 @@ export default function EbookPricing() {
               placeholder="tu@email.com"
               style={{
                 width: "100%",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(30,30,31,0.9)",
-                borderRadius: 2,
-                padding: "12px 14px",
-                color: "var(--bone)",
+                background: "#f6f3f1",
+                border: "1px solid rgba(0,0,0,0.2)",
+                borderRadius: 12,
+                padding: "13px 16px",
+                color: "#000",
                 fontSize: "0.95rem",
                 outline: "none",
                 marginBottom: 14,
                 boxSizing: "border-box",
-                fontFamily: "var(--font-sans)",
+                fontFamily: "var(--font-mono)",
               }}
             />
 
             {errorMsg && (
               <p
                 style={{
-                  color: "rgba(217,106,106,0.9)",
+                  color: "#c0392b",
                   fontSize: "0.8rem",
                   marginBottom: 12,
                   lineHeight: 1.5,
+                  fontFamily: "var(--font-mono)",
                 }}
               >
                 {errorMsg}
@@ -267,12 +258,10 @@ export default function EbookPricing() {
             <button
               type="submit"
               disabled={status === "loading"}
-              className="btn-evaluacion btn-lg"
+              className="btn-monad-fill"
               style={{
                 width: "100%",
                 cursor: status === "loading" ? "wait" : "pointer",
-                opacity: status === "loading" ? 0.7 : 1,
-                border: "none",
               }}
             >
               {status === "loading"
@@ -284,7 +273,7 @@ export default function EbookPricing() {
           {/* Trust signals */}
           <div
             style={{
-              padding: "0 28px 24px",
+              padding: "0 36px 28px",
               display: "flex",
               flexDirection: "column",
               gap: 8,
@@ -301,9 +290,9 @@ export default function EbookPricing() {
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  color: "var(--smoke)",
-                  fontSize: "0.78rem",
-                  fontWeight: 300,
+                  color: "#4e4d4d",
+                  fontSize: "0.75rem",
+                  fontFamily: "var(--font-mono)",
                 }}
               >
                 <CheckIcon />

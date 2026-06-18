@@ -43,18 +43,41 @@ export const metadata: Metadata = {
 function EbookProblem() {
   return (
     <section className="section-y px-6">
-      <div className="max-w-2xl mx-auto">
-        <p className="eyebrow mb-5">El problema</p>
+      <div style={{ maxWidth: 672, margin: "0 auto" }}>
+        <p
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.68rem",
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+            color: "#4e4d4d",
+            marginBottom: 20,
+          }}
+        >
+          El problema
+        </p>
         <h2
-          className="font-light leading-tight mb-8"
-          style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
+          style={{
+            fontFamily: "var(--font-serif-monad), Georgia, serif",
+            fontWeight: 400,
+            fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
+            lineHeight: 1.2,
+            letterSpacing: "-0.01em",
+            color: "#000",
+            marginBottom: 32,
+          }}
         >
           Claude es la herramienta más infravalorada del mercado.{" "}
-          <em className="gradient-text">Y la documentación no ayuda.</em>
+          <em style={{ fontStyle: "italic" }}>Y la documentación no ayuda.</em>
         </h2>
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <p
-            style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.85 }}
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.85rem",
+              color: "#4e4d4d",
+              lineHeight: 1.85,
+            }}
           >
             La mayoría de las personas que prueban Claude lo usan como
             un ChatGPT glorificado. Piden cosas simples, obtienen respuestas
@@ -62,7 +85,12 @@ function EbookProblem() {
             de ellas — es que nadie les enseñó a usarlo bien.
           </p>
           <p
-            style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.85 }}
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.85rem",
+              color: "#4e4d4d",
+              lineHeight: 1.85,
+            }}
           >
             La documentación oficial está escrita para ingenieros que ya saben
             lo que buscan. No hay una ruta clara de cero a productivo. Hay que
@@ -70,7 +98,12 @@ function EbookProblem() {
             de prueba y error.
           </p>
           <p
-            style={{ color: "var(--bone)", fontWeight: 300, lineHeight: 1.85 }}
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.85rem",
+              color: "#000",
+              lineHeight: 1.85,
+            }}
           >
             Este ebook condensa 6 meses de experimentación real con Claude Code
             en 120 páginas. La ruta que me habría gustado tener cuando empecé.
@@ -93,16 +126,16 @@ function ProfileCard({
   return (
     <div
       style={{
-        background: "var(--carbon)",
-        border: "1px solid rgba(30,30,31,0.9)",
-        borderRadius: 2,
-        padding: "24px 22px",
+        background: "#cfdaf5",
+        borderRadius: 40,
+        padding: "32px",
+        boxShadow: "rgba(0,0,0,0.1) 0px 0px 10px 0px",
       }}
     >
       <p
         style={{
-          color: "var(--champagne)",
-          fontSize: "0.7rem",
+          color: "#242424",
+          fontSize: "0.68rem",
           fontFamily: "var(--font-mono)",
           letterSpacing: "0.18em",
           textTransform: "uppercase",
@@ -112,19 +145,24 @@ function ProfileCard({
         {role}
       </p>
       <h3
-        className="font-light mb-3"
         style={{
-          fontFamily: "var(--font-display)",
-          color: "var(--bone)",
+          fontFamily: "var(--font-serif-monad), Georgia, serif",
+          fontWeight: 400,
+          color: "#000",
           fontSize: "1.05rem",
           lineHeight: 1.35,
+          marginBottom: 10,
         }}
       >
         {title}
       </h3>
       <p
-        className="text-sm leading-relaxed"
-        style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.75 }}
+        style={{
+          fontFamily: "var(--font-mono)",
+          fontSize: "0.78rem",
+          color: "#4e4d4d",
+          lineHeight: 1.75,
+        }}
       >
         {desc}
       </p>
@@ -135,19 +173,36 @@ function ProfileCard({
 function EbookWhoIsFor() {
   return (
     <section className="section-y px-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <p className="eyebrow mb-4">Para quién es</p>
+      <div style={{ maxWidth: 1024, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <p
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.68rem",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "#4e4d4d",
+              marginBottom: 16,
+            }}
+          >
+            Para quién es
+          </p>
           <h2
-            className="font-light leading-tight"
-            style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
+            style={{
+              fontFamily: "var(--font-serif-monad), Georgia, serif",
+              fontWeight: 400,
+              fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
+              lineHeight: 1.15,
+              letterSpacing: "-0.01em",
+              color: "#000",
+            }}
           >
             Si reconocés alguno de estos perfiles,{" "}
-            <em className="gradient-text">este ebook es para vos.</em>
+            <em style={{ fontStyle: "italic" }}>este ebook es para vos.</em>
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <ProfileCard
             role="Perfil 01"
             title="Dueño de PYME técnica"
@@ -171,7 +226,7 @@ function EbookWhoIsFor() {
 
 export default function EbookPage() {
   return (
-    <main className="pt-28">
+    <main className="monad pt-28">
       <EbookHero />
       <EbookProblem />
       <EbookBenefits />

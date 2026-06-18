@@ -34,51 +34,73 @@ export default function EbookFAQ() {
 
   return (
     <section className="section-y-narrow px-6">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-14">
-          <p className="tag mb-5 inline-block">FAQ</p>
+      <div style={{ maxWidth: 720, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 56 }}>
+          <p
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.68rem",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "#4e4d4d",
+              marginBottom: 16,
+            }}
+          >
+            FAQ
+          </p>
           <h2
-            className="font-light leading-tight"
-            style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
+            style={{
+              fontFamily: "var(--font-serif-monad), Georgia, serif",
+              fontWeight: 400,
+              fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
+              lineHeight: 1.15,
+              letterSpacing: "-0.01em",
+              color: "#000",
+            }}
           >
             Las que más{" "}
-            <em className="gradient-text">nos preguntan.</em>
+            <em style={{ fontStyle: "italic" }}>nos preguntan.</em>
           </h2>
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div style={{ display: "flex", flexDirection: "column" }}>
           {FAQS.map((faq, idx) => {
             const isOpen = open === idx;
             return (
               <div
                 key={idx}
-                className="border overflow-hidden transition-all duration-200"
+                className="overflow-hidden"
                 style={{
-                  borderRadius: 2,
-                  borderColor: isOpen
-                    ? "rgba(217,179,106,0.35)"
-                    : "rgba(30,30,31,0.9)",
-                  background: isOpen
-                    ? "rgba(217,179,106,0.04)"
-                    : "var(--carbon)",
+                  borderBottom: "1px solid rgba(0,0,0,0.1)",
+                  borderTop: idx === 0 ? "1px solid rgba(0,0,0,0.1)" : "none",
                 }}
               >
                 <button
-                  className="w-full text-left px-6 py-5 flex items-center justify-between gap-4"
+                  className="w-full text-left py-5 flex items-center justify-between gap-4"
+                  style={{ padding: "20px 0" }}
                   onClick={() => setOpen(isOpen ? null : idx)}
                   aria-expanded={isOpen}
                 >
                   <span
-                    className="text-sm font-light leading-snug"
-                    style={{ color: "var(--bone)" }}
+                    style={{
+                      fontFamily: "var(--font-serif-monad), Georgia, serif",
+                      fontWeight: 400,
+                      fontSize: "1rem",
+                      lineHeight: 1.45,
+                      color: "#000",
+                    }}
                   >
                     {faq.q}
                   </span>
                   <span
-                    className="flex-shrink-0 text-xl leading-none transition-transform duration-300"
                     style={{
-                      color: "var(--smoke)",
+                      color: "#4e4d4d",
+                      fontSize: "1.25rem",
+                      lineHeight: 1,
+                      flexShrink: 0,
+                      transition: "transform 0.3s ease",
                       transform: isOpen ? "rotate(45deg)" : "rotate(0deg)",
+                      display: "block",
                     }}
                   >
                     +
@@ -86,13 +108,14 @@ export default function EbookFAQ() {
                 </button>
 
                 <div className={`accordion-body${isOpen ? " open" : ""}`}>
-                  <div className="px-6">
+                  <div>
                     <p
-                      className="text-sm leading-relaxed pb-5"
                       style={{
-                        color: "var(--ash)",
-                        fontWeight: 300,
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "0.82rem",
                         lineHeight: 1.8,
+                        color: "#4e4d4d",
+                        paddingBottom: 20,
                       }}
                     >
                       {faq.a}

@@ -13,10 +13,10 @@ export default function DownloadLink({ token, email }: Props) {
   return (
     <a
       href={`/api/ebook/download?${params.toString()}`}
-      className="btn-evaluacion btn-lg"
-      style={{ display: "inline-block", textDecoration: "none" }}
+      className="btn-monad-fill"
+      style={{ display: "inline-flex", textDecoration: "none" }}
     >
-      Descargar ebook
+      Descargar ebook (PDF)
     </a>
   );
 }

@@ -10,7 +10,7 @@ export default function EbookAuthor() {
 
   return (
     <section className="section-y px-6">
-      <div className="max-w-2xl mx-auto">
+      <div style={{ maxWidth: 800, margin: "0 auto" }}>
         <motion.div
           ref={ref}
           initial={{ opacity: 0, y: 24 }}
@@ -31,7 +31,7 @@ export default function EbookAuthor() {
               height={96}
               style={{
                 borderRadius: "50%",
-                border: "2px solid rgba(217,179,106,0.3)",
+                border: "2px solid #cfdaf5",
                 objectFit: "cover",
                 display: "block",
               }}
@@ -39,33 +39,57 @@ export default function EbookAuthor() {
           </div>
 
           <div style={{ flex: 1, minWidth: 220 }}>
-            <p className="eyebrow mb-3">El autor</p>
-            <h3
-              className="font-light mb-1"
+            <p
               style={{
-                fontFamily: "var(--font-display)",
-                color: "var(--bone)",
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.68rem",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "#4e4d4d",
+                marginBottom: 12,
+              }}
+            >
+              El autor
+            </p>
+            <h3
+              style={{
+                fontFamily: "var(--font-serif-monad), Georgia, serif",
+                fontWeight: 400,
+                color: "#000",
                 fontSize: "1.3rem",
+                marginBottom: 4,
               }}
             >
               Sergio Astudillo
             </h3>
             <p
-              className="text-sm mb-4"
-              style={{ color: "var(--champagne)", fontFamily: "var(--font-mono)", fontSize: "0.72rem", letterSpacing: "0.1em" }}
+              style={{
+                color: "#4e4d4d",
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.72rem",
+                letterSpacing: "0.1em",
+                marginBottom: 16,
+              }}
             >
               Fundador · CrececonIA
             </p>
             <p
-              className="text-sm leading-relaxed mb-4"
-              style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.8 }}
+              style={{
+                fontSize: "0.92rem",
+                lineHeight: 1.8,
+                color: "#4e4d4d",
+                marginBottom: 12,
+              }}
             >
               5+ años integrando IA en empresas medianas. 30+ proyectos en producción. 7 industrias.
               4 países. CrececonIA existe porque vi demasiados PDFs de estrategia que nadie usaba.
             </p>
             <p
-              className="text-sm leading-relaxed"
-              style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.8 }}
+              style={{
+                fontSize: "0.92rem",
+                lineHeight: 1.8,
+                color: "#4e4d4d",
+              }}
             >
               Este ebook no es teoría. Es lo que aprendí haciendo — los prompts que uso cada semana,
               los workflows que le explico a cada cliente nuevo, y los errores que ya no cometo.
@@ -74,10 +98,11 @@ export default function EbookAuthor() {
             <div style={{ marginTop: 20 }}>
               <a
                 href="/#manifiesto"
-                className="text-sm"
                 style={{
-                  color: "var(--champagne)",
-                  textDecoration: "none",
+                  color: "#242424",
+                  textDecoration: "underline",
+                  textDecorationColor: "rgba(0,0,0,0.3)",
+                  textUnderlineOffset: 3,
                   fontFamily: "var(--font-mono)",
                   fontSize: "0.72rem",
                   letterSpacing: "0.1em",

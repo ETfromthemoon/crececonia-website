@@ -39,20 +39,37 @@ export default function EbookTOC() {
   const inView = useInView(ref, { once: true, margin: "-60px" });
 
   return (
-    <section className="section-y px-6" style={{ background: "var(--graphite)" }}>
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-14">
-          <p className="eyebrow mb-4">Contenido</p>
+    <section className="section-y px-6" style={{ background: "rgba(207,218,245,0.18)" }}>
+      <div style={{ maxWidth: 800, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 56 }}>
+          <p
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.68rem",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "#4e4d4d",
+              marginBottom: 16,
+            }}
+          >
+            Contenido
+          </p>
           <h2
-            className="font-light leading-tight"
-            style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
+            style={{
+              fontFamily: "var(--font-serif-monad), Georgia, serif",
+              fontWeight: 400,
+              fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
+              lineHeight: 1.15,
+              letterSpacing: "-0.01em",
+              color: "#000",
+            }}
           >
             Lo que vas a aprender,{" "}
-            <em className="gradient-text">capítulo por capítulo.</em>
+            <em style={{ fontStyle: "italic" }}>capítulo por capítulo.</em>
           </h2>
         </div>
 
-        <div ref={ref} className="flex flex-col gap-1">
+        <div ref={ref}>
           {CHAPTERS.map((ch, i) => (
             <motion.div
               key={i}
@@ -66,25 +83,25 @@ export default function EbookTOC() {
               style={{
                 display: "flex",
                 gap: 20,
-                padding: "20px 0",
-                borderBottom: i < CHAPTERS.length - 1 ? "1px solid rgba(30,30,31,0.9)" : "none",
+                padding: "22px 0",
+                borderBottom: i < CHAPTERS.length - 1 ? "1px solid rgba(0,0,0,0.1)" : "none",
+                alignItems: "flex-start",
               }}
             >
               <div
-                className="number-badge flex-shrink-0"
                 style={{
-                  width: 32,
-                  height: 32,
+                  width: 36,
+                  height: 36,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "rgba(217,179,106,0.08)",
-                  border: "1px solid rgba(217,179,106,0.2)",
-                  borderRadius: 2,
-                  color: "var(--champagne)",
-                  fontSize: 12,
+                  background: "#cfdaf5",
+                  borderRadius: 8,
+                  color: "#242424",
+                  fontSize: "0.7rem",
                   fontFamily: "var(--font-mono)",
                   fontWeight: 400,
+                  flexShrink: 0,
                   marginTop: 2,
                 }}
               >
@@ -92,19 +109,24 @@ export default function EbookTOC() {
               </div>
               <div>
                 <p
-                  className="font-light mb-1"
                   style={{
-                    color: "var(--bone)",
-                    fontFamily: "var(--font-display)",
+                    fontFamily: "var(--font-serif-monad), Georgia, serif",
+                    fontWeight: 400,
+                    color: "#000",
                     fontSize: "1rem",
                     lineHeight: 1.4,
+                    marginBottom: 4,
                   }}
                 >
                   {ch.title}
                 </p>
                 <p
-                  className="text-sm leading-relaxed"
-                  style={{ color: "var(--smoke)", fontWeight: 300, lineHeight: 1.7 }}
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.78rem",
+                    color: "#4e4d4d",
+                    lineHeight: 1.65,
+                  }}
                 >
                   {ch.desc}
                 </p>

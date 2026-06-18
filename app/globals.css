@@ -613,3 +613,31 @@ p, span, li {
   padding: 16px 32px;
   font-size: 0.95rem;
 }
+
+/* ===== MONAD DESIGN SYSTEM — ebook (fondo claro, tipografía editorial) ===== */
+.monad {
+  background: #f6f3f1;
+  color: #000;
+}
+
+.btn-monad-fill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 32px;
+  border-radius: 100px;
+  font-weight: 400;
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  background: #242424;
+  color: #f6f3f1;
+  border: 1px solid #242424;
+  font-family: var(--font-mono), monospace;
+  letter-spacing: 0.02em;
+  transition: opacity 0.2s ease;
+}
+.btn-monad-fill:hover { opacity: 0.82; }
+.btn-monad-fill:disabled { opacity: 0.5; cursor: wait; }

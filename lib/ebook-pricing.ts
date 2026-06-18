@@ -19,7 +19,7 @@ export async function getCurrentPrice(): Promise<PriceInfo> {
     (cupos["super-early"]?.total ?? 0) - (cupos["super-early"]?.used ?? 0);
   if (superEarlyLeft > 0) {
     return {
-      price: 350, // TEST — revertir a 10800
+      price: 10800,
       tier: "super-early",
       remaining: superEarlyLeft,
       originalPrice: 27000,
@@ -30,14 +30,14 @@ export async function getCurrentPrice(): Promise<PriceInfo> {
     (cupos["early"]?.total ?? 0) - (cupos["early"]?.used ?? 0);
   if (earlyLeft > 0) {
     return {
-      price: 100, // TEST — revertir a 17900
+      price: 17900,
       tier: "early",
       remaining: earlyLeft,
       originalPrice: 27000,
     };
   }
 
-  return { price: 350, tier: "regular", remaining: null, originalPrice: 27000 }; // TEST — revertir a 27000
+  return { price: 27000, tier: "regular", remaining: null, originalPrice: 27000 };
 }
 
 export function determineTier(amount: number): Tier {

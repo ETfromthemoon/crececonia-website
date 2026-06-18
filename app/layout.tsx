@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
+import { Inter, Fraunces, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import { EvaluacionProvider } from "@/components/EvaluacionProvider";
@@ -23,6 +23,14 @@ const fraunces = Fraunces({
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const sourceSerif4 = Source_Serif_4({
+  variable: "--font-serif-monad",
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
   display: "swap",
 });
 
@@ -120,7 +128,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable} antialiased`}
+      className={`${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable} ${sourceSerif4.variable} antialiased`}
     >
       <head>
         <script

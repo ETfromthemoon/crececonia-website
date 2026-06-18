@@ -14,7 +14,7 @@ export default function EbookPreview() {
       <div
         style={{
           transform: "perspective(1400px) rotateY(-15deg) rotateX(3deg)",
-          boxShadow: "-12px 18px 0 #050505, 40px 56px 110px rgba(0,0,0,0.85), 0 0 80px rgba(217,179,106,0.06)",
+          boxShadow: "-6px 10px 0 rgba(0,0,0,0.06), 28px 44px 70px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08)",
           borderRadius: 6,
           overflow: "hidden",
           flexShrink: 0,
