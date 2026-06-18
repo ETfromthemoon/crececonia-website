@@ -10,7 +10,8 @@ const NAV_LINKS = [
   { label: "Casos", href: "/#resultados" },
   { label: "Inversión", href: "/#servicios" },
   { label: "Conocimiento", href: "/centro" },
-];
+  { label: "Ebook", href: "/ebook/de-cero-a-claude-en-una-semana", highlight: true },
+] as const;
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -55,15 +56,30 @@ export default function Navbar() {
               href={link.href}
               className="text-xs transition-colors"
               style={{
-                color: "var(--smoke)",
+                color: "highlight" in link && link.highlight ? "var(--champagne)" : "var(--smoke)",
                 fontFamily: "var(--font-mono)",
                 letterSpacing: "0.18em",
                 textTransform: "uppercase",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
               }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--champagne)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--smoke)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "highlight" in link && link.highlight ? "var(--champagne)" : "var(--smoke)")}
             >
               {link.label}
+              {"highlight" in link && link.highlight && (
+                <span
+                  style={{
+                    width: 5,
+                    height: 5,
+                    borderRadius: "50%",
+                    background: "var(--champagne)",
+                    flexShrink: 0,
+                    marginBottom: 1,
+                  }}
+                />
+              )}
             </a>
           ))}
         </nav>
@@ -132,13 +148,31 @@ export default function Navbar() {
                   onClick={() => handleNavClick()}
                   className="text-xs py-2 transition-colors"
                   style={{
-                    color: "var(--smoke)",
+                    color: "highlight" in link && link.highlight ? "var(--champagne)" : "var(--smoke)",
                     fontFamily: "var(--font-mono)",
                     letterSpacing: "0.18em",
                     textTransform: "uppercase",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
                   }}
                 >
                   {link.label}
+                  {"highlight" in link && link.highlight && (
+                    <span
+                      style={{
+                        fontSize: "0.55rem",
+                        background: "rgba(217,179,106,0.15)",
+                        color: "var(--champagne)",
+                        border: "1px solid rgba(217,179,106,0.3)",
+                        borderRadius: 2,
+                        padding: "1px 5px",
+                        letterSpacing: "0.12em",
+                      }}
+                    >
+                      NUEVO
+                    </span>
+                  )}
                 </a>
               ))}
             </div>

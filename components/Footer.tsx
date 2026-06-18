@@ -8,6 +8,7 @@ const COL_SERVICIOS = [
 ];
 
 const COL_RECURSOS = [
+  { label: "Ebook · De cero a Claude", href: "/ebook/de-cero-a-claude-en-una-semana", highlight: true },
   { label: "Centro de Conocimiento", href: "/centro" },
   { label: "Guías", href: "/centro/guias" },
   { label: "Skills para Claude Code", href: "/centro/skills" },
@@ -98,12 +99,34 @@ export default function Footer() {
                 <li key={l.label}>
                   <a
                     href={l.href}
-                    style={linkStyle}
+                    style={{
+                      ...linkStyle,
+                      color: "highlight" in l && l.highlight ? "var(--champagne)" : "var(--smoke)",
+                    }}
                     className="transition-colors"
                     onMouseEnter={(e) => (e.currentTarget.style.color = "var(--champagne)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "var(--smoke)")}
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.color =
+                        "highlight" in l && l.highlight ? "var(--champagne)" : "var(--smoke)")
+                    }
                   >
                     {l.label}
+                    {"highlight" in l && l.highlight && (
+                      <span
+                        style={{
+                          fontSize: "0.55rem",
+                          background: "rgba(217,179,106,0.12)",
+                          color: "var(--champagne)",
+                          border: "1px solid rgba(217,179,106,0.25)",
+                          borderRadius: 2,
+                          padding: "1px 5px",
+                          letterSpacing: "0.12em",
+                          marginLeft: 2,
+                        }}
+                      >
+                        NUEVO
+                      </span>
+                    )}
                   </a>
                 </li>
               ))}

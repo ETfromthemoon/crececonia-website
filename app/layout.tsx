@@ -6,6 +6,7 @@ import { EvaluacionProvider } from "@/components/EvaluacionProvider";
 import EvaluacionModal from "@/components/EvaluacionModal";
 import ChatWidget from "@/components/ChatWidget";
 import SuscriptorPopup from "@/components/SuscriptorPopup";
+import EbookPopup from "@/components/EbookPopup";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -143,6 +144,7 @@ export default function RootLayout({
           <EvaluacionModal />
           <ChatWidget />
           <SuscriptorPopup />
+          <EbookPopup />
         </EvaluacionProvider>
       </body>
     </html>
