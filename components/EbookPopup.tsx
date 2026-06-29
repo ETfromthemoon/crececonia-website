@@ -69,91 +69,101 @@ export default function EbookPopup() {
   return (
     <AnimatePresence>
       {visible && (
-        <>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          onClick={dismiss}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.65)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9998,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px",
+          }}
+          className="ebook-popup-backdrop"
+        >
           <style>{`
-            .ebook-popup-card {
-              position: fixed;
-              z-index: 9999;
-              width: min(480px, calc(100vw - 32px));
-              max-height: calc(100vh - 64px);
-              overflow-y: auto;
-              background: var(--carbon);
-              border: 1px solid rgba(30,30,31,0.9);
-              border-top: 3px solid var(--champagne);
-              border-radius: 6px;
-              padding: 36px 32px 32px;
-              box-shadow: 0 32px 64px rgba(0,0,0,0.6);
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
+            .ebook-popup-backdrop {
+              display: flex;
+              align-items: center;
+              justify-content: center;
             }
 
             @media (max-width: 639px) {
-              .ebook-popup-card {
-                top: auto;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                transform: none;
-                width: 100%;
-                max-height: calc(100vh - 32px);
-                border-radius: 14px 14px 0 0;
-                padding: 24px 20px 28px;
-                box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
-              }
-
-              .ebook-popup-title {
-                font-size: clamp(1.3rem, 7vw, 1.8rem);
-              }
-
-              .ebook-popup-desc {
-                font-size: 0.78rem;
-              }
-
-              .ebook-popup-actions {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-              }
-
-              .ebook-popup-cta {
-                font-size: 0.8rem;
-                padding: 14px 24px;
-                justify-content: center;
-              }
-
-              .ebook-popup-dismiss {
-                font-size: 0.78rem;
-                padding: 10px 0;
+              .ebook-popup-backdrop {
+                align-items: flex-end;
+                padding: 0;
               }
             }
           `}</style>
 
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            onClick={dismiss}
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "rgba(0,0,0,0.65)",
-              backdropFilter: "blur(6px)",
-              zIndex: 9998,
-            }}
-          />
-
-          <motion.div
-            initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 40 }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             role="dialog"
             aria-modal="true"
             aria-label="Nuevo ebook de CrececonIA"
+            onClick={(e) => e.stopPropagation()}
             className="ebook-popup-card"
           >
+            <style>{`
+              .ebook-popup-card {
+                position: relative;
+                width: min(480px, calc(100vw - 32px));
+                max-height: calc(100vh - 64px);
+                overflow-y: auto;
+                background: var(--carbon);
+                border: 1px solid rgba(30,30,31,0.9);
+                border-top: 3px solid var(--champagne);
+                border-radius: 6px;
+                padding: 36px 32px 32px;
+                box-shadow: 0 32px 64px rgba(0,0,0,0.6);
+              }
+
+              @media (max-width: 639px) {
+                .ebook-popup-card {
+                  width: 100%;
+                  max-height: calc(100vh - 32px);
+                  border-radius: 14px 14px 0 0;
+                  padding: 24px 20px 28px;
+                  box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
+                }
+
+                .ebook-popup-title {
+                  font-size: clamp(1.3rem, 7vw, 1.8rem);
+                }
+
+                .ebook-popup-desc {
+                  font-size: 0.78rem;
+                }
+
+                .ebook-popup-actions {
+                  flex-direction: column;
+                  align-items: stretch;
+                  gap: 12px;
+                }
+
+                .ebook-popup-cta {
+                  font-size: 0.8rem;
+                  padding: 14px 24px;
+                  justify-content: center;
+                }
+
+                .ebook-popup-dismiss-btn {
+                  font-size: 0.78rem;
+                  padding: 10px 0;
+                }
+              }
+            `}</style>
+
             <button
               onClick={dismiss}
               aria-label="Cerrar"
@@ -165,7 +175,6 @@ export default function EbookPopup() {
                 border: "none",
                 cursor: "pointer",
                 color: "var(--smoke)",
-                fontSize: 18,
                 lineHeight: 1,
                 padding: 6,
                 display: "flex",
@@ -306,7 +315,7 @@ export default function EbookPopup() {
 
               <button
                 onClick={dismiss}
-                className="ebook-popup-dismiss"
+                className="ebook-popup-dismiss-btn"
                 style={{
                   background: "none",
                   border: "none",
@@ -324,7 +333,7 @@ export default function EbookPopup() {
               </button>
             </div>
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );
