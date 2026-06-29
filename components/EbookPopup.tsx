@@ -7,18 +7,24 @@ import { motion, AnimatePresence } from "framer-motion";
 const STORAGE_KEY = "crececonia_ebook_popup_v1";
 const COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 const DELAY_MS = 4_000;
-const MOBILE_BP = 640;
+
+interface PriceData {
+  price: number;
+  tier: string;
+  remaining: number | null;
+  originalPrice: number;
+}
 
 export default function EbookPopup() {
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [priceData, setPriceData] = useState<PriceData | null>(null);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < MOBILE_BP);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    fetch("/api/ebook/cupos")
+      .then((r) => r.json())
+      .then(setPriceData)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -44,57 +50,85 @@ export default function EbookPopup() {
     setVisible(false);
   }
 
-  const cardDesktop: React.CSSProperties = {
-    position: "fixed",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    zIndex: 9999,
-    width: "min(480px, calc(100vw - 32px))",
-    background: "var(--carbon)",
-    border: "1px solid rgba(30,30,31,0.9)",
-    borderTop: "3px solid var(--champagne)",
-    borderRadius: 6,
-    padding: "36px 32px 32px",
-    boxShadow: "0 32px 64px rgba(0,0,0,0.6)",
-  };
+  const formattedPrice = priceData?.price
+    ? priceData.price.toLocaleString("es-CL")
+    : null;
 
-  const cardMobile: React.CSSProperties = {
-    position: "fixed",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 9999,
-    width: "100%",
-    maxHeight: "calc(100vh - 40px)",
-    overflowY: "auto",
-    background: "var(--carbon)",
-    border: "1px solid rgba(30,30,31,0.9)",
-    borderTop: "3px solid var(--champagne)",
-    borderRadius: "12px 12px 0 0",
-    padding: "24px 20px 28px",
-    boxShadow: "0 -8px 40px rgba(0,0,0,0.6)",
-    WebkitOverflowScrolling: "touch",
-  };
+  const tierLabel =
+    priceData?.tier === "super-early"
+      ? "Super Early · 60% OFF"
+      : priceData?.tier === "early"
+        ? "Early Adopters · 33% OFF"
+        : null;
 
-  const cardStyle = isMobile ? cardMobile : cardDesktop;
-
-  const initialAnim = isMobile
-    ? { opacity: 0, y: 80 }
-    : { opacity: 0, y: 24, scale: 0.96 };
-
-  const exitAnim = isMobile
-    ? { opacity: 0, y: 80 }
-    : { opacity: 0, y: 16, scale: 0.96 };
-
-  const animTransition = isMobile
-    ? { duration: 0.35, ease: [0.32, 0.72, 0, 1] as const }
-    : { duration: 0.4, ease: [0.16, 1, 0.3, 1] as const };
+  const remainingText =
+    priceData?.remaining != null && priceData.remaining <= 5
+      ? `Solo quedan ${priceData.remaining} cupo${priceData.remaining === 1 ? "" : "s"}`
+      : null;
 
   return (
     <AnimatePresence>
       {visible && (
         <>
+          <style>{`
+            .ebook-popup-card {
+              position: fixed;
+              z-index: 9999;
+              width: min(480px, calc(100vw - 32px));
+              max-height: calc(100vh - 64px);
+              overflow-y: auto;
+              background: var(--carbon);
+              border: 1px solid rgba(30,30,31,0.9);
+              border-top: 3px solid var(--champagne);
+              border-radius: 6px;
+              padding: 36px 32px 32px;
+              box-shadow: 0 32px 64px rgba(0,0,0,0.6);
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+            }
+
+            @media (max-width: 639px) {
+              .ebook-popup-card {
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                transform: none;
+                width: 100%;
+                max-height: calc(100vh - 32px);
+                border-radius: 14px 14px 0 0;
+                padding: 24px 20px 28px;
+                box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
+              }
+
+              .ebook-popup-title {
+                font-size: clamp(1.3rem, 7vw, 1.8rem);
+              }
+
+              .ebook-popup-desc {
+                font-size: 0.78rem;
+              }
+
+              .ebook-popup-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+              }
+
+              .ebook-popup-cta {
+                font-size: 0.8rem;
+                padding: 14px 24px;
+                justify-content: center;
+              }
+
+              .ebook-popup-dismiss {
+                font-size: 0.78rem;
+                padding: 10px 0;
+              }
+            }
+          `}</style>
+
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -111,29 +145,29 @@ export default function EbookPopup() {
           />
 
           <motion.div
-            initial={initialAnim}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={exitAnim}
-            transition={animTransition}
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
             role="dialog"
             aria-modal="true"
             aria-label="Nuevo ebook de CrececonIA"
-            style={cardStyle}
+            className="ebook-popup-card"
           >
             <button
               onClick={dismiss}
               aria-label="Cerrar"
               style={{
                 position: "absolute",
-                top: isMobile ? 14 : 16,
-                right: isMobile ? 14 : 16,
+                top: 16,
+                right: 16,
                 background: "none",
                 border: "none",
                 cursor: "pointer",
                 color: "var(--smoke)",
-                fontSize: isMobile ? 22 : 18,
+                fontSize: 18,
                 lineHeight: 1,
-                padding: 4,
+                padding: 6,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -141,7 +175,10 @@ export default function EbookPopup() {
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--bone)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--smoke)")}
             >
-              ✕
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
 
             <p
@@ -151,20 +188,21 @@ export default function EbookPopup() {
                 letterSpacing: "0.28em",
                 textTransform: "uppercase",
                 color: "var(--champagne)",
-                marginBottom: isMobile ? 14 : 20,
+                marginBottom: 20,
               }}
             >
               Nuevo · Ebook
             </p>
 
             <h2
+              className="ebook-popup-title"
               style={{
                 fontFamily: "var(--font-display)",
                 fontWeight: 300,
-                fontSize: isMobile ? "clamp(1.3rem, 7vw, 1.8rem)" : "clamp(1.6rem, 4vw, 2rem)",
+                fontSize: "clamp(1.6rem, 4vw, 2rem)",
                 lineHeight: 1.15,
                 color: "var(--bone)",
-                marginBottom: isMobile ? 12 : 16,
+                marginBottom: 16,
                 letterSpacing: "-0.01em",
               }}
             >
@@ -174,58 +212,88 @@ export default function EbookPopup() {
             </h2>
 
             <p
+              className="ebook-popup-desc"
               style={{
                 fontFamily: "var(--font-mono)",
-                fontSize: isMobile ? "0.78rem" : "0.82rem",
+                fontSize: "0.82rem",
                 color: "var(--ash)",
                 lineHeight: 1.7,
-                marginBottom: isMobile ? 16 : 24,
+                marginBottom: 20,
               }}
             >
               Lo que la documentación oficial no te enseña. Dominá Claude en 7 días — aunque nunca hayas usado IA antes.
             </p>
 
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                background: "rgba(217,179,106,0.08)",
-                border: "1px solid rgba(217,179,106,0.25)",
-                borderRadius: 3,
-                padding: "6px 12px",
-                marginBottom: isMobile ? 20 : 28,
-              }}
-            >
-              <span
+            {formattedPrice && (
+              <div
                 style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "0.72rem",
-                  color: "var(--champagne)",
-                  letterSpacing: "0.06em",
+                  display: "inline-flex",
+                  flexDirection: "column",
+                  gap: 6,
+                  background: "rgba(217,179,106,0.08)",
+                  border: "1px solid rgba(217,179,106,0.25)",
+                  borderRadius: 3,
+                  padding: "8px 14px",
+                  marginBottom: 24,
                 }}
               >
-                Early Access · desde $10.800 CLP
-              </span>
-            </div>
+                <span
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.72rem",
+                    color: "var(--champagne)",
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  ${formattedPrice} CLP
+                </span>
+                {tierLabel && (
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.6rem",
+                      color: "var(--smoke)",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {tierLabel}
+                  </span>
+                )}
+                {remainingText && (
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.6rem",
+                      color: "#f87171",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {remainingText}
+                  </span>
+                )}
+              </div>
+            )}
 
-            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: isMobile ? 12 : 20 }}>
+            <div
+              className="ebook-popup-actions"
+              style={{ display: "flex", alignItems: "center", gap: 20 }}
+            >
               <a
                 href="/ebook/de-cero-a-claude-en-una-semana"
                 onClick={dismiss}
+                className="ebook-popup-cta"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  justifyContent: "center",
                   gap: 8,
                   background: "var(--champagne)",
                   color: "var(--obsidian)",
                   fontFamily: "var(--font-mono)",
-                  fontSize: isMobile ? "0.8rem" : "0.78rem",
+                  fontSize: "0.78rem",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   textDecoration: "none",
-                  padding: isMobile ? "14px 24px" : "12px 24px",
+                  padding: "12px 24px",
                   borderRadius: 3,
                   fontWeight: 500,
                 }}
@@ -238,15 +306,16 @@ export default function EbookPopup() {
 
               <button
                 onClick={dismiss}
+                className="ebook-popup-dismiss"
                 style={{
                   background: "none",
                   border: "none",
                   cursor: "pointer",
                   fontFamily: "var(--font-mono)",
-                  fontSize: isMobile ? "0.78rem" : "0.72rem",
+                  fontSize: "0.72rem",
                   color: "var(--smoke)",
                   letterSpacing: "0.06em",
-                  padding: isMobile ? "10px 0" : 0,
+                  padding: 0,
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "var(--ash)")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "var(--smoke)")}
