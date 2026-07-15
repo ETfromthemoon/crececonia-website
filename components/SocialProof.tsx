@@ -104,7 +104,7 @@ function ResultCard({ result }: { result: (typeof RESULTS)[0] }) {
       </p>
       <p
         className="gradient-text font-light leading-none"
-        style={{ fontFamily: "var(--font-display)", fontSize: "2.4rem", fontStyle: "italic" }}
+        style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.6rem, 3vw, 2.4rem)", fontStyle: "italic" }}
       >
         {result.impact}
       </p>

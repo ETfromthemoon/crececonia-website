@@ -36,7 +36,7 @@ export default function HowItWorks() {
         </div>
 
         {/* Flow visual: desktop horizontal con flechas */}
-        <div className="hidden md:flex items-start justify-center gap-0 mb-8">
+        <div className="hidden md:flex items-start justify-center gap-0 mb-8 flex-wrap">
           {STEPS.map((step, i) => (
             <motion.div
               key={step.number}
@@ -52,7 +52,8 @@ export default function HowItWorks() {
                   background: "var(--card-bg)",
                   border: "1px solid var(--hairline)",
                   borderRadius: 2,
-                  width: 280,
+                  maxWidth: 280,
+                  minWidth: 240,
                 }}
               >
                 <span className="number-badge mb-4">{step.number}</span>
