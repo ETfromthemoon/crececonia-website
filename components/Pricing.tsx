@@ -9,7 +9,6 @@ const FEATURES = [
   "Capacitación de tu equipo (1 sesión)",
   "Soporte continuo mensual",
   "Sin contrato anual — cancelas cuando quieras",
-  "Setup gratis para los primeros 5 clientes",
 ];
 
 const fadeUp = (delay = 0) => ({
@@ -69,7 +68,7 @@ export default function Pricing() {
           style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
           {...fadeUp(0.14)}
         >
-          Setup único de USD 200. Gratis para los primeros 5 clientes.
+          Setup único de USD 200.
         </motion.p>
 
         <motion.div
@@ -106,12 +105,12 @@ export default function Pricing() {
 
         <motion.div {...fadeUp(0.26)}>
           <a
-            href="https://wa.me/569XXXXXXXX?text=Quiero%20ser%20de%20los%20primeros%205%20clientes%20con%20setup%20gratis"
+            href="https://wa.me/569XXXXXXXX?text=Hola!%20Quiero%20un%20agente%20IA%20para%20mi%20negocio"
             target="_blank"
             rel="noopener noreferrer"
             className="btn-primary"
           >
-            Quiero ser de los primeros 5
+            Quiero mi agente IA
           </a>
         </motion.div>
       </div>

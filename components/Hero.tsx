@@ -38,7 +38,7 @@ export default function Hero() {
             width: 960,
             height: 720,
             background:
-              "radial-gradient(ellipse, rgba(217,179,106,0.1) 0%, rgba(140,111,63,0.06) 40%, transparent 70%)",
+              "radial-gradient(ellipse, rgba(196,155,74,0.08) 0%, rgba(140,111,63,0.04) 40%, transparent 70%)",
             filter: "blur(80px)",
           }}
         />
@@ -49,7 +49,7 @@ export default function Hero() {
             right: "8%",
             width: 420,
             height: 420,
-            background: "radial-gradient(circle, rgba(217,179,106,0.08), transparent 70%)",
+            background: "radial-gradient(circle, rgba(196,155,74,0.06), transparent 70%)",
             filter: "blur(70px)",
           }}
         />
@@ -60,7 +60,7 @@ export default function Hero() {
             left: "6%",
             width: 320,
             height: 320,
-            background: "radial-gradient(circle, rgba(37,211,102,0.06), transparent 70%)",
+            background: "radial-gradient(circle, rgba(196,155,74,0.04), transparent 70%)",
             filter: "blur(60px)",
           }}
         />
@@ -71,7 +71,7 @@ export default function Hero() {
             right: "12%",
             width: 280,
             height: 280,
-            background: "radial-gradient(circle, rgba(217,179,106,0.06), transparent 70%)",
+            background: "radial-gradient(circle, rgba(196,155,74,0.04), transparent 70%)",
             filter: "blur(55px)",
           }}
         />

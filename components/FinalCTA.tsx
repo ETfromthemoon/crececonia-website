@@ -111,8 +111,6 @@ export default function FinalCTA() {
           <span>USD 297/mes</span>
           <span className="hidden sm:block">&middot;</span>
           <span>sin permanencia</span>
-          <span className="hidden sm:block">&middot;</span>
-          <span>primeros 5 clientes con setup gratis</span>
         </div>
       </div>
     </section>
