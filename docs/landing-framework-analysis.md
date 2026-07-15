@@ -71,7 +71,7 @@
 
 ---
 
-## Plan de modificación propuesto
+## Plan de modificación propuesto (pre-lety.ai)
 
 ### Prioridad alta (impacto directo en conversión)
 
@@ -107,6 +107,97 @@
    - Verificar Lighthouse, comprimir imágenes, revisar Core Web Vitals.
 8. **Prueba A/B del headline y CTA**
    - Proponer variantes del hero tagline.
+
+---
+
+# ACTUALIZACIÓN: Pivote a Lety.ai (Julio 2026)
+
+## ¿Qué es Lety.ai?
+
+Plataforma **white-label** para agencias de IA. Permite:
+- Construir agentes de IA para cualquier vertical (12 verticales, 46 nichos)
+- Desplegar en múltiples canales (WhatsApp, web chat, Instagram, email, SMS)
+- Marca blanca total: el cliente ve la agencia, nunca a Lety
+- Multi-tenant nativo: cliente aislado por workspace
+- Facturación integrada: suscripción + markup de tokens + MCP calls
+- 600+ integraciones MCP
+- Agencias en 40+ países facturando millones a través de la plataforma
+
+## ¿Cómo cambia la oferta?
+
+**Antes (consultoría IA genérica):**
+- Test de Fit → Diagnóstico BPI → Evaluación → Implementación personalizada
+- Proyectos de USD 500 a 5.000+
+- Cada implementación es artesanal
+- Escala limitada a capacidad de Sergio
+
+**Ahora (agencia de agentes sobre Lety.ai):**
+- Diagnóstico BPI → Agente listo en Lety.ai → Onboarding rápido
+- El agente se implementa en minutos, no semanas
+- Multi-tenant: un agente → muchos clientes (misma plantilla, diferentes datos)
+- Ingreso recurrente por suscripción mensual por agente vivo
+- Escalabilidad: de 1 a 1.000+ clientes con la misma plataforma
+- Margen: cobras 3-10x el costo de Lety (markup en tokens + suscripción)
+
+## Nivel de escalabilidad
+
+| Dimensión | Antes (consultoría) | Ahora (Lety.ai) |
+|---|---|---|
+| Tiempo por cliente | 2-12 semanas | 30 min - 2 días |
+| Ingreso por cliente | Una vez (proyecto) | Recurrente (suscripción) |
+| Límite de clientes/mes | 1-3 proyectos | 10-100+ agentes |
+| Entrega | Artesanal (Sergio) | Plantilla + datos del cliente |
+| Competencia | Otras consultorías | Otras agencias Lety |
+| Diferenciación | Metodología BPI | BPI + velocidad de implementación |
+
+**Conclusión**: Escalabilidad **alta**. Lety elimina el cuello de botella de implementación. El límite pasa a ser cuántos leads calificados puedes captar, no cuánto puedes construir.
+
+---
+
+## Plan de modificación 2.0 — con lety.ai
+
+### Postura de marca
+
+CrececonIA deja de ser "consultoría de IA" y pasa a ser:
+> **Agencia de agentes IA para empresas latinoamericanas**
+> Implementamos asistentes IA listos en 48h sobre Lety.ai
+
+### Headline (nuevo)
+> *"Un agente IA para tu negocio, listo en 48 horas. Sin ingenieros, sin contratos anuales."*
+
+O más filtrador:
+> *"¿Tu empresa necesita un asistente IA? Lo implementamos esta semana o te decimos por qué no."*
+
+### Subheadline
+> *"Sobre Lety.ai — la misma plataforma que usan agencias en 40+ países. Tú pones los datos, nosotros lo dejamos funcionando en WhatsApp, web y los canales que uses."*
+
+### Hero Image
+- BackgroundPaths actual se mantiene como firma visual (es parte de la identidad CrececonIA)
+- Pero se **superpone un badge** tipo: "Implementado sobre Lety.ai · 600+ integraciones"
+
+### CTA
+> *"Quiero mi agente IA"* → abre WhatsApp (como hoy)
+O:
+> *"¿Aplica mi negocio? Descúbrelo en 5 min"* (Test de Fit express)
+
+### Objeciones (3 bullets)
+> **Esto NO es para ti si:**
+> - Buscas IA personalizada con un equipo de ingenieros dedicados
+> - Tu empresa no tiene procesos documentados ni data accesible
+> - Crees que un agente IA reemplaza a tu equipo (no, los asiste)
+
+### Social Proof
+Mostrar logotipos de marcas que usan Lety.ai (Sura, Nutresa, KIA, Papa John's, Guess) + casos de CrececonIA adaptados a agentes.
+
+### Pricing
+- Agente IA desde USD X/mes (incluye: implementación, hosting, soporte)
+- Setup fee único: USD Y (personalización + integración)
+- Sin contrato anual. Cancelas cuando quieras.
+
+### Diferenciación vs otras agencias Lety
+- Protocolo BPI como filtro calificador (no implementamos si no hay caso)
+- Soporte en español chileno/latino
+- Velocidad: implementación en 48h vs semanas de otras agencias
 
 ---
 
