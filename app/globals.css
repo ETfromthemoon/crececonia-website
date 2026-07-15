@@ -21,28 +21,50 @@
 
 
 :root {
-  /* === OBSIDIAN PALETTE === */
-  --obsidian:    #0A0A0B;
-  --graphite:    #1E1E1F;
-  --carbon:      #0F0F10;
-  --champagne:   #D9B36A;
+  /* === PALETA COMPARTIDA (accentos) === */
+  --champagne:   #C49B4A;
   --champagne-2: #8C6F3F;
-  --bone:        #F5F5F4;
-  --ash:         #A8A29E;
-  --smoke:       #8C8C8C;
-  --hairline:    rgba(30,30,31,0.9);
-  --gold-soft:   rgba(217,179,106,0.10);
+  --gold-soft:   rgba(196,155,74,0.08);
 
   /* === Estados (form/feedback) === */
-  --danger:      #EF4444;
-  --success:     #4ADE80;
+  --danger:      #DC2626;
+  --success:     #16A34A;
 
-  /* === TOKENS SEMÁNTICOS === */
-  --bg:       var(--obsidian);
-  --ink:      var(--bone);
-  --muted:    var(--ash);
+  /* === TOKENS SEMÁNTICOS (tema claro por defecto) === */
+  --bg:       #FAFAF9;
+  --ink:      #1A1A1A;
+  --muted:    #6B6B6B;
   --accent:   var(--champagne);
+  --border:   rgba(0,0,0,0.08);
+  --carbon:   #FFFFFF;
+  --graphite: #FFFFFF;
+  --obsidian: #FAFAF9;
+  --bone:     #1A1A1A;
+  --ash:      #6B6B6B;
+  --smoke:    #9CA3AF;
+  --hairline: rgba(0,0,0,0.08);
+  --card-bg:  #FFFFFF;
+  --section-alt: #F5F4F0;
+}
+
+[data-theme="dark"] {
+  --champagne:   #D9B36A;
+  --champagne-2: #8C6F3F;
+  --gold-soft:   rgba(217,179,106,0.10);
+  --bg:       #0A0A0B;
+  --ink:      #F5F5F4;
+  --muted:    #A8A29E;
+  --accent:   #D9B36A;
   --border:   rgba(30,30,31,0.95);
+  --carbon:   #0F0F10;
+  --graphite: #1E1E1F;
+  --obsidian: #0A0A0B;
+  --bone:     #F5F5F4;
+  --ash:      #A8A29E;
+  --smoke:    #8C8C8C;
+  --hairline: rgba(30,30,31,0.9);
+  --card-bg:  #0F0F10;
+  --section-alt: #1E1E1F;
 }
 
 @theme inline {
@@ -64,9 +86,13 @@ html {
 /* Grain sutil */
 body::before {
   content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1;
+  opacity: 0.018;
+  background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.5) 1px, transparent 0);
+  background-size: 3px 3px;
+}
+[data-theme="dark"] body::before {
   opacity: 0.022;
   background-image: radial-gradient(circle at 1px 1px, #fff 1px, transparent 0);
-  background-size: 3px 3px;
 }
 
 body {

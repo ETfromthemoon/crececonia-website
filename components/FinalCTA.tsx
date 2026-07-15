@@ -1,18 +1,16 @@
 "use client";
 
-import { WAButton } from "./GradientButton";
-
 export default function FinalCTA() {
   return (
     <section
       id="conversemos"
       className="section-y-spacious px-6 relative overflow-hidden"
-      style={{ background: "var(--obsidian)" }}
+      style={{ background: "var(--section-alt)" }}
     >
       {/* Dot pattern */}
       <div className="absolute inset-0 dot-pattern opacity-30" aria-hidden="true" />
 
-      {/* Orbe champagne — superior izquierdo */}
+      {/* Orbes champagne — tema claro, opacidad baja */}
       <div
         className="absolute pointer-events-none"
         style={{
@@ -20,7 +18,8 @@ export default function FinalCTA() {
           left: "-5%",
           width: 500,
           height: 500,
-          background: "radial-gradient(circle, rgba(217,179,106,0.12), transparent 70%)",
+          background:
+            "radial-gradient(circle, rgba(196,155,74,0.10), transparent 70%)",
           filter: "blur(80px)",
         }}
         aria-hidden="true"
@@ -33,7 +32,8 @@ export default function FinalCTA() {
           transform: "translateX(-50%)",
           width: 600,
           height: 400,
-          background: "radial-gradient(ellipse, rgba(140,111,63,0.08), transparent 70%)",
+          background:
+            "radial-gradient(ellipse, rgba(140,111,63,0.06), transparent 70%)",
           filter: "blur(80px)",
         }}
         aria-hidden="true"
@@ -45,7 +45,8 @@ export default function FinalCTA() {
           right: "-5%",
           width: 420,
           height: 420,
-          background: "radial-gradient(circle, rgba(37,211,102,0.08), transparent 70%)",
+          background:
+            "radial-gradient(circle, rgba(196,155,74,0.06), transparent 70%)",
           filter: "blur(80px)",
         }}
         aria-hidden="true"
@@ -61,27 +62,28 @@ export default function FinalCTA() {
             letterSpacing: "-0.02em",
           }}
         >
-          <em className="gradient-text">Conversemos.</em>
+          ¿Listo para dejar de{" "}
+          <em className="gradient-text">responder lo mismo</em> todos los días?
         </h2>
-        <p
-          className="text-base mb-3 leading-relaxed"
-          style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
-        >
-          Si llegaste hasta acá y algo resonó, agenda 30 minutos para hacer
-          el Test de Fit. Si no, también respondo emails directamente.
-        </p>
+
         <p
           className="text-base mb-10 leading-relaxed"
           style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
         >
-          Cualquiera de los dos te va a dar una respuesta honesta sobre si
-          podemos ayudarte o si todavía no es el momento.
+          Cuéntanos de tu negocio. En 30 minutos te decimos si un agente IA te
+          sirve o no. Sin costo, sin compromiso.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <WAButton source="final-primary" size="lg">
-            Solicitar Test de Fit
-          </WAButton>
+          <a
+            href="https://wa.me/569XXXXXXXX"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary"
+            style={{ padding: "16px 32px", fontSize: "0.95rem" }}
+          >
+            Quiero mi agente IA
+          </a>
           <a
             href="mailto:sergio@crececonia.cl"
             className="text-sm transition-opacity hover:opacity-70"
@@ -104,11 +106,13 @@ export default function FinalCTA() {
             letterSpacing: "0.1em",
           }}
         >
-          <span>30 min · sin pitch</span>
-          <span className="hidden sm:block">·</span>
-          <span>Confidencial con NDA incluido</span>
-          <span className="hidden sm:block">·</span>
-          <span>Te decimos en qué letra del BPI estás</span>
+          <span>48h de setup</span>
+          <span className="hidden sm:block">&middot;</span>
+          <span>USD 297/mes</span>
+          <span className="hidden sm:block">&middot;</span>
+          <span>sin permanencia</span>
+          <span className="hidden sm:block">&middot;</span>
+          <span>primeros 5 clientes con setup gratis</span>
         </div>
       </div>
     </section>

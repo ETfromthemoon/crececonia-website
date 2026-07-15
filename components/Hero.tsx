@@ -1,7 +1,7 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { WAButton } from "./GradientButton";
 import { BackgroundPaths } from "./ui/background-paths";
 
 const fadeUp = (delay = 0) => ({
@@ -11,6 +11,15 @@ const fadeUp = (delay = 0) => ({
 });
 
 export default function Hero() {
+  const [rubro, setRubro] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rubro.trim()) return;
+    const msg = `Hola! Quiero un agente IA para mi negocio: ${rubro.trim()}`;
+    window.open(`https://wa.me/569XXXXXXXX?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
   return (
     <section
       className="relative flex items-center justify-center overflow-hidden px-6"
@@ -70,12 +79,12 @@ export default function Hero() {
 
       {/* Contenido central */}
       <div className="relative max-w-3xl mx-auto text-center">
-        {/* Etiqueta superior — manifiesto */}
+        {/* Eyebrow */}
         <motion.p {...fadeUp(0.04)} className="eyebrow" style={{ marginBottom: 24 }}>
-          Para empresas medianas que quieren resultados, no promesas
+          Agentes IA para empresas latinoamericanas
         </motion.p>
 
-        {/* Headline manifesto */}
+        {/* Headline */}
         <motion.h1
           {...fadeUp(0.08)}
           className="leading-none mb-5"
@@ -87,32 +96,49 @@ export default function Hero() {
             letterSpacing: "-0.025em",
           }}
         >
-          Sistemas que tu equipo sí usa,
+          Un agente IA para tu negocio,
           <br />
           <em className="gradient-text" style={{ fontStyle: "italic" }}>
-            sin gastar en IA que no necesitas.
+            listo en 48 horas.
           </em>
         </motion.h1>
 
-        {/* Subtítulo — BPI thesis */}
+        {/* Subheadline */}
         <motion.p
           {...fadeUp(0.16)}
           className="text-lg max-w-2xl mx-auto mb-10 leading-relaxed"
           style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
         >
-          No facturamos horas ni entregamos PDFs. Cada proyecto termina con un sistema en producción y métricas de adopción real.
-          <br className="hidden sm:inline" />{" "}
-          Si tu empresa no está lista para IA, te lo decimos en 30 minutos, sin costo.
+          Eliges el canal —WhatsApp, web, Instagram—, cargas lo que sabe de tu negocio,
+          y te lo entregamos funcionando.
         </motion.p>
 
-        {/* CTA */}
-        <motion.div {...fadeUp(0.24)} className="flex justify-center">
-          <WAButton source="hero-primary" size="lg">
-            Agendar Test de Fit
-          </WAButton>
+        {/* Mini-form */}
+        <motion.div {...fadeUp(0.24)}>
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col sm:flex-row gap-3 justify-center items-center max-w-md mx-auto"
+          >
+            <input
+              type="text"
+              value={rubro}
+              onChange={(e) => setRubro(e.target.value)}
+              placeholder="Ej: restaurante, clínica dental, inmobiliaria..."
+              required
+              className="flex-1 px-4 py-3 rounded-sm border text-base w-full"
+              style={{
+                borderColor: "var(--border)",
+                background: "var(--card-bg)",
+                color: "var(--ink)",
+              }}
+            />
+            <button type="submit" className="btn-primary whitespace-nowrap w-full sm:w-auto">
+              Quiero mi agente IA
+            </button>
+          </form>
         </motion.div>
 
-        {/* Señales — una línea sobria */}
+        {/* Trust line */}
         <motion.p
           {...fadeUp(0.34)}
           className="mt-8 text-xs"
@@ -122,7 +148,7 @@ export default function Hero() {
             letterSpacing: "0.12em",
           }}
         >
-          30 min · conversación honesta · sin pitch de venta
+          Setup en 48h &middot; desde USD 297/mes &middot; sin permanencia
         </motion.p>
       </div>
     </section>

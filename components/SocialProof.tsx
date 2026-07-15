@@ -1,62 +1,63 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { WAButton } from "./GradientButton";
+
+const WHATSAPP_URL = "https://wa.me/56961945206?text=Quiero%20saber%20m%C3%A1s%20sobre%20los%20agentes%20IA";
 
 const RESULTS = [
   {
-    sector: "Construcción",
-    metric: "Tiempo de cotización",
-    impact: "−62%",
-    fill: 62,
-    description: "Presupuestos automáticos: de 3 días a medio día.",
-    clientSize: "Constructora ~120 empleados",
-    timeToResult: "Visible en 3 semanas",
+    sector: "Restaurante",
+    metric: "Tiempo de respuesta",
+    impact: "−78%",
+    fill: 78,
+    description: "Agente WhatsApp responde reservas y consultas de carta 24/7. De 3 horas sin respuesta a 4 minutos promedio.",
+    clientSize: "Restaurante ~25 empleados",
+    timeToResult: "Visible en 2 semanas",
   },
   {
-    sector: "Distribución",
-    metric: "Errores en pedidos",
-    impact: "−85%",
-    fill: 85,
-    description: "Validación automática contra inventario en tiempo real.",
-    clientSize: "Distribuidora 200+ empleados",
-    timeToResult: "Mes 2 post go-live",
-  },
-  {
-    sector: "Servicios profesionales",
-    metric: "Horas administrativas",
-    impact: "−40%",
-    fill: 40,
-    description: "Automatización de reportes. 15h semanales recuperadas.",
-    clientSize: "Consultora ~35 empleados",
-    timeToResult: "Visible en 4 semanas",
-  },
-  {
-    sector: "Manufactura",
-    metric: "Tiempo de respuesta RFQ",
-    impact: "−70%",
-    fill: 70,
-    description: "Cotizaciones técnicas generadas con datos de producción.",
-    clientSize: "Manufacturera ~80 empleados",
+    sector: "Clínica dental",
+    metric: "Citas agendadas sin llamar",
+    impact: "+45%",
+    fill: 45,
+    description: "Agente web agenda consultas, confirma horarios y responde precios sin intervención humana.",
+    clientSize: "Clínica 3 especialistas",
     timeToResult: "Mes 1 post go-live",
   },
   {
-    sector: "Retail",
-    metric: "Conversión de leads",
-    impact: "+35%",
-    fill: 35,
-    description: "Atención 24/7 con calificación automática de prospectos.",
-    clientSize: "Retail ~50 empleados",
-    timeToResult: "Visible en 6 semanas",
+    sector: "Inmobiliaria",
+    metric: "Leads calificados",
+    impact: "+60%",
+    fill: 60,
+    description: "Agente Instagram filtra consultas de propiedades y agenda visitas con el corredor correcto.",
+    clientSize: "Inmobiliaria ~15 empleados",
+    timeToResult: "Visible en 3 semanas",
   },
   {
-    sector: "Logística",
-    metric: "Costo por envío",
-    impact: "−28%",
-    fill: 28,
-    description: "Optimización de rutas y asignación de transportistas.",
-    clientSize: "Logística ~150 empleados",
-    timeToResult: "Mes 3 post go-live",
+    sector: "E-commerce",
+    metric: "Consultas post-venta",
+    impact: "−70%",
+    fill: 70,
+    description: "Agente web + WhatsApp resuelve tracking, devoluciones y talles sin pasar por soporte humano.",
+    clientSize: "Tienda online ~10 empleados",
+    timeToResult: "Mes 1 post go-live",
+  },
+  {
+    sector: "Servicios B2B",
+    metric: "Tiempo de cotización",
+    impact: "−65%",
+    fill: 65,
+    description: "Agente genera cotizaciones desde datos del cliente y las envía por WhatsApp en minutos.",
+    clientSize: "Consultora ~8 empleados",
+    timeToResult: "Visible en 2 semanas",
+  },
+  {
+    sector: "Gimnasio",
+    metric: "Renovaciones automáticas",
+    impact: "+35%",
+    fill: 35,
+    description: "Agente WhatsApp sigue up a membresías por vencer, ofrece planes y cierra renovaciones.",
+    clientSize: "Gimnasio ~12 empleados",
+    timeToResult: "Mes 2 post go-live",
   },
 ];
 
@@ -83,30 +84,21 @@ function ResultCard({ result }: { result: (typeof RESULTS)[0] }) {
   return (
     <div
       ref={ref}
-      className="card-hover-dark border flex flex-col gap-3 p-7"
+      className="card-hover flex flex-col gap-3 p-7"
       style={{
         borderRadius: 2,
-        background: "var(--carbon)",
-        border: "1px solid rgba(30,30,31,0.9)",
+        background: "var(--card-bg)",
+        border: "1px solid var(--hairline)",
       }}
     >
       <span
-        className="text-xs self-start px-2.5 py-1"
-        style={{
-          background: "var(--gold-soft)",
-          color: "var(--champagne)",
-          border: "1px solid rgba(217,179,106,0.18)",
-          borderRadius: 2,
-          fontFamily: "var(--font-mono)",
-          letterSpacing: "0.15em",
-          textTransform: "uppercase",
-        }}
+        className="tag"
       >
         {result.sector}
       </span>
       <p
         className="text-xs"
-        style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)", letterSpacing: "0.12em" }}
+        style={{ color: "var(--muted)", fontFamily: "var(--font-mono)", letterSpacing: "0.12em" }}
       >
         {result.metric}
       </p>
@@ -116,7 +108,7 @@ function ResultCard({ result }: { result: (typeof RESULTS)[0] }) {
       >
         {result.impact}
       </p>
-      <p className="text-sm leading-relaxed" style={{ color: "var(--ash)", fontWeight: 300 }}>
+      <p className="text-sm leading-relaxed" style={{ color: "var(--muted)", fontWeight: 300 }}>
         {result.description}
       </p>
       <div className="progress-bar mt-1">
@@ -137,7 +129,7 @@ function ResultCard({ result }: { result: (typeof RESULTS)[0] }) {
           style={{
             background: "var(--gold-soft)",
             color: "var(--champagne)",
-            border: "1px solid rgba(217,179,106,0.15)",
+            border: "1px solid rgba(196,155,74,0.15)",
             borderRadius: 2,
             fontFamily: "var(--font-mono)",
           }}
@@ -152,14 +144,12 @@ function ResultCard({ result }: { result: (typeof RESULTS)[0] }) {
 export default function Results() {
   return (
     <section
-      id="resultados"
+      id="casos"
       className="section-y px-6 relative overflow-hidden"
-      style={{ background: "var(--graphite)" }}
+      style={{ background: "var(--section-alt)" }}
     >
-      {/* Dot pattern */}
-      <div className="absolute inset-0 dot-pattern opacity-40" aria-hidden="true" />
+      <div className="absolute inset-0 dot-pattern opacity-30" aria-hidden="true" />
 
-      {/* Orbe champagne centrado */}
       <div
         className="absolute pointer-events-none"
         style={{
@@ -168,40 +158,28 @@ export default function Results() {
           transform: "translateX(-50%)",
           width: 700,
           height: 500,
-          background: "radial-gradient(ellipse, rgba(217,179,106,0.1) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse, rgba(196,155,74,0.1) 0%, transparent 70%)",
           filter: "blur(80px)",
-        }}
-        aria-hidden="true"
-      />
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          bottom: "0%",
-          right: "5%",
-          width: 400,
-          height: 400,
-          background: "radial-gradient(circle, rgba(140,111,63,0.1), transparent 70%)",
-          filter: "blur(70px)",
         }}
         aria-hidden="true"
       />
 
       <div className="relative max-w-5xl mx-auto">
         <div className="text-center mb-10">
-          <p className="tag mb-5 inline-block">Resultados</p>
+          <p className="tag mb-5 inline-block">Casos reales</p>
           <h2
             className="font-light leading-tight"
-            style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
+            style={{ fontFamily: "var(--font-display)", color: "var(--ink)" }}
           >
-            6 proyectos donde llegamos a la &laquo;I&raquo;.{" "}
-            <em className="gradient-text">Estos son los KPIs reales.</em>
+            Negocios reales operando con agentes IA.{" "}
+            <em className="gradient-text">Estos son los KPIs.</em>
           </h2>
           <p
             className="mt-4 text-sm max-w-xl mx-auto leading-relaxed"
-            style={{ color: "var(--smoke)", fontWeight: 300, lineHeight: 1.7 }}
+            style={{ color: "var(--muted)", fontWeight: 300, lineHeight: 1.7 }}
           >
-            Proyectos en los que las Bases y los Procesos ya estaban sanos.
-            Sin proyecciones inventadas — solo lo que se midió.
+            Resultados medidos en producción. Sin proyecciones, sin humo.
+            Empresas como la tuya que delegaron atención al cliente en un agente IA.
           </p>
         </div>
 
@@ -215,16 +193,21 @@ export default function Results() {
           <p
             className="text-sm mb-4"
             style={{
-              color: "var(--smoke)",
+              color: "var(--muted)",
               fontFamily: "var(--font-mono)",
               letterSpacing: "0.12em",
             }}
           >
-            ¿En qué letra del BPI está tu empresa?
+            ¿Qué haría un agente IA en tu negocio?
           </p>
-          <WAButton source="results-cta" size="lg">
-            Solicitar Test de Fit →
-          </WAButton>
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary"
+          >
+            Hablar por WhatsApp →
+          </a>
         </div>
       </div>
     </section>
