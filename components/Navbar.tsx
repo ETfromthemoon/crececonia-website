@@ -60,7 +60,7 @@ export default function Navbar() {
               style={{
                 color: "highlight" in link && link.highlight ? "var(--champagne)" : "var(--smoke)",
                 fontFamily: "var(--font-mono)",
-                letterSpacing: "0.18em",
+                letterSpacing: "0.15em",
                 textTransform: "uppercase",
                 display: "inline-flex",
                 alignItems: "center",
@@ -92,8 +92,8 @@ export default function Navbar() {
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-primary text-sm"
-            style={{ padding: "10px 20px", fontSize: "0.8rem" }}
+            className="btn-primary"
+            style={{ padding: "9px 18px" }}
           >
             Hablemos por WhatsApp
           </a>
@@ -130,8 +130,8 @@ export default function Navbar() {
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-primary text-sm"
-            style={{ padding: "8px 16px", fontSize: "0.75rem" }}
+            className="btn-primary"
+            style={{ padding: "8px 16px" }}
           >
             WhatsApp
           </a>
@@ -165,7 +165,7 @@ export default function Navbar() {
                   style={{
                     color: "highlight" in link && link.highlight ? "var(--champagne)" : "var(--muted)",
                     fontFamily: "var(--font-mono)",
-                    letterSpacing: "0.18em",
+                    letterSpacing: "0.15em",
                     textTransform: "uppercase",
                     display: "inline-flex",
                     alignItems: "center",

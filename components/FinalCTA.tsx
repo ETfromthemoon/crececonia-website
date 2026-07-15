@@ -57,7 +57,6 @@ export default function FinalCTA() {
           className="font-light mb-5 leading-tight"
           style={{
             fontFamily: "var(--font-display)",
-            fontSize: "clamp(2rem, 4vw, 2.8rem)",
             color: "var(--bone)",
             letterSpacing: "-0.02em",
           }}
@@ -79,8 +78,7 @@ export default function FinalCTA() {
             href="https://wa.me/569XXXXXXXX"
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-primary"
-            style={{ padding: "16px 32px", fontSize: "0.95rem" }}
+            className="btn-primary btn-lg"
           >
             Quiero mi agente IA
           </a>
@@ -103,7 +101,7 @@ export default function FinalCTA() {
           style={{
             color: "var(--smoke)",
             fontFamily: "var(--font-mono)",
-            letterSpacing: "0.1em",
+            letterSpacing: "0.12em",
           }}
         >
           <span>48h de setup</span>

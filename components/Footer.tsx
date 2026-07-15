@@ -12,8 +12,8 @@ const NAV_LINKS = [
 const linkStyle: React.CSSProperties = {
   color: "var(--smoke)",
   fontFamily: "var(--font-mono)",
-  letterSpacing: "0.06em",
-  fontSize: "12px",
+  letterSpacing: "0.1em",
+  fontSize: "0.75rem",
   textTransform: "none",
   lineHeight: 1.8,
   display: "inline-flex",
@@ -24,8 +24,8 @@ const linkStyle: React.CSSProperties = {
 const headerStyle: React.CSSProperties = {
   color: "var(--bone)",
   fontFamily: "var(--font-mono)",
-  letterSpacing: "0.16em",
-  fontSize: "11px",
+  letterSpacing: "0.14em",
+  fontSize: "0.7rem",
   textTransform: "uppercase",
   marginBottom: "16px",
   fontWeight: 600,
