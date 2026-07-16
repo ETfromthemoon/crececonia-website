@@ -61,6 +61,8 @@ export default function EbookFAQ() {
                   style={{ padding: "20px 0" }}
                   onClick={() => setOpen(isOpen ? null : idx)}
                   aria-expanded={isOpen}
+                  aria-controls={`faq-panel-${idx}`}
+                  id={`faq-trigger-${idx}`}
                 >
                   <span
                     style={{
@@ -88,7 +90,12 @@ export default function EbookFAQ() {
                   </span>
                 </button>
 
-                <div className={`accordion-body${isOpen ? " open" : ""}`}>
+                <div
+                  id={`faq-panel-${idx}`}
+                  role="region"
+                  aria-labelledby={`faq-trigger-${idx}`}
+                  className={`accordion-body${isOpen ? " open" : ""}`}
+                >
                   <div>
                     <p
                       style={{

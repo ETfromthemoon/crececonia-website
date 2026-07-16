@@ -4,10 +4,9 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import EbookPreview from "./EbookPreview";
 import type { PriceInfo } from "@/lib/ebook-pricing";
+import { EBOOK_ACCENT as ACCENT, EBOOK_COLD_BG as BG } from "@/lib/ebook-theme";
 
 const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
-const ACCENT = "#8fa3d9";
-const BG = "#141414";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },

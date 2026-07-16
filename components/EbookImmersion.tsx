@@ -9,6 +9,7 @@ import {
   useReducedMotion,
 } from "framer-motion";
 import styles from "./EbookCinematic.module.css";
+import { EBOOK_ACCENT, EBOOK_COLD_BG } from "@/lib/ebook-theme";
 
 /**
  * Cinematic scroll set-piece dramatizing the ebook's promise. Text-only by
@@ -26,8 +27,8 @@ const LINES: [string, string, string] = [
   "en 150+ páginas.",
 ];
 const DETAIL = "PDF · Descarga inmediata · Garantía de devolución";
-const ACCENT = "#8fa3d9";
-const BG = "#141414";
+const ACCENT = EBOOK_ACCENT;
+const BG = EBOOK_COLD_BG;
 const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
 
 export default function EbookImmersion() {

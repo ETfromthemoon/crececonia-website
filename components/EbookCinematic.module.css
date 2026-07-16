@@ -57,7 +57,11 @@
   color: #f6f3f1;
 }
 
-/* Global cursor spotlight — paired with EbookCursorGlow.tsx */
+/* Global cursor spotlight — paired with EbookCursorGlow.tsx.
+   Uses a darker periwinkle (rgb(111,134,201)) than EBOOK_ACCENT
+   (rgb(143,163,217), lib/ebook-theme.ts) on purpose: this glow sits over the
+   cream body sections, where the lighter accent used on the dark cold-open
+   would wash out and barely register. */
 .cursorGlow {
   position: fixed;
   top: 0;
@@ -78,7 +82,9 @@
   will-change: transform;
 }
 
-/* Grown hairline accent — animate scaleX 0→1 via motion */
+/* Grown hairline accent — animate scaleX 0→1 via motion.
+   Same darker periwinkle as .cursorGlow, same reason: renders on cream
+   section backgrounds, not the dark cold-open. */
 .hairline {
   height: 1.5px;
   width: 56px;
