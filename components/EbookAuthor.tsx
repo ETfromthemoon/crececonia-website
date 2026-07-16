@@ -3,14 +3,30 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import Image from "next/image";
+import styles from "./EbookCinematic.module.css";
 
 export default function EbookAuthor() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
 
   return (
-    <section className="section-y px-6">
-      <div style={{ maxWidth: 800, margin: "0 auto" }}>
+    <section className="section-y px-6" style={{ position: "relative", overflow: "hidden" }}>
+      <div
+        aria-hidden
+        className={styles.numeralGhost}
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: "-4%",
+          transform: "translateX(-50%)",
+          fontSize: "clamp(8rem, 24vw, 18rem)",
+          color: "rgba(36,36,36,0.045)",
+          zIndex: 0,
+        }}
+      >
+        &ldquo;
+      </div>
+      <div style={{ maxWidth: 800, margin: "0 auto", position: "relative", zIndex: 1 }}>
         <motion.div
           ref={ref}
           initial={{ opacity: 0, y: 24 }}
@@ -23,7 +39,10 @@ export default function EbookAuthor() {
             flexWrap: "wrap",
           }}
         >
-          <div style={{ flexShrink: 0 }}>
+          <div
+            className={`${styles.glass} ${styles.glassSheen}`}
+            style={{ flexShrink: 0, borderRadius: "50%", padding: 6 }}
+          >
             <Image
               src="/sergio.jpg"
               alt="Sergio Astudillo"
@@ -31,7 +50,6 @@ export default function EbookAuthor() {
               height={96}
               style={{
                 borderRadius: "50%",
-                border: "2px solid #cfdaf5",
                 objectFit: "cover",
                 display: "block",
               }}

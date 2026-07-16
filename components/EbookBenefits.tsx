@@ -2,6 +2,8 @@
 
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
+import EbookSectionHeading from "./EbookSectionHeading";
+import styles from "./EbookCinematic.module.css";
 
 const BENEFITS = [
   {
@@ -49,51 +51,24 @@ export default function EbookBenefits() {
   return (
     <section className="section-y px-6">
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 56 }}>
-          <p
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "0.68rem",
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              color: "#4e4d4d",
-              marginBottom: 16,
-            }}
-          >
-            Lo que vas a encontrar
-          </p>
-          <h2
-            style={{
-              fontFamily: "var(--font-serif-monad), Georgia, serif",
-              fontWeight: 400,
-              fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)",
-              lineHeight: 1.15,
-              letterSpacing: "-0.01em",
-              color: "#000",
-            }}
-          >
-            Todo lo que necesitás para{" "}
-            <em style={{ fontStyle: "italic" }}>arrancar en serio.</em>
-          </h2>
-        </div>
+        <EbookSectionHeading kicker="Lo que vas a encontrar" size="lg">
+          Todo lo que necesitás para{" "}
+          <em style={{ fontStyle: "italic" }}>arrancar en serio.</em>
+        </EbookSectionHeading>
 
         <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {BENEFITS.map((b, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 24 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
+              initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
+              animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{
                 duration: 0.55,
                 delay: i * 0.08,
                 ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
               }}
-              style={{
-                background: "#cfdaf5",
-                borderRadius: 40,
-                padding: "40px",
-                boxShadow: "rgba(0,0,0,0.1) 0px 0px 10px 0px",
-              }}
+              className={`${styles.glass} ${styles.glassHover}`}
+              style={{ borderRadius: 40, padding: "40px" }}
             >
               <div style={{ color: "#242424", marginBottom: 18 }}>
                 {b.icon}

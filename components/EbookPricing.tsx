@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import type { PriceInfo } from "@/lib/ebook-pricing";
+import EbookSectionHeading from "./EbookSectionHeading";
+import styles from "./EbookCinematic.module.css";
 
 const TIER_LABELS: Record<string, { badge: string; discount: string }> = {
   "super-early": { badge: "Super Early", discount: "60% OFF" },
@@ -28,6 +31,7 @@ function CheckIcon() {
 }
 
 export default function EbookPricing() {
+  const reduced = useReducedMotion() ?? false;
   const [priceInfo, setPriceInfo] = useState<PriceInfo | null>(null);
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -79,41 +83,14 @@ export default function EbookPricing() {
   return (
     <section id="comprar" className="section-y px-6">
       <div style={{ maxWidth: 480, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <p
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "0.68rem",
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              color: "#4e4d4d",
-              marginBottom: 16,
-            }}
-          >
-            Precio
-          </p>
-          <h2
-            style={{
-              fontFamily: "var(--font-serif-monad), Georgia, serif",
-              fontWeight: 400,
-              fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
-              lineHeight: 1.15,
-              letterSpacing: "-0.01em",
-              color: "#000",
-            }}
-          >
-            Empezá hoy.{" "}
-            <em style={{ fontStyle: "italic" }}>Sin excusas.</em>
-          </h2>
-        </div>
+        <EbookSectionHeading kicker="Precio">
+          Empezá hoy.{" "}
+          <em style={{ fontStyle: "italic" }}>Sin excusas.</em>
+        </EbookSectionHeading>
 
         <div
-          style={{
-            background: "#cfdaf5",
-            borderRadius: 40,
-            overflow: "hidden",
-            boxShadow: "rgba(0,0,0,0.1) 0px 0px 10px 0px",
-          }}
+          className={`${styles.glass} ${styles.glassSheen}`}
+          style={{ borderRadius: 40, overflow: "hidden" }}
         >
           {/* Price header */}
           <div
@@ -187,7 +164,13 @@ export default function EbookPricing() {
             </div>
 
             {priceInfo?.remaining !== null && priceInfo?.remaining !== undefined && (
-              <p
+              <motion.p
+                animate={
+                  priceInfo.remaining <= 3 && !reduced
+                    ? { opacity: [1, 0.55, 1] }
+                    : {}
+                }
+                transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
                 style={{
                   color: priceInfo.remaining <= 3 ? "#242424" : "#4e4d4d",
                   fontSize: "0.72rem",
@@ -200,7 +183,7 @@ export default function EbookPricing() {
                 {priceInfo.remaining <= 3
                   ? `¡Solo quedan ${priceInfo.remaining}!`
                   : `Quedan ${priceInfo.remaining} cupos a este precio`}
-              </p>
+              </motion.p>
             )}
           </div>
 

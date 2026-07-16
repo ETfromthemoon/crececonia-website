@@ -2,6 +2,7 @@
 
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
+import EbookSectionHeading from "./EbookSectionHeading";
 
 const CHAPTERS = [
   {
@@ -41,33 +42,10 @@ export default function EbookTOC() {
   return (
     <section className="section-y px-6" style={{ background: "rgba(207,218,245,0.18)" }}>
       <div style={{ maxWidth: 800, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 56 }}>
-          <p
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "0.68rem",
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              color: "#4e4d4d",
-              marginBottom: 16,
-            }}
-          >
-            Contenido
-          </p>
-          <h2
-            style={{
-              fontFamily: "var(--font-serif-monad), Georgia, serif",
-              fontWeight: 400,
-              fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
-              lineHeight: 1.15,
-              letterSpacing: "-0.01em",
-              color: "#000",
-            }}
-          >
-            Lo que vas a aprender,{" "}
-            <em style={{ fontStyle: "italic" }}>capítulo por capítulo.</em>
-          </h2>
-        </div>
+        <EbookSectionHeading kicker="Contenido">
+          Lo que vas a aprender,{" "}
+          <em style={{ fontStyle: "italic" }}>capítulo por capítulo.</em>
+        </EbookSectionHeading>
 
         <div ref={ref}>
           {CHAPTERS.map((ch, i) => (
@@ -80,57 +58,72 @@ export default function EbookTOC() {
                 delay: i * 0.06,
                 ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
               }}
-              style={{
-                display: "flex",
-                gap: 20,
-                padding: "22px 0",
-                borderBottom: i < CHAPTERS.length - 1 ? "1px solid rgba(0,0,0,0.1)" : "none",
-                alignItems: "flex-start",
-              }}
+              style={{ padding: "22px 0" }}
             >
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "#cfdaf5",
-                  borderRadius: 8,
-                  color: "#242424",
-                  fontSize: "0.7rem",
-                  fontFamily: "var(--font-mono)",
-                  fontWeight: 400,
-                  flexShrink: 0,
-                  marginTop: 2,
-                }}
-              >
-                {String(i + 1).padStart(2, "0")}
-              </div>
-              <div>
-                <p
+              <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+                <div
                   style={{
-                    fontFamily: "var(--font-serif-monad), Georgia, serif",
-                    fontWeight: 400,
-                    color: "#000",
-                    fontSize: "1rem",
-                    lineHeight: 1.4,
-                    marginBottom: 4,
-                  }}
-                >
-                  {ch.title}
-                </p>
-                <p
-                  style={{
+                    width: 36,
+                    height: 36,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#cfdaf5",
+                    borderRadius: 8,
+                    color: "#242424",
+                    fontSize: "0.7rem",
                     fontFamily: "var(--font-mono)",
-                    fontSize: "0.78rem",
-                    color: "#4e4d4d",
-                    lineHeight: 1.65,
+                    fontWeight: 400,
+                    flexShrink: 0,
+                    marginTop: 2,
                   }}
                 >
-                  {ch.desc}
-                </p>
+                  {String(i + 1).padStart(2, "0")}
+                </div>
+                <div>
+                  <p
+                    style={{
+                      fontFamily: "var(--font-serif-monad), Georgia, serif",
+                      fontWeight: 400,
+                      color: "#000",
+                      fontSize: "1rem",
+                      lineHeight: 1.4,
+                      marginBottom: 4,
+                    }}
+                  >
+                    {ch.title}
+                  </p>
+                  <p
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.78rem",
+                      color: "#4e4d4d",
+                      lineHeight: 1.65,
+                    }}
+                  >
+                    {ch.desc}
+                  </p>
+                </div>
               </div>
+              {i < CHAPTERS.length - 1 && (
+                <motion.div
+                  aria-hidden
+                  initial={{ scaleX: 0 }}
+                  animate={inView ? { scaleX: 1 } : {}}
+                  transition={{
+                    duration: 0.6,
+                    delay: i * 0.06 + 0.15,
+                    ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+                  }}
+                  style={{
+                    marginTop: 22,
+                    height: 1,
+                    background:
+                      "linear-gradient(to right, rgba(111,134,201,0.4), rgba(0,0,0,0.08) 60%)",
+                    transformOrigin: "left",
+                  }}
+                />
+              )}
             </motion.div>
           ))}
         </div>

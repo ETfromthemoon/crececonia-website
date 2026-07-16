@@ -5,6 +5,10 @@ import EbookTOC from "@/components/EbookTOC";
 import EbookAuthor from "@/components/EbookAuthor";
 import EbookPricing from "@/components/EbookPricing";
 import EbookFAQ from "@/components/EbookFAQ";
+import EbookImmersion from "@/components/EbookImmersion";
+import EbookCursorGlow from "@/components/EbookCursorGlow";
+import EbookSectionHeading from "@/components/EbookSectionHeading";
+import EbookProfileCard from "@/components/EbookProfileCard";
 
 const SITE_URL = "https://www.crececonia.cl";
 const SLUG = "de-cero-a-claude-en-una-semana";
@@ -44,33 +48,19 @@ function EbookProblem() {
   return (
     <section className="section-y px-6">
       <div style={{ maxWidth: 672, margin: "0 auto" }}>
-        <p
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "0.68rem",
-            letterSpacing: "0.2em",
-            textTransform: "uppercase",
-            color: "#4e4d4d",
-            marginBottom: 20,
-          }}
-        >
-          El problema
-        </p>
-        <h2
-          style={{
-            fontFamily: "var(--font-serif-monad), Georgia, serif",
-            fontWeight: 400,
-            fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
-            lineHeight: 1.2,
-            letterSpacing: "-0.01em",
-            color: "#000",
-            marginBottom: 32,
-          }}
-        >
+        <EbookSectionHeading kicker="El problema" align="left" maxWidth={672}>
           Claude es la herramienta más infravalorada del mercado.{" "}
           <em style={{ fontStyle: "italic" }}>Y la documentación no ayuda.</em>
-        </h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        </EbookSectionHeading>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 20,
+            borderLeft: "2px solid rgba(207,218,245,0.9)",
+            paddingLeft: 24,
+          }}
+        >
           <p
             style={{
               fontFamily: "var(--font-mono)",
@@ -114,110 +104,37 @@ function EbookProblem() {
   );
 }
 
-function ProfileCard({
-  title,
-  role,
-  desc,
-}: {
-  title: string;
-  role: string;
-  desc: string;
-}) {
-  return (
-    <div
-      style={{
-        background: "#cfdaf5",
-        borderRadius: 40,
-        padding: "32px",
-        boxShadow: "rgba(0,0,0,0.1) 0px 0px 10px 0px",
-      }}
-    >
-      <p
-        style={{
-          color: "#242424",
-          fontSize: "0.68rem",
-          fontFamily: "var(--font-mono)",
-          letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          marginBottom: 10,
-        }}
-      >
-        {role}
-      </p>
-      <h3
-        style={{
-          fontFamily: "var(--font-serif-monad), Georgia, serif",
-          fontWeight: 400,
-          color: "#000",
-          fontSize: "1.05rem",
-          lineHeight: 1.35,
-          marginBottom: 10,
-        }}
-      >
-        {title}
-      </h3>
-      <p
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: "0.78rem",
-          color: "#4e4d4d",
-          lineHeight: 1.75,
-        }}
-      >
-        {desc}
-      </p>
-    </div>
-  );
-}
+const PROFILES = [
+  {
+    role: "Perfil 01",
+    title: "Dueño de PYME técnica",
+    desc: "Tenés equipo pero no tiempo para experimentar semanas con cada herramienta nueva. Querés saber si Claude realmente sirve y cómo integrarlo sin romper lo que ya funciona.",
+  },
+  {
+    role: "Perfil 02",
+    title: "Freelance / Independiente",
+    desc: "Querés multiplicar tu output sin contratar. Claude puede ser el multiplicador de fuerza que te permite tomar más proyectos sin trabajar más horas.",
+  },
+  {
+    role: "Perfil 03",
+    title: "Líder técnico",
+    desc: "Necesitás que tu equipo adopte IA sin caos ni dependencia ciega. Querés un marco claro para entender qué tareas tiene sentido darle a Claude y cuáles no.",
+  },
+];
 
 function EbookWhoIsFor() {
   return (
     <section className="section-y px-6">
       <div style={{ maxWidth: 1024, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <p
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "0.68rem",
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              color: "#4e4d4d",
-              marginBottom: 16,
-            }}
-          >
-            Para quién es
-          </p>
-          <h2
-            style={{
-              fontFamily: "var(--font-serif-monad), Georgia, serif",
-              fontWeight: 400,
-              fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
-              lineHeight: 1.15,
-              letterSpacing: "-0.01em",
-              color: "#000",
-            }}
-          >
-            Si reconocés alguno de estos perfiles,{" "}
-            <em style={{ fontStyle: "italic" }}>este ebook es para vos.</em>
-          </h2>
-        </div>
+        <EbookSectionHeading kicker="Para quién es">
+          Si reconocés alguno de estos perfiles,{" "}
+          <em style={{ fontStyle: "italic" }}>este ebook es para vos.</em>
+        </EbookSectionHeading>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <ProfileCard
-            role="Perfil 01"
-            title="Dueño de PYME técnica"
-            desc="Tenés equipo pero no tiempo para experimentar semanas con cada herramienta nueva. Querés saber si Claude realmente sirve y cómo integrarlo sin romper lo que ya funciona."
-          />
-          <ProfileCard
-            role="Perfil 02"
-            title="Freelance / Independiente"
-            desc="Querés multiplicar tu output sin contratar. Claude puede ser el multiplicador de fuerza que te permite tomar más proyectos sin trabajar más horas."
-          />
-          <ProfileCard
-            role="Perfil 03"
-            title="Líder técnico"
-            desc="Necesitás que tu equipo adopte IA sin caos ni dependencia ciega. Querés un marco claro para entender qué tareas tiene sentido darle a Claude y cuáles no."
-          />
+          {PROFILES.map((profile, i) => (
+            <EbookProfileCard key={profile.role} index={i} {...profile} />
+          ))}
         </div>
       </div>
     </section>
@@ -227,7 +144,9 @@ function EbookWhoIsFor() {
 export default function EbookPage() {
   return (
     <main className="monad pt-28">
+      <EbookCursorGlow />
       <EbookHero />
+      <EbookImmersion />
       <EbookProblem />
       <EbookBenefits />
       <EbookWhoIsFor />

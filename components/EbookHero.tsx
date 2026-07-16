@@ -13,6 +13,12 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.7, delay, ease: EASE },
 });
 
+const blurIn = (delay = 0) => ({
+  initial: { opacity: 0, y: 32, filter: "blur(14px)" },
+  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+  transition: { duration: 0.9, delay, ease: EASE },
+});
+
 export default function EbookHero() {
   const [priceInfo, setPriceInfo] = useState<PriceInfo | null>(null);
 
@@ -54,7 +60,7 @@ export default function EbookHero() {
             </motion.p>
 
             <motion.h1
-              {...fadeUp(0.1)}
+              {...blurIn(0.1)}
               style={{
                 fontFamily: "var(--font-serif-monad), Georgia, serif",
                 fontWeight: 400,
@@ -143,8 +149,31 @@ export default function EbookHero() {
             </motion.p>
           </div>
 
-          {/* Right: 3D Mockup */}
-          <EbookPreview />
+          {/* Right: 3D Mockup with editorial overlap (ghost wordmark behind) */}
+          <div className="relative flex items-center justify-center">
+            <motion.div
+              aria-hidden
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1.2, delay: 0.5, ease: EASE }}
+              style={{
+                position: "absolute",
+                fontFamily: "var(--font-serif-monad), Georgia, serif",
+                fontSize: "clamp(6rem, 18vw, 13rem)",
+                color: "rgba(36,36,36,0.05)",
+                lineHeight: 1,
+                whiteSpace: "nowrap",
+                pointerEvents: "none",
+                userSelect: "none",
+                zIndex: 0,
+              }}
+            >
+              Claude
+            </motion.div>
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <EbookPreview />
+            </div>
+          </div>
         </div>
       </div>
     </section>
