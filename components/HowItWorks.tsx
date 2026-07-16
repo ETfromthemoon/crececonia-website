@@ -6,17 +6,17 @@ const STEPS = [
   {
     number: 1,
     title: "Cuéntanos de tu negocio",
-    body: "Una videollamada de 30 minutos donde mapeamos tus procesos. Si tu negocio no está listo, te lo decimos sin cobrarte.",
+    body: "Una videollamada de 30 minutos. Entendemos cómo operas, qué preguntas te hacen siempre, y si un agente realmente te va a servir. Si no, te lo decimos sin cobrarte.",
   },
   {
     number: 2,
     title: "Construimos tu agente",
-    body: "Configuramos el agente con lo que sabe de tu negocio, lo conectamos a tus canales y lo entrenamos con tus respuestas reales.",
+    body: "Cargamos tus datos, conectamos tus canales y entrenamos al agente con tus respuestas reales. Tú solo nos pasas la info de tu negocio.",
   },
   {
     number: 3,
     title: "Tu agente en vivo",
-    body: "Lo entregamos funcionando. Capacitamos a tu equipo. Medimos adopción. Si en la semana 3 no lo están usando, lo iteramos sin costo.",
+    body: "Lo dejamos funcionando. Le enseñamos a tu equipo a usarlo. Si en la semana 3 nadie lo está usando, lo ajustamos sin costo hasta que lo adopten.",
   },
 ] as const;
 

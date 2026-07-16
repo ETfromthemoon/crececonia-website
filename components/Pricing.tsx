@@ -68,7 +68,7 @@ export default function Pricing() {
           style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
           {...fadeUp(0.14)}
         >
-          Setup único de USD 200.
+          Configuración inicial: USD 200.
         </motion.p>
 
         <motion.div

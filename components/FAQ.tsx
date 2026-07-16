@@ -5,23 +5,23 @@ import { useState } from "react";
 const FAQS = [
   {
     q: "¿Qué puede hacer un agente IA por mi negocio?",
-    a: "Responder consultas por WhatsApp, web o Instagram 24/7. Agendar citas, dar precios, calificar leads, hacer seguimiento. Todo lo que hoy hace tu equipo de forma repetitiva, el agente lo resuelve automático. Y cuando algo necesita intervención humana, deriva la conversación a la persona correcta.",
+    a: "Atender consultas por WhatsApp, web o Instagram. 24/7. Agendar citas, dar precios, calificar leads. Cuando algo necesita a una persona, deriva la conversación. Sin que tu equipo toque el teléfono.",
   },
   {
     q: "¿Cuánto demora tener mi agente funcionando?",
-    a: "48 horas desde que tenemos la información de tu negocio. Hacemos una videollamada de 30 minutos para entender tus procesos, cargamos el conocimiento, conectamos los canales y te entregamos el agente funcionando. En la primera semana ya está atendiendo consultas reales.",
+    a: "48 horas desde que nos pasas la info de tu negocio. Hacemos una videollamada de 30 minutos, configuramos todo, y en la primera semana ya está atendiendo clientes reales.",
   },
   {
     q: "¿Necesito un equipo técnico o saber de IA?",
-    a: "No. Tú nos dices cómo funciona tu negocio y nosotros hacemos todo lo técnico. No necesitas instalar nada, no necesitas ingenieros, no necesitas saber de prompts ni de APIs. Solo necesitas tener claro qué hace tu negocio y qué preguntas reciben todos los días.",
+    a: "No. Tú conoces tu negocio, nosotros hacemos lo demás. No instalas nada, no necesitas ingenieros, no tocas una API. Solo nos dices cómo operas y qué preguntas recibes todos los días.",
   },
   {
     q: "¿Puedo cancelar cuando quiera?",
-    a: "Sí. No hay contrato anual ni permanencia forzada. Pagas mes a mes. Si en cualquier momento sientes que el agente no te está sirviendo, cancelas y listo. Los datos de tu negocio y tus conversaciones son tuyos.",
+    a: "Sí. Es mes a mes. Si en cualquier momento sientes que no te está sirviendo, cancelas. Tus datos y tus conversaciones son tuyos.",
   },
   {
     q: "¿Qué pasa si mi negocio es muy chico o muy específico?",
-    a: "Los agentes funcionan mejor cuando tienes procesos repetitivos claros: consultas que se repiten, reservas, cotizaciones, seguimiento. Si tu negocio tiene al menos 10-15 consultas diarias del mismo tipo, probablemente un agente te sirva. Si no, te lo decimos en la primera llamada, sin costo.",
+    a: "Si tienes al menos 10-15 consultas diarias que se repiten, probablemente un agente te sirva. Si no, te lo decimos en la primera llamada sin cobrarte.",
   },
 ];
 

@@ -75,7 +75,7 @@ export default function UseCases() {
             style={{ fontFamily: "var(--font-display)", color: "var(--ink)" }}
           >
             Tu agente IA funciona en WhatsApp, web e Instagram.{" "}
-            <em className="gradient-text">Estos son los verticales donde más rinde.</em>
+            <em className="gradient-text">Estos son los tipos de negocio donde más rinde.</em>
           </h2>
         </div>
 

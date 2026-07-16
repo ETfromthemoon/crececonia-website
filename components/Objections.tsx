@@ -6,17 +6,17 @@ const OBJECTIONS = [
   {
     text: "Buscas un chatbot genérico",
     description:
-      "Vendemos agentes que entienden TU negocio, no respuestas automáticas de catálogo.",
+      "Entrenamos al agente con lo que sabe tu negocio. Tus menús, tus precios, tus políticas. No es un robot con respuestas prefabricadas.",
   },
   {
-    text: "Tu negocio no tiene procesos mínimos",
+    text: "Tu negocio todavía no tiene procesos claros",
     description:
-      "Si no sabes cómo atienden a tus clientes hoy, el agente no va a tener sobre qué construir.",
+      "Si hoy no sabes cómo atienden a tus clientes, el agente no va a tener de dónde aprender. Primero ordenamos eso juntos.",
   },
   {
     text: "Crees que un agente IA reemplaza a tu equipo",
     description:
-      "Asiste, no borra. Tus clientes van a seguir hablando con personas cuando lo necesiten.",
+      "El agente responde lo repetitivo. Cuando un cliente necesita hablar con una persona, el agente deriva la conversación. No desaparece a nadie.",
   },
 ];
 

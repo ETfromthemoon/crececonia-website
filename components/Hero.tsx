@@ -90,7 +90,6 @@ export default function Hero() {
           className="leading-none mb-5"
           style={{
             fontFamily: "var(--font-display)",
-            fontSize: "clamp(2.4rem, 5.5vw, 4.2rem)",
             fontWeight: 300,
             color: "var(--bone)",
             letterSpacing: "-0.025em",
@@ -109,8 +108,8 @@ export default function Hero() {
           className="text-lg max-w-2xl mx-auto mb-10 leading-relaxed"
           style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
         >
-          Eliges el canal —WhatsApp, web, Instagram—, cargas lo que sabe de tu negocio,
-          y te lo entregamos funcionando.
+          Eliges el canal —WhatsApp, web, Instagram—, nos cuentas cómo funciona tu negocio,
+          y en 48 horas está atendiendo clientes reales.
         </motion.p>
 
         {/* Mini-form */}
@@ -149,7 +148,7 @@ export default function Hero() {
             letterSpacing: "0.12em",
           }}
         >
-          Setup en 48h &middot; desde USD 297/mes &middot; sin permanencia
+          Configuración en 48h &middot; desde USD 297/mes &middot; sin contrato forzado
         </motion.p>
       </div>
     </section>

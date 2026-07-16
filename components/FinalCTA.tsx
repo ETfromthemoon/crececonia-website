@@ -70,7 +70,7 @@ export default function FinalCTA() {
           style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
         >
           Cuéntanos de tu negocio. En 30 minutos te decimos si un agente IA te
-          sirve o no. Sin costo, sin compromiso.
+          sirve o no. Sin costo. Si no hay caso, te lo decimos.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -104,11 +104,11 @@ export default function FinalCTA() {
             letterSpacing: "0.12em",
           }}
         >
-          <span>48h de setup</span>
+          <span>Configuración en 48h</span>
           <span className="hidden sm:block">&middot;</span>
           <span>USD 297/mes</span>
           <span className="hidden sm:block">&middot;</span>
-          <span>sin permanencia</span>
+          <span>sin contrato forzado</span>
         </div>
       </div>
     </section>

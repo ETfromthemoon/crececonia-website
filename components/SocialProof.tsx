@@ -172,7 +172,7 @@ export default function Results() {
             style={{ fontFamily: "var(--font-display)", color: "var(--ink)" }}
           >
             Negocios reales operando con agentes IA.{" "}
-            <em className="gradient-text">Estos son los KPIs.</em>
+            <em className="gradient-text">Estos son los resultados.</em>
           </h2>
           <p
             className="mt-4 text-sm max-w-xl mx-auto leading-relaxed"

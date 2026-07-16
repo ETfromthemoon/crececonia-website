@@ -16,7 +16,7 @@ const INCLUDES = [
   {
     title: "Soporte y evolución",
     description:
-      "Acompañamiento continuo. Si algo cambia en tu negocio, actualizamos el agente. Si no lo usan, iteramos sin costo.",
+      "Acompañamiento continuo. Si algo cambia en tu negocio, actualizamos el agente. Si no lo usan, lo ajustamos sin costo.",
   },
 ];
 
@@ -31,7 +31,7 @@ export default function Investment() {
             style={{ fontFamily: "var(--font-display)", color: "var(--ink)" }}
           >
             Todo lo que necesitas.{" "}
-            <em className="gradient-text">Sin costos escondidos.</em>
+            <em className="gradient-text">Una tarifa. Todo incluido.</em>
           </h2>
           <p
             className="text-base leading-relaxed"
@@ -103,14 +103,14 @@ export default function Investment() {
               textTransform: "uppercase",
             }}
           >
-            Garantía de adopción
+              Garantía
           </p>
           <p
             className="text-base leading-relaxed"
             style={{ color: "var(--muted)", fontWeight: 300, lineHeight: 1.8 }}
           >
-            Si en la semana 3 tu equipo no está usando el agente, iteramos sin
-            costo hasta que lo adopten. La adopción es nuestro problema, no el
+            Si en la semana 3 tu equipo no está usando el agente, lo ajustamos sin
+            costo hasta que lo usen. Que funcione es nuestro problema, no el
             tuyo.
           </p>
         </div>
