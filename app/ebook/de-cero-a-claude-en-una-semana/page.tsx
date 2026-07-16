@@ -143,7 +143,7 @@ function EbookWhoIsFor() {
 
 export default function EbookPage() {
   return (
-    <main className="monad pt-28">
+    <main className="monad">
       <EbookCursorGlow />
       <EbookHero />
       <EbookImmersion />
