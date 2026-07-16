@@ -14,7 +14,7 @@ import styles from "./EbookCinematic.module.css";
  * Cinematic scroll set-piece dramatizing the ebook's promise. Text-only by
  * design: the ebook cover art (public/ebook-cover.png) already carries its
  * own baked-in cover copy ("25 capítulos") that would clash with this page's
- * "120 páginas" framing if blown up full-bleed, so this reveal is built from
+ * page-count framing if blown up full-bleed, so this reveal is built from
  * typography instead of the cover image.
  *
  * Copy is reused verbatim from EbookProblem's third paragraph and from the
@@ -23,7 +23,7 @@ import styles from "./EbookCinematic.module.css";
 const LINES: [string, string, string] = [
   "Este ebook condensa 6 meses",
   "de experimentación real con Claude Code",
-  "en 120 páginas.",
+  "en 150+ páginas.",
 ];
 const DETAIL = "PDF · Descarga inmediata · Garantía de devolución";
 const ACCENT = "#8fa3d9";

@@ -96,7 +96,7 @@ function EbookProblem() {
             }}
           >
             Este ebook condensa 6 meses de experimentación real con Claude Code
-            en 120 páginas. La ruta que me habría gustado tener cuando empecé.
+            en 150+ páginas. La ruta que me habría gustado tener cuando empecé.
           </p>
         </div>
       </div>

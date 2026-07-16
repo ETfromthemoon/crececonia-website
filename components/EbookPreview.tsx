@@ -14,7 +14,9 @@ export default function EbookPreview() {
       transition={{ duration: 0.9, delay: 0.35, ease: EASE }}
       className="relative flex items-center justify-center py-8 lg:py-0"
     >
-      {/* Glass frame peeking out behind the tilted cover — editorial overlap */}
+      {/* Glass frame peeking out behind the tilted cover — editorial overlap.
+          Bumped opacity vs. the shared .glass default so it reads against
+          the Hero's dark cold-open backdrop. */}
       <motion.div
         aria-hidden
         className={`${styles.glass} ${styles.glassSheen}`}
@@ -25,13 +27,15 @@ export default function EbookPreview() {
           position: "absolute",
           inset: "8% -4% -4% 10%",
           borderRadius: 28,
+          background: "rgba(207,218,245,0.5)",
         }}
       />
       <div
         style={{
           position: "relative",
           transform: "perspective(1400px) rotateY(-15deg) rotateX(3deg)",
-          boxShadow: "-6px 10px 0 rgba(0,0,0,0.06), 28px 44px 70px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08)",
+          boxShadow:
+            "0 40px 100px -20px rgba(143,163,217,0.4), 0 0 70px rgba(143,163,217,0.15)",
           borderRadius: 6,
           overflow: "hidden",
           flexShrink: 0,

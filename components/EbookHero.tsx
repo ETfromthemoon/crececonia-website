@@ -6,6 +6,8 @@ import EbookPreview from "./EbookPreview";
 import type { PriceInfo } from "@/lib/ebook-pricing";
 
 const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
+const ACCENT = "#8fa3d9";
+const BG = "#141414";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
@@ -39,9 +41,33 @@ export default function EbookHero() {
   return (
     <section
       className="flex items-center section-y-spacious px-6"
-      style={{ minHeight: "88vh" }}
+      style={{ minHeight: "88vh", background: BG, position: "relative", overflow: "hidden" }}
     >
-      <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%" }}>
+      {/* Cinematic cold-open: vignette + grain, ties into EbookImmersion right after */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(ellipse 90% 70% at 50% 40%, transparent 40%, rgba(0,0,0,0.55) 100%)",
+          zIndex: 0,
+        }}
+      />
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.5) 1px, transparent 0)",
+          backgroundSize: "3px 3px",
+          opacity: 0.025,
+          zIndex: 0,
+        }}
+      />
+
+      <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%", position: "relative", zIndex: 1 }}>
         <div className="grid lg:grid-cols-[1fr_2fr] gap-10 lg:gap-16 items-center">
           {/* Left: copy + CTA */}
           <div>
@@ -52,7 +78,7 @@ export default function EbookHero() {
                 fontSize: "0.68rem",
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
-                color: "#4e4d4d",
+                color: "rgba(246,243,241,0.6)",
                 marginBottom: 20,
               }}
             >
@@ -64,15 +90,16 @@ export default function EbookHero() {
               style={{
                 fontFamily: "var(--font-serif-monad), Georgia, serif",
                 fontWeight: 400,
-                fontSize: "clamp(2.4rem, 5.5vw, 4.2rem)",
-                lineHeight: 1.1,
+                fontSize: "clamp(2.6rem, 6vw, 4.6rem)",
+                lineHeight: 1.08,
                 letterSpacing: "-0.01em",
-                color: "#000",
+                color: "#f6f3f1",
                 marginBottom: 24,
+                textShadow: "0 4px 40px rgba(0,0,0,0.4)",
               }}
             >
               De cero a Claude{" "}
-              <em style={{ fontStyle: "italic" }}>en una semana.</em>
+              <em style={{ fontStyle: "italic", color: ACCENT }}>en una semana.</em>
             </motion.h1>
 
             <motion.p
@@ -80,7 +107,7 @@ export default function EbookHero() {
               style={{
                 fontSize: "1.05rem",
                 lineHeight: 1.75,
-                color: "#4e4d4d",
+                color: "rgba(246,243,241,0.68)",
                 marginBottom: 36,
                 maxWidth: 440,
                 fontWeight: 400,
@@ -88,7 +115,7 @@ export default function EbookHero() {
             >
               La guía práctica para dominar Claude Code sin perder semanas
               probando. Desde la instalación hasta prompts que generan código
-              en producción — todo en 120 páginas.
+              en producción — todo en 150+ páginas.
             </motion.p>
 
             <motion.div
@@ -98,7 +125,13 @@ export default function EbookHero() {
               <button
                 onClick={scrollToComprar}
                 className="btn-monad-fill"
-                style={{ cursor: "pointer" }}
+                style={{
+                  cursor: "pointer",
+                  background: "#f6f3f1",
+                  color: "#141414",
+                  borderColor: "#f6f3f1",
+                  boxShadow: "0 0 40px rgba(246,243,241,0.15)",
+                }}
               >
                 {formattedPrice
                   ? `Comprar · $${formattedPrice} CLP`
@@ -108,7 +141,7 @@ export default function EbookHero() {
               {priceInfo?.tier === "super-early" && (
                 <p
                   style={{
-                    color: "#4e4d4d",
+                    color: ACCENT,
                     fontFamily: "var(--font-mono)",
                     fontSize: "0.72rem",
                     letterSpacing: "0.08em",
@@ -122,7 +155,7 @@ export default function EbookHero() {
               {priceInfo?.tier === "early" && (
                 <p
                   style={{
-                    color: "#4e4d4d",
+                    color: ACCENT,
                     fontFamily: "var(--font-mono)",
                     fontSize: "0.72rem",
                     letterSpacing: "0.08em",
@@ -138,7 +171,7 @@ export default function EbookHero() {
             <motion.p
               {...fadeUp(0.34)}
               style={{
-                color: "#4e4d4d",
+                color: "rgba(246,243,241,0.5)",
                 fontSize: "0.75rem",
                 fontFamily: "var(--font-mono)",
                 letterSpacing: "0.05em",
@@ -160,7 +193,7 @@ export default function EbookHero() {
                 position: "absolute",
                 fontFamily: "var(--font-serif-monad), Georgia, serif",
                 fontSize: "clamp(6rem, 18vw, 13rem)",
-                color: "rgba(36,36,36,0.05)",
+                color: "rgba(246,243,241,0.06)",
                 lineHeight: 1,
                 whiteSpace: "nowrap",
                 pointerEvents: "none",
