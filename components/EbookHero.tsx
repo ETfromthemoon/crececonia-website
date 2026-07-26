@@ -2,7 +2,9 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import EbookPreview from "./EbookPreview";
+import EbookSoldCounter from "./EbookSoldCounter";
 import type { PriceInfo } from "@/lib/ebook-pricing";
 import { EBOOK_ACCENT as ACCENT, EBOOK_COLD_BG as BG } from "@/lib/ebook-theme";
 
@@ -84,6 +86,22 @@ export default function EbookHero() {
               Ebook · CrececonIA
             </motion.p>
 
+            <motion.div {...fadeUp(0.02)} style={{ marginBottom: 4 }}>
+              <Link
+                href="/ebooks"
+                style={{
+                  color: "rgba(246,243,241,0.55)",
+                  fontSize: "0.7rem",
+                  fontFamily: "var(--font-mono)",
+                  letterSpacing: "0.05em",
+                  textDecoration: "underline",
+                  textDecorationColor: "rgba(246,243,241,0.3)",
+                }}
+              >
+                Ver todos los ebooks →
+              </Link>
+            </motion.div>
+
             <motion.h1
               {...blurIn(0.1)}
               style={{
@@ -146,9 +164,7 @@ export default function EbookHero() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  Super Early — 60% off · {priceInfo.remaining} cupo
-                  {priceInfo.remaining === 1 ? "" : "s"} restante
-                  {priceInfo.remaining === 1 ? "" : "s"}
+                  Super Early — 60% off
                 </p>
               )}
               {priceInfo?.tier === "early" && (
@@ -160,11 +176,10 @@ export default function EbookHero() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  Early Adopters — 33% off · {priceInfo.remaining} cupo
-                  {priceInfo.remaining === 1 ? "" : "s"} restante
-                  {priceInfo.remaining === 1 ? "" : "s"}
+                  Early Adopters — 33% off
                 </p>
               )}
+              <EbookSoldCounter />
             </motion.div>
 
             <motion.p

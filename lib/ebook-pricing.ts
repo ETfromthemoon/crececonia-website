@@ -59,3 +59,18 @@ export async function decrementCupo(tier: Tier): Promise<void> {
     .update({ used: (data?.used ?? 0) + 1 })
     .eq("tier", tier);
 }
+
+/**
+ * Ventas previas a la puesta en marcha del contador (no quedaron registradas
+ * como filas en ebook_purchases). El total mostrado es este offset + el
+ * conteo real de compras confirmadas desde ahora en adelante.
+ */
+const PRE_LAUNCH_SOLD_OFFSET = 66;
+
+export async function getEbookSoldCount(): Promise<number> {
+  const db = getSupabaseAdmin();
+  const { count } = await db
+    .from("ebook_purchases")
+    .select("id", { count: "exact", head: true });
+  return PRE_LAUNCH_SOLD_OFFSET + (count ?? 0);
+}
