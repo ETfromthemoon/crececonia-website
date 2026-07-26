@@ -23,13 +23,22 @@ export default async function AdminDiscountCodesPage({
 
   const rows = codes ?? [];
 
-  const fmtDate = (s: string) =>
-    new Date(s).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" });
+  const fmtDate = (s: string | null) =>
+    s ? new Date(s).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" }) : "Sin vencimiento";
 
-  const statusOf = (row: { used_count: number; max_uses: number; expires_at: string; active: boolean }) => {
+  const statusOf = (row: {
+    used_count: number;
+    max_uses: number | null;
+    expires_at: string | null;
+    active: boolean;
+  }) => {
     if (!row.active) return { label: "Inactivo", color: "var(--smoke)" };
-    if (new Date(row.expires_at).getTime() < Date.now()) return { label: "Vencido", color: "var(--smoke)" };
-    if (row.used_count >= row.max_uses) return { label: "Usado", color: "var(--smoke)" };
+    if (row.expires_at && new Date(row.expires_at).getTime() < Date.now()) {
+      return { label: "Vencido", color: "var(--smoke)" };
+    }
+    if (row.max_uses !== null && row.used_count >= row.max_uses) {
+      return { label: "Usado", color: "var(--smoke)" };
+    }
     return { label: "Activo", color: "var(--champagne)" };
   };
 
@@ -127,7 +136,7 @@ export default async function AdminDiscountCodesPage({
                         {row.type === "percent" ? `${row.amount}%` : `$${row.amount.toLocaleString("es-CL")}`}
                       </td>
                       <td style={{ padding: "10px 12px", color: "var(--smoke)", textAlign: "center" }}>
-                        {row.used_count}/{row.max_uses}
+                        {row.used_count}/{row.max_uses ?? "∞"}
                       </td>
                       <td style={{ padding: "10px 12px", color: "var(--smoke)", fontFamily: "var(--font-mono)", fontSize: 12 }}>
                         {fmtDate(row.expires_at)}

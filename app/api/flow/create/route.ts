@@ -1,18 +1,10 @@
 import { NextResponse } from "next/server";
+import { getSupabaseAdmin } from "@/lib/supabase";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 import { validateDiscountCode } from "@/lib/discount-codes";
 import { flowSign, getFlowBase } from "@/lib/flow";
 
 const SITE_URL = process.env.SITE_URL ?? "https://www.crececonia.cl";
-
-// Marcadores usados para viajar el tier y el código de descuento dentro de
-// commerceOrder (Flow lo devuelve tal cual en payment/getStatus), sin
-// depender de una tabla de órdenes pendientes. El tier viaja siempre porque
-// el webhook de confirmación no puede reconstruirlo de forma confiable desde
-// el monto final una vez que existen descuentos (un código agresivo puede
-// hacer que el monto caiga "por casualidad" en el rango de otro tier).
-const TIER_MARKER = "_tier_";
-const DISCOUNT_MARKER = "_disc_";
 
 function randomId(): string {
   return Math.random().toString(36).slice(2, 8);
@@ -50,9 +42,19 @@ export async function POST(request: Request) {
   const apiKey = process.env.FLOW_API_KEY!;
   const secretKey = process.env.FLOW_SECRET_KEY!;
 
-  const commerceOrder =
-    `ebook-${Date.now()}-${randomId()}${TIER_MARKER}${priceInfo.tier}` +
-    (appliedCode ? `${DISCOUNT_MARKER}${appliedCode}` : "");
+  // commerceOrder queda exactamente en el formato corto original — nunca
+  // metemos datos de longitud variable (tier, código de descuento) ahí
+  // dentro. Flow no documenta un máximo de caracteres para este campo, así
+  // que no apostamos a que un código con prefijo largo no lo rompa. El tier
+  // y el código elegido viven en ebook_pending_orders, indexados por este
+  // mismo commerceOrder, y el webhook de confirmación los lee de ahí.
+  const commerceOrder = `ebook-${Date.now()}-${randomId()}`;
+
+  await getSupabaseAdmin().from("ebook_pending_orders").insert({
+    commerce_order: commerceOrder,
+    tier: priceInfo.tier,
+    discount_code: appliedCode ?? null,
+  });
 
   const params: Record<string, string | number> = {
     apiKey,

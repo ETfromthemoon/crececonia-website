@@ -6,9 +6,6 @@ import { redeemDiscountCode } from "@/lib/discount-codes";
 
 const SITE_URL = process.env.SITE_URL ?? "https://www.crececonia.cl";
 
-// Deben coincidir con los marcadores usados en app/api/flow/create/route.ts.
-const TIER_MARKER = "_tier_";
-const DISCOUNT_MARKER = "_disc_";
 const VALID_TIERS: Tier[] = ["super-early", "early", "regular"];
 
 function getResend() {
@@ -21,26 +18,6 @@ interface FlowPayment {
   amount: number;
   flowOrder: number;
   commerceOrder: string;
-}
-
-function extractDiscountCode(commerceOrder: string): string | null {
-  const idx = commerceOrder.indexOf(DISCOUNT_MARKER);
-  if (idx === -1) return null;
-  return commerceOrder.slice(idx + DISCOUNT_MARKER.length) || null;
-}
-
-/**
- * El tier viaja en commerceOrder (ver comentario en create/route.ts). Si el
- * marcador no está presente (orden creada antes de este cambio, o request
- * malformado), se cae al método anterior de reconstruir el tier desde el
- * monto — que sigue siendo correcto mientras no haya descuento aplicado.
- */
-function extractTier(commerceOrder: string, amount: number): Tier {
-  const idx = commerceOrder.indexOf(TIER_MARKER);
-  if (idx === -1) return determineTier(amount);
-  const rest = commerceOrder.slice(idx + TIER_MARKER.length);
-  const tier = rest.split(DISCOUNT_MARKER)[0] as Tier;
-  return VALID_TIERS.includes(tier) ? tier : determineTier(amount);
 }
 
 async function getPaymentStatus(token: string): Promise<FlowPayment | null> {
@@ -104,8 +81,18 @@ export async function POST(request: Request) {
     if (existing) return new Response("OK", { status: 200 });
 
     const commerceOrder = payment.commerceOrder ?? "";
-    const tier = extractTier(commerceOrder, payment.amount);
-    const discountCode = extractDiscountCode(commerceOrder);
+    const { data: pending } = await db
+      .from("ebook_pending_orders")
+      .select("tier, discount_code")
+      .eq("commerce_order", commerceOrder)
+      .maybeSingle();
+
+    // Si no hay fila pendiente (orden creada antes de este cambio, o el
+    // registro ya fue limpiado), se cae al método anterior de reconstruir
+    // el tier desde el monto — correcto mientras no haya descuento aplicado.
+    const pendingTier = pending?.tier as Tier | undefined;
+    const tier = pendingTier && VALID_TIERS.includes(pendingTier) ? pendingTier : determineTier(payment.amount);
+    const discountCode: string | null = pending?.discount_code ?? null;
 
     await db.from("ebook_purchases").insert({
       email: payment.email,
@@ -118,6 +105,7 @@ export async function POST(request: Request) {
 
     await decrementCupo(tier);
     if (discountCode) await redeemDiscountCode(discountCode);
+    if (pending) await db.from("ebook_pending_orders").delete().eq("commerce_order", commerceOrder);
     await sendConfirmationEmail(payment.email, token);
   } catch {
     // Always return 200 so Flow doesn't retry indefinitely

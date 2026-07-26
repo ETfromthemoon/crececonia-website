@@ -33,6 +33,9 @@ export default function DiscountCodeForm({ adminKey }: Props) {
   const [amount, setAmount] = useState("20");
   const [quantity, setQuantity] = useState("1");
   const [expiresInDays, setExpiresInDays] = useState("7");
+  const [noExpiration, setNoExpiration] = useState(false);
+  const [maxUses, setMaxUses] = useState("1");
+  const [unlimitedUses, setUnlimitedUses] = useState(false);
   const [prefix, setPrefix] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -44,9 +47,9 @@ export default function DiscountCodeForm({ adminKey }: Props) {
     setErrorMsg("");
     setGenerated([]);
 
-    const expiresAt = new Date(
-      Date.now() + Number(expiresInDays) * 24 * 60 * 60 * 1000
-    ).toISOString();
+    const expiresAt = noExpiration
+      ? null
+      : new Date(Date.now() + Number(expiresInDays) * 24 * 60 * 60 * 1000).toISOString();
 
     const res = await fetch("/api/admin/discount-codes", {
       method: "POST",
@@ -56,6 +59,7 @@ export default function DiscountCodeForm({ adminKey }: Props) {
         amount: Number(amount),
         quantity: Number(quantity),
         expiresAt,
+        maxUses: unlimitedUses ? null : Number(maxUses),
         prefix: prefix || undefined,
       }),
     });
@@ -146,9 +150,62 @@ export default function DiscountCodeForm({ adminKey }: Props) {
               min={1}
               value={expiresInDays}
               onChange={(e) => setExpiresInDays(e.target.value)}
-              style={inputStyle}
-              required
+              style={{ ...inputStyle, opacity: noExpiration ? 0.4 : 1 }}
+              disabled={noExpiration}
+              required={!noExpiration}
             />
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginTop: 6,
+                color: "var(--smoke)",
+                fontSize: 11,
+                fontFamily: "var(--font-mono)",
+                cursor: "pointer",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={noExpiration}
+                onChange={(e) => setNoExpiration(e.target.checked)}
+              />
+              Sin vencimiento
+            </label>
+          </div>
+
+          <div>
+            <label style={labelStyle} htmlFor="disc-max-uses">Usos por código</label>
+            <input
+              id="disc-max-uses"
+              type="number"
+              min={1}
+              value={maxUses}
+              onChange={(e) => setMaxUses(e.target.value)}
+              style={{ ...inputStyle, opacity: unlimitedUses ? 0.4 : 1 }}
+              disabled={unlimitedUses}
+              required={!unlimitedUses}
+            />
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginTop: 6,
+                color: "var(--smoke)",
+                fontSize: 11,
+                fontFamily: "var(--font-mono)",
+                cursor: "pointer",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={unlimitedUses}
+                onChange={(e) => setUnlimitedUses(e.target.checked)}
+              />
+              Usos ilimitados
+            </label>
           </div>
 
           <div>
@@ -183,7 +240,8 @@ export default function DiscountCodeForm({ adminKey }: Props) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
             <p style={{ color: "var(--champagne)", fontSize: 13, fontFamily: "var(--font-mono)" }}>
               {generated.length} código{generated.length === 1 ? "" : "s"} generado
-              {generated.length === 1 ? "" : "s"} — single-use, cada uno se puede usar 1 vez
+              {generated.length === 1 ? "" : "s"} — {unlimitedUses ? "usos ilimitados" : `${maxUses} uso${Number(maxUses) === 1 ? "" : "s"} cada uno`}
+              {noExpiration ? ", sin vencimiento" : ""}
             </p>
             <button
               type="button"

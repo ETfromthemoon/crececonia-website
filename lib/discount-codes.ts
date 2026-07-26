@@ -7,9 +7,9 @@ export interface DiscountCode {
   code: string;
   type: DiscountType;
   amount: number;
-  max_uses: number;
+  max_uses: number | null; // null = ilimitado
   used_count: number;
-  expires_at: string;
+  expires_at: string | null; // null = sin vencimiento
   active: boolean;
 }
 
@@ -19,6 +19,7 @@ export type DiscountValidation =
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sin 0/O/1/I para evitar ambigüedad
 const MIN_PRICE_CLP = 1000;
+const MAX_PREFIX_LENGTH = 10;
 
 function randomCode(length = 8): string {
   let out = "";
@@ -28,22 +29,32 @@ function randomCode(length = 8): string {
   return out;
 }
 
+function sanitizePrefix(prefix: string): string {
+  return prefix
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, MAX_PREFIX_LENGTH);
+}
+
 /**
- * Genera `quantity` códigos únicos, single-use, e inserta las filas en
- * discount_codes. Requiere que la tabla exista (ver SQL en el PR/README).
+ * Genera `quantity` códigos únicos e inserta las filas en discount_codes.
+ * `maxUses: null` → el código no tiene límite de usos. `expiresAt: null` →
+ * el código no vence. Requiere que la tabla exista (ver SQL en el PR).
  */
 export async function generateDiscountCodes(params: {
   type: DiscountType;
   amount: number;
   quantity: number;
-  expiresAt: string;
+  expiresAt: string | null;
+  maxUses: number | null;
   prefix?: string;
 }): Promise<string[]> {
-  const { type, amount, quantity, expiresAt, prefix } = params;
+  const { type, amount, quantity, expiresAt, maxUses, prefix } = params;
   const db = getSupabaseAdmin();
+  const cleanPrefix = prefix ? sanitizePrefix(prefix) : "";
   const codes = Array.from({ length: quantity }, () => {
     const raw = randomCode();
-    return prefix ? `${prefix.toUpperCase()}-${raw}` : raw;
+    return cleanPrefix ? `${cleanPrefix}-${raw}` : raw;
   });
 
   const { error } = await db.from("discount_codes").insert(
@@ -51,7 +62,7 @@ export async function generateDiscountCodes(params: {
       code,
       type,
       amount,
-      max_uses: 1,
+      max_uses: maxUses,
       used_count: 0,
       expires_at: expiresAt,
       active: true,
@@ -95,11 +106,11 @@ export async function validateDiscountCode(
   const row = data as DiscountCode;
 
   if (!row.active) return { valid: false, reason: "Este código ya no está activo." };
-  if (new Date(row.expires_at).getTime() < Date.now()) {
+  if (row.expires_at && new Date(row.expires_at).getTime() < Date.now()) {
     return { valid: false, reason: "Este código venció." };
   }
-  if (row.used_count >= row.max_uses) {
-    return { valid: false, reason: "Este código ya fue usado." };
+  if (row.max_uses !== null && row.used_count >= row.max_uses) {
+    return { valid: false, reason: "Este código ya alcanzó su límite de usos." };
   }
 
   return {
@@ -114,8 +125,8 @@ export async function validateDiscountCode(
 /**
  * Marca un código como usado. Se llama únicamente desde el webhook de
  * confirmación de pago (payment.status === 2), nunca al crear la orden.
- * Si el código ya alcanzó max_uses o no existe, no hace nada — el pago ya
- * se cobró con el monto correcto, esto es solo el registro de uso.
+ * Si el código no existe, no hace nada — el pago ya se cobró con el monto
+ * correcto, esto es solo el registro de uso.
  */
 export async function redeemDiscountCode(rawCode: string): Promise<void> {
   const code = rawCode.trim().toUpperCase();

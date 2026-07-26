@@ -35,7 +35,12 @@ export async function POST(request: Request) {
   const type: DiscountType = body?.type;
   const amount: number = Number(body?.amount);
   const quantity: number = Number(body?.quantity ?? 1);
-  const expiresAt: string = body?.expiresAt;
+  // null/undefined = ilimitado, tanto para vencimiento como para usos.
+  const expiresAt: string | null = body?.expiresAt || null;
+  const maxUses: number | null =
+    body?.maxUses === null || body?.maxUses === undefined || body?.maxUses === ""
+      ? null
+      : Number(body.maxUses);
   const prefix: string | undefined = body?.prefix || undefined;
 
   if (type !== "percent" && type !== "fixed") {
@@ -47,15 +52,20 @@ export async function POST(request: Request) {
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > 200) {
     return NextResponse.json({ error: "quantity debe ser entre 1 y 200." }, { status: 400 });
   }
-  if (!expiresAt || Number.isNaN(new Date(expiresAt).getTime())) {
-    return NextResponse.json({ error: "expiresAt inválido." }, { status: 400 });
+  if (expiresAt !== null) {
+    if (Number.isNaN(new Date(expiresAt).getTime())) {
+      return NextResponse.json({ error: "expiresAt inválido." }, { status: 400 });
+    }
+    if (new Date(expiresAt).getTime() <= Date.now()) {
+      return NextResponse.json({ error: "expiresAt debe ser una fecha futura." }, { status: 400 });
+    }
   }
-  if (new Date(expiresAt).getTime() <= Date.now()) {
-    return NextResponse.json({ error: "expiresAt debe ser una fecha futura." }, { status: 400 });
+  if (maxUses !== null && (!Number.isInteger(maxUses) || maxUses < 1)) {
+    return NextResponse.json({ error: "maxUses debe ser un entero positivo, o vacío para ilimitado." }, { status: 400 });
   }
 
   try {
-    const codes = await generateDiscountCodes({ type, amount, quantity, expiresAt, prefix });
+    const codes = await generateDiscountCodes({ type, amount, quantity, expiresAt, maxUses, prefix });
     return NextResponse.json({ codes });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error al generar códigos.";
