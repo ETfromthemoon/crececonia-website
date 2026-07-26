@@ -61,16 +61,22 @@ export async function decrementCupo(tier: Tier): Promise<void> {
 }
 
 /**
- * Ventas previas a la puesta en marcha del contador (no quedaron registradas
- * como filas en ebook_purchases). El total mostrado es este offset + el
- * conteo real de compras confirmadas desde ahora en adelante.
+ * Ventas que NO están registradas como filas en ebook_purchases (ventas
+ * previas a que existiera este sistema de checkout).
+ *
+ * Calibrado para que el total mostrado sea 66 al momento de configurarlo
+ * (2026-07-26), cuando ebook_purchases tenía 7 filas: 59 + 7 = 66. Cada
+ * compra nueva confirmada por Flow suma 1 desde ahí (67, 68, ...).
+ *
+ * Si alguna vez borrás filas de ebook_purchases el total mostrado baja —
+ * ajustá este número si eso pasa.
  */
-const PRE_LAUNCH_SOLD_OFFSET = 66;
+const UNRECORDED_SOLD_OFFSET = 59;
 
 export async function getEbookSoldCount(): Promise<number> {
   const db = getSupabaseAdmin();
   const { count } = await db
     .from("ebook_purchases")
     .select("id", { count: "exact", head: true });
-  return PRE_LAUNCH_SOLD_OFFSET + (count ?? 0);
+  return UNRECORDED_SOLD_OFFSET + (count ?? 0);
 }
