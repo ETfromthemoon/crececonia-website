@@ -35,6 +35,13 @@ There is no `lint`, `typecheck`, or `test` script. Run `npm run build` to typech
 /guias/[slug]             → app/guias/[slug]/page.tsx
 /skills/[slug]            → app/skills/[slug]/page.tsx
 /guias, /skills           → 308 redirects to /centro/guias, /centro/skills
+/ebooks                   → app/ebooks/page.tsx (catálogo — cards por ebook)
+/ebooks/agentes-de-ia     → app/ebooks/agentes-de-ia/page.tsx ("Próximamente", sin checkout)
+/ebook/de-cero-a-claude-en-una-semana → app/ebook/de-cero-a-claude-en-una-semana/page.tsx (venta real, Flow)
+  .../success             → página de retorno post-pago (Flow urlReturn)
+  .../descargar           → recuperar link de descarga por email
+/admin/ebook?key=…        → app/admin/ebook/page.tsx (dashboard ventas, gated por ADMIN_SECRET)
+/admin/descuentos?key=…   → app/admin/descuentos/page.tsx (generar códigos de descuento, gated por ADMIN_SECRET)
 ```
 
 ### Component map (landing page)
@@ -66,12 +73,18 @@ Loaded via `next/font/google` in `app/layout.tsx`:
 ### Backend
 
 - **External API**: `https://autodrive.cl/api/public/...` (not in this repo). Handles: skill views, skill downloads, call scheduling, email sending.
-- **Supabase** (env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`).
+- **Supabase** (env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`). Tables used by the ebook system: `ebook_purchases`, `ebook_cupos`, `discount_codes` (no migration files in this repo — schema is managed directly in the Supabase dashboard; see PR descriptions for the SQL that created each table).
 - **Resend** for transactional email (`RESEND_API_KEY`).
+- **Flow** (Chilean payment gateway, `FLOW_API_KEY`/`FLOW_SECRET_KEY`/`FLOW_SANDBOX`) powers ebook checkout — `lib/flow.ts` + `app/api/flow/create` (creates the order) + `app/api/flow/confirm` (webhook, inserts into `ebook_purchases`, redeems discount codes, sends the download email).
+- **Discount codes** (`lib/discount-codes.ts`): generated from `/admin/descuentos`, single-use by default, validated at `/api/ebook/discount/validate` before checkout and redeemed only after Flow confirms payment (never at checkout-creation, to avoid burning codes on abandoned carts). The applied code travels inside Flow's `commerceOrder` string (suffix after `_disc_`) rather than a separate pending-orders table.
+
+### Admin auth pattern
+
+Every `/admin/*` page follows the same gate: compare a `?key=` query param against `process.env.ADMIN_SECRET`, `notFound()` on mismatch (see `app/admin/ebook/page.tsx`, `app/admin/descuentos/page.tsx`). API routes under `/api/admin/*` accept the same secret via an `x-admin-key` header or `?key=` query param. There is no session/cookie auth — it's a single shared secret, intentionally simple for a single-admin site.
 
 ### Env setup
 
-Copy `.env.local.example` → `.env.local`. Four vars needed: Supabase (3) + Resend (1) + Admin secret.
+Copy `.env.local.example` → `.env.local`. Vars needed: Supabase (3), Resend (1), Admin secret (1), Flow (3: `FLOW_API_KEY`, `FLOW_SECRET_KEY`, `FLOW_SANDBOX`).
 
 ## Conventions
 
