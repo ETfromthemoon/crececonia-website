@@ -50,11 +50,26 @@ export async function POST(request: Request) {
   // mismo commerceOrder, y el webhook de confirmación los lee de ahí.
   const commerceOrder = `ebook-${Date.now()}-${randomId()}`;
 
-  await getSupabaseAdmin().from("ebook_pending_orders").insert({
-    commerce_order: commerceOrder,
-    tier: priceInfo.tier,
-    discount_code: appliedCode ?? null,
-  });
+  // Guardar el tier/código es contabilidad, no un requisito para cobrar: si
+  // Supabase falla acá NO abortamos la venta. El webhook de confirmación tiene
+  // fallback (reconstruye el tier desde el monto) para cuando no encuentra la
+  // fila. Perder el registro del código es peor que perder la venta, pero
+  // bloquear el checkout es peor que ambos.
+  try {
+    const { error: pendingError } = await getSupabaseAdmin()
+      .from("ebook_pending_orders")
+      .insert({
+        commerce_order: commerceOrder,
+        tier: priceInfo.tier,
+        discount_code: appliedCode ?? null,
+      });
+    if (pendingError) throw new Error(pendingError.message);
+  } catch (err) {
+    console.error(
+      `[flow/create] no se registró la orden pendiente ${commerceOrder} (tier=${priceInfo.tier}, código=${appliedCode ?? "ninguno"}):`,
+      err
+    );
+  }
 
   const params: Record<string, string | number> = {
     apiKey,

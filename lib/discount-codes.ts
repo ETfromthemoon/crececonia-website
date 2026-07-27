@@ -123,22 +123,26 @@ export async function validateDiscountCode(
 }
 
 /**
- * Marca un código como usado. Se llama únicamente desde el webhook de
- * confirmación de pago (payment.status === 2), nunca al crear la orden.
- * Si el código no existe, no hace nada — el pago ya se cobró con el monto
- * correcto, esto es solo el registro de uso.
+ * Marca un código como usado, de forma atómica. Se llama únicamente desde el
+ * webhook de confirmación de pago (payment.status === 2), nunca al crear la
+ * orden — así un carrito abandonado no quema el código.
+ *
+ * El incremento vive en una función de Postgres que sube `used_count` en una
+ * sola sentencia y solo si el código sigue siendo canjeable
+ * (`used_count < max_uses`). Antes esto era leer-luego-escribir sin volver a
+ * comparar contra `max_uses`, así que dos confirmaciones simultáneas podían
+ * perder un incremento o pasarse del límite sin que quedara registro.
+ *
+ * Devuelve `false` si el código ya no era canjeable (llegó a su límite o
+ * venció entre el checkout y la confirmación). El pago ya se cobró con el
+ * monto correcto, así que eso no se revierte — pero el contador no miente.
  */
-export async function redeemDiscountCode(rawCode: string): Promise<void> {
+export async function redeemDiscountCode(rawCode: string): Promise<boolean> {
   const code = rawCode.trim().toUpperCase();
   const db = getSupabaseAdmin();
-  const { data } = await db
-    .from("discount_codes")
-    .select("used_count")
-    .eq("code", code)
-    .maybeSingle();
-  if (!data) return;
-  await db
-    .from("discount_codes")
-    .update({ used_count: data.used_count + 1 })
-    .eq("code", code);
+  const { data, error } = await db.rpc("redeem_discount_code", { p_code: code });
+  if (error) {
+    throw new Error(`No se pudo canjear el código ${code}: ${error.message}`);
+  }
+  return data === true;
 }

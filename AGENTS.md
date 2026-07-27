@@ -8,18 +8,22 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - **Next.js 16.2.3** App Router + Turbopack. TypeScript strict. Tailwind CSS v4 via `@tailwindcss/postcss`.
 - **Site**: crececonia.cl — consulting landing page for mid-sized companies. Chilean Spanish copy.
-- **Deploy**: Vercel via CLI (`vercel --prod`). Region `gru1` (São Paulo). Aliased to `www.crececonia.cl`.
-- **No tests, no linter, no formatter config.** TypeScript is the only gate.
+- **Deploy**: Vercel git integration — pushing to `main` deploys to production automatically, and every PR gets a preview deployment (protected by Vercel Authentication, so preview URLs need a Vercel login). `vercel --prod` exists as a manual escape hatch but is not the normal path. Region `gru1` (São Paulo). Aliased to `www.crececonia.cl`.
+- **No linter, no formatter config.** TypeScript + the vitest suite are the gates.
 
 ## Commands
 
 ```bash
 npm run dev      # local dev (Turbopack)
-npm run build    # production build
-vercel --prod    # deploy to production (aliases to www.crececonia.cl)
+npm run build    # production build (also typechecks)
+npm test         # vitest run — unit/integration tests
+npm run test:watch
+vercel --prod    # manual deploy; NOT normally needed (see Deploy below)
 ```
 
-There is no `lint`, `typecheck`, or `test` script. Run `npm run build` to typecheck + verify.
+There is no `lint` or `typecheck` script — `npm run build` typechecks.
+
+**There IS a test suite** (`tests/`, vitest): `pricing`, `create`, `confirm`, `download`, `discount-codes`. It covers the ebook payment path — pricing tiers, Flow order creation, the Flow confirmation webhook, discount-code validation/redemption, and gated downloads. **Run `npm test` after touching anything under `lib/ebook-*`, `lib/discount-codes.ts`, `app/api/flow/*`, or `app/api/ebook/*`** — these mock Supabase and Flow, so a change to how those are called (e.g. swapping a `.from().update()` for an `.rpc()`) breaks the tests even when the build passes.
 
 ## Architecture
 

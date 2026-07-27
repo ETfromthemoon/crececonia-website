@@ -94,7 +94,14 @@ export async function POST(request: Request) {
     const tier = pendingTier && VALID_TIERS.includes(pendingTier) ? pendingTier : determineTier(payment.amount);
     const discountCode: string | null = pending?.discount_code ?? null;
 
-    await db.from("ebook_purchases").insert({
+    // Este insert es el guard de idempotencia real: ebook_purchases tiene un
+    // índice único sobre flow_token, así que si Flow entrega el webhook dos
+    // veces el segundo insert falla y cortamos acá. El SELECT de arriba es
+    // solo un atajo — no es atómico, dos entregas simultáneas lo pasan las
+    // dos. supabase-js NO lanza excepción en errores de query, por eso hay
+    // que leer `error` explícitamente: sin esto seguíamos de largo y
+    // duplicábamos cupo, canje del código y email para un solo pago.
+    const { error: insertError } = await db.from("ebook_purchases").insert({
       email: payment.email,
       amount: payment.amount,
       flow_token: token,
@@ -103,12 +110,49 @@ export async function POST(request: Request) {
       discount_code: discountCode,
     });
 
-    await decrementCupo(tier);
-    if (discountCode) await redeemDiscountCode(discountCode);
-    if (pending) await db.from("ebook_pending_orders").delete().eq("commerce_order", commerceOrder);
-    await sendConfirmationEmail(payment.email, token);
-  } catch {
-    // Always return 200 so Flow doesn't retry indefinitely
+    if (insertError) {
+      console.error(
+        `[flow/confirm] no se registró la compra del token ${token}:`,
+        insertError.message
+      );
+      return new Response("OK", { status: 200 });
+    }
+
+    // Entregar el ebook es lo más importante para el comprador, así que va
+    // antes que la contabilidad y cada paso se aísla: que falle el conteo de
+    // cupos no puede dejar a alguien que ya pagó sin su descarga.
+    try {
+      await sendConfirmationEmail(payment.email, token);
+    } catch (err) {
+      console.error(`[flow/confirm] falló el email de ${payment.email}:`, err);
+    }
+
+    try {
+      await decrementCupo(tier);
+    } catch (err) {
+      console.error(`[flow/confirm] falló el conteo de cupo (${tier}):`, err);
+    }
+
+    if (discountCode) {
+      try {
+        const redeemed = await redeemDiscountCode(discountCode);
+        if (!redeemed) {
+          console.error(
+            `[flow/confirm] el código ${discountCode} ya no era canjeable al confirmar el pago del token ${token} — se cobró con descuento de todas formas`
+          );
+        }
+      } catch (err) {
+        console.error(`[flow/confirm] falló el canje de ${discountCode}:`, err);
+      }
+    }
+
+    if (pending) {
+      await db.from("ebook_pending_orders").delete().eq("commerce_order", commerceOrder);
+    }
+  } catch (err) {
+    // Siempre respondemos 200 para que Flow no reintente indefinidamente,
+    // pero dejamos rastro en los logs de Vercel.
+    console.error("[flow/confirm] error inesperado:", err);
   }
 
   return new Response("OK", { status: 200 });
