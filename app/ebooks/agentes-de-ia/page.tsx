@@ -19,6 +19,7 @@ export default function AgentesDeIAPage() {
         description="La guía para diseñar, automatizar y desplegar agentes de IA en tu negocio o tu stack de desarrollo — sin la teoría de siempre. En preparación."
         ghostWord="Agentes"
         ctaSource="ebook-agentes-ia-proximamente"
+        resource="ebook:agentes-de-ia"
       />
     </main>
   );

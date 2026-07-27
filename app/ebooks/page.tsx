@@ -27,18 +27,25 @@ const EBOOKS = [
     href: "/ebooks/agentes-de-ia",
     status: "coming-soon" as const,
   },
+  {
+    title: "Curso completo de creación de sitios web con IA, landing corporativo e ecommerce",
+    description:
+      "De cero a un sitio en producción: landing corporativo y tienda ecommerce, construidos con IA paso a paso. En preparación.",
+    href: "/ebooks/sitios-web-ia",
+    status: "coming-soon" as const,
+  },
 ];
 
 export default function EbooksPage() {
   return (
     <main className="monad">
       <section className="section-y-spacious px-6">
-        <div style={{ maxWidth: 1024, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <EbookSectionHeading kicker="Biblioteca">
             Ebooks de <em style={{ fontStyle: "italic" }}>CrececonIA.</em>
           </EbookSectionHeading>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {EBOOKS.map((ebook, i) => (
               <EbookCard key={ebook.href} index={i} {...ebook} />
             ))}
