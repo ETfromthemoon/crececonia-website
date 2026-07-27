@@ -45,3 +45,8 @@ next-env.d.ts
 
 # private assets (PDFs, etc.) — never commit
 /private
+
+# tooling artifacts (npx skills, graphify) — never commit
+.agents/
+graphify-out/
+skills-lock.json

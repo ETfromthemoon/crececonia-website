@@ -1,0 +1,28 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Si se pushea varias veces seguidas al mismo branch, cancela los runs viejos.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # tests/setup.ts inyecta las env vars de prueba, así que no hacen falta
+      # secretos: la suite mockea Supabase, Flow y Resend.
+      - run: npm test

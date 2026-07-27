@@ -39,14 +39,14 @@ const SITE_URL = "https://crececonia.cl";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "CrececonIA — Sistemas que tu equipo sí usa, sin gastar en IA que no necesitas.",
+  title: "CrececonIA — Un agente IA para tu negocio, listo en 48 horas.",
   description:
-    "Consultoría de IA para empresas medianas. Aplicamos el Protocolo BPI: Bases, Procesos, IA — en ese orden. Test de Fit gratuito de 30 minutos: te decimos honestamente en qué letra está tu empresa.",
+    "Implementamos agentes IA para empresas latinoamericanas. Eliges el canal, cargas lo que sabe de tu negocio y te lo entregamos funcionando. Desde USD 297/mes.",
   authors: [{ name: "CrececonIA" }],
   openGraph: {
-    title: "CrececonIA — Sistemas que tu equipo sí usa, sin gastar en IA que no necesitas.",
+    title: "CrececonIA — Un agente IA para tu negocio, listo en 48 horas.",
     description:
-      "Consultoría de IA para empresas medianas. Aplicamos el Protocolo BPI: Bases, Procesos, IA — en ese orden. Test de Fit gratuito de 30 minutos.",
+      "Implementamos agentes IA para empresas latinoamericanas. WhatsApp, web, Instagram. Setup en 48h. Desde USD 297/mes.",
     url: SITE_URL,
     siteName: "CrececonIA",
     locale: "es_CL",
@@ -56,15 +56,15 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "CrececonIA — Protocolo BPI: Bases, Procesos, IA",
+        alt: "CrececonIA — Agentes IA para empresas, listos en 48h",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CrececonIA — Sistemas que tu equipo sí usa, sin gastar en IA que no necesitas.",
+    title: "CrececonIA — Un agente IA para tu negocio, listo en 48 horas.",
     description:
-      "Consultoría de IA para empresas medianas. Protocolo BPI: Bases, Procesos, IA — en ese orden. Test de Fit gratuito.",
+      "Implementamos agentes IA para empresas latinoamericanas. WhatsApp, web, Instagram. Desde USD 297/mes.",
     images: ["/og-image.png"],
   },
   alternates: {
@@ -89,33 +89,25 @@ const jsonLd = {
   name: "CrececonIA",
   url: SITE_URL,
   description:
-    "Consultoría de IA para empresas medianas. Aplicamos el Protocolo BPI: Bases, Procesos, IA — en ese orden. Si tu empresa no necesita IA, te lo decimos en el Test de Fit.",
+    "Agencia de agentes IA para empresas latinoamericanas. Implementamos asistentes IA en WhatsApp, web e Instagram. Desde USD 297/mes. Setup en 48 horas.",
   areaServed: ["CL", "ES", "MX", "CO", "AR", "PE"],
-  serviceType: "Consultoría de Inteligencia Artificial",
-  slogan: "Sistemas que tu equipo sí usa, sin gastar en IA que no necesitas.",
+  serviceType: "Implementación de Agentes de Inteligencia Artificial",
+  slogan: "Un agente IA para tu negocio, listo en 48 horas.",
   offers: [
     {
       "@type": "Offer",
-      name: "Test de Fit",
+      name: "Agente IA mensual",
       description:
-        "Sesión gratuita de 30 minutos para identificar en qué letra del Protocolo BPI está tu empresa (Bases, Procesos o IA).",
-      price: "0",
-      priceCurrency: "CLP",
-    },
-    {
-      "@type": "Offer",
-      name: "Auditoría profunda",
-      description:
-        "Mapeo de Bases y Procesos + hoja de ruta priorizada por ROI. 2 semanas.",
-      price: "500",
+        "Agente IA implementado en WhatsApp, web o Instagram. Incluye setup, integración, capacitación y soporte continuo.",
+      price: "297",
       priceCurrency: "USD",
     },
     {
       "@type": "Offer",
-      name: "Implementación completa",
+      name: "Setup inicial",
       description:
-        "Instalación, integración, capacitación y medición de adopción en semana 3. Garantía: si no se usa, iteramos sin costo.",
-      price: "1500",
+        "Personalización, integración con tus canales y carga de conocimiento de tu negocio. Entrega en 48 horas.",
+      price: "200",
       priceCurrency: "USD",
     },
   ],
@@ -129,6 +121,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
+      data-theme="light"
       className={`${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable} ${sourceSerif4.variable} antialiased`}
     >
       <head>

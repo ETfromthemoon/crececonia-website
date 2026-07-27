@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import EbookSectionHeading from "./EbookSectionHeading";
 
 const FAQS = [
   {
@@ -35,33 +36,10 @@ export default function EbookFAQ() {
   return (
     <section className="section-y-narrow px-6">
       <div style={{ maxWidth: 720, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 56 }}>
-          <p
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "0.68rem",
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              color: "#4e4d4d",
-              marginBottom: 16,
-            }}
-          >
-            FAQ
-          </p>
-          <h2
-            style={{
-              fontFamily: "var(--font-serif-monad), Georgia, serif",
-              fontWeight: 400,
-              fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
-              lineHeight: 1.15,
-              letterSpacing: "-0.01em",
-              color: "#000",
-            }}
-          >
-            Las que más{" "}
-            <em style={{ fontStyle: "italic" }}>nos preguntan.</em>
-          </h2>
-        </div>
+        <EbookSectionHeading kicker="FAQ">
+          Las que más{" "}
+          <em style={{ fontStyle: "italic" }}>nos preguntan.</em>
+        </EbookSectionHeading>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           {FAQS.map((faq, idx) => {
@@ -73,6 +51,9 @@ export default function EbookFAQ() {
                 style={{
                   borderBottom: "1px solid rgba(0,0,0,0.1)",
                   borderTop: idx === 0 ? "1px solid rgba(0,0,0,0.1)" : "none",
+                  background: isOpen ? "rgba(207,218,245,0.16)" : "transparent",
+                  transition: "background 0.35s ease",
+                  borderRadius: isOpen ? 12 : 0,
                 }}
               >
                 <button
@@ -80,6 +61,8 @@ export default function EbookFAQ() {
                   style={{ padding: "20px 0" }}
                   onClick={() => setOpen(isOpen ? null : idx)}
                   aria-expanded={isOpen}
+                  aria-controls={`faq-panel-${idx}`}
+                  id={`faq-trigger-${idx}`}
                 >
                   <span
                     style={{
@@ -107,7 +90,12 @@ export default function EbookFAQ() {
                   </span>
                 </button>
 
-                <div className={`accordion-body${isOpen ? " open" : ""}`}>
+                <div
+                  id={`faq-panel-${idx}`}
+                  role="region"
+                  aria-labelledby={`faq-trigger-${idx}`}
+                  className={`accordion-body${isOpen ? " open" : ""}`}
+                >
                   <div>
                     <p
                       style={{

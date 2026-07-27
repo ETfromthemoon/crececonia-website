@@ -1,10 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { determineTier, getCurrentPrice, decrementCupo } from "@/lib/ebook-pricing";
 
-// Mock Supabase
-const mockFrom = vi.fn();
+// Mock Supabase. vi.hoisted porque vi.mock se hoistea por encima de estas
+// declaraciones y el factory se evalúa al importar el módulo bajo prueba.
+const { mockFrom, mockRpc } = vi.hoisted(() => ({
+  mockFrom: vi.fn(),
+  mockRpc: vi.fn(),
+}));
 vi.mock("@/lib/supabase", () => ({
-  getSupabaseAdmin: () => ({ from: mockFrom }),
+  getSupabaseAdmin: () => ({ from: mockFrom, rpc: mockRpc }),
 }));
 
 function makeChain(result: unknown) {
@@ -108,30 +112,35 @@ describe("getCurrentPrice", () => {
 });
 
 describe("decrementCupo", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRpc.mockResolvedValue({ error: null });
+  });
 
   it("no hace nada para tier regular", async () => {
     await decrementCupo("regular");
+    expect(mockRpc).not.toHaveBeenCalled();
     expect(mockFrom).not.toHaveBeenCalled();
   });
 
-  it("incrementa used para super-early", async () => {
-    const updateChain = { eq: vi.fn().mockResolvedValue({}) };
-    const updateFn = vi.fn(() => updateChain);
-    const selectChain = {
-      eq: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: { used: 3 } }),
-    };
-    mockFrom.mockImplementation((table: string) => {
-      if (table === "ebook_cupos") {
-        return {
-          select: vi.fn(() => selectChain),
-          update: updateFn,
-        };
-      }
-    });
-
+  it("incrementa el cupo con una sola sentencia atómica (RPC)", async () => {
     await decrementCupo("super-early");
-    expect(updateFn).toHaveBeenCalledWith({ used: 4 });
+    expect(mockRpc).toHaveBeenCalledWith("increment_cupo_used", {
+      p_tier: "super-early",
+    });
+  });
+
+  it("nunca escribe un valor absoluto con un read-then-write", async () => {
+    // Regresión: antes leía `used` y escribía `used + 1`. Si el SELECT fallaba,
+    // escribía used = 1 y borraba el conteo real, reabriendo el tier con 60% off.
+    await decrementCupo("early");
+    expect(mockFrom).not.toHaveBeenCalled();
+  });
+
+  it("lanza cuando la RPC falla, en vez de corromper el contador", async () => {
+    mockRpc.mockResolvedValue({ error: { message: "statement timeout" } });
+    await expect(decrementCupo("super-early")).rejects.toThrow(
+      /no se pudo incrementar el cupo/i
+    );
   });
 });

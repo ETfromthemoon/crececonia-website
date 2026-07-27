@@ -1,7 +1,7 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { WAButton } from "./GradientButton";
 import { BackgroundPaths } from "./ui/background-paths";
 
 const fadeUp = (delay = 0) => ({
@@ -11,6 +11,15 @@ const fadeUp = (delay = 0) => ({
 });
 
 export default function Hero() {
+  const [rubro, setRubro] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rubro.trim()) return;
+    const msg = `Hola! Quiero un agente IA para mi negocio: ${rubro.trim()}`;
+    window.open(`https://wa.me/569XXXXXXXX?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
   return (
     <section
       className="relative flex items-center justify-center overflow-hidden px-6"
@@ -29,7 +38,7 @@ export default function Hero() {
             width: 960,
             height: 720,
             background:
-              "radial-gradient(ellipse, rgba(217,179,106,0.1) 0%, rgba(140,111,63,0.06) 40%, transparent 70%)",
+              "radial-gradient(ellipse, rgba(196,155,74,0.08) 0%, rgba(140,111,63,0.04) 40%, transparent 70%)",
             filter: "blur(80px)",
           }}
         />
@@ -40,7 +49,7 @@ export default function Hero() {
             right: "8%",
             width: 420,
             height: 420,
-            background: "radial-gradient(circle, rgba(217,179,106,0.08), transparent 70%)",
+            background: "radial-gradient(circle, rgba(196,155,74,0.06), transparent 70%)",
             filter: "blur(70px)",
           }}
         />
@@ -51,7 +60,7 @@ export default function Hero() {
             left: "6%",
             width: 320,
             height: 320,
-            background: "radial-gradient(circle, rgba(37,211,102,0.06), transparent 70%)",
+            background: "radial-gradient(circle, rgba(196,155,74,0.04), transparent 70%)",
             filter: "blur(60px)",
           }}
         />
@@ -62,7 +71,7 @@ export default function Hero() {
             right: "12%",
             width: 280,
             height: 280,
-            background: "radial-gradient(circle, rgba(217,179,106,0.06), transparent 70%)",
+            background: "radial-gradient(circle, rgba(196,155,74,0.04), transparent 70%)",
             filter: "blur(55px)",
           }}
         />
@@ -70,49 +79,66 @@ export default function Hero() {
 
       {/* Contenido central */}
       <div className="relative max-w-3xl mx-auto text-center">
-        {/* Etiqueta superior — manifiesto */}
+        {/* Eyebrow */}
         <motion.p {...fadeUp(0.04)} className="eyebrow" style={{ marginBottom: 24 }}>
-          Para empresas medianas que quieren resultados, no promesas
+          Agentes IA para empresas latinoamericanas
         </motion.p>
 
-        {/* Headline manifesto */}
+        {/* Headline */}
         <motion.h1
           {...fadeUp(0.08)}
           className="leading-none mb-5"
           style={{
             fontFamily: "var(--font-display)",
-            fontSize: "clamp(2.4rem, 5.5vw, 4.2rem)",
             fontWeight: 300,
             color: "var(--bone)",
             letterSpacing: "-0.025em",
           }}
         >
-          Sistemas que tu equipo sí usa,
+          Un agente IA para tu negocio,
           <br />
           <em className="gradient-text" style={{ fontStyle: "italic" }}>
-            sin gastar en IA que no necesitas.
+            listo en 48 horas.
           </em>
         </motion.h1>
 
-        {/* Subtítulo — BPI thesis */}
+        {/* Subheadline */}
         <motion.p
           {...fadeUp(0.16)}
           className="text-lg max-w-2xl mx-auto mb-10 leading-relaxed"
           style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
         >
-          No facturamos horas ni entregamos PDFs. Cada proyecto termina con un sistema en producción y métricas de adopción real.
-          <br className="hidden sm:inline" />{" "}
-          Si tu empresa no está lista para IA, te lo decimos en 30 minutos, sin costo.
+          Eliges el canal —WhatsApp, web, Instagram—, nos cuentas cómo funciona tu negocio,
+          y en 48 horas está atendiendo clientes reales.
         </motion.p>
 
-        {/* CTA */}
-        <motion.div {...fadeUp(0.24)} className="flex justify-center">
-          <WAButton source="hero-primary" size="lg">
-            Agendar Test de Fit
-          </WAButton>
+        {/* Mini-form */}
+        <motion.div {...fadeUp(0.24)}>
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col sm:flex-row gap-3 justify-center items-center max-w-md mx-auto"
+          >
+            <input
+              type="text"
+              value={rubro}
+              onChange={(e) => setRubro(e.target.value)}
+              placeholder="Ej: restaurante, clínica dental, inmobiliaria..."
+              aria-label="¿De qué es tu negocio?"
+              required
+              className="flex-1 px-4 py-3 rounded-sm border text-base w-full"
+              style={{
+                borderColor: "var(--border)",
+                background: "var(--card-bg)",
+                color: "var(--ink)",
+              }}
+            />
+            <button type="submit" className="btn-primary whitespace-nowrap w-full sm:w-auto">
+              Quiero mi agente IA
+            </button>
+          </form>
         </motion.div>
 
-        {/* Señales — una línea sobria */}
+        {/* Trust line */}
         <motion.p
           {...fadeUp(0.34)}
           className="mt-8 text-xs"
@@ -122,7 +148,7 @@ export default function Hero() {
             letterSpacing: "0.12em",
           }}
         >
-          30 min · conversación honesta · sin pitch de venta
+          Configuración en 48h &middot; desde USD 297/mes &middot; sin contrato forzado
         </motion.p>
       </div>
     </section>

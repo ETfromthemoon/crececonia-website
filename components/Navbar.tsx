@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { WAButton } from "./GradientButton";
 
 const NAV_LINKS = [
-  { label: "Manifiesto", href: "/#manifiesto" },
-  { label: "Protocolo BPI", href: "/#proceso" },
-  { label: "Casos", href: "/#resultados" },
-  { label: "Inversión", href: "/#servicios" },
+  { label: "Cómo funciona", href: "/#como-funciona" },
+  { label: "Casos", href: "/#casos" },
+  { label: "Precio", href: "/#precio" },
+  { label: "FAQ", href: "/#faq" },
   { label: "Conocimiento", href: "/centro" },
   { label: "Ebook", href: "/ebook/de-cero-a-claude-en-una-semana", highlight: true },
 ] as const;
+
+const WHATSAPP_URL = "https://wa.me/569XXXXXXXX";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -32,9 +33,10 @@ export default function Navbar() {
       className="fixed top-0 left-0 right-0 z-50"
       style={{
         height: 68,
-        background: scrolled ? "rgba(10,10,11,0.92)" : "transparent",
+        background: scrolled ? "rgba(250,250,249,0.92)" : "transparent",
         backdropFilter: scrolled ? "blur(12px)" : "none",
-        borderBottom: scrolled ? "1px solid rgba(30,30,31,0.9)" : "none",
+        WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
+        borderBottom: scrolled ? "1px solid rgba(0,0,0,0.06)" : "none",
         transition: "background 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease",
       }}
     >
@@ -42,10 +44,10 @@ export default function Navbar() {
         <a
           href="/"
           className="font-light text-lg tracking-tight flex-shrink-0"
-          style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
+          style={{ fontFamily: "var(--font-display)", color: "var(--ink)" }}
         >
           Crece<span style={{ color: "var(--champagne)", fontStyle: "italic" }}>con</span>
-          <span style={{ color: "var(--bone)" }}>IA</span>
+          <span style={{ color: "var(--ink)" }}>IA</span>
         </a>
 
         {/* Desktop Navigation */}
@@ -58,7 +60,7 @@ export default function Navbar() {
               style={{
                 color: "highlight" in link && link.highlight ? "var(--champagne)" : "var(--smoke)",
                 fontFamily: "var(--font-mono)",
-                letterSpacing: "0.18em",
+                letterSpacing: "0.15em",
                 textTransform: "uppercase",
                 display: "inline-flex",
                 alignItems: "center",
@@ -86,9 +88,15 @@ export default function Navbar() {
 
         {/* Desktop CTA */}
         <div className="hidden sm:block">
-          <WAButton source="nav" size="md">
-            Solicitar Test de Fit
-          </WAButton>
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary"
+            style={{ padding: "9px 18px" }}
+          >
+            Hablemos por WhatsApp
+          </a>
         </div>
 
         {/* Mobile Menu Button */}
@@ -102,25 +110,31 @@ export default function Navbar() {
           <motion.span
             animate={{ rotate: mobileMenuOpen ? 45 : 0, y: mobileMenuOpen ? 8 : 0 }}
             className="w-5 h-px rounded transition-all"
-            style={{ background: "var(--bone)" }}
+            style={{ background: "var(--ink)" }}
           />
           <motion.span
             animate={{ opacity: mobileMenuOpen ? 0 : 1 }}
             className="w-5 h-px rounded"
-            style={{ background: "var(--bone)" }}
+            style={{ background: "var(--ink)" }}
           />
           <motion.span
             animate={{ rotate: mobileMenuOpen ? -45 : 0, y: mobileMenuOpen ? -8 : 0 }}
             className="w-5 h-px rounded transition-all"
-            style={{ background: "var(--bone)" }}
+            style={{ background: "var(--ink)" }}
           />
         </button>
 
         {/* Mobile CTA */}
         <div className="sm:hidden">
-          <WAButton source="nav-mobile" size="md">
-            Test de Fit
-          </WAButton>
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary"
+            style={{ padding: "8px 16px" }}
+          >
+            WhatsApp
+          </a>
         </div>
       </div>
 
@@ -135,9 +149,10 @@ export default function Navbar() {
             className="md:hidden absolute left-0 right-0"
             style={{
               top: 68,
-              background: "rgba(10,10,11,0.97)",
-              borderBottom: "1px solid rgba(30,30,31,0.9)",
+              background: "rgba(250,250,249,0.97)",
+              borderBottom: "1px solid rgba(0,0,0,0.06)",
               backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
             }}
           >
             <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-3">
@@ -148,9 +163,9 @@ export default function Navbar() {
                   onClick={() => handleNavClick()}
                   className="text-xs py-2 transition-colors"
                   style={{
-                    color: "highlight" in link && link.highlight ? "var(--champagne)" : "var(--smoke)",
+                    color: "highlight" in link && link.highlight ? "var(--champagne)" : "var(--muted)",
                     fontFamily: "var(--font-mono)",
-                    letterSpacing: "0.18em",
+                    letterSpacing: "0.15em",
                     textTransform: "uppercase",
                     display: "inline-flex",
                     alignItems: "center",
@@ -162,9 +177,9 @@ export default function Navbar() {
                     <span
                       style={{
                         fontSize: "0.55rem",
-                        background: "rgba(217,179,106,0.15)",
+                        background: "rgba(196,155,74,0.12)",
                         color: "var(--champagne)",
-                        border: "1px solid rgba(217,179,106,0.3)",
+                        border: "1px solid rgba(196,155,74,0.25)",
                         borderRadius: 2,
                         padding: "1px 5px",
                         letterSpacing: "0.12em",

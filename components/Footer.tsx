@@ -1,53 +1,45 @@
 "use client";
 
-const COL_SERVICIOS = [
-  { label: "Protocolo BPI", href: "/protocolo-bpi" },
-  { label: "Lo que creemos", href: "/#manifiesto" },
-  { label: "Casos reales", href: "/#resultados" },
-  { label: "Inversión", href: "/#servicios" },
-];
-
-const COL_RECURSOS = [
-  { label: "Ebook · De cero a Claude", href: "/ebook/de-cero-a-claude-en-una-semana", highlight: true },
+const NAV_LINKS = [
+  { label: "Cómo funciona", href: "/#como-funciona" },
+  { label: "Casos", href: "/#casos" },
+  { label: "Precio", href: "/#precio" },
+  { label: "FAQ", href: "/#faq" },
   { label: "Centro de Conocimiento", href: "/centro" },
-  { label: "Guías", href: "/centro/guias" },
-  { label: "Skills para Claude Code", href: "/centro/skills" },
-  { label: "Preguntas frecuentes", href: "/#faq" },
+  { label: "Ebook", href: "/ebook/de-cero-a-claude-en-una-semana", highlight: true },
 ];
 
-const linkStyle = {
+const linkStyle: React.CSSProperties = {
   color: "var(--smoke)",
   fontFamily: "var(--font-mono)",
-  letterSpacing: "0.06em",
-  fontSize: "12px",
-  textTransform: "none" as const,
+  letterSpacing: "0.1em",
+  fontSize: "0.75rem",
+  textTransform: "none",
   lineHeight: 1.8,
   display: "inline-flex",
   alignItems: "center",
   gap: "8px",
 };
 
-const headerStyle = {
+const headerStyle: React.CSSProperties = {
   color: "var(--bone)",
   fontFamily: "var(--font-mono)",
-  letterSpacing: "0.16em",
-  fontSize: "11px",
-  textTransform: "uppercase" as const,
+  letterSpacing: "0.14em",
+  fontSize: "0.7rem",
+  textTransform: "uppercase",
   marginBottom: "16px",
-  fontWeight: 600 as const,
+  fontWeight: 600,
 };
 
 export default function Footer() {
   return (
     <footer
       className="pt-16 pb-8 px-6 border-t"
-      style={{ borderColor: "rgba(30,30,31,0.9)", background: "var(--obsidian)" }}
+      style={{ borderColor: "var(--hairline)", background: "var(--carbon)" }}
     >
       <div className="max-w-6xl mx-auto">
-        {/* 3 columnas — en mobile: brand a la izquierda + 2 cols apilados después */}
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10 mb-12">
-
-          {/* Col 1 — Brand (full width en mobile pequeño) */}
+          {/* Col 1 — Brand */}
           <div className="col-span-2 sm:col-span-2 lg:col-span-1">
             <a
               href="/"
@@ -60,54 +52,44 @@ export default function Footer() {
               className="text-sm leading-relaxed"
               style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
             >
-              Consultoría de IA para empresas medianas. Aplicamos el Protocolo BPI:
-              Bases, Procesos, IA — en ese orden.
+              Agentes IA para empresas latinoamericanas.
             </p>
             <p
               className="mt-4 text-xs"
-              style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)", letterSpacing: "0.06em" }}
+              style={{
+                color: "var(--smoke)",
+                fontFamily: "var(--font-mono)",
+                letterSpacing: "0.06em",
+              }}
             >
               Santiago, Chile
             </p>
           </div>
 
-          {/* Col 2 — Servicios */}
+          {/* Col 2 — Navegación */}
           <div>
-            <p style={headerStyle}>Servicios</p>
+            <p style={headerStyle}>Navegación</p>
             <ul className="space-y-1.5">
-              {COL_SERVICIOS.map((l) => (
-                <li key={l.label}>
-                  <a
-                    href={l.href}
-                    style={linkStyle}
-                    className="transition-colors"
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--champagne)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "var(--smoke)")}
-                  >
-                    {l.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Col 3 — Recursos */}
-          <div>
-            <p style={headerStyle}>Recursos</p>
-            <ul className="space-y-1.5">
-              {COL_RECURSOS.map((l) => (
+              {NAV_LINKS.map((l) => (
                 <li key={l.label}>
                   <a
                     href={l.href}
                     style={{
                       ...linkStyle,
-                      color: "highlight" in l && l.highlight ? "var(--champagne)" : "var(--smoke)",
+                      color:
+                        "highlight" in l && l.highlight
+                          ? "var(--champagne)"
+                          : "var(--smoke)",
                     }}
                     className="transition-colors"
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--champagne)")}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.color = "var(--champagne)")
+                    }
                     onMouseLeave={(e) =>
                       (e.currentTarget.style.color =
-                        "highlight" in l && l.highlight ? "var(--champagne)" : "var(--smoke)")
+                        "highlight" in l && l.highlight
+                          ? "var(--champagne)"
+                          : "var(--smoke)")
                     }
                   >
                     {l.label}
@@ -115,9 +97,9 @@ export default function Footer() {
                       <span
                         style={{
                           fontSize: "0.55rem",
-                          background: "rgba(217,179,106,0.12)",
+                          background: "rgba(196,155,74,0.12)",
                           color: "var(--champagne)",
-                          border: "1px solid rgba(217,179,106,0.25)",
+                          border: "1px solid rgba(196,155,74,0.25)",
                           borderRadius: 2,
                           padding: "1px 5px",
                           letterSpacing: "0.12em",
@@ -132,26 +114,90 @@ export default function Footer() {
               ))}
             </ul>
           </div>
+
+          {/* Col 3 — Contacto */}
+          <div>
+            <p style={headerStyle}>Contacto</p>
+            <ul className="space-y-1.5">
+              <li>
+                <a
+                  href="mailto:sergio@crececonia.cl"
+                  style={linkStyle}
+                  className="transition-colors"
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.color = "var(--champagne)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.color = "var(--smoke)")
+                  }
+                >
+                  sergio@crececonia.cl
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://wa.me/569XXXXXXXX"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={linkStyle}
+                  className="transition-colors"
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.color = "var(--champagne)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.color = "var(--smoke)")
+                  }
+                >
+                  WhatsApp
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.linkedin.com/in/sergioastudillo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={linkStyle}
+                  className="transition-colors"
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.color = "var(--champagne)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.color = "var(--smoke)")
+                  }
+                >
+                  LinkedIn
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
 
         {/* Separador + cierre */}
         <div
           className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4"
-          style={{ borderTop: "1px solid rgba(30,30,31,0.9)" }}
+          style={{ borderTop: "1px solid var(--hairline)" }}
         >
           <p
             className="text-xs"
-            style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)", letterSpacing: "0.06em" }}
+            style={{
+              color: "var(--smoke)",
+              fontFamily: "var(--font-mono)",
+              letterSpacing: "0.06em",
+            }}
           >
-            © {new Date().getFullYear()} CrececonIA · Strimo SPA · Todos los derechos reservados
+            &copy; 2026 CrececonIA. Todos los derechos reservados.
           </p>
           <div className="flex items-center gap-5">
             <a
               href="mailto:sergio@crececonia.cl"
               style={linkStyle}
               className="transition-colors"
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--champagne)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--smoke)")}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.color = "var(--champagne)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "var(--smoke)")
+              }
             >
               Email
             </a>
@@ -161,19 +207,27 @@ export default function Footer() {
               rel="noopener noreferrer"
               style={linkStyle}
               className="transition-colors"
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--champagne)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--smoke)")}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.color = "var(--champagne)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "var(--smoke)")
+              }
             >
               LinkedIn
             </a>
             <a
-              href="https://wa.me/56961945206"
+              href="https://wa.me/569XXXXXXXX"
               target="_blank"
               rel="noopener noreferrer"
               style={linkStyle}
               className="transition-colors"
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--champagne)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--smoke)")}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.color = "var(--champagne)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "var(--smoke)")
+              }
             >
               WhatsApp
             </a>

@@ -21,28 +21,50 @@
 
 
 :root {
-  /* === OBSIDIAN PALETTE === */
-  --obsidian:    #0A0A0B;
-  --graphite:    #1E1E1F;
-  --carbon:      #0F0F10;
-  --champagne:   #D9B36A;
+  /* === PALETA COMPARTIDA (accentos) === */
+  --champagne:   #C49B4A;
   --champagne-2: #8C6F3F;
-  --bone:        #F5F5F4;
-  --ash:         #A8A29E;
-  --smoke:       #8C8C8C;
-  --hairline:    rgba(30,30,31,0.9);
-  --gold-soft:   rgba(217,179,106,0.10);
+  --gold-soft:   rgba(196,155,74,0.08);
 
   /* === Estados (form/feedback) === */
-  --danger:      #EF4444;
-  --success:     #4ADE80;
+  --danger:      #DC2626;
+  --success:     #16A34A;
 
-  /* === TOKENS SEMÁNTICOS === */
-  --bg:       var(--obsidian);
-  --ink:      var(--bone);
-  --muted:    var(--ash);
+  /* === TOKENS SEMÁNTICOS (tema claro por defecto) === */
+  --bg:       #FAFAF9;
+  --ink:      #1A1A1A;
+  --muted:    #555555;
   --accent:   var(--champagne);
+  --border:   rgba(0,0,0,0.08);
+  --carbon:   #FFFFFF;
+  --graphite: #FFFFFF;
+  --obsidian: #FAFAF9;
+  --bone:     #1A1A1A;
+  --ash:      #555555;
+  --smoke:    #8C8C8C;
+  --hairline: rgba(0,0,0,0.08);
+  --card-bg:  #FFFFFF;
+  --section-alt: #F5F4F0;
+}
+
+[data-theme="dark"] {
+  --champagne:   #D9B36A;
+  --champagne-2: #8C6F3F;
+  --gold-soft:   rgba(217,179,106,0.10);
+  --bg:       #0A0A0B;
+  --ink:      #F5F5F4;
+  --muted:    #A8A29E;
+  --accent:   #D9B36A;
   --border:   rgba(30,30,31,0.95);
+  --carbon:   #0F0F10;
+  --graphite: #1E1E1F;
+  --obsidian: #0A0A0B;
+  --bone:     #F5F5F4;
+  --ash:      #A8A29E;
+  --smoke:    #8C8C8C;
+  --hairline: rgba(30,30,31,0.9);
+  --card-bg:  #0F0F10;
+  --section-alt: #1E1E1F;
 }
 
 @theme inline {
@@ -64,19 +86,23 @@ html {
 /* Grain sutil */
 body::before {
   content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1;
+  opacity: 0.018;
+  background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.5) 1px, transparent 0);
+  background-size: 3px 3px;
+}
+[data-theme="dark"] body::before {
   opacity: 0.022;
   background-image: radial-gradient(circle at 1px 1px, #fff 1px, transparent 0);
-  background-size: 3px 3px;
 }
 
 body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-inter), system-ui, sans-serif;
-  font-weight: 300;
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 ::-webkit-scrollbar { width: 5px; }
@@ -116,8 +142,8 @@ summary:focus-visible {
   padding: 13px 26px;
   border-radius: 2px;
   font-weight: 500;
-  font-size: 0.85rem;
-  letter-spacing: 0.05em;
+  font-size: 0.875rem;
+  letter-spacing: 0.04em;
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
@@ -157,7 +183,7 @@ summary:focus-visible {
 }
 .btn-ghost.btn-lg {
   padding: 16px 32px;
-  font-size: 1rem;
+  font-size: 0.9375rem;
 }
 
 /* ===== Espaciado de secciones (sistema unificado) =====
@@ -224,9 +250,9 @@ summary:focus-visible {
   display: inline-block;
   color: var(--champagne);
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 400;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   margin-bottom: 1rem;
 }
@@ -239,16 +265,17 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.02em;
 }
 
-h1 { font-size: clamp(2.4rem, 5.5vw, 4.2rem); }
-h2 { font-size: clamp(1.8rem, 3.5vw, 2.4rem); }
-h3 { font-size: clamp(1.15rem, 1.9vw, 1.5rem); }
+h1 { font-size: clamp(2.6rem, 6vw, 5.2rem); }
+h2 { font-size: clamp(1.9rem, 4vw, 2.8rem); }
+h3 { font-size: clamp(1.15rem, 2vw, 1.6rem); }
 
 p, span, li {
-  font-weight: 300;
-  line-height: 1.65;
+  font-weight: 400;
+  line-height: 1.7;
 }
 
-.text-muted  { color: var(--ash); font-weight: 300; }
+/* Override: solo texto secundario usa peso 300 */
+.text-muted  { color: var(--ash); font-weight: 400; }
 .text-semibold { font-weight: 500; }
 .text-bold   { font-weight: 600; }
 
@@ -263,15 +290,15 @@ p, span, li {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 14px;
+  padding: 4px 12px;
   border-radius: 2px;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 400;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--champagne);
   background: var(--gold-soft);
-  border: 1px solid rgba(217,179,106,0.25);
+  border: 1px solid rgba(196,155,74,0.25);
   font-family: var(--font-mono);
 }
 
@@ -414,8 +441,8 @@ p, span, li {
 }
 .card-hover:hover {
   transform: translateY(-3px);
-  box-shadow: 0 0 0 1px rgba(217,179,106,0.25), 0 24px 60px rgba(217,179,106,0.1);
-  border-color: rgba(217,179,106,0.28) !important;
+  box-shadow: 0 0 0 1px rgba(196,155,74,0.18), 0 24px 48px rgba(0,0,0,0.06);
+  border-color: rgba(196,155,74,0.22) !important;
 }
 
 /* ===== Card elevación (fondo oscuro) ===== */
@@ -593,8 +620,8 @@ p, span, li {
   gap: 8px;
   padding: 13px 26px;
   border-radius: 2px;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: 500;
+  font-size: 0.875rem;
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
@@ -611,7 +638,7 @@ p, span, li {
 }
 .btn-evaluacion.btn-lg {
   padding: 16px 32px;
-  font-size: 0.95rem;
+  font-size: 0.9375rem;
 }
 
 /* ===== MONAD DESIGN SYSTEM — ebook (fondo claro, tipografía editorial) ===== */

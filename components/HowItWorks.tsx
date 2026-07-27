@@ -1,172 +1,139 @@
-const STAGES = [
-  {
-    letter: "B",
-    label: "Bases",
-    question: "¿Tu data está accesible? ¿Tu equipo entiende sus propios procesos?",
-    body: "Sin esto, ningún sistema de IA va a funcionar — porque no hay sobre qué construir. Las Bases son prerequisito de todo lo demás. Si tu empresa todavía está acá, lo más útil que podemos hacer es decírtelo y recomendarte por dónde empezar (que no somos necesariamente nosotros).",
-  },
-  {
-    letter: "P",
-    label: "Procesos",
-    question: "¿El proceso que quieres automatizar tiene sentido como está?",
-    body: "Muchas veces la &laquo;mejor IA&raquo; es rediseñar el proceso primero. Sin software adicional. Sin licencias nuevas. Sin pagar por capas de tecnología que tapan un problema operativo. Si tu proceso está roto, automatizarlo solo lo rompe más rápido.",
-  },
-  {
-    letter: "I",
-    label: "IA",
-    question: "¿En qué procesos la IA realmente paga el costo total de propiedad?",
-    body: "Solo cuando las Bases y los Procesos están sanos, evaluamos qué procesos pagan con IA y cuáles no. La mayoría no — y eso te lo decimos antes de cobrarte un peso. Cuando hay caso, instalamos el sistema, lo integramos, capacitamos y medimos adopción.",
-  },
-];
+"use client";
 
-export default function BPIProtocol() {
+import { motion } from "framer-motion";
+
+const STEPS = [
+  {
+    number: 1,
+    title: "Cuéntanos de tu negocio",
+    body: "Una videollamada de 30 minutos. Entendemos cómo operas, qué preguntas te hacen siempre, y si un agente realmente te va a servir. Si no, te lo decimos sin cobrarte.",
+  },
+  {
+    number: 2,
+    title: "Construimos tu agente",
+    body: "Cargamos tus datos, conectamos tus canales y entrenamos al agente con tus respuestas reales. Tú solo nos pasas la info de tu negocio.",
+  },
+  {
+    number: 3,
+    title: "Tu agente en vivo",
+    body: "Lo dejamos funcionando. Le enseñamos a tu equipo a usarlo. Si en la semana 3 nadie lo está usando, lo ajustamos sin costo hasta que lo adopten.",
+  },
+] as const;
+
+export default function HowItWorks() {
   return (
-    <section id="proceso" className="section-y px-6" style={{ background: "var(--graphite)" }}>
+    <section id="como-funciona" className="section-y px-6" style={{ background: "var(--section-alt)" }}>
       <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-14">
-          <p className="tag mb-5 inline-block">Metodología propietaria</p>
+        <div className="text-center mb-12">
+          <p className="tag mb-5 inline-block">Cómo funciona</p>
           <h2
-            className="font-light leading-tight mb-4"
-            style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
+            className="font-light leading-tight"
+            style={{ fontFamily: "var(--font-display)", color: "var(--ink)" }}
           >
-            Protocolo BPI.{" "}
-            <em className="gradient-text">Bases, Procesos, IA — en ese orden.</em>
+            De cero a agente en vivo{" "}
+            <em className="gradient-text">en 48 horas.</em>
           </h2>
-          <p
-            className="mt-4 text-base max-w-2xl mx-auto leading-relaxed"
-            style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
-          >
-            La mayoría de los proyectos de IA fallan porque saltan a la &laquo;I&raquo;
-            cuando la empresa todavía está en la &laquo;B&raquo; o en la &laquo;P&raquo;.
-            Antes de cobrarte por implementación, te decimos en qué letra estás.
-          </p>
         </div>
 
-        {/* Flujo B → P → I visual */}
-        <div className="hidden md:flex items-center justify-center gap-4 mb-12">
-          {["B", "P", "I"].map((letter, i) => (
-            <div key={letter} className="flex items-center gap-4">
+        {/* Flow visual: desktop horizontal con flechas */}
+        <div className="hidden md:flex items-start justify-center gap-0 mb-8 flex-wrap">
+          {STEPS.map((step, i) => (
+            <motion.div
+              key={step.number}
+              className="flex items-start"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.5, delay: i * 0.15 }}
+            >
               <div
-                className="flex items-center justify-center"
+                className="card-hover flex flex-col items-center text-center p-6"
                 style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 4,
-                  border: `1px solid ${i === 2 ? "var(--champagne)" : "rgba(217,179,106,0.3)"}`,
-                  background:
-                    i === 2 ? "rgba(217,179,106,0.08)" : "rgba(255,255,255,0.02)",
-                  color: i === 2 ? "var(--champagne)" : "var(--bone)",
-                  fontFamily: "var(--font-display)",
-                  fontSize: "1.6rem",
-                  fontWeight: 300,
+                  background: "var(--card-bg)",
+                  border: "1px solid var(--hairline)",
+                  borderRadius: 2,
+                  maxWidth: 280,
+                  minWidth: 240,
                 }}
               >
-                {letter}
-              </div>
-              {i < 2 && (
-                <span
-                  style={{
-                    color: "var(--champagne)",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "1.1rem",
-                    opacity: 0.6,
-                  }}
+                <span className="number-badge mb-4">{step.number}</span>
+                <h3
+                  className="text-base font-medium mb-2 leading-snug"
+                  style={{ color: "var(--ink)" }}
                 >
-                  →
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-5">
-          {STAGES.map((stage, idx) => (
-            <div
-              key={stage.letter}
-              className="card-hover border flex flex-col md:flex-row gap-6 p-7 relative overflow-hidden"
-              style={{
-                borderRadius: 2,
-                borderColor:
-                  idx === 2 ? "rgba(217,179,106,0.3)" : "rgba(30,30,31,0.9)",
-                background: "var(--carbon)",
-              }}
-            >
-              {/* Letra grande */}
-              <div
-                className="flex-shrink-0 flex md:flex-col items-center md:items-start gap-3 md:gap-1"
-                style={{ minWidth: 96 }}
-              >
-                <span
-                  className="leading-none"
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "3.6rem",
-                    fontWeight: 300,
-                    fontStyle: "italic",
-                    color:
-                      idx === 2 ? "var(--champagne)" : "rgba(231,229,221,0.85)",
-                  }}
-                >
-                  {stage.letter}
-                </span>
-                <span
-                  className="text-xs"
-                  style={{
-                    color: "var(--smoke)",
-                    fontFamily: "var(--font-mono)",
-                    letterSpacing: "0.18em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {stage.label}
-                </span>
-              </div>
-
-              <div className="flex-1">
-                <p
-                  className="text-base font-light leading-snug mb-3"
-                  style={{ color: "var(--bone)", fontFamily: "var(--font-display)" }}
-                >
-                  {stage.question}
-                </p>
+                  {step.title}
+                </h3>
                 <p
                   className="text-sm leading-relaxed"
-                  style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.8 }}
-                  dangerouslySetInnerHTML={{ __html: stage.body }}
-                />
+                  style={{ color: "var(--muted)", fontWeight: 300, lineHeight: 1.75 }}
+                >
+                  {step.body}
+                </p>
               </div>
-            </div>
+
+              {i < STEPS.length - 1 && (
+                <div className="flex items-center justify-center px-4 pt-10">
+                  <span
+                    style={{
+                      color: "var(--champagne)",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "1.2rem",
+                      opacity: 0.5,
+                    }}
+                    aria-hidden="true"
+                  >
+                    →
+                  </span>
+                </div>
+              )}
+            </motion.div>
           ))}
         </div>
 
-        <p
-          className="text-center text-xs mt-10"
-          style={{
-            color: "var(--smoke)",
-            fontFamily: "var(--font-mono)",
-            letterSpacing: "0.12em",
-          }}
-        >
-          El Test de Fit te dice en qué letra estás. Si no es la &laquo;I&raquo;, te lo
-          decimos.
-        </p>
+        {/* Mobile: stacked */}
+        <div className="md:hidden flex flex-col gap-5">
+          {STEPS.map((step, i) => (
+            <motion.div
+              key={step.number}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              className="card-hover flex gap-5 p-6"
+              style={{
+                background: "var(--card-bg)",
+                border: "1px solid var(--hairline)",
+                borderRadius: 2,
+              }}
+            >
+              <span className="number-badge mt-0.5 flex-shrink-0">{step.number}</span>
+              <div className="flex-1">
+                <h3
+                  className="text-base font-medium mb-2 leading-snug"
+                  style={{ color: "var(--ink)" }}
+                >
+                  {step.title}
+                </h3>
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ color: "var(--muted)", fontWeight: 300, lineHeight: 1.75 }}
+                >
+                  {step.body}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
 
-        <div className="text-center mt-6">
-          <a
-            href="/protocolo-bpi"
-            className="inline-flex items-center gap-2 text-xs transition-colors"
-            style={{
-              color: "var(--champagne)",
-              fontFamily: "var(--font-mono)",
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              borderBottom: "1px solid rgba(217,179,106,0.3)",
-              paddingBottom: 4,
-            }}
-          >
-            Ver el Protocolo BPI completo
-            <span aria-hidden="true">→</span>
-          </a>
+        {/* Arrow connector for mobile: vertical arrows between cards */}
+        <div className="md:hidden flex flex-col items-center gap-2 mt-2 mb-6">
+          {STEPS.slice(0, -1).map((_, i) => (
+            <span
+              key={i}
+              className="hidden"
+              aria-hidden="true"
+            />
+          ))}
         </div>
       </div>
     </section>

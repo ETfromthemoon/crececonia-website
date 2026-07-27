@@ -61,11 +61,6 @@ export default function EbookPopup() {
         ? "Early Adopters · 33% OFF"
         : null;
 
-  const remainingText =
-    priceData?.remaining != null && priceData.remaining <= 5
-      ? `Solo quedan ${priceData.remaining} cupo${priceData.remaining === 1 ? "" : "s"}`
-      : null;
-
   return (
     <AnimatePresence>
       {visible && (
@@ -266,18 +261,6 @@ export default function EbookPopup() {
                     }}
                   >
                     {tierLabel}
-                  </span>
-                )}
-                {remainingText && (
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "0.6rem",
-                      color: "#f87171",
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    {remainingText}
                   </span>
                 )}
               </div>
