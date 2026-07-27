@@ -142,7 +142,7 @@ export default function EbookComingSoon({ title, description, ghostWord, ctaSour
               boxShadow: "0 0 40px rgba(246,243,241,0.15)",
             }}
           >
-            Avisame cuando esté disponible
+            Avísame cuando esté disponible
           </button>
 
           <Link

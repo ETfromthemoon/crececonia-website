@@ -113,7 +113,7 @@ export default function EbookPricing() {
     <section id="comprar" className="section-y px-6">
       <div style={{ maxWidth: 480, margin: "0 auto" }}>
         <EbookSectionHeading kicker="Precio">
-          Empezá hoy.{" "}
+          Empieza hoy.{" "}
           <em style={{ fontStyle: "italic" }}>Sin excusas.</em>
         </EbookSectionHeading>
 
@@ -225,7 +225,7 @@ export default function EbookPricing() {
                     marginBottom: 8,
                   }}
                 >
-                  ¿Tenés un código de descuento?
+                  ¿Tienes un código de descuento?
                 </label>
                 <div style={{ display: "flex", gap: 8 }}>
                   <input

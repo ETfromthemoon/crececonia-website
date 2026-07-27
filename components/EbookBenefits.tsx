@@ -34,8 +34,8 @@ const BENEFITS = [
     ),
   },
   {
-    title: "Evitás meses de prueba y error",
-    desc: "6 meses de experimentación real condensados. Los errores costosos ya los cometí yo — no los tenés que repetir.",
+    title: "Evitas meses de prueba y error",
+    desc: "6 meses de experimentación real condensados. Los errores costosos ya los cometí yo — no los tienes que repetir.",
     icon: (
       <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -52,7 +52,7 @@ export default function EbookBenefits() {
     <section className="section-y px-6">
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
         <EbookSectionHeading kicker="Lo que vas a encontrar" size="lg">
-          Todo lo que necesitás para{" "}
+          Todo lo que necesitas para{" "}
           <em style={{ fontStyle: "italic" }}>arrancar en serio.</em>
         </EbookSectionHeading>
 
