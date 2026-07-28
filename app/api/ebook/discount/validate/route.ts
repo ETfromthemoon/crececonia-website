@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 import { validateDiscountCode } from "@/lib/discount-codes";
+import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ valid: false, reason: "Ingresa un código." }, { status: 400 });
   }
 
-  const priceInfo = await getCurrentPrice().catch(() => null);
+  // Los códigos de descuento solo aplican a la compra de 1 solo libro (el
+  // combo y el código nunca se combinan), así que siempre se valida contra
+  // el precio del libro por defecto.
+  const priceInfo = await getCurrentPrice(DEFAULT_EBOOK_RESOURCE).catch(() => null);
   if (!priceInfo) {
     return NextResponse.json(
       { valid: false, reason: "No se pudo verificar el código. Intenta nuevamente." },
