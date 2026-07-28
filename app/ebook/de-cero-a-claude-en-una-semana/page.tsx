@@ -108,17 +108,17 @@ const PROFILES = [
   {
     role: "Perfil 01",
     title: "Dueño de PYME técnica",
-    desc: "Tenés equipo pero no tiempo para experimentar semanas con cada herramienta nueva. Querés saber si Claude realmente sirve y cómo integrarlo sin romper lo que ya funciona.",
+    desc: "Tienes equipo pero no tiempo para experimentar semanas con cada herramienta nueva. Quieres saber si Claude realmente sirve y cómo integrarlo sin romper lo que ya funciona.",
   },
   {
     role: "Perfil 02",
     title: "Freelance / Independiente",
-    desc: "Querés multiplicar tu output sin contratar. Claude puede ser el multiplicador de fuerza que te permite tomar más proyectos sin trabajar más horas.",
+    desc: "Quieres multiplicar tu output sin contratar. Claude puede ser el multiplicador de fuerza que te permite tomar más proyectos sin trabajar más horas.",
   },
   {
     role: "Perfil 03",
     title: "Líder técnico",
-    desc: "Necesitás que tu equipo adopte IA sin caos ni dependencia ciega. Querés un marco claro para entender qué tareas tiene sentido darle a Claude y cuáles no.",
+    desc: "Necesitas que tu equipo adopte IA sin caos ni dependencia ciega. Quieres un marco claro para entender qué tareas tiene sentido darle a Claude y cuáles no.",
   },
 ];
 
@@ -127,8 +127,8 @@ function EbookWhoIsFor() {
     <section className="section-y px-6">
       <div style={{ maxWidth: 1024, margin: "0 auto" }}>
         <EbookSectionHeading kicker="Para quién es">
-          Si reconocés alguno de estos perfiles,{" "}
-          <em style={{ fontStyle: "italic" }}>este ebook es para vos.</em>
+          Si reconoces alguno de estos perfiles,{" "}
+          <em style={{ fontStyle: "italic" }}>este ebook es para ti.</em>
         </EbookSectionHeading>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

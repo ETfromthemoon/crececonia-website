@@ -74,8 +74,8 @@ export default async function CentroPage() {
               className="text-base max-w-xl mx-auto"
               style={{ color: "var(--ash)", fontWeight: 300 }}
             >
-              Skills, guías y enlaces organizados por objetivo. Elegí qué querés
-              lograr y encontrá lo que te sirve para crecer.
+              Skills, guías y enlaces organizados por objetivo. Elige qué quieres
+              lograr y encuentra lo que te sirve para crecer.
             </p>
           </div>
         </section>
