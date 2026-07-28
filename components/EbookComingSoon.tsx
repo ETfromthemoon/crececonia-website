@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useEvaluacion } from "./EvaluacionProvider";
 import { EBOOK_ACCENT as ACCENT, EBOOK_COLD_BG as BG } from "@/lib/ebook-theme";
+
+const SUBSCRIBE_API = "/api/ebook/waitlist";
+const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
 const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
 
@@ -24,16 +27,41 @@ type Props = {
   description: string;
   ghostWord: string;
   ctaSource: string;
+  resource: string;
 };
+
+type Status = "idle" | "loading" | "success" | "error";
 
 /**
  * Plantilla de "próximamente" para un ebook aún no lanzado. Reusa el mismo
  * cold-open oscuro + tipografía editorial de EbookHero (mismo BG/ACCENT vía
  * lib/ebook-theme) para que se sienta parte de la misma familia de páginas,
- * pero sin precio ni checkout — solo captura de interés vía EvaluacionModal.
+ * pero sin precio ni checkout — solo captura de interés vía /api/ebook/waitlist
+ * (lib/ebook-waitlist.ts), que guarda el email en nuestra propia base de
+ * Supabase y confirma por Resend. A diferencia de SuscriptorPopup/EmailPopup,
+ * NO pasa por autodrive.cl — estos correos solo sirven para avisar el
+ * lanzamiento, no alimentan ninguna lista de Autodrive.
  */
-export default function EbookComingSoon({ title, description, ghostWord, ctaSource }: Props) {
-  const { abrir } = useEvaluacion();
+export default function EbookComingSoon({ title, description, ghostWord, ctaSource, resource }: Props) {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<Status>("idle");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!isValidEmail(email)) return;
+    setStatus("loading");
+    try {
+      const res = await fetch(SUBSCRIBE_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, source: ctaSource, resource }),
+        signal: AbortSignal.timeout(10_000),
+      });
+      setStatus(res.ok ? "success" : "error");
+    } catch {
+      setStatus("error");
+    }
+  }
 
   return (
     <section
@@ -128,22 +156,74 @@ export default function EbookComingSoon({ title, description, ghostWord, ctaSour
 
         <motion.div
           {...fadeUp(0.26)}
-          style={{ display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}
+          style={{ display: "flex", flexDirection: "column", gap: 14, alignItems: "center", width: "100%" }}
         >
-          <button
-            type="button"
-            onClick={() => abrir(ctaSource)}
-            className="btn-monad-fill"
-            style={{
-              cursor: "pointer",
-              background: "#f6f3f1",
-              color: "#141414",
-              borderColor: "#f6f3f1",
-              boxShadow: "0 0 40px rgba(246,243,241,0.15)",
-            }}
-          >
-            Avisame cuando esté disponible
-          </button>
+          {status === "success" ? (
+            <p
+              style={{
+                color: ACCENT,
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.85rem",
+                letterSpacing: "0.02em",
+              }}
+            >
+              Listo — te avisamos apenas esté disponible.
+            </p>
+          ) : (
+            <form
+              onSubmit={handleSubmit}
+              style={{
+                display: "flex",
+                gap: 10,
+                width: "100%",
+                maxWidth: 420,
+                flexWrap: "wrap",
+                justifyContent: "center",
+              }}
+            >
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="tu@email.com"
+                disabled={status === "loading"}
+                aria-label="Tu email"
+                style={{
+                  flex: "1 1 220px",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(246,243,241,0.15)",
+                  borderRadius: 2,
+                  padding: "14px 16px",
+                  color: "#f6f3f1",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.9rem",
+                  outline: "none",
+                }}
+              />
+              <button
+                type="submit"
+                disabled={status === "loading"}
+                className="btn-monad-fill"
+                style={{
+                  cursor: "pointer",
+                  background: "#f6f3f1",
+                  color: "#141414",
+                  borderColor: "#f6f3f1",
+                  boxShadow: "0 0 40px rgba(246,243,241,0.15)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {status === "loading" ? "Enviando…" : "Avísame cuando esté"}
+              </button>
+            </form>
+          )}
+
+          {status === "error" && (
+            <p style={{ color: "rgba(217,106,106,0.9)", fontSize: "0.78rem", fontFamily: "var(--font-mono)" }}>
+              Algo salió mal. Intenta de nuevo.
+            </p>
+          )}
 
           <Link
             href="/ebooks"
