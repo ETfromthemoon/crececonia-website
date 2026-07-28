@@ -77,7 +77,7 @@ Loaded via `next/font/google` in `app/layout.tsx`:
 ### Backend
 
 - **External API**: `https://autodrive.cl/api/public/...` (not in this repo). Handles: skill views, skill downloads, call scheduling, email sending.
-- **Supabase** (env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`). Tables used by the ebook system: `ebook_purchases`, `ebook_cupos`, `discount_codes` (no migration files in this repo — schema is managed directly in the Supabase dashboard; see PR descriptions for the SQL that created each table).
+- **Supabase** (env vars: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — there is no anon key in this project, every access is server-side with the service role key). Tables used by the ebook system: `ebook_purchases`, `ebook_cupos`, `discount_codes`, `ebook_pending_orders`, `ebook_waitlist` (no migration files in this repo — schema is managed directly in the Supabase dashboard; SQL lives in `docs/superpowers/plans/*.sql` and PR descriptions). Both `ebook_purchases` and `ebook_cupos` carry a `resource` column (multi-book bundle engine, see `lib/ebook-catalog.ts`) — every book, including future ones, shares this schema. `ebook_waitlist` (email, resource, source, created_at) captures "notify me" signups from coming-soon book pages — see the runbook below for how to notify them when a book launches.
 - **Resend** for transactional email (`RESEND_API_KEY`).
 - **Flow** (Chilean payment gateway, `FLOW_API_KEY`/`FLOW_SECRET_KEY`/`FLOW_SANDBOX`) powers ebook checkout — `lib/flow.ts` + `app/api/flow/create` (creates the order) + `app/api/flow/confirm` (webhook, inserts into `ebook_purchases`, redeems discount codes, sends the download email).
 - **Discount codes** (`lib/discount-codes.ts`): generated from `/admin/descuentos`, single-use by default, validated at `/api/ebook/discount/validate` before checkout and redeemed only after Flow confirms payment (never at checkout-creation, to avoid burning codes on abandoned carts). The applied code travels inside Flow's `commerceOrder` string (suffix after `_disc_`) rather than a separate pending-orders table.
@@ -89,6 +89,44 @@ Every `/admin/*` page follows the same gate: compare a `?key=` query param again
 ### Env setup
 
 Copy `.env.local.example` → `.env.local`. Vars needed: Supabase (3), Resend (1), Admin secret (1), Flow (3: `FLOW_API_KEY`, `FLOW_SECRET_KEY`, `FLOW_SANDBOX`).
+
+## Runbook: activar un ebook nuevo (agente)
+
+Cuando el usuario pida "activar [nombre del libro]" / "lanzar el libro de X" / "poner a la venta [libro]",
+seguir estos pasos en orden. No hace falta preguntar el enfoque — es mecánico.
+
+1. **Confirmar con el usuario, antes de tocar nada**: precio de cada tramo (super-early/early/regular en
+   CLP) y cuántos cupos super-early/early quiere ofrecer. Esto es una decisión de negocio, no técnica —
+   no inventar números.
+2. **`lib/ebook-catalog.ts`**: cambiar la entrada del libro de `active: false` a `active: true` y agregarle
+   `tierPrices: { superEarly, early, regular }` con los valores confirmados. Es un discriminated union —
+   TypeScript exige `tierPrices` apenas se pone `active: true`, así que el build falla si falta.
+3. **Supabase — cupos**: insertar las filas de `ebook_cupos` para ese `resource` (una fila por tier
+   `super-early` y `early`, con `total` = cupos acordados y `used = 0`). El `resource` debe ser
+   exactamente el string del catálogo (ej. `ebook:agentes-de-ia`).
+4. **El PDF del libro**: subir el archivo a `private/{slug}-{format}.pdf` (`movil` y `a4`), donde `slug` es
+   el resource sin el prefijo `ebook:` (ej. `private/agentes-de-ia-movil.pdf`). Sin el archivo,
+   `/api/ebook/download` responde 503 "se está preparando" — no rompe nada, pero nadie puede descargar.
+5. **Página de venta real**: los libros "coming-soon" hoy renderizan `EbookComingSoon` (solo waitlist, sin
+   precio). Activar el libro en el catálogo **no crea automáticamente una página de venta** — `EbookPricing`
+   está montado únicamente en `/ebook/de-cero-a-claude-en-una-semana/page.tsx` y solo ese componente sabe
+   ofrecer combos (los otros libros `active` aparecen ahí como checkbox de combo, no como venta
+   independiente). Para que el libro nuevo tenga su propia página de venta (hero + beneficios + FAQ +
+   bloque de precio propio), hay que construirla siguiendo el patrón de esa página — no es un flag, es
+   trabajo de UI real. Si por ahora alcanza con venderlo solo como parte de un combo desde la página del
+   libro 1, este paso se puede saltar.
+6. **`npm test && npm run build`**: confirmar que el build sigue verde (el catálogo generaliza tipos, un
+   error de `tierPrices` faltante se detecta acá).
+7. **Avisar a la waitlist** (`ebook_waitlist`, ver tabla en el punto de Backend abajo) — esto es manual
+   hoy, no hay automatización. Exportar los interesados en ESE libro:
+   ```sql
+   select email from ebook_waitlist where resource = 'ebook:agentes-de-ia' order by created_at;
+   ```
+   y mandarles el aviso de lanzamiento a mano desde Resend (Broadcasts) o el proveedor de email que se use
+   en ese momento. No enviar el email de lanzamiento como parte de este runbook automáticamente — es una
+   decisión de timing del usuario, no del agente.
+8. **Deploy**: commit + push a una rama, PR, y el mismo flujo de siempre (ver "Deploy" arriba) — el merge a
+   `main` es responsabilidad del usuario, confirmarlo explícitamente antes de mergear.
 
 ## Conventions
 
