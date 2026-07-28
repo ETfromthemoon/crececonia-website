@@ -2,9 +2,18 @@
 
 import { useEffect, useState } from "react";
 import type { PriceInfo } from "@/lib/ebook-pricing";
+import { getActiveCatalogEntries, DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
+import { computeBundleTotal } from "@/lib/ebook-bundles";
 import EbookSectionHeading from "./EbookSectionHeading";
 import EbookSoldCounter from "./EbookSoldCounter";
 import styles from "./EbookCinematic.module.css";
+
+// Los demás libros activos del catálogo, excluyendo el que ya se vende en
+// esta página. Hoy siempre es un array vacío — no hay checkboxes de combo
+// hasta que se active un segundo libro.
+const OTHER_ACTIVE_EBOOKS = getActiveCatalogEntries().filter(
+  (entry) => entry.resource !== DEFAULT_EBOOK_RESOURCE
+);
 
 const TIER_LABELS: Record<string, { badge: string; discount: string }> = {
   "super-early": { badge: "Super Early", discount: "60% OFF" },
@@ -42,6 +51,7 @@ export default function EbookPricing() {
   const [applyingDiscount, setApplyingDiscount] = useState(false);
   const [discountError, setDiscountError] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
+  const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
 
   async function handleApplyDiscount() {
     if (!discountInput) return;
@@ -67,7 +77,7 @@ export default function EbookPricing() {
 
   useEffect(() => {
     const load = () =>
-      fetch("/api/ebook/cupos")
+      fetch(`/api/ebook/cupos?resource=${DEFAULT_EBOOK_RESOURCE}`)
         .then((r) => r.json())
         .then(setPriceInfo)
         .catch(() => {});
@@ -76,6 +86,40 @@ export default function EbookPricing() {
     const id = setInterval(load, 30000);
     return () => clearInterval(id);
   }, []);
+
+  const tier = priceInfo?.tier ?? "regular";
+  const tierInfo = TIER_LABELS[tier] ?? TIER_LABELS.regular;
+  const basePrice = priceInfo?.price ?? 27000;
+  const isCombo = selectedExtras.length > 0;
+  const selectedResources = [DEFAULT_EBOOK_RESOURCE, ...selectedExtras];
+
+  // Preview client-side, solo para mostrar el total en vivo — el servidor
+  // recalcula todo desde cero en /api/flow/create y nunca confía en este
+  // número.
+  const bundlePreview = isCombo
+    ? computeBundleTotal(
+        selectedResources.map((resource) => ({
+          resource,
+          price:
+            resource === DEFAULT_EBOOK_RESOURCE
+              ? basePrice
+              : OTHER_ACTIVE_EBOOKS.find((entry) => entry.resource === resource)!.tierPrices.regular,
+        }))
+      )
+    : null;
+
+  const displayPrice = isCombo ? bundlePreview!.total : appliedDiscount?.finalPrice ?? basePrice;
+  const formattedPrice = displayPrice.toLocaleString("es-CL");
+  const formattedBasePrice = basePrice.toLocaleString("es-CL");
+  const formattedOriginal = (27000).toLocaleString("es-CL");
+  const hasDiscount = tier !== "regular";
+
+  function toggleExtra(resource: string, checked: boolean) {
+    setSelectedExtras((prev) => (checked ? [...prev, resource] : prev.filter((r) => r !== resource)));
+    // El combo y el código de descuento nunca se combinan — sumar un libro
+    // limpia cualquier código ya aplicado.
+    setAppliedDiscount(null);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -86,7 +130,11 @@ export default function EbookPricing() {
     const res = await fetch("/api/flow/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, discountCode: appliedDiscount?.code }),
+      body: JSON.stringify({
+        email,
+        resources: selectedResources,
+        discountCode: isCombo ? undefined : appliedDiscount?.code,
+      }),
     });
 
     const data = await res.json().catch(() => ({}));
@@ -99,15 +147,6 @@ export default function EbookPricing() {
 
     window.location.href = data.redirectUrl;
   }
-
-  const tier = priceInfo?.tier ?? "regular";
-  const tierInfo = TIER_LABELS[tier] ?? TIER_LABELS.regular;
-  const basePrice = priceInfo?.price ?? 27000;
-  const displayPrice = appliedDiscount?.finalPrice ?? basePrice;
-  const formattedPrice = displayPrice.toLocaleString("es-CL");
-  const formattedBasePrice = basePrice.toLocaleString("es-CL");
-  const formattedOriginal = (27000).toLocaleString("es-CL");
-  const hasDiscount = tier !== "regular";
 
   return (
     <section id="comprar" className="section-y px-6">
@@ -212,7 +251,50 @@ export default function EbookPricing() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} style={{ padding: "28px 36px" }}>
-            {!appliedDiscount && (
+            {OTHER_ACTIVE_EBOOKS.length > 0 && (
+              <div style={{ marginBottom: 18 }}>
+                <p
+                  style={{
+                    color: "#4e4d4d",
+                    fontSize: "0.75rem",
+                    fontFamily: "var(--font-mono)",
+                    letterSpacing: "0.08em",
+                    marginBottom: 8,
+                  }}
+                >
+                  Sumá otros ebooks y ahorrá más
+                </p>
+                {OTHER_ACTIVE_EBOOKS.map((entry) => (
+                  <label
+                    key={entry.resource}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: "0.85rem",
+                      fontFamily: "var(--font-mono)",
+                      color: "#242424",
+                      marginBottom: 6,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedExtras.includes(entry.resource)}
+                      onChange={(e) => toggleExtra(entry.resource, e.target.checked)}
+                    />
+                    {entry.title}
+                  </label>
+                ))}
+                {isCombo && (
+                  <p style={{ color: "#2e7d32", fontSize: "0.75rem", fontFamily: "var(--font-mono)", marginTop: 6 }}>
+                    {bundlePreview!.discountPercent}% de descuento por combo aplicado ✓
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!appliedDiscount && !isCombo && (
               <div style={{ marginBottom: 18 }}>
                 <label
                   htmlFor="ebook-discount"
