@@ -110,6 +110,12 @@ export async function POST(request: Request) {
     const discountCode: string | null = pending?.discount_code ?? null;
 
     const fulfilled: PendingResource[] = [];
+    // Si algún insert falla por una razón real (no por ya existir), no
+    // borramos la orden pendiente: sin ella, un reintento del webhook cae al
+    // fallback legado de 1 solo libro, que reconstruye mal un combo (asume
+    // DEFAULT_EBOOK_RESOURCE y el monto completo). Mejor dejar la fila viva
+    // para que el próximo reintento de Flow pueda completar lo que falta.
+    let allResolved = true;
 
     for (const item of resources) {
       // Atajo de idempotencia (no atómico) — el índice único (flow_token,
@@ -140,50 +146,49 @@ export async function POST(request: Request) {
           `[flow/confirm] no se registró la compra de ${item.resource} para el token ${token}:`,
           insertError.message
         );
+        allResolved = false;
         continue;
       }
 
       fulfilled.push(item);
     }
 
-    if (fulfilled.length === 0) {
-      // Todo el combo ya estaba confirmado (replay), o cada insert falló —
-      // en ambos casos no hay nada nuevo que entregar.
-      if (pending) await db.from("ebook_pending_orders").delete().eq("commerce_order", commerceOrder);
-      return new Response("OK", { status: 200 });
-    }
-
-    // Entregar el ebook es lo más importante para el comprador, así que va
-    // antes que la contabilidad y cada paso se aísla: que falle el conteo de
-    // cupos no puede dejar a alguien que ya pagó sin su descarga.
-    try {
-      await sendConfirmationEmail(payment.email, token, fulfilled);
-    } catch (err) {
-      console.error(`[flow/confirm] falló el email de ${payment.email}:`, err);
-    }
-
-    for (const item of fulfilled) {
+    if (fulfilled.length > 0) {
+      // Entregar el ebook es lo más importante para el comprador, así que va
+      // antes que la contabilidad y cada paso se aísla: que falle el conteo
+      // de cupos no puede dejar a alguien que ya pagó sin su descarga.
       try {
-        await decrementCupo(item.resource, item.tier);
+        await sendConfirmationEmail(payment.email, token, fulfilled);
       } catch (err) {
-        console.error(`[flow/confirm] falló el conteo de cupo (${item.resource}/${item.tier}):`, err);
+        console.error(`[flow/confirm] falló el email de ${payment.email}:`, err);
       }
-    }
 
-    if (discountCode && resources.length === 1 && fulfilled.length === 1) {
-      try {
-        const redeemed = await redeemDiscountCode(discountCode);
-        if (!redeemed) {
-          console.error(
-            `[flow/confirm] el código ${discountCode} ya no era canjeable al confirmar el pago del token ${token} — se cobró con descuento de todas formas`
-          );
+      for (const item of fulfilled) {
+        try {
+          await decrementCupo(item.resource, item.tier);
+        } catch (err) {
+          console.error(`[flow/confirm] falló el conteo de cupo (${item.resource}/${item.tier}):`, err);
         }
-      } catch (err) {
-        console.error(`[flow/confirm] falló el canje de ${discountCode}:`, err);
+      }
+
+      if (discountCode && resources.length === 1 && fulfilled.length === 1) {
+        try {
+          const redeemed = await redeemDiscountCode(discountCode);
+          if (!redeemed) {
+            console.error(
+              `[flow/confirm] el código ${discountCode} ya no era canjeable al confirmar el pago del token ${token} — se cobró con descuento de todas formas`
+            );
+          }
+        } catch (err) {
+          console.error(`[flow/confirm] falló el canje de ${discountCode}:`, err);
+        }
       }
     }
 
-    if (pending) {
+    // Solo borramos la orden pendiente cuando cada libro del combo quedó
+    // resuelto (ya existía o se insertó recién) — nunca cuando alguno falló
+    // de verdad, para no perder la única copia del detalle del combo.
+    if (pending && allResolved) {
       await db.from("ebook_pending_orders").delete().eq("commerce_order", commerceOrder);
     }
   } catch (err) {

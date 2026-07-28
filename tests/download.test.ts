@@ -139,4 +139,32 @@ describe("GET /api/ebook/download", () => {
     const res = await GET(req({ token: "tok_flow_500" }));
     expect(res.status).toBe(404);
   });
+
+  // ── 10. resource param desambigua compras combo con el mismo flow_token ───
+  it("filtra por resource además de flow_token (necesario para combos)", async () => {
+    const chain = dbChain({ data: { id: "uuid-4", email: "combo@test.com" } });
+    mockFrom.mockReturnValue(chain);
+
+    await GET(req({ token: "tok_combo", resource: "ebook:agentes-de-ia" }));
+    expect(chain.eq).toHaveBeenCalledWith("flow_token", "tok_combo");
+    expect(chain.eq).toHaveBeenCalledWith("resource", "ebook:agentes-de-ia");
+  });
+
+  it("usa el libro por defecto cuando no viene ?resource= (compatibilidad)", async () => {
+    const chain = dbChain({ data: { id: "uuid-5", email: "test@test.com" } });
+    mockFrom.mockReturnValue(chain);
+
+    const res = await GET(req({ token: "tok_valido" }));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Disposition")).toContain("De-cero-a-Claude-en-una-semana");
+  });
+
+  it("no filtra por resource cuando la búsqueda es por email (comportamiento previo intacto)", async () => {
+    const chain = dbChain({ data: { id: "uuid-6", email: "sergio@test.com" } });
+    mockFrom.mockReturnValue(chain);
+
+    await GET(req({ email: "sergio@test.com" }));
+    const resourceCalls = chain.eq.mock.calls.filter((c: unknown[]) => c[0] === "resource");
+    expect(resourceCalls).toHaveLength(0);
+  });
 });

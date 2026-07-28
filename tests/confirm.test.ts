@@ -165,6 +165,28 @@ describe("POST /api/flow/confirm", () => {
     expect(mockResendSend).not.toHaveBeenCalled();
   });
 
+  it("no borra la orden pendiente si un insert falla genuinamente (permite reintentar)", async () => {
+    mockFlowStatus(2, 19440);
+    setupDb({
+      pendingResources: [
+        { resource: DEFAULT_EBOOK_RESOURCE, tier: "super-early", amount: 9720 },
+        { resource: "ebook:agentes-de-ia", tier: "regular", amount: 9720 },
+      ],
+    });
+    mockInsert.mockImplementation((row: { resource: string }) =>
+      row.resource === "ebook:agentes-de-ia"
+        ? Promise.resolve({ error: { message: "db down" } })
+        : Promise.resolve({ error: null })
+    );
+
+    const res = await POST(flowWebhook("tok_partial_fail"));
+    expect(res.status).toBe(200);
+    expect(mockDelete).not.toHaveBeenCalled();
+    // El libro que sí se guardó igual se entrega — no se le puede negar la
+    // descarga a alguien que ya pagó por la falla de otro item del combo.
+    expect(mockResendSend).toHaveBeenCalledOnce();
+  });
+
   it("retorna 200 aunque el envío de email falle", async () => {
     mockFlowStatus(2);
     setupDb({ pendingResources: null });

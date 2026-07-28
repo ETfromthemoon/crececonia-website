@@ -32,8 +32,16 @@ create unique index if not exists ebook_cupos_resource_tier_key
   on ebook_cupos (resource, tier);
 
 -- 4. Función RPC de incremento de cupo, actualizada para recibir resource.
---    Reemplaza la firma anterior increment_cupo_used(p_tier text).
-create or replace function increment_cupo_used(p_resource text, p_tier text)
+--    Reemplaza la firma anterior increment_cupo_used(p_tier text). El default
+--    de p_resource es a propósito: durante la ventana entre correr este SQL y
+--    que el deploy del código nuevo termine, el código VIEJO todavía en
+--    producción sigue llamando increment_cupo_used con un solo argumento
+--    (p_tier) — sin el default, esa llamada rompería apenas se corra este
+--    script, antes incluso de que el código nuevo exista.
+create or replace function increment_cupo_used(
+  p_tier text,
+  p_resource text default 'ebook:de-cero-a-claude-en-una-semana'
+)
 returns void as $$
   update ebook_cupos
   set used = used + 1
@@ -41,10 +49,27 @@ returns void as $$
 $$ language sql;
 
 -- 5. ebook_pending_orders: nueva columna para el detalle del combo (array de
---    {resource, tier, amount} por libro del carrito).
+--    {resource, tier, amount} por libro del carrito). El código nuevo ya no
+--    escribe la columna `tier` existente en cada insert (el detalle vive en
+--    `resources`) — si `tier` es NOT NULL, todo insert a esta tabla fallaría
+--    en silencio (el create-order lo tolera y sigue cobrando igual, pero el
+--    detalle del combo nunca quedaría guardado). Confirmar en el dashboard si
+--    tier es NOT NULL; si lo es, correr la línea de abajo.
 alter table ebook_pending_orders
   add column if not exists resources jsonb;
+
+alter table ebook_pending_orders
+  alter column tier drop not null;
 
 -- Nada de esto activa el libro 2 ni el 3 — eso es un paso de negocio
 -- separado (agregar la entrada a lib/ebook-catalog.ts con active: true y sus
 -- tierPrices, más las filas de cupos correspondientes en ebook_cupos).
+--
+-- ORDEN DE DEPLOY: correr este SQL completo ANTES de mergear/deployar el
+-- código de esta rama a main. Los dos pasos de arriba (RPC con default, tier
+-- nullable) hacen que sea seguro correr este script mientras el código VIEJO
+-- todavía está en producción. Lo que NO es seguro es el orden inverso: si el
+-- código nuevo llega a producción antes que este SQL, CUALQUIER compra
+-- (no solo combos) falla en silencio, porque el webhook de confirmación
+-- referencia una columna `resource` que todavía no existiría — Flow ya cobró,
+-- pero no se guarda la compra ni se manda el email de descarga.

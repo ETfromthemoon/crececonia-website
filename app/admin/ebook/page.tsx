@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { getCatalogEntry } from "@/lib/ebook-catalog";
+import { getCatalogEntry, DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -28,14 +28,21 @@ export default async function AdminEbookPage({
   const rows = purchases ?? [];
   const totalVentas = rows.length;
   const totalCLP = rows.reduce((s, p) => s + p.amount, 0);
+
+  // Los tramos (Super Early / Early Adopters) son cupos propios del libro por
+  // defecto — si un segundo libro suma sus propias filas en ebook_cupos, no
+  // deben mezclarse en estas tarjetas ni pisarse entre sí por compartir tier.
+  const defaultBookRows = rows.filter((p) => p.resource === DEFAULT_EBOOK_RESOURCE);
   const porTier = {
-    "super-early": rows.filter((p) => p.tier === "super-early").length,
-    early: rows.filter((p) => p.tier === "early").length,
-    regular: rows.filter((p) => p.tier === "regular").length,
+    "super-early": defaultBookRows.filter((p) => p.tier === "super-early").length,
+    early: defaultBookRows.filter((p) => p.tier === "early").length,
+    regular: defaultBookRows.filter((p) => p.tier === "regular").length,
   };
 
   const cuposMap = Object.fromEntries(
-    (cupos ?? []).map((c) => [c.tier, c as { total: number; used: number }])
+    (cupos ?? [])
+      .filter((c) => c.resource === DEFAULT_EBOOK_RESOURCE)
+      .map((c) => [c.tier, c as { total: number; used: number }])
   );
 
   const fmtCLP = (n: number) =>

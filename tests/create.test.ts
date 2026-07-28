@@ -242,6 +242,27 @@ describe("POST /api/flow/create — combos", () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
+  it("400 si resources trae más entradas que el catálogo entero", async () => {
+    flowOk();
+    const res = await POST(
+      postJson({
+        email: "user@test.com",
+        resources: Array(10).fill(DEFAULT_EBOOK_RESOURCE),
+      })
+    );
+    expect(res.status).toBe(400);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("400 si algún elemento de resources no es un string", async () => {
+    flowOk();
+    const res = await POST(
+      postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE, 12345] })
+    );
+    expect(res.status).toBe(400);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
   it("400 si se repite el mismo libro dos veces en el combo", async () => {
     flowOk();
     const res = await POST(

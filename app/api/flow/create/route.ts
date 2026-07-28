@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 import { validateDiscountCode } from "@/lib/discount-codes";
 import { flowSign, getFlowBase } from "@/lib/flow";
-import { getCatalogEntry, DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
+import { getCatalogEntry, DEFAULT_EBOOK_RESOURCE, EBOOK_CATALOG } from "@/lib/ebook-catalog";
 import { computeBundleTotal } from "@/lib/ebook-bundles";
 
 const SITE_URL = process.env.SITE_URL ?? "https://www.crececonia.cl";
@@ -23,6 +23,12 @@ export async function POST(request: Request) {
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "Email inválido." }, { status: 400 });
+  }
+
+  // Endpoint público: acotar el array antes de iterarlo. Nunca puede ser
+  // válido pedir más recursos que entradas tiene el catálogo entero.
+  if (resources.length > EBOOK_CATALOG.length || !resources.every((r) => typeof r === "string")) {
+    return NextResponse.json({ error: "Lista de libros inválida." }, { status: 400 });
   }
 
   const uniqueResources = new Set(resources);
