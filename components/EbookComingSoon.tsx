@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { EBOOK_ACCENT as ACCENT, EBOOK_COLD_BG as BG } from "@/lib/ebook-theme";
 
-const SUBSCRIBE_API = "https://autodrive.cl/api/public/subscribe";
+const SUBSCRIBE_API = "/api/ebook/waitlist";
 const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
 const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
@@ -36,9 +36,11 @@ type Status = "idle" | "loading" | "success" | "error";
  * Plantilla de "próximamente" para un ebook aún no lanzado. Reusa el mismo
  * cold-open oscuro + tipografía editorial de EbookHero (mismo BG/ACCENT vía
  * lib/ebook-theme) para que se sienta parte de la misma familia de páginas,
- * pero sin precio ni checkout — solo captura de interés vía el mismo endpoint
- * de suscripción que usan SuscriptorPopup/EmailPopup (un solo campo de email,
- * nada del formulario de calificación de leads de EvaluacionModal).
+ * pero sin precio ni checkout — solo captura de interés vía /api/ebook/waitlist
+ * (lib/ebook-waitlist.ts), que guarda el email en nuestra propia base de
+ * Supabase y confirma por Resend. A diferencia de SuscriptorPopup/EmailPopup,
+ * NO pasa por autodrive.cl — estos correos solo sirven para avisar el
+ * lanzamiento, no alimentan ninguna lista de Autodrive.
  */
 export default function EbookComingSoon({ title, description, ghostWord, ctaSource, resource }: Props) {
   const [email, setEmail] = useState("");
