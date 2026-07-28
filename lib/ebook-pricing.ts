@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "./supabase";
+import { getCatalogEntry } from "./ebook-catalog";
 
 export type Tier = "super-early" | "early" | "regular";
 
@@ -9,9 +10,18 @@ export interface PriceInfo {
   originalPrice: number;
 }
 
-export async function getCurrentPrice(): Promise<PriceInfo> {
+function getActiveEntryOrThrow(resource: string) {
+  const entry = getCatalogEntry(resource);
+  if (!entry || !entry.active) {
+    throw new Error(`Recurso no comprable: ${resource}`);
+  }
+  return entry;
+}
+
+export async function getCurrentPrice(resource: string): Promise<PriceInfo> {
+  const entry = getActiveEntryOrThrow(resource);
   const db = getSupabaseAdmin();
-  const { data } = await db.from("ebook_cupos").select("*");
+  const { data } = await db.from("ebook_cupos").select("*").eq("resource", resource);
   const cupos: Record<string, { total: number; used: number }> =
     Object.fromEntries((data ?? []).map((r) => [r.tier, r]));
 
@@ -19,35 +29,41 @@ export async function getCurrentPrice(): Promise<PriceInfo> {
     (cupos["super-early"]?.total ?? 0) - (cupos["super-early"]?.used ?? 0);
   if (superEarlyLeft > 0) {
     return {
-      price: 10800,
+      price: entry.tierPrices.superEarly,
       tier: "super-early",
       remaining: superEarlyLeft,
-      originalPrice: 27000,
+      originalPrice: entry.tierPrices.regular,
     };
   }
 
-  const earlyLeft =
-    (cupos["early"]?.total ?? 0) - (cupos["early"]?.used ?? 0);
+  const earlyLeft = (cupos["early"]?.total ?? 0) - (cupos["early"]?.used ?? 0);
   if (earlyLeft > 0) {
     return {
-      price: 17900,
+      price: entry.tierPrices.early,
       tier: "early",
       remaining: earlyLeft,
-      originalPrice: 27000,
+      originalPrice: entry.tierPrices.regular,
     };
   }
 
-  return { price: 27000, tier: "regular", remaining: null, originalPrice: 27000 };
+  return {
+    price: entry.tierPrices.regular,
+    tier: "regular",
+    remaining: null,
+    originalPrice: entry.tierPrices.regular,
+  };
 }
 
-export function determineTier(amount: number): Tier {
-  if (amount <= 10800) return "super-early";
-  if (amount <= 17900) return "early";
+export function determineTier(amount: number, resource: string): Tier {
+  const entry = getActiveEntryOrThrow(resource);
+  if (amount <= entry.tierPrices.superEarly) return "super-early";
+  if (amount <= entry.tierPrices.early) return "early";
   return "regular";
 }
 
 /**
- * Incrementa el contador de cupos usados del tier, de forma atómica.
+ * Incrementa el contador de cupos usados del (resource, tier), de forma
+ * atómica.
  *
  * Antes esto leía `used` y después escribía `used + 1` en dos queries
  * separadas. supabase-js no lanza excepción cuando una query falla (retorna
@@ -60,12 +76,12 @@ export function determineTier(amount: number): Tier {
  * una función de Postgres, y si falla lanzamos en vez de escribir un valor
  * absoluto: preferimos quedarnos cortos en el conteo antes que corromperlo.
  */
-export async function decrementCupo(tier: Tier): Promise<void> {
+export async function decrementCupo(resource: string, tier: Tier): Promise<void> {
   if (tier === "regular") return;
   const db = getSupabaseAdmin();
-  const { error } = await db.rpc("increment_cupo_used", { p_tier: tier });
+  const { error } = await db.rpc("increment_cupo_used", { p_resource: resource, p_tier: tier });
   if (error) {
-    throw new Error(`No se pudo incrementar el cupo de ${tier}: ${error.message}`);
+    throw new Error(`No se pudo incrementar el cupo de ${resource}/${tier}: ${error.message}`);
   }
 }
 
@@ -78,7 +94,8 @@ export async function decrementCupo(tier: Tier): Promise<void> {
  * compra nueva confirmada por Flow suma 1 desde ahí (67, 68, ...).
  *
  * Si alguna vez borrás filas de ebook_purchases el total mostrado baja —
- * ajustá este número si eso pasa.
+ * ajustá este número si eso pasa. Cuenta filas, no órdenes: un combo de 3
+ * libros suma 3, no 1 (ver spec del motor de bundles).
  */
 const UNRECORDED_SOLD_OFFSET = 59;
 
