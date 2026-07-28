@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
+import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const priceInfo = await getCurrentPrice().catch(() => null);
+export async function GET(request: Request) {
+  const resource = new URL(request.url).searchParams.get("resource") ?? DEFAULT_EBOOK_RESOURCE;
+  const priceInfo = await getCurrentPrice(resource).catch(() => null);
+
   if (!priceInfo) {
     return NextResponse.json(
       { price: 27000, tier: "regular", remaining: null, originalPrice: 27000 },
