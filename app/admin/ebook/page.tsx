@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { getCatalogEntry } from "@/lib/ebook-catalog";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,7 @@ export default async function AdminEbookPage({
   const [{ data: purchases }, { data: cupos }] = await Promise.all([
     db
       .from("ebook_purchases")
-      .select("id, email, amount, tier, purchased_at, download_count")
+      .select("id, email, amount, tier, resource, purchased_at, download_count")
       .order("purchased_at", { ascending: false }),
     db.from("ebook_cupos").select("*"),
   ]);
@@ -51,6 +52,8 @@ export default async function AdminEbookPage({
     early: "Early",
     regular: "Regular",
   };
+
+  const titleFor = (resource: string) => getCatalogEntry(resource)?.title ?? resource;
 
   return (
     <main
@@ -172,7 +175,7 @@ export default async function AdminEbookPage({
                     textAlign: "left",
                   }}
                 >
-                  {["Email", "Monto", "Tier", "Descargas", "Fecha"].map(
+                  {["Email", "Libro", "Monto", "Tier", "Descargas", "Fecha"].map(
                     (h) => (
                       <th
                         key={h}
@@ -201,6 +204,9 @@ export default async function AdminEbookPage({
                   >
                     <td style={{ padding: "10px 12px", color: "var(--bone)" }}>
                       {p.email}
+                    </td>
+                    <td style={{ padding: "10px 12px", color: "var(--smoke)", fontSize: 12 }}>
+                      {titleFor(p.resource)}
                     </td>
                     <td
                       style={{
