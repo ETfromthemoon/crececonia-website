@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { getCatalogEntry, DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,7 @@ export default async function AdminEbookPage({
   const [{ data: purchases }, { data: cupos }] = await Promise.all([
     db
       .from("ebook_purchases")
-      .select("id, email, amount, tier, purchased_at, download_count")
+      .select("id, email, amount, tier, resource, purchased_at, download_count")
       .order("purchased_at", { ascending: false }),
     db.from("ebook_cupos").select("*"),
   ]);
@@ -27,14 +28,21 @@ export default async function AdminEbookPage({
   const rows = purchases ?? [];
   const totalVentas = rows.length;
   const totalCLP = rows.reduce((s, p) => s + p.amount, 0);
+
+  // Los tramos (Super Early / Early Adopters) son cupos propios del libro por
+  // defecto — si un segundo libro suma sus propias filas en ebook_cupos, no
+  // deben mezclarse en estas tarjetas ni pisarse entre sí por compartir tier.
+  const defaultBookRows = rows.filter((p) => p.resource === DEFAULT_EBOOK_RESOURCE);
   const porTier = {
-    "super-early": rows.filter((p) => p.tier === "super-early").length,
-    early: rows.filter((p) => p.tier === "early").length,
-    regular: rows.filter((p) => p.tier === "regular").length,
+    "super-early": defaultBookRows.filter((p) => p.tier === "super-early").length,
+    early: defaultBookRows.filter((p) => p.tier === "early").length,
+    regular: defaultBookRows.filter((p) => p.tier === "regular").length,
   };
 
   const cuposMap = Object.fromEntries(
-    (cupos ?? []).map((c) => [c.tier, c as { total: number; used: number }])
+    (cupos ?? [])
+      .filter((c) => c.resource === DEFAULT_EBOOK_RESOURCE)
+      .map((c) => [c.tier, c as { total: number; used: number }])
   );
 
   const fmtCLP = (n: number) =>
@@ -51,6 +59,8 @@ export default async function AdminEbookPage({
     early: "Early",
     regular: "Regular",
   };
+
+  const titleFor = (resource: string) => getCatalogEntry(resource)?.title ?? resource;
 
   return (
     <main
@@ -172,7 +182,7 @@ export default async function AdminEbookPage({
                     textAlign: "left",
                   }}
                 >
-                  {["Email", "Monto", "Tier", "Descargas", "Fecha"].map(
+                  {["Email", "Libro", "Monto", "Tier", "Descargas", "Fecha"].map(
                     (h) => (
                       <th
                         key={h}
@@ -201,6 +211,9 @@ export default async function AdminEbookPage({
                   >
                     <td style={{ padding: "10px 12px", color: "var(--bone)" }}>
                       {p.email}
+                    </td>
+                    <td style={{ padding: "10px 12px", color: "var(--smoke)", fontSize: 12 }}>
+                      {titleFor(p.resource)}
                     </td>
                     <td
                       style={{

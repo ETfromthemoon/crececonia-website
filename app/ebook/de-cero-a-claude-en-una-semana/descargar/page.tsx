@@ -99,7 +99,7 @@ export default function DescargarPage() {
                   className="text-sm"
                   style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7, marginBottom: 24 }}
                 >
-                  Elegí el formato que querés descargar:
+                  Elige el formato que quieres descargar:
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <a

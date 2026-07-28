@@ -1,17 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
 
-// Mockear getCurrentPrice directamente evita depender de la cadena de Supabase
-vi.mock("@/lib/ebook-pricing", () => ({
-  getCurrentPrice: vi.fn().mockResolvedValue({
+const { mockGetCurrentPrice } = vi.hoisted(() => ({
+  mockGetCurrentPrice: vi.fn().mockResolvedValue({
     price: 10800,
     tier: "super-early",
     remaining: 7,
     originalPrice: 27000,
   }),
 }));
+vi.mock("@/lib/ebook-pricing", () => ({ getCurrentPrice: mockGetCurrentPrice }));
 
-// La ruta guarda el tier/código en ebook_pending_orders. Sin este mock se
-// construiría un cliente real de Supabase que además pisaría el fetch stubeado.
 const { mockPendingInsert, mockValidateDiscount } = vi.hoisted(() => ({
   mockPendingInsert: vi.fn().mockResolvedValue({ error: null }),
   mockValidateDiscount: vi.fn(),
@@ -45,18 +44,21 @@ function postJson(body: unknown) {
   });
 }
 
-describe("POST /api/flow/create", () => {
+function flowBody() {
+  return new URLSearchParams(mockFetch.mock.calls[0][1].body as string);
+}
+
+describe("POST /api/flow/create — 1 solo libro (comportamiento existente)", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("400 cuando no se pasa email", async () => {
-    const res = await POST(postJson({}));
+    const res = await POST(postJson({ resources: [DEFAULT_EBOOK_RESOURCE] }));
     expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.error).toMatch(/email/i);
+    expect((await res.json()).error).toMatch(/email/i);
   });
 
   it("400 para email sin formato válido", async () => {
-    const res = await POST(postJson({ email: "no-es-un-email" }));
+    const res = await POST(postJson({ email: "no-es-un-email", resources: [DEFAULT_EBOOK_RESOURCE] }));
     expect(res.status).toBe(400);
   });
 
@@ -72,13 +74,20 @@ describe("POST /api/flow/create", () => {
   });
 
   it("400 para email con espacios", async () => {
-    const res = await POST(postJson({ email: "user @test.com" }));
+    const res = await POST(postJson({ email: "user @test.com", resources: [DEFAULT_EBOOK_RESOURCE] }));
     expect(res.status).toBe(400);
+  });
+
+  it("usa el libro por defecto si no se manda `resources` (cliente viejo)", async () => {
+    flowOk();
+    const res = await POST(postJson({ email: "user@test.com" }));
+    expect(res.status).toBe(200);
+    expect(mockGetCurrentPrice).toHaveBeenCalledWith(DEFAULT_EBOOK_RESOURCE);
   });
 
   it("502 cuando Flow API devuelve !ok", async () => {
     mockFetch.mockResolvedValue({ ok: false, json: async () => ({}) });
-    const res = await POST(postJson({ email: "user@test.com" }));
+    const res = await POST(postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE] }));
     expect(res.status).toBe(502);
   });
 
@@ -87,20 +96,16 @@ describe("POST /api/flow/create", () => {
       ok: true,
       json: async () => ({ message: "respuesta inesperada" }),
     });
-    const res = await POST(postJson({ email: "user@test.com" }));
+    const res = await POST(postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE] }));
     expect(res.status).toBe(502);
   });
 
   it("200 con redirectUrl cuando Flow responde correctamente", async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ url: "https://sandbox.flow.cl/pay", token: "abc123" }),
-    });
-
-    const res = await POST(postJson({ email: "user@test.com" }));
+    flowOk();
+    const res = await POST(postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE] }));
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.redirectUrl).toContain("abc123");
+    expect(body.redirectUrl).toContain("tok_ok");
     expect(body.redirectUrl).toContain("flow.cl");
   });
 
@@ -109,27 +114,18 @@ describe("POST /api/flow/create", () => {
       ok: true,
       json: async () => ({ url: "https://sandbox.flow.cl/pay", token: "tok_xyz" }),
     });
-
-    const res = await POST(postJson({ email: "comprador@empresa.cl" }));
+    const res = await POST(postJson({ email: "comprador@empresa.cl", resources: [DEFAULT_EBOOK_RESOURCE] }));
     const body = await res.json();
     expect(body.redirectUrl).toBe("https://sandbox.flow.cl/pay?token=tok_xyz");
   });
 
   it("500 cuando getCurrentPrice falla (Supabase caído)", async () => {
-    const { getCurrentPrice } = await import("@/lib/ebook-pricing");
-    vi.mocked(getCurrentPrice).mockRejectedValueOnce(new Error("DB down"));
-
-    const res = await POST(postJson({ email: "user@test.com" }));
+    mockGetCurrentPrice.mockRejectedValueOnce(new Error("DB down"));
+    const res = await POST(postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE] }));
     expect(res.status).toBe(500);
     const body = await res.json();
     expect(body.error).toMatch(/precio/i);
   });
-
-  // ── códigos de descuento ───────────────────────────────────────────────────
-
-  function flowBody() {
-    return new URLSearchParams(mockFetch.mock.calls[0][1].body as string);
-  }
 
   it("cobra el monto con descuento cuando el código es válido", async () => {
     flowOk();
@@ -140,8 +136,9 @@ describe("POST /api/flow/create", () => {
       amount: 50,
       finalPrice: 5400,
     });
-
-    const res = await POST(postJson({ email: "user@test.com", discountCode: "promo-abc" }));
+    const res = await POST(
+      postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE], discountCode: "promo-abc" })
+    );
     expect(res.status).toBe(200);
     expect(flowBody().get("amount")).toBe("5400");
   });
@@ -149,8 +146,9 @@ describe("POST /api/flow/create", () => {
   it("400 y no llama a Flow cuando el código es inválido", async () => {
     flowOk();
     mockValidateDiscount.mockResolvedValue({ valid: false, reason: "Este código venció." });
-
-    const res = await POST(postJson({ email: "user@test.com", discountCode: "VENCIDO" }));
+    const res = await POST(
+      postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE], discountCode: "VENCIDO" })
+    );
     expect(res.status).toBe(400);
     expect((await res.json()).error).toMatch(/venció/i);
     expect(mockFetch).not.toHaveBeenCalled();
@@ -165,15 +163,13 @@ describe("POST /api/flow/create", () => {
       amount: 800,
       finalPrice: 10000,
     });
-
-    // El cliente manda un monto propio: debe ser ignorado por completo.
-    await POST(postJson({ email: "user@test.com", discountCode: "X", amount: 1 }));
+    await POST(
+      postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE], discountCode: "X", amount: 1 })
+    );
     expect(flowBody().get("amount")).toBe("10000");
   });
 
   it("commerceOrder queda corto: no lleva el tier ni el código embebidos", async () => {
-    // Regresión: el tier y el código viajaban dentro de commerceOrder, que puede
-    // tener un máximo de caracteres no documentado en Flow.
     flowOk();
     mockValidateDiscount.mockResolvedValue({
       valid: true,
@@ -182,8 +178,13 @@ describe("POST /api/flow/create", () => {
       amount: 10,
       finalPrice: 9720,
     });
-
-    await POST(postJson({ email: "user@test.com", discountCode: "PREFIJOLARGO-ABCD1234" }));
+    await POST(
+      postJson({
+        email: "user@test.com",
+        resources: [DEFAULT_EBOOK_RESOURCE],
+        discountCode: "PREFIJOLARGO-ABCD1234",
+      })
+    );
     const order = flowBody().get("commerceOrder") ?? "";
     expect(order).toMatch(/^ebook-\d+-[a-z0-9]+$/);
     expect(order).not.toContain("PREFIJOLARGO");
@@ -191,13 +192,94 @@ describe("POST /api/flow/create", () => {
   });
 
   it("la venta sigue si falla el registro de la orden pendiente", async () => {
-    // Regresión: ese insert es contabilidad. Si Supabase falla, no puede
-    // tumbar el checkout de alguien que quiere pagar.
     flowOk();
     mockPendingInsert.mockResolvedValueOnce({ error: { message: "DB down" } });
-
-    const res = await POST(postJson({ email: "user@test.com" }));
+    const res = await POST(postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE] }));
     expect(res.status).toBe(200);
     expect((await res.json()).redirectUrl).toContain("tok_ok");
   });
 });
+
+describe("POST /api/flow/create — combos", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetCurrentPrice.mockImplementation(async (resource: string) => {
+      if (resource === "ebook:agentes-de-ia") {
+        return { price: 15000, tier: "regular", remaining: null, originalPrice: 15000 };
+      }
+      return { price: 10800, tier: "super-early", remaining: 7, originalPrice: 27000 };
+    });
+  });
+
+  it("400 si algún resource no existe en el catálogo", async () => {
+    flowOk();
+    const res = await POST(
+      postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE, "ebook:no-existe"] })
+    );
+    expect(res.status).toBe(400);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("400 si algún resource está coming-soon (no active en el catálogo real)", async () => {
+    flowOk();
+    const res = await POST(
+      postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE, "ebook:sitios-web-ia"] })
+    );
+    expect(res.status).toBe(400);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("400 si se manda discountCode junto con 2+ resources", async () => {
+    flowOk();
+    const res = await POST(
+      postJson({
+        email: "user@test.com",
+        resources: [DEFAULT_EBOOK_RESOURCE, "ebook:agentes-de-ia"],
+        discountCode: "PROMO",
+      })
+    );
+    expect(res.status).toBe(400);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("400 si resources trae más entradas que el catálogo entero", async () => {
+    flowOk();
+    const res = await POST(
+      postJson({
+        email: "user@test.com",
+        resources: Array(10).fill(DEFAULT_EBOOK_RESOURCE),
+      })
+    );
+    expect(res.status).toBe(400);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("400 si algún elemento de resources no es un string", async () => {
+    flowOk();
+    const res = await POST(
+      postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE, 12345] })
+    );
+    expect(res.status).toBe(400);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("400 si se repite el mismo libro dos veces en el combo", async () => {
+    flowOk();
+    const res = await POST(
+      postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE, DEFAULT_EBOOK_RESOURCE] })
+    );
+    expect(res.status).toBe(400);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+});
+
+// La matemática del descuento por combo (10%/20% sobre 2-3 libros DISTINTOS)
+// ya está cubierta de forma exhaustiva y aislada en tests/ebook-bundles.test.ts
+// (computeBundleTotal es una función pura, no necesita mocks de Supabase/Flow).
+// Este archivo no repite esa matemática con 2 libros activos reales porque hoy
+// el catálogo real (lib/ebook-catalog.ts) solo tiene 1 libro `active` — no hay
+// forma de ejercitar ese camino sin mockear el catálogo, y hacerlo probaría un
+// escenario que no puede ocurrir en producción todavía. Cuando se active el
+// libro 2, agregar acá un test de combo real de 2 resources distintos con el
+// descuento del 10% verificado end-to-end es la primera prueba de regresión a
+// escribir.

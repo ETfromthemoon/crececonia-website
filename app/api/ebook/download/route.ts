@@ -3,18 +3,36 @@ import fs from "fs";
 import path from "path";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { flowSign, getFlowBase } from "@/lib/flow";
+import { getCatalogEntry, DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
 
 const VALID_FORMATS = ["movil", "a4"] as const;
 type Format = (typeof VALID_FORMATS)[number];
 
-function getPdfPath(format: Format): string {
-  return path.join(process.cwd(), "private", `libro-${format}.pdf`);
+/**
+ * Un combo comparte un solo flow_token entre varias filas de ebook_purchases
+ * (una por libro) — el nombre/ruta del PDF necesita saber cuál de esos libros
+ * es. El libro 1 mantiene exactamente su ruta/nombre actual (el archivo ya
+ * existe en producción con ese nombre); los libros nuevos usan una
+ * convención derivada del resource, que hoy no tiene archivo todavía (cae en
+ * el 503 "se está preparando", igual que si faltara cualquier PDF).
+ */
+function getPdfPath(resource: string, format: Format): string {
+  if (resource === DEFAULT_EBOOK_RESOURCE) {
+    return path.join(process.cwd(), "private", `libro-${format}.pdf`);
+  }
+  const slug = resource.replace(/^ebook:/, "");
+  return path.join(process.cwd(), "private", `${slug}-${format}.pdf`);
 }
 
-function getDownloadFilename(format: Format): string {
-  return format === "a4"
-    ? "De-cero-a-Claude-en-una-semana-A4.pdf"
-    : "De-cero-a-Claude-en-una-semana.pdf";
+function getDownloadFilename(resource: string, format: Format): string {
+  if (resource === DEFAULT_EBOOK_RESOURCE) {
+    return format === "a4"
+      ? "De-cero-a-Claude-en-una-semana-A4.pdf"
+      : "De-cero-a-Claude-en-una-semana.pdf";
+  }
+  const title = getCatalogEntry(resource)?.title ?? resource;
+  const base = title.replace(/[^a-zA-Z0-9]+/g, "-");
+  return format === "a4" ? `${base}-A4.pdf` : `${base}.pdf`;
 }
 
 async function verifyTokenWithFlow(token: string): Promise<boolean> {
@@ -47,15 +65,20 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Parámetros requeridos." }, { status: 400 });
   }
 
+  const resource = searchParams.get("resource") ?? DEFAULT_EBOOK_RESOURCE;
+
   const db = getSupabaseAdmin();
   const filterKey = token ? "flow_token" : "email";
   const filterValue = (token ?? email)!;
 
-  const { data } = await db
-    .from("ebook_purchases")
-    .select("id, email")
-    .eq(filterKey, filterValue)
-    .maybeSingle();
+  let purchaseQuery = db.from("ebook_purchases").select("id, email").eq(filterKey, filterValue);
+  if (token) {
+    // Un combo inserta varias filas bajo el mismo flow_token (una por libro)
+    // — sin este filtro, maybeSingle() encuentra 2+ filas y falla en vez de
+    // resolver cuál de los libros del combo se está pidiendo.
+    purchaseQuery = purchaseQuery.eq("resource", resource);
+  }
+  const { data } = await purchaseQuery.maybeSingle();
 
   if (!data) {
     if (token) {
@@ -74,7 +97,7 @@ export async function GET(request: Request) {
     }
   }
 
-  const pdfPath = getPdfPath(format);
+  const pdfPath = getPdfPath(resource, format);
 
   if (!fs.existsSync(pdfPath)) {
     return NextResponse.json(
@@ -104,7 +127,7 @@ export async function GET(request: Request) {
   return new Response(buffer, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${getDownloadFilename(format)}"`,
+      "Content-Disposition": `attachment; filename="${getDownloadFilename(resource, format)}"`,
       "Content-Length": String(buffer.length),
       "Cache-Control": "private, no-store",
     },

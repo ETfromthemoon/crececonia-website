@@ -6,27 +6,27 @@ import EbookSectionHeading from "./EbookSectionHeading";
 const FAQS = [
   {
     q: "¿En qué formato viene el ebook?",
-    a: "En PDF, optimizado para leer en desktop y en mobile. Una vez que comprás, podés descargarlo inmediatamente y guardarlo donde quieras. No hay DRM ni restricciones de copia.",
+    a: "En PDF, optimizado para leer en desktop y en mobile. Una vez que compras, puedes descargarlo inmediatamente y guardarlo donde quieras. No hay DRM ni restricciones de copia.",
   },
   {
     q: "¿Cómo recibo el ebook después de comprar?",
-    a: "Inmediatamente después del pago vas a ver un botón de descarga. También te enviamos un email con el link para que lo tengas de respaldo. Si perdés el email, podés recuperar la descarga en la página de re-descarga ingresando tu email.",
+    a: "Inmediatamente después del pago vas a ver un botón de descarga. También te enviamos un email con el link para que lo tengas de respaldo. Si pierdes el email, puedes recuperar la descarga en la página de re-descarga ingresando tu email.",
   },
   {
     q: "¿Tiene garantía o devolución?",
-    a: "Si terminás el ebook y sentís que no valió la pena, escribime directamente y te devuelvo lo que pagaste. Sin preguntas raras. No quiero que nadie se quede con algo que no le sirvió.",
+    a: "Si terminas el ebook y sientes que no valió la pena, escríbeme directamente y te devuelvo lo que pagaste. Sin preguntas raras. No quiero que nadie se quede con algo que no le sirvió.",
   },
   {
     q: "¿Necesito saber programar para aprovechar el ebook?",
-    a: "No. Empezamos desde cero: qué es Claude, cómo instalarlo, cómo funciona. Si ya sabés programar, vas a avanzar más rápido y sacarle más jugo a los workflows de código. Pero el punto de partida es para cualquiera.",
+    a: "No. Empezamos desde cero: qué es Claude, cómo instalarlo, cómo funciona. Si ya sabes programar, vas a avanzar más rápido y sacarle más jugo a los workflows de código. Pero el punto de partida es para cualquiera.",
   },
   {
     q: "¿Claude es gratis? ¿Necesito pagar algo más?",
-    a: "Claude tiene un tier gratuito que funciona bien para empezar. El ebook cubre ambos escenarios: cómo sacarle el máximo al plan gratuito y cuándo tiene sentido pasarse al Pro. No tenés que gastar nada más para aplicar lo del ebook.",
+    a: "Claude tiene un tier gratuito que funciona bien para empezar. El ebook cubre ambos escenarios: cómo sacarle el máximo al plan gratuito y cuándo tiene sentido pasarse al Pro. No tienes que gastar nada más para aplicar lo del ebook.",
   },
   {
     q: "¿Esto es un curso en video o hay soporte incluido?",
-    a: "Es un ebook en PDF. Nada de videos ni plataformas — solo texto, prompts y templates que podés copiar. No incluye soporte 1:1. Si querés acompañamiento personalizado, ese es el servicio de consultoría de CrececonIA.",
+    a: "Es un ebook en PDF. Nada de videos ni plataformas — solo texto, prompts y templates que puedes copiar. No incluye soporte 1:1. Si quieres acompañamiento personalizado, ese es el servicio de consultoría de CrececonIA.",
   },
 ];
 

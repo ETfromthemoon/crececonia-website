@@ -126,7 +126,7 @@ export default function EbookAuthor() {
                   letterSpacing: "0.1em",
                 }}
               >
-                Conocé más sobre CrececonIA →
+                Conoce más sobre CrececonIA →
               </a>
             </div>
           </div>

@@ -136,7 +136,7 @@ export default function EbookCard({
           border: isComingSoon ? "1px solid rgba(0,0,0,0.25)" : "1px solid #242424",
         }}
       >
-        {isComingSoon ? "Avisame cuando esté" : priceLabel ?? "Ver ebook"}
+        {isComingSoon ? "Avísame cuando esté" : priceLabel ?? "Ver ebook"}
       </Link>
     </motion.div>
   );

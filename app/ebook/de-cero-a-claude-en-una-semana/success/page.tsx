@@ -107,7 +107,7 @@ export default async function SuccessPage({
                   marginBottom: 16,
                 }}
               >
-                Elegí tu formato
+                Elige tu formato
               </p>
               <div
                 style={{
