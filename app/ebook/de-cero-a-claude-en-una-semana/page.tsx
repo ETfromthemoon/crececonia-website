@@ -152,7 +152,7 @@ export default function EbookPage() {
       <EbookWhoIsFor />
       <EbookTOC />
       <EbookAuthor />
-      <EbookPricing />
+      <EbookPricing resource="ebook:de-cero-a-claude-en-una-semana" />
       <EbookFAQ />
     </main>
   );

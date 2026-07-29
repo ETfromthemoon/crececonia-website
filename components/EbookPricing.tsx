@@ -2,18 +2,17 @@
 
 import { useEffect, useState } from "react";
 import type { PriceInfo } from "@/lib/ebook-pricing";
-import { getActiveCatalogEntries, DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
+import { DEFAULT_EBOOK_RESOURCE, getOtherActiveEntries } from "@/lib/ebook-catalog";
 import { computeBundleTotal } from "@/lib/ebook-bundles";
+import { trackEbookEvent } from "@/lib/analytics";
+import { useFeatureFlagVariantKey } from "posthog-js/react";
 import EbookSectionHeading from "./EbookSectionHeading";
 import EbookSoldCounter from "./EbookSoldCounter";
 import styles from "./EbookCinematic.module.css";
 
-// Los demás libros activos del catálogo, excluyendo el que ya se vende en
-// esta página. Hoy siempre es un array vacío — no hay checkboxes de combo
-// hasta que se active un segundo libro.
-const OTHER_ACTIVE_EBOOKS = getActiveCatalogEntries().filter(
-  (entry) => entry.resource !== DEFAULT_EBOOK_RESOURCE
-);
+type EbookPricingProps = {
+  resource?: string;
+};
 
 const TIER_LABELS: Record<string, { badge: string; discount: string }> = {
   "super-early": { badge: "Super Early", discount: "60% OFF" },
@@ -41,7 +40,9 @@ function CheckIcon() {
 
 type AppliedDiscount = { code: string; finalPrice: number };
 
-export default function EbookPricing() {
+export default function EbookPricing({ resource = DEFAULT_EBOOK_RESOURCE }: EbookPricingProps) {
+  const otherActiveEbooks = getOtherActiveEntries(resource);
+  const pricingVariant = useFeatureFlagVariantKey("ebook-pricing-variant") ?? "control";
   const [priceInfo, setPriceInfo] = useState<PriceInfo | null>(null);
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -77,7 +78,7 @@ export default function EbookPricing() {
 
   useEffect(() => {
     const load = () =>
-      fetch(`/api/ebook/cupos?resource=${DEFAULT_EBOOK_RESOURCE}`)
+      fetch(`/api/ebook/cupos?resource=${resource}`)
         .then((r) => r.json())
         .then(setPriceInfo)
         .catch(() => {});
@@ -85,25 +86,30 @@ export default function EbookPricing() {
     load();
     const id = setInterval(load, 30000);
     return () => clearInterval(id);
-  }, []);
+  }, [resource]);
+
+  useEffect(() => {
+    trackEbookEvent("ebook_page_view", { resource, pricing_variant: pricingVariant });
+  }, [resource, pricingVariant]);
 
   const tier = priceInfo?.tier ?? "regular";
   const tierInfo = TIER_LABELS[tier] ?? TIER_LABELS.regular;
   const basePrice = priceInfo?.price ?? 27000;
   const isCombo = selectedExtras.length > 0;
-  const selectedResources = [DEFAULT_EBOOK_RESOURCE, ...selectedExtras];
+  const selectedResources = [resource, ...selectedExtras];
 
   // Preview client-side, solo para mostrar el total en vivo — el servidor
   // recalcula todo desde cero en /api/flow/create y nunca confía en este
   // número.
   const bundlePreview = isCombo
     ? computeBundleTotal(
-        selectedResources.map((resource) => ({
-          resource,
+        selectedResources.map((itemResource) => ({
+          resource: itemResource,
           price:
-            resource === DEFAULT_EBOOK_RESOURCE
+            itemResource === resource
               ? basePrice
-              : OTHER_ACTIVE_EBOOKS.find((entry) => entry.resource === resource)!.tierPrices.regular,
+              : otherActiveEbooks.find((entry) => entry.resource === itemResource)!.tierPrices
+                  .regular,
         }))
       )
     : null;
@@ -114,11 +120,19 @@ export default function EbookPricing() {
   const formattedOriginal = (27000).toLocaleString("es-CL");
   const hasDiscount = tier !== "regular";
 
-  function toggleExtra(resource: string, checked: boolean) {
-    setSelectedExtras((prev) => (checked ? [...prev, resource] : prev.filter((r) => r !== resource)));
+  function toggleExtra(extraResource: string, checked: boolean) {
+    setSelectedExtras((prev) =>
+      checked ? [...prev, extraResource] : prev.filter((r) => r !== extraResource)
+    );
     // El combo y el código de descuento nunca se combinan — sumar un libro
     // limpia cualquier código ya aplicado.
     setAppliedDiscount(null);
+    trackEbookEvent("ebook_combo_toggle", {
+      resource,
+      extra_resource: extraResource,
+      action: checked ? "add" : "remove",
+      pricing_variant: pricingVariant,
+    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -126,6 +140,14 @@ export default function EbookPricing() {
     if (!email) return;
     setStatus("loading");
     setErrorMsg("");
+
+    trackEbookEvent("ebook_checkout_started", {
+      resource,
+      tier,
+      item_count: selectedResources.length,
+      has_discount_code: Boolean(appliedDiscount),
+      pricing_variant: pricingVariant,
+    });
 
     const res = await fetch("/api/flow/create", {
       method: "POST",
@@ -251,7 +273,7 @@ export default function EbookPricing() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} style={{ padding: "28px 36px" }}>
-            {OTHER_ACTIVE_EBOOKS.length > 0 && (
+            {otherActiveEbooks.length > 0 && (
               <div style={{ marginBottom: 18 }}>
                 <p
                   style={{
@@ -264,7 +286,7 @@ export default function EbookPricing() {
                 >
                   Sumá otros ebooks y ahorrá más
                 </p>
-                {OTHER_ACTIVE_EBOOKS.map((entry) => (
+                {otherActiveEbooks.map((entry) => (
                   <label
                     key={entry.resource}
                     style={{
