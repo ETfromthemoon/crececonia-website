@@ -122,8 +122,8 @@ export default function Hero() {
               type="text"
               value={rubro}
               onChange={(e) => setRubro(e.target.value)}
-              placeholder="Ej: restaurante, clínica dental, inmobiliaria..."
-              aria-label="¿De qué es tu negocio?"
+              placeholder="¿Qué tipo de negocio tienes? Ej: restaurante, clínica dental..."
+              aria-label="¿Qué tipo de negocio tienes? Nómbralo aquí para tu agente IA"
               required
               className="flex-1 px-4 py-3 rounded-sm border text-base w-full"
               style={{
