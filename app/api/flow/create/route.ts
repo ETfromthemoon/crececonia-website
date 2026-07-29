@@ -5,6 +5,7 @@ import { validateDiscountCode } from "@/lib/discount-codes";
 import { flowSign, getFlowBase } from "@/lib/flow";
 import { getCatalogEntry, DEFAULT_EBOOK_RESOURCE, EBOOK_CATALOG } from "@/lib/ebook-catalog";
 import { computeBundleTotal } from "@/lib/ebook-bundles";
+import { captureServerEvent } from "@/lib/posthog-server";
 
 const SITE_URL = process.env.SITE_URL ?? "https://www.crececonia.cl";
 
@@ -157,6 +158,13 @@ export async function POST(request: Request) {
       { status: 502 }
     );
   }
+
+  captureServerEvent("ebook_checkout_started", email, {
+    resource: resources[0],
+    tier: priceInfos[0].tier,
+    item_count: resources.length,
+    has_discount_code: Boolean(discountCode),
+  }).catch((err) => console.error("[flow/create] falló el evento de PostHog:", err));
 
   return NextResponse.json({ redirectUrl: `${data.url}?token=${data.token}` });
 }

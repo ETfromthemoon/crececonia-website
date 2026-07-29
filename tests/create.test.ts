@@ -24,6 +24,13 @@ vi.mock("@/lib/discount-codes", () => ({
   validateDiscountCode: mockValidateDiscount,
 }));
 
+const { mockCaptureServerEvent } = vi.hoisted(() => ({
+  mockCaptureServerEvent: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock("@/lib/posthog-server", () => ({
+  captureServerEvent: mockCaptureServerEvent,
+}));
+
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
@@ -197,6 +204,20 @@ describe("POST /api/flow/create — 1 solo libro (comportamiento existente)", ()
     const res = await POST(postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE] }));
     expect(res.status).toBe(200);
     expect((await res.json()).redirectUrl).toContain("tok_ok");
+  });
+
+  it("captura ebook_checkout_started con el resource, tier y cantidad de items", async () => {
+    flowOk();
+    await POST(postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE] }));
+    expect(mockCaptureServerEvent).toHaveBeenCalledWith(
+      "ebook_checkout_started",
+      "user@test.com",
+      expect.objectContaining({
+        resource: DEFAULT_EBOOK_RESOURCE,
+        item_count: 1,
+        has_discount_code: false,
+      })
+    );
   });
 });
 

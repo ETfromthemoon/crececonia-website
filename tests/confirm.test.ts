@@ -23,6 +23,13 @@ vi.mock("@/lib/ebook-pricing", async (importOriginal) => {
   return { ...real, decrementCupo: vi.fn().mockResolvedValue(undefined) };
 });
 
+const { mockCaptureServerEvent } = vi.hoisted(() => ({
+  mockCaptureServerEvent: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock("@/lib/posthog-server", () => ({
+  captureServerEvent: mockCaptureServerEvent,
+}));
+
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
@@ -134,6 +141,16 @@ describe("POST /api/flow/confirm", () => {
     );
     expect(decrementCupo).toHaveBeenCalledTimes(2);
     expect(mockResendSend).toHaveBeenCalledOnce();
+    expect(mockCaptureServerEvent).toHaveBeenCalledWith(
+      "ebook_purchase_confirmed",
+      "comprador@test.com",
+      expect.objectContaining({ resource: DEFAULT_EBOOK_RESOURCE, amount: 9720 })
+    );
+    expect(mockCaptureServerEvent).toHaveBeenCalledWith(
+      "ebook_purchase_confirmed",
+      "comprador@test.com",
+      expect.objectContaining({ resource: "ebook:agentes-de-ia", amount: 9720 })
+    );
   });
 
   it("combo con 1 libro ya confirmado (retry parcial): solo inserta el que falta", async () => {
