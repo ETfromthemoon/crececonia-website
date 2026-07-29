@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Fraunces, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
+import PostHogProvider from "@/components/PostHogProvider";
 import { EvaluacionProvider } from "@/components/EvaluacionProvider";
 import EvaluacionModal from "@/components/EvaluacionModal";
 import ChatWidget from "@/components/ChatWidget";
@@ -131,14 +132,16 @@ export default function RootLayout({
         />
       </head>
       <body className="flex flex-col min-h-screen">
-        <EvaluacionProvider>
-          <SmoothScroll />
-          {children}
-          <EvaluacionModal />
-          <ChatWidget />
-          <SuscriptorPopup />
-          <EbookPopup />
-        </EvaluacionProvider>
+        <PostHogProvider>
+          <EvaluacionProvider>
+            <SmoothScroll />
+            {children}
+            <EvaluacionModal />
+            <ChatWidget />
+            <SuscriptorPopup />
+            <EbookPopup />
+          </EvaluacionProvider>
+        </PostHogProvider>
       </body>
     </html>
   );
