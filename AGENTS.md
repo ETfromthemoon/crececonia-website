@@ -140,10 +140,11 @@ Requiere `POSTHOG_PERSONAL_API_KEY` (Personal API Key de PostHog con scope de le
 Account → Personal API keys — distinta del project token `phc_...` usado para capturar eventos, que
 es solo de escritura).
 
-Para que corra solo cada semana y avise al usuario, se programa como un cron del harness de Claude
-Code (skill `schedule`), no como código de este repo — el cron ejecuta el script, y si el reporte
-marca "señal accionable" en la comparación de variantes, se le pregunta al usuario antes de generar
-cualquier PR de cambio (nunca automático).
+Corre solo cada semana vía `.github/workflows/posthog-weekly-report.yml` (GitHub Actions, cron nativo
+de la plataforma — la key vive en el secret encriptado del repo `POSTHOG_PERSONAL_API_KEY`, nunca en
+texto plano). El workflow abre un issue con el resumen; si el reporte marca "señal accionable" en la
+comparación de variantes, el título del issue lo distingue. Convertir esa señal en un cambio real de
+copy/precio sigue siendo una decisión manual del usuario — nunca se genera un PR automáticamente.
 
 ## Conventions
 
