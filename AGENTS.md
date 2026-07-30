@@ -128,6 +128,23 @@ seguir estos pasos en orden. No hace falta preguntar el enfoque — es mecánico
 8. **Deploy**: commit + push a una rama, PR, y el mismo flujo de siempre (ver "Deploy" arriba) — el merge a
    `main` es responsabilidad del usuario, confirmarlo explícitamente antes de mergear.
 
+## Reporte de analytics de PostHog
+
+`npm run posthog:report -- [dias]` (default 7) imprime un resumen del funnel de venta de ebooks
+(`lib/posthog-analytics.ts` + `lib/posthog-report-format.ts`): conteos por etapa, tasa de combo, y
+comparación de conversión por `pricing_variant` cuando hay volumen suficiente (mínimo 30 vistas por
+variante y diferencia ≥20% relativo — si no se cumple, el reporte lo dice explícitamente en vez de
+sacar conclusiones prematuras).
+
+Requiere `POSTHOG_PERSONAL_API_KEY` (Personal API Key de PostHog con scope de lectura, generada en
+Account → Personal API keys — distinta del project token `phc_...` usado para capturar eventos, que
+es solo de escritura).
+
+Para que corra solo cada semana y avise al usuario, se programa como un cron del harness de Claude
+Code (skill `schedule`), no como código de este repo — el cron ejecuta el script, y si el reporte
+marca "señal accionable" en la comparación de variantes, se le pregunta al usuario antes de generar
+cualquier PR de cambio (nunca automático).
+
 ## Conventions
 
 - **Language**: All copy in Spanish (Chilean). Title/meta in `app/layout.tsx` sets OG/Twitter/JSON-LD.
