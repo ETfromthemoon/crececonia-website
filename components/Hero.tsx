@@ -80,9 +80,12 @@ export default function Hero() {
 
       {/* Contenido central */}
       <div className="relative max-w-3xl mx-auto text-center">
-        {/* Eyebrow */}
+        {/* Eyebrow: antes decía "Agentes IA para empresas latinoamericanas",
+            que es tan amplio que no filtra a nadie ni genera identificación.
+            Nombrar al lector y su problema en la misma línea hace que el
+            visitante correcto se reconozca en el primer segundo. */}
         <motion.p {...fadeUp(0.04)} className="eyebrow" style={{ marginBottom: 24 }}>
-          Agentes IA para empresas latinoamericanas
+          Para negocios que reciben más consultas de las que pueden responder
         </motion.p>
 
         {/* Headline */}
@@ -106,11 +109,24 @@ export default function Hero() {
         {/* Subheadline */}
         <motion.p
           {...fadeUp(0.16)}
-          className="text-lg max-w-2xl mx-auto mb-10 leading-relaxed"
+          className="text-lg max-w-2xl mx-auto mb-4 leading-relaxed"
           style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
         >
           Eliges el canal —WhatsApp, web, Instagram—, nos cuentas cómo funciona tu negocio,
           y en 48 horas está atendiendo clientes reales.
+        </motion.p>
+
+        {/* Hace el trabajo que hacía la sección UseCases (¿aplica a mi
+            rubro?) en una línea y acá arriba, donde el visitante decide si
+            sigue leyendo. Sube también el criterio de calificación que antes
+            estaba enterrado en la última pregunta del FAQ. */}
+        <motion.p
+          {...fadeUp(0.2)}
+          className="text-sm max-w-xl mx-auto mb-10 leading-relaxed"
+          style={{ color: "var(--smoke)", fontWeight: 300, lineHeight: 1.7 }}
+        >
+          Restaurantes, clínicas, inmobiliarias, e-commerce y servicios
+          profesionales. Si recibes 10 o más consultas repetidas al día, te sirve.
         </motion.p>
 
         {/* Mini-form */}
@@ -149,7 +165,7 @@ export default function Hero() {
             letterSpacing: "0.12em",
           }}
         >
-          Configuración en 48h &middot; desde USD 297/mes &middot; sin contrato forzado
+          USD 297/mes + USD 200 de configuración &middot; listo en 48h &middot; cancelas cuando quieras
         </motion.p>
       </div>
     </section>

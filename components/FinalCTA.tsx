@@ -106,11 +106,15 @@ export default function FinalCTA() {
             letterSpacing: "0.12em",
           }}
         >
-          <span>Configuración en 48h</span>
+          {/* Mismo texto que el trust line del hero, palabra por palabra.
+              Antes el hero decía "desde USD 297" y acá "USD 297" sin el
+              cargo de configuración: tres versiones distintas del precio en
+              una sola página. */}
+          <span>USD 297/mes + USD 200 de configuración</span>
           <span className="hidden sm:block">&middot;</span>
-          <span>USD 297/mes</span>
+          <span>listo en 48h</span>
           <span className="hidden sm:block">&middot;</span>
-          <span>sin contrato forzado</span>
+          <span>cancelas cuando quieras</span>
         </div>
       </div>
     </section>

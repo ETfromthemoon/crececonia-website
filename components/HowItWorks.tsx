@@ -16,7 +16,10 @@ const STEPS = [
   {
     number: 3,
     title: "Tu agente en vivo",
-    body: "Lo dejamos funcionando. Le enseñamos a tu equipo a usarlo. Si en la semana 3 nadie lo está usando, lo ajustamos sin costo hasta que lo adopten.",
+    // La garantía salió de acá: era casi verbatim el bloque "Garantía" de la
+    // sección de precio, y quemarla en el paso 3 le dejaba a ese bloque nada
+    // nuevo que decir.
+    body: "Lo dejamos funcionando y le enseñamos a tu equipo a usarlo. Desde ese día atiende clientes reales.",
   },
 ] as const;
 

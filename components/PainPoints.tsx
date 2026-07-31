@@ -77,7 +77,7 @@ export default function PainPoints() {
             rel="noopener noreferrer"
             className="btn-primary"
           >
-            Quiero resolver esto
+            Quiero mi agente IA
           </a>
         </div>
       </div>

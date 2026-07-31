@@ -2,10 +2,15 @@
 
 import { useState } from "react";
 
+// Salió "¿Qué puede hacer un agente IA por mi negocio?": si a esta altura de
+// la página el visitante todavía no sabe qué hace el producto, la landing
+// falló — y su respuesta era un resumen del hero y de la sección de precio.
+// En su lugar entra la objeción que un dueño de negocio realmente se hace y
+// que no estaba respondida en ninguna parte del sitio.
 const FAQS = [
   {
-    q: "¿Qué puede hacer un agente IA por mi negocio?",
-    a: "Atender consultas por WhatsApp, web o Instagram. 24/7. Agendar citas, dar precios, calificar leads. Cuando algo necesita a una persona, deriva la conversación. Sin que tu equipo toque el teléfono.",
+    q: "¿Qué pasa si el agente le responde algo mal a un cliente?",
+    a: "Ves todas las conversaciones. Si algo se respondió mal, lo corriges y el agente deja de repetirlo. Y cuando una consulta se sale de lo que domina, deriva a una persona de tu equipo en vez de improvisar una respuesta.",
   },
   {
     q: "¿Cuánto demora tener mi agente funcionando?",
