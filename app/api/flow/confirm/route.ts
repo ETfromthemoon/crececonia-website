@@ -4,6 +4,7 @@ import { flowSign, getFlowBase } from "@/lib/flow";
 import { determineTier, decrementCupo, type Tier } from "@/lib/ebook-pricing";
 import { redeemDiscountCode } from "@/lib/discount-codes";
 import { getCatalogEntry, DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
+import { captureServerEvent } from "@/lib/posthog-server";
 
 const SITE_URL = process.env.SITE_URL ?? "https://www.crececonia.cl";
 
@@ -169,6 +170,15 @@ export async function POST(request: Request) {
         } catch (err) {
           console.error(`[flow/confirm] falló el conteo de cupo (${item.resource}/${item.tier}):`, err);
         }
+
+        captureServerEvent("ebook_purchase_confirmed", payment.email, {
+          resource: item.resource,
+          amount: item.amount,
+          item_count: fulfilled.length,
+          discount_code: discountCode,
+        }).catch((err) =>
+          console.error(`[flow/confirm] falló el evento de PostHog para ${item.resource}:`, err)
+        );
       }
 
       if (discountCode && resources.length === 1 && fulfilled.length === 1) {

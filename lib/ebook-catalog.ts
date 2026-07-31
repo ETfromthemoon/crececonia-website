@@ -63,3 +63,9 @@ export function getActiveCatalogEntries(): Extract<EbookCatalogEntry, { active: 
     (entry): entry is Extract<EbookCatalogEntry, { active: true }> => entry.active
   );
 }
+
+export function getOtherActiveEntries(
+  resource: string
+): Extract<EbookCatalogEntry, { active: true }>[] {
+  return getActiveCatalogEntries().filter((entry) => entry.resource !== resource);
+}
