@@ -1,5 +1,7 @@
 "use client";
 
+import { whatsappUrl } from "@/lib/contact";
+
 export default function FinalCTA() {
   return (
     <section
@@ -75,7 +77,7 @@ export default function FinalCTA() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <a
-            href="https://wa.me/569XXXXXXXX"
+            href={whatsappUrl("Hola! Quiero un agente IA para mi negocio")}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-primary btn-lg"

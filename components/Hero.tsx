@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { BackgroundPaths } from "./ui/background-paths";
+import { whatsappUrl } from "@/lib/contact";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 32 },
@@ -17,7 +18,7 @@ export default function Hero() {
     e.preventDefault();
     if (!rubro.trim()) return;
     const msg = `Hola! Quiero un agente IA para mi negocio: ${rubro.trim()}`;
-    window.open(`https://wa.me/569XXXXXXXX?text=${encodeURIComponent(msg)}`, "_blank");
+    window.open(whatsappUrl(msg), "_blank");
   };
 
   return (

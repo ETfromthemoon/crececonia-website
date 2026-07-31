@@ -1,6 +1,8 @@
 "use client";
 
-const WHATSAPP_URL = "https://wa.me/56961945206?text=Quiero%20mi%20agente%20IA";
+import { whatsappUrl } from "@/lib/contact";
+
+const WHATSAPP_URL = whatsappUrl("Quiero mi agente IA");
 
 const INCLUDES = [
   {

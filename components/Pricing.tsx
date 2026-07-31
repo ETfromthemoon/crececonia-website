@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { whatsappUrl } from "@/lib/contact";
 
 const FEATURES = [
   "Implementación completa en 48 horas",
@@ -105,7 +106,7 @@ export default function Pricing() {
 
         <motion.div {...fadeUp(0.26)}>
           <a
-            href="https://wa.me/569XXXXXXXX?text=Hola!%20Quiero%20un%20agente%20IA%20para%20mi%20negocio"
+            href={whatsappUrl("Hola! Quiero un agente IA para mi negocio")}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-primary"

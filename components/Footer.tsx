@@ -1,5 +1,7 @@
 "use client";
 
+import { whatsappUrl } from "@/lib/contact";
+
 const NAV_LINKS = [
   { label: "Cómo funciona", href: "/#como-funciona" },
   { label: "Casos", href: "/#casos" },
@@ -136,7 +138,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://wa.me/569XXXXXXXX"
+                  href={whatsappUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={linkStyle}
@@ -217,7 +219,7 @@ export default function Footer() {
               LinkedIn
             </a>
             <a
-              href="https://wa.me/569XXXXXXXX"
+              href={whatsappUrl()}
               target="_blank"
               rel="noopener noreferrer"
               style={linkStyle}
