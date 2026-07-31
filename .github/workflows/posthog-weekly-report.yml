@@ -1,0 +1,61 @@
+name: Reporte semanal de PostHog
+
+on:
+  schedule:
+    # Lunes 13:00 UTC ≈ 9am Chile (UTC-4, horario estándar). Si Chile cambia
+    # de huso horario, ajustar acá.
+    - cron: "0 13 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  issues: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Generar reporte
+        id: report
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+        run: |
+          npm run posthog:report | tee report.txt >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Detectar señal accionable
+        id: signal
+        run: |
+          if grep -qi "señal accionable" report.txt; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Crear issue con el resumen
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('report.txt', 'utf8');
+            const hasSignal = '${{ steps.signal.outputs.found }}' === 'true';
+            const title = hasSignal
+              ? '📊 Reporte de PostHog — señal accionable detectada'
+              : '📊 Reporte semanal de PostHog';
+
+            // No se usan labels: la API de creación de issues falla si el label
+            // no existe todavía en el repo, y no vale la pena el paso extra de
+            // crearlos — el título ya distingue si hay señal accionable.
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body: '```\n' + report + '\n```',
+            });
