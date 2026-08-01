@@ -1,28 +1,11 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { flowSign, getFlowBase } from "@/lib/flow";
 import { getCatalogEntry, DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
+import { EBOOK_STORAGE_BUCKET, storageObjectName } from "@/lib/ebook-storage";
 
 const VALID_FORMATS = ["movil", "a4"] as const;
 type Format = (typeof VALID_FORMATS)[number];
-
-/**
- * Un combo comparte un solo flow_token entre varias filas de ebook_purchases
- * (una por libro) — el nombre/ruta del PDF necesita saber cuál de esos libros
- * es. El libro 1 mantiene exactamente su ruta/nombre actual (el archivo ya
- * existe en producción con ese nombre); los libros nuevos usan una
- * convención derivada del resource, que hoy no tiene archivo todavía (cae en
- * el 503 "se está preparando", igual que si faltara cualquier PDF).
- */
-function getPdfPath(resource: string, format: Format): string {
-  if (resource === DEFAULT_EBOOK_RESOURCE) {
-    return path.join(process.cwd(), "private", `libro-${format}.pdf`);
-  }
-  const slug = resource.replace(/^ebook:/, "");
-  return path.join(process.cwd(), "private", `${slug}-${format}.pdf`);
-}
 
 function getDownloadFilename(resource: string, format: Format): string {
   if (resource === DEFAULT_EBOOK_RESOURCE) {
@@ -97,9 +80,20 @@ export async function GET(request: Request) {
     }
   }
 
-  const pdfPath = getPdfPath(resource, format);
+  // El PDF se baja de Supabase Storage, no del disco del servidor. Leerlo del
+  // disco solo funcionaba cuando el deploy se hacía por CLI: /private está en
+  // .gitignore (el repo es público y el libro es un producto pago), así que la
+  // integración de Git de Vercel deployaba sin los archivos y todo comprador
+  // recibía 503 "se está preparando".
+  const { data: archivo, error: storageError } = await db.storage
+    .from(EBOOK_STORAGE_BUCKET)
+    .download(storageObjectName(resource, format));
 
-  if (!fs.existsSync(pdfPath)) {
+  if (storageError || !archivo) {
+    console.error(
+      `[ebook/download] no se pudo bajar ${storageObjectName(resource, format)} de Storage:`,
+      storageError?.message ?? "sin archivo"
+    );
     return NextResponse.json(
       { error: "El archivo está siendo preparado. Intenta en unos minutos." },
       { status: 503 }
@@ -122,7 +116,7 @@ export async function GET(request: Request) {
       });
   }
 
-  const buffer = fs.readFileSync(pdfPath);
+  const buffer = Buffer.from(await archivo.arrayBuffer());
 
   return new Response(buffer, {
     headers: {

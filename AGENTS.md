@@ -104,9 +104,16 @@ seguir estos pasos en orden. No hace falta preguntar el enfoque — es mecánico
 3. **Supabase — cupos**: insertar las filas de `ebook_cupos` para ese `resource` (una fila por tier
    `super-early` y `early`, con `total` = cupos acordados y `used = 0`). El `resource` debe ser
    exactamente el string del catálogo (ej. `ebook:agentes-de-ia`).
-4. **El PDF del libro**: subir el archivo a `private/{slug}-{format}.pdf` (`movil` y `a4`), donde `slug` es
-   el resource sin el prefijo `ebook:` (ej. `private/agentes-de-ia-movil.pdf`). Sin el archivo,
-   `/api/ebook/download` responde 503 "se está preparando" — no rompe nada, pero nadie puede descargar.
+4. **El PDF del libro**: dejar los archivos en `private/{slug}-{format}.pdf` (`movil` y `a4`, donde `slug`
+   es el resource sin el prefijo `ebook:`) y **subirlos a Supabase Storage con `npm run ebook:subir-pdfs`**.
+   `/api/ebook/download` los sirve desde el bucket privado `ebooks`, NO desde el disco del servidor.
+
+   ⚠️ No alcanza con dejarlos en `private/`: esa carpeta está en `.gitignore` (este repo es **público** y el
+   libro es un producto pago), así que los deploys por integración de Git —el camino normal— se construyen
+   desde el repositorio y nunca incluyen los PDFs. Eso ya causó que compradores reales recibieran 503
+   "se está preparando" pese a haber pagado. El `.vercelignore` que intentaba incluirlos solo aplica a
+   subidas por CLI (`vercel --prod`), no a los deploys por git. Sin el archivo en Storage, nadie puede
+   descargar.
 5. **Página de venta real**: los libros "coming-soon" hoy renderizan `EbookComingSoon` (solo waitlist, sin
    precio). Activar el libro en el catálogo **no crea automáticamente una página de venta** — `EbookPricing`
    está montado únicamente en `/ebook/de-cero-a-claude-en-una-semana/page.tsx` y solo ese componente sabe
@@ -127,6 +134,29 @@ seguir estos pasos en orden. No hace falta preguntar el enfoque — es mecánico
    decisión de timing del usuario, no del agente.
 8. **Deploy**: commit + push a una rama, PR, y el mismo flujo de siempre (ver "Deploy" arriba) — el merge a
    `main` es responsabilidad del usuario, confirmarlo explícitamente antes de mergear.
+
+## Entregabilidad del ebook: cómo verificarla y repararla
+
+Tres comandos, todos de solo lectura por defecto:
+
+```bash
+npm run flow:contract     # ¿Flow sigue devolviendo los campos que necesita el webhook?
+npm run ebook:recuperar   # ¿hay pagos cobrados que no se entregaron? (dry-run)
+npm run ebook:subir-pdfs  # sube/actualiza los PDFs en el bucket privado de Storage
+```
+
+`npm run ebook:recuperar -- --aplicar` inserta las compras faltantes; agregando `--enviar-email` también le
+manda el link de descarga y una disculpa al comprador. Sin esos flags no escribe ni envía nada.
+
+Contexto: hubo dos fallas que dejaron compradores sin su libro pese a haber pagado, y **ninguna de las dos
+la detectaron los tests** porque los mocks replicaban la suposición equivocada del código:
+
+1. `/api/flow/confirm` leía `payment.email`, pero Flow entrega el correo en `payment.payer`. El mock de los
+   tests simulaba `email`. Por eso ahora los tests construyen la respuesta de Flow desde un fixture
+   capturado de producción (`tests/fixtures/flow-getstatus.ts`) y existe `npm run flow:contract` para
+   detectar si Flow cambia su contrato.
+2. El PDF se leía del disco (`/private`), que no llega a los deploys por git. El mock de `fs` devolvía
+   siempre `true`. Ahora se sirve desde Supabase Storage y el test verifica que se baje del bucket.
 
 ## Reporte de analytics de PostHog
 

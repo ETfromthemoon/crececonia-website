@@ -8,7 +8,10 @@
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
-    "posthog:report": "tsx scripts/posthog-report.ts"
+    "posthog:report": "tsx scripts/posthog-report.ts",
+    "flow:contract": "tsx scripts/flow-contract-check.ts",
+    "ebook:recuperar": "tsx scripts/recuperar-entregas.ts",
+    "ebook:subir-pdfs": "tsx scripts/subir-ebooks-storage.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",

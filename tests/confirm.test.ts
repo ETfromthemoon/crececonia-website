@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
+import { flowGetStatus } from "./fixtures/flow-getstatus";
 
 const { mockInsert, mockResendSend, mockFrom, mockDelete } = vi.hoisted(() => ({
   mockInsert: vi.fn().mockResolvedValue({ error: null }),
@@ -46,28 +47,26 @@ function flowWebhook(token: string | null) {
 }
 
 /**
- * Simula la respuesta REAL de `getStatus` de Flow. Dos detalles que este mock
- * tenía mal y que dejaron pasar a producción una entrega fallida:
+ * Simula a Flow usando el fixture capturado de producción
+ * (tests/fixtures/flow-getstatus.ts) en vez de un objeto escrito a mano.
  *
- * - el email del comprador va en `payer`, no en `email`;
- * - `amount` es un string, no un number.
- *
- * Con el mock devolviendo `email` y un number, los 114 tests quedaban verdes
+ * Este mock antes devolvía `email` y un `amount` numérico — o sea replicaba la
+ * misma suposición equivocada del código. Los 114 tests pasaban en verde
  * mientras el webhook real insertaba `email: undefined` y no entregaba nada.
+ * Construirlo desde el fixture es lo que evita que vuelva a divergir.
  */
 function mockFlowStatus(status: number, amount = 10800) {
   mockFetch.mockResolvedValue({
     ok: true,
-    json: async () => ({
-      status,
-      payer: "comprador@test.com",
-      amount: String(amount),
-      flowOrder: 12345,
-    }),
+    json: async () => flowGetStatus({ status, amount }),
   });
 }
 
-// existingByResource: mapa resource -> ¿ya existe una fila para este flow_token+resource?
+// Registra los filtros que se usaron al buscar una compra existente, para
+// poder afirmar que la idempotencia mira flow_order y no flow_token.
+const filtrosDeIdempotencia: { field: string; value: unknown }[] = [];
+
+// existingByResource: mapa resource -> ¿ya existe una fila para este pago+resource?
 function setupDb(options: {
   pendingResources: { resource: string; tier: string; amount: number }[] | null;
   existingByResource?: Record<string, boolean>;
@@ -95,6 +94,7 @@ function setupDb(options: {
       select: vi.fn(() => builder),
       eq: vi.fn((field: string, value: string) => {
         if (field === "resource") queriedResource = value;
+        filtrosDeIdempotencia.push({ field, value });
         return builder;
       }),
       maybeSingle: vi.fn(() =>
@@ -109,7 +109,10 @@ function setupDb(options: {
 }
 
 describe("POST /api/flow/confirm", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    filtrosDeIdempotencia.length = 0;
+  });
 
   it("responde 200 cuando no hay token en el body", async () => {
     const res = await POST(flowWebhook(null));
@@ -157,7 +160,7 @@ describe("POST /api/flow/confirm", () => {
   it("no entrega ni inserta si Flow no devuelve el email del comprador", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ status: 2, amount: "10800", flowOrder: 12345 }),
+      json: async () => flowGetStatus({ payer: null }),
     });
     setupDb({ pendingResources: null });
 
@@ -166,6 +169,25 @@ describe("POST /api/flow/confirm", () => {
     expect(res.status).toBe(200);
     expect(mockInsert).not.toHaveBeenCalled();
     expect(mockResendSend).not.toHaveBeenCalled();
+  });
+
+  // La recuperación manual de compras no entregadas no puede conocer el token
+  // (Flow no lo expone en getStatusByCommerceId ni en getPayments), así que
+  // inserta con un token sintético. Si la idempotencia mirara flow_token, un
+  // reintento tardío del webhook insertaría una segunda fila y mandaría un
+  // segundo email al mismo comprador.
+  it("la idempotencia filtra por flow_order, no por flow_token", async () => {
+    mockFlowStatus(2);
+    setupDb({ pendingResources: null });
+
+    await POST(flowWebhook("token-distinto-al-de-la-recuperacion"));
+
+    const campos = filtrosDeIdempotencia.map((f) => f.field);
+    expect(campos).toContain("flow_order");
+    expect(campos).not.toContain("flow_token");
+    expect(filtrosDeIdempotencia).toEqual(
+      expect.arrayContaining([{ field: "flow_order", value: 176845578 }])
+    );
   });
 
   it("combo de 2 libros: inserta 2 filas, decrementa 2 cupos, manda 1 solo email", async () => {
