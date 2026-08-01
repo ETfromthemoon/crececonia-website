@@ -147,12 +147,17 @@ export async function POST(request: Request) {
     let allResolved = true;
 
     for (const item of resources) {
-      // Atajo de idempotencia (no atómico) — el índice único (flow_token,
-      // resource) en el insert de abajo es la protección real.
+      // Idempotencia por flow_order, no por flow_token: flow_order es el id
+      // estable del pago en Flow y es el mismo dato que usa la recuperación
+      // manual de compras no entregadas (scripts/recuperar-entregas.ts), que
+      // no puede conocer el token porque Flow no lo expone en sus consultas.
+      // Chequear por token dejaba pasar un duplicado si el webhook llegaba
+      // después de una recuperación. El índice único (flow_token, resource)
+      // sigue siendo la protección real contra dobles webhooks.
       const { data: existing } = await db
         .from("ebook_purchases")
         .select("id")
-        .eq("flow_token", token)
+        .eq("flow_order", payment.flowOrder)
         .eq("resource", item.resource)
         .maybeSingle();
       if (existing) continue;

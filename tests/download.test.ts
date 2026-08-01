@@ -2,19 +2,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ── mocks deben declararse antes del import del módulo ──────────────────────
 const mockFrom = vi.fn();
+// El PDF ya no se lee del disco sino de Supabase Storage (ver
+// lib/ebook-storage.ts): leerlo del disco solo funcionaba con deploys por CLI,
+// porque /private está gitignoreado y la integración de Git de Vercel
+// construye desde el repositorio.
+const mockStorageDownload = vi.fn();
+const mockStorageFrom = vi.fn(() => ({ download: mockStorageDownload }));
 vi.mock("@/lib/supabase", () => ({
-  getSupabaseAdmin: () => ({ from: mockFrom }),
-}));
-
-const mockExistsSync = vi.fn();
-const mockReadFileSync = vi.fn();
-vi.mock("fs", () => ({
-  default: {
-    existsSync: (...a: unknown[]) => mockExistsSync(...a),
-    readFileSync: (...a: unknown[]) => mockReadFileSync(...a),
-  },
-  existsSync: (...a: unknown[]) => mockExistsSync(...a),
-  readFileSync: (...a: unknown[]) => mockReadFileSync(...a),
+  getSupabaseAdmin: () => ({ from: mockFrom, storage: { from: mockStorageFrom } }),
 }));
 
 // Mock global fetch para llamadas a Flow
@@ -44,11 +39,23 @@ function dbChain(result: unknown) {
 
 const FAKE_PDF = Buffer.from("%PDF-fake-content");
 
+/** Simula que el PDF existe en Storage. */
+function storageConArchivo() {
+  mockStorageDownload.mockResolvedValue({
+    data: { arrayBuffer: async () => FAKE_PDF },
+    error: null,
+  });
+}
+
+/** Simula que el PDF NO está en Storage (bucket vacío o nombre distinto). */
+function storageSinArchivo() {
+  mockStorageDownload.mockResolvedValue({ data: null, error: { message: "Object not found" } });
+}
+
 describe("GET /api/ebook/download", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockExistsSync.mockReturnValue(true);
-    mockReadFileSync.mockReturnValue(FAKE_PDF);
+    storageConArchivo();
   });
 
   // ── 1. Sin parámetros ──────────────────────────────────────────────────────
@@ -120,15 +127,33 @@ describe("GET /api/ebook/download", () => {
     expect(res.status).toBe(404);
   });
 
-  // ── 8. PDF no existe aún ──────────────────────────────────────────────────
-  it("503 cuando el PDF no está disponible en el servidor", async () => {
+  // ── 8. PDF no está en Storage ─────────────────────────────────────────────
+  it("503 cuando el PDF no está en Storage", async () => {
     mockFrom.mockReturnValue(dbChain({ data: { id: "uuid-3", email: "ok@test.com" } }));
-    mockExistsSync.mockReturnValue(false);
+    storageSinArchivo();
 
     const res = await GET(req({ token: "tok_nopdf" }));
     expect(res.status).toBe(503);
     const body = await res.json();
     expect(body.error).toMatch(/preparad/i);
+  });
+
+  // Regresión: una compra válida con el PDF en Storage tiene que entregar el
+  // archivo. Este es el caso que estuvo roto en producción sin que ningún test
+  // lo notara, porque el PDF se leía del disco y los tests mockeaban `fs`
+  // devolviendo siempre `true` — o sea simulaban un disco que en el deploy real
+  // no tenía los archivos.
+  it("baja el PDF del bucket privado y lo entrega con el nombre correcto", async () => {
+    mockFrom.mockReturnValue(dbChain({ data: { id: "uuid-9", email: "ok@test.com" } }));
+
+    const res = await GET(req({ email: "ok@test.com", format: "a4" }));
+
+    expect(res.status).toBe(200);
+    expect(mockStorageFrom).toHaveBeenCalledWith("ebooks");
+    expect(mockStorageDownload).toHaveBeenCalledWith("libro-a4.pdf");
+    expect(res.headers.get("content-type")).toBe("application/pdf");
+    expect(res.headers.get("content-disposition")).toContain("De-cero-a-Claude-en-una-semana-A4.pdf");
+    expect(Buffer.from(await res.arrayBuffer())).toEqual(FAKE_PDF);
   });
 
   // ── 9. Flow API devuelve !ok ───────────────────────────────────────────────

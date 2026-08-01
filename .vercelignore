@@ -1,5 +1,16 @@
-# Vercel ignore — mirrors .gitignore but SIN /private
-# Los PDFs en /private se suben al deploy aunque estén gitignored
+# Vercel ignore — aplica SOLO a deploys por CLI (`vercel --prod`), que suben
+# archivos desde el disco local. Los deploys por integración de Git (el camino
+# normal de este proyecto) se construyen desde el repositorio y este archivo no
+# los afecta.
+#
+# OJO: este archivo NO sirve para incluir /private en el deploy. Antes decía que
+# los PDFs gitignoreados "se suben al deploy", y eso es falso para los deploys
+# por git: al no estar en el repositorio, nunca llegaban, y los compradores
+# recibían 503 en la descarga. Los PDFs ahora viven en Supabase Storage
+# (`npm run ebook:subir-pdfs`), no en el deploy.
+#
+# Se conserva principalmente por `.env*`: evita subir secretos si alguien
+# deploya por CLI.
 
 /node_modules
 /.pnp
