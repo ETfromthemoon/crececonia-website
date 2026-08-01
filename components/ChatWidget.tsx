@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEvaluacion } from "./EvaluacionProvider";
+import { whatsappUrl } from "@/lib/contact";
 
 const API = "https://autodrive.cl";
+
+const CHAT_WHATSAPP_URL = whatsappUrl("Hola! Vengo del chat de la web. Quiero un agente IA para mi negocio");
 
 type Message = {
   id: string;
@@ -14,11 +16,15 @@ type Message = {
   lead_capturado?: boolean;
 };
 
+// Alineadas con lo que la landing realmente vende (agente IA en 48h, USD
+// 297/mes). Antes preguntaban por el "Protocolo BPI" y el "Test de Fit",
+// términos que la landing no menciona ni explica en ninguna parte — el
+// visitante abría el chat y lo primero que veía era un producto del que
+// nunca oyó hablar.
 const QUICK_REPLIES = [
-  "¿Qué es el Protocolo BPI?",
-  "¿Cómo funciona el Test de Fit?",
-  "¿Para qué tipo de empresa son?",
-  "Quiero solicitar el Test de Fit",
+  "¿Cuánto cuesta?",
+  "¿Sirve para mi negocio?",
+  "¿En cuánto tiempo está listo?",
 ];
 
 const TypingDots = () => (
@@ -33,18 +39,19 @@ const TypingDots = () => (
   </div>
 );
 
+const SALUDO_FALLBACK =
+  "¡Hola! Soy el asistente de CrececonIA 👋 Puedo contarte cómo funciona un agente IA para tu negocio, cuánto cuesta y en cuánto tiempo queda listo.";
+
 export default function ChatWidget() {
   const [open, setOpen]           = useState(false);
   const [messages, setMessages]   = useState<Message[]>([]);
   const [input, setInput]         = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [loading, setLoading]     = useState(false);
-  const [unread, setUnread]       = useState(false);
   const [initDone, setInitDone]   = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
-  const { abrir } = useEvaluacion();
 
   // Auto-scroll
   useEffect(() => {
@@ -53,34 +60,14 @@ export default function ChatWidget() {
 
   // Focus input on open
   useEffect(() => {
-    if (open) {
-      setUnread(false);
-      setTimeout(() => inputRef.current?.focus(), 120);
-    }
+    if (open) setTimeout(() => inputRef.current?.focus(), 120);
   }, [open]);
 
-  const initSession = useCallback(async () => {
-    if (initDone) return;
-    setInitDone(true);
-    try {
-      const r = await fetch(`${API}/api/public/widget/inicio`, { method: "POST" });
-      const j = await r.json();
-      setSessionId(j.session_id);
-      setMessages([{ id: "init", role: "bot", content: j.mensaje }]);
-    } catch {
-      setMessages([{
-        id: "init",
-        role: "bot",
-        content: "¡Hola! Soy el asistente de CrececonIA 👋 ¿En qué te puedo ayudar hoy?",
-      }]);
-    }
-  }, [initDone]);
-
-  const resetChat = async () => {
-    if (loading) return;
+  // Una sola función para abrir sesión: antes initSession y resetChat tenían
+  // el mismo fetch y el mismo fallback duplicados línea por línea.
+  const startSession = useCallback(async () => {
     setMessages([]);
     setInput("");
-    setLoading(false);
     setSessionId(null);
     try {
       const r = await fetch(`${API}/api/public/widget/inicio`, { method: "POST" });
@@ -88,17 +75,16 @@ export default function ChatWidget() {
       setSessionId(j.session_id);
       setMessages([{ id: "init", role: "bot", content: j.mensaje }]);
     } catch {
-      setMessages([{
-        id: "init",
-        role: "bot",
-        content: "¡Hola! Soy el asistente de CrececonIA 👋 ¿En qué te puedo ayudar hoy?",
-      }]);
+      setMessages([{ id: "init", role: "bot", content: SALUDO_FALLBACK }]);
     }
-  };
+  }, []);
 
   const handleOpen = () => {
     setOpen(true);
-    if (!initDone) initSession();
+    if (!initDone) {
+      setInitDone(true);
+      startSession();
+    }
   };
 
   const sendMessage = async (text: string) => {
@@ -126,7 +112,6 @@ export default function ChatWidget() {
         lead_capturado:      j.lead_capturado,
       };
       setMessages((prev) => [...prev, botMsg]);
-      if (!open) setUnread(true);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -200,7 +185,7 @@ export default function ChatWidget() {
                 {/* Reiniciar — solo visible cuando hay conversación */}
                 {messages.length > 1 && (
                   <button
-                    onClick={resetChat}
+                    onClick={() => !loading && startSession()}
                     disabled={loading}
                     className="w-7 h-7 flex items-center justify-center transition-opacity hover:opacity-60 disabled:opacity-30"
                     style={{ color: "var(--smoke)" }}
@@ -249,12 +234,17 @@ export default function ChatWidget() {
                     {m.content}
                   </div>
 
-                  {/* CTA evaluación */}
+                  {/* CTA cuando el bot detecta intención de compra. Va al
+                      mismo WhatsApp que el resto de la landing: antes abría
+                      el formulario de 3 pasos del Protocolo BPI, que es otro
+                      producto y otro embudo. */}
                   {m.sugerir_evaluacion && (
-                    <motion.button
+                    <motion.a
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
-                      onClick={() => { setOpen(false); abrir("chat-widget"); }}
+                      href={CHAT_WHATSAPP_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="mt-2 text-xs px-3 py-2 transition-opacity hover:opacity-80"
                       style={{
                         background: "rgba(217,179,106,0.12)",
@@ -264,8 +254,8 @@ export default function ChatWidget() {
                         fontWeight: 500,
                       }}
                     >
-                      Solicitar Test de Fit →
-                    </motion.button>
+                      Quiero mi agente IA →
+                    </motion.a>
                   )}
 
                   {/* Confirmación lead capturado */}
@@ -359,12 +349,25 @@ export default function ChatWidget() {
               </button>
             </div>
 
-            {/* Branding pie */}
-            <div
-              className="text-center pb-2"
-              style={{ color: "var(--smoke)", fontSize: 10, opacity: 0.5, fontFamily: "var(--font-mono)" }}
-            >
-              crececonia.cl
+            {/* Salida a WhatsApp siempre disponible. Reemplaza el
+                "crececonia.cl" que no hacía nada: si el visitante se cansa
+                del bot, no tiene que buscar un CTA fuera del panel. */}
+            <div className="text-center pb-2.5">
+              <a
+                href={CHAT_WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-opacity hover:opacity-100"
+                style={{
+                  color: "var(--smoke)",
+                  fontSize: 10,
+                  opacity: 0.65,
+                  fontFamily: "var(--font-mono)",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                o hablar directo por WhatsApp →
+              </a>
             </div>
           </motion.div>
         )}
@@ -391,22 +394,6 @@ export default function ChatWidget() {
         }}
         aria-label={open ? "Cerrar chat" : "Abrir chat de ayuda"}
       >
-        {/* Badge no leídos */}
-        <AnimatePresence>
-          {unread && !open && (
-            <motion.span
-              key="badge"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white font-bold"
-              style={{ background: "var(--danger)", fontSize: 9 }}
-            >
-              1
-            </motion.span>
-          )}
-        </AnimatePresence>
-
         <AnimatePresence mode="wait">
           {open ? (
             <motion.svg

@@ -6,7 +6,6 @@ import PostHogProvider from "@/components/PostHogProvider";
 import { EvaluacionProvider } from "@/components/EvaluacionProvider";
 import EvaluacionModal from "@/components/EvaluacionModal";
 import ChatWidget from "@/components/ChatWidget";
-import SuscriptorPopup from "@/components/SuscriptorPopup";
 import EbookPopup from "@/components/EbookPopup";
 
 const inter = Inter({
@@ -137,8 +136,13 @@ export default function RootLayout({
             <SmoothScroll />
             {children}
             <EvaluacionModal />
+            {/* Un solo popup además del chat. Antes había tres elementos
+                intrusivos simultáneos (chat + suscripción + ebook) encima de
+                los 9 CTAs de la landing, compitiendo entre ellos y con el
+                CTA de venta. Se retiró SuscriptorPopup; el del ebook queda
+                porque es un producto con venta activa y ya está instrumentado
+                en PostHog, así que se puede medir si convierte. */}
             <ChatWidget />
-            <SuscriptorPopup />
             <EbookPopup />
           </EvaluacionProvider>
         </PostHogProvider>

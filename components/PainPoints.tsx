@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { whatsappUrl } from "@/lib/contact";
 
 const PAIN_POINTS = [
   {
@@ -20,7 +21,7 @@ const PAIN_POINTS = [
   },
 ] as const;
 
-const WHATSAPP_URL = "https://wa.me/569XXXXXXXX?text=Quiero%20resolver%20la%20saturacion%20de%20mi%20equipo";
+const WHATSAPP_URL = whatsappUrl("Quiero resolver la saturación de mi equipo");
 
 export default function PainPoints() {
   return (
@@ -76,7 +77,7 @@ export default function PainPoints() {
             rel="noopener noreferrer"
             className="btn-primary"
           >
-            Quiero resolver esto
+            Quiero mi agente IA
           </a>
         </div>
       </div>

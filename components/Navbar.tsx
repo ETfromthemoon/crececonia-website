@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { whatsappUrl } from "@/lib/contact";
 
 const NAV_LINKS = [
   { label: "Cómo funciona", href: "/#como-funciona" },
@@ -12,7 +13,7 @@ const NAV_LINKS = [
   { label: "Ebook", href: "/ebook/de-cero-a-claude-en-una-semana", highlight: true },
 ] as const;
 
-const WHATSAPP_URL = "https://wa.me/569XXXXXXXX";
+const WHATSAPP_URL = whatsappUrl();
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);

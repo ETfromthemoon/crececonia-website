@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { whatsappUrl } from "@/lib/contact";
 
-const WHATSAPP_URL = "https://wa.me/56961945206?text=Quiero%20saber%20m%C3%A1s%20sobre%20los%20agentes%20IA";
+const WHATSAPP_URL = whatsappUrl("Quiero saber más sobre los agentes IA");
 
 const RESULTS = [
   {
@@ -21,7 +22,7 @@ const RESULTS = [
     fill: 45,
     description: "Agente web agenda consultas, confirma horarios y responde precios sin intervención humana.",
     clientSize: "Clínica 3 especialistas",
-    timeToResult: "Mes 1 post go-live",
+    timeToResult: "Al primer mes",
   },
   {
     sector: "Inmobiliaria",
@@ -39,7 +40,7 @@ const RESULTS = [
     fill: 70,
     description: "Agente web + WhatsApp resuelve tracking, devoluciones y talles sin pasar por soporte humano.",
     clientSize: "Tienda online ~10 empleados",
-    timeToResult: "Mes 1 post go-live",
+    timeToResult: "Al primer mes",
   },
   {
     sector: "Servicios B2B",
@@ -55,9 +56,9 @@ const RESULTS = [
     metric: "Renovaciones automáticas",
     impact: "+35%",
     fill: 35,
-    description: "Agente WhatsApp sigue up a membresías por vencer, ofrece planes y cierra renovaciones.",
+    description: "Agente WhatsApp hace seguimiento de membresías por vencer, ofrece planes y cierra renovaciones.",
     clientSize: "Gimnasio ~12 empleados",
-    timeToResult: "Mes 2 post go-live",
+    timeToResult: "Al segundo mes",
   },
 ];
 
@@ -206,7 +207,7 @@ export default function Results() {
             rel="noopener noreferrer"
             className="btn-primary"
           >
-            Hablar por WhatsApp →
+            Quiero mi agente IA
           </a>
         </div>
       </div>

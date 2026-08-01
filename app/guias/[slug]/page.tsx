@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { marked } from "marked";
 import GuiaCodeCopy from "@/components/GuiaCodeCopy";
+import { whatsappUrl } from "@/lib/contact";
 
 const API_BASE = "https://autodrive.cl";
 
@@ -211,7 +212,7 @@ export default async function GuiaPage({
               ¿Quieres automatizar tu negocio con IA?
             </p>
             <a
-              href="https://wa.me/56961945206"
+              href={whatsappUrl()}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block text-xs px-6 py-3 transition-opacity hover:opacity-90"

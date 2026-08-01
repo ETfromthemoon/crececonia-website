@@ -1,11 +1,15 @@
 "use client";
 
+import { whatsappUrl } from "@/lib/contact";
+
 const NAV_LINKS = [
   { label: "Cómo funciona", href: "/#como-funciona" },
   { label: "Casos", href: "/#casos" },
   { label: "Precio", href: "/#precio" },
   { label: "FAQ", href: "/#faq" },
-  { label: "Centro de Conocimiento", href: "/centro" },
+  // Mismo nombre que en el navbar: antes acá decía "Centro de Conocimiento"
+  // y arriba "Conocimiento" — el mismo link con dos nombres distintos.
+  { label: "Conocimiento", href: "/centro" },
   { label: "Ebook", href: "/ebook/de-cero-a-claude-en-una-semana", highlight: true },
 ];
 
@@ -136,7 +140,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://wa.me/569XXXXXXXX"
+                  href={whatsappUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={linkStyle}
@@ -172,13 +176,15 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Separador + cierre */}
+        {/* Separador + cierre. Acá había una segunda tanda de links a Email,
+            LinkedIn y WhatsApp — los mismos tres que ya están en la columna
+            de Contacto tres líneas más arriba, dentro de los mismos 200px. */}
         <div
-          className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+          className="pt-6"
           style={{ borderTop: "1px solid var(--hairline)" }}
         >
           <p
-            className="text-xs"
+            className="text-xs text-center sm:text-left"
             style={{
               color: "var(--smoke)",
               fontFamily: "var(--font-mono)",
@@ -187,51 +193,6 @@ export default function Footer() {
           >
             &copy; 2026 CrececonIA. Todos los derechos reservados.
           </p>
-          <div className="flex items-center gap-5">
-            <a
-              href="mailto:sergio@crececonia.cl"
-              style={linkStyle}
-              className="transition-colors"
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "var(--champagne)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "var(--smoke)")
-              }
-            >
-              Email
-            </a>
-            <a
-              href="https://www.linkedin.com/in/sergioastudillo"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={linkStyle}
-              className="transition-colors"
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "var(--champagne)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "var(--smoke)")
-              }
-            >
-              LinkedIn
-            </a>
-            <a
-              href="https://wa.me/569XXXXXXXX"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={linkStyle}
-              className="transition-colors"
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "var(--champagne)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "var(--smoke)")
-              }
-            >
-              WhatsApp
-            </a>
-          </div>
         </div>
       </div>
     </footer>

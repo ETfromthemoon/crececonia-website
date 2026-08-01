@@ -1,5 +1,7 @@
 "use client";
 
+import { whatsappUrl } from "@/lib/contact";
+
 export default function FinalCTA() {
   return (
     <section
@@ -75,7 +77,7 @@ export default function FinalCTA() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <a
-            href="https://wa.me/569XXXXXXXX"
+            href={whatsappUrl("Hola! Quiero un agente IA para mi negocio")}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-primary btn-lg"
@@ -104,11 +106,15 @@ export default function FinalCTA() {
             letterSpacing: "0.12em",
           }}
         >
-          <span>Configuración en 48h</span>
+          {/* Mismo texto que el trust line del hero, palabra por palabra.
+              Antes el hero decía "desde USD 297" y acá "USD 297" sin el
+              cargo de configuración: tres versiones distintas del precio en
+              una sola página. */}
+          <span>USD 297/mes + USD 200 de configuración</span>
           <span className="hidden sm:block">&middot;</span>
-          <span>USD 297/mes</span>
+          <span>listo en 48h</span>
           <span className="hidden sm:block">&middot;</span>
-          <span>sin contrato forzado</span>
+          <span>cancelas cuando quieras</span>
         </div>
       </div>
     </section>

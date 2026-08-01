@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { whatsappUrl } from "@/lib/contact";
 
 const FEATURES = [
   "Implementación completa en 48 horas",
@@ -59,16 +60,20 @@ export default function Pricing() {
           style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
           {...fadeUp(0.08)}
         >
-          Desde{" "}
-          <em className="gradient-text">USD 297/mes</em>.
+          <em className="gradient-text">USD 297/mes</em>, todo incluido.
         </motion.h2>
 
+        {/* El cargo de configuración se dice completo y en el mismo lugar que
+            la mensualidad. Antes el hero prometía "desde USD 297" y el cargo
+            de USD 200 aparecía recién acá: un costo sorpresa a mitad de
+            página es una de las causas más limpias de abandono. */}
         <motion.p
           className="text-base leading-relaxed mb-12"
           style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
           {...fadeUp(0.14)}
         >
-          Configuración inicial: USD 200.
+          Más USD 200 de configuración inicial, una sola vez. Sin costos
+          escondidos y sin contrato anual.
         </motion.p>
 
         <motion.div
@@ -103,9 +108,43 @@ export default function Pricing() {
           </ul>
         </motion.div>
 
-        <motion.div {...fadeUp(0.26)}>
+        {/* Garantía: venía de Services.tsx, que era esta misma sección
+            escrita dos veces (mismos features, otro formato, pegada justo
+            después). Al fusionar, este bloque es lo único que Services
+            aportaba de nuevo. */}
+        <motion.div
+          className="text-left mb-12 px-6 py-5"
+          style={{
+            background: "var(--gold-soft)",
+            border: "1px solid rgba(196,155,74,0.28)",
+            borderRadius: 2,
+          }}
+          {...fadeUp(0.24)}
+        >
+          <p
+            className="text-xs mb-2"
+            style={{
+              color: "var(--champagne)",
+              fontFamily: "var(--font-mono)",
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+            }}
+          >
+            Garantía
+          </p>
+          <p
+            className="text-sm leading-relaxed"
+            style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.8 }}
+          >
+            Si en la semana 3 tu equipo no está usando el agente, lo ajustamos
+            sin costo hasta que lo usen. Que funcione es nuestro problema, no el
+            tuyo.
+          </p>
+        </motion.div>
+
+        <motion.div {...fadeUp(0.3)}>
           <a
-            href="https://wa.me/569XXXXXXXX?text=Hola!%20Quiero%20un%20agente%20IA%20para%20mi%20negocio"
+            href={whatsappUrl("Hola! Quiero un agente IA para mi negocio")}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-primary"
