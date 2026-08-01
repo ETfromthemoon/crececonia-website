@@ -12,10 +12,22 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
+/**
+ * Respuesta de `GET /payment/getStatus` de Flow.
+ *
+ * OJO con dos campos, que costaron una entrega no realizada:
+ *
+ * - El email del comprador viene en `payer`, NO en `email`. Este tipo
+ *   declaraba `email` y el resto del archivo leía `payment.email`, que
+ *   siempre era `undefined`: el insert en ebook_purchases fallaba, la orden
+ *   quedaba pendiente y el comprador nunca recibía el libro pese a haber
+ *   pagado.
+ * - `amount` llega como string ("17900"), no como number.
+ */
 interface FlowPayment {
   status: number;
-  email: string;
-  amount: number;
+  payer: string;
+  amount: string | number;
   flowOrder: number;
   commerceOrder: string;
 }
@@ -89,6 +101,22 @@ export async function POST(request: Request) {
     const payment = await getPaymentStatus(token);
     if (!payment || payment.status !== 2) return new Response("OK", { status: 200 });
 
+    // Normalizamos acá los dos campos que Flow entrega distinto de lo que el
+    // resto del archivo espera, así el resto del flujo trabaja con un email y
+    // un monto ya sanos (ver el comentario de FlowPayment).
+    const buyerEmail = payment.payer;
+    const paidAmount = Number(payment.amount);
+
+    if (!buyerEmail) {
+      // Sin email no hay a quién entregar. Antes esto seguía de largo con
+      // `undefined` y se descubría recién cuando el comprador reclamaba.
+      console.error(
+        `[flow/confirm] Flow no devolvió 'payer' para el token ${token} — no se puede entregar. Respuesta:`,
+        JSON.stringify(payment)
+      );
+      return new Response("OK", { status: 200 });
+    }
+
     const db = getSupabaseAdmin();
     const commerceOrder = payment.commerceOrder ?? "";
 
@@ -104,8 +132,8 @@ export async function POST(request: Request) {
     const resources: PendingResource[] = pending?.resources ?? [
       {
         resource: DEFAULT_EBOOK_RESOURCE,
-        tier: determineTier(payment.amount, DEFAULT_EBOOK_RESOURCE),
-        amount: payment.amount,
+        tier: determineTier(paidAmount, DEFAULT_EBOOK_RESOURCE),
+        amount: paidAmount,
       },
     ];
     const discountCode: string | null = pending?.discount_code ?? null;
@@ -133,7 +161,7 @@ export async function POST(request: Request) {
       // leer `error` explícitamente: sin esto seguíamos de largo y
       // duplicábamos cupo/email para una fila que nunca se guardó.
       const { error: insertError } = await db.from("ebook_purchases").insert({
-        email: payment.email,
+        email: buyerEmail,
         resource: item.resource,
         amount: item.amount,
         flow_token: token,
@@ -159,9 +187,9 @@ export async function POST(request: Request) {
       // antes que la contabilidad y cada paso se aísla: que falle el conteo
       // de cupos no puede dejar a alguien que ya pagó sin su descarga.
       try {
-        await sendConfirmationEmail(payment.email, token, fulfilled);
+        await sendConfirmationEmail(buyerEmail, token, fulfilled);
       } catch (err) {
-        console.error(`[flow/confirm] falló el email de ${payment.email}:`, err);
+        console.error(`[flow/confirm] falló el email de ${buyerEmail}:`, err);
       }
 
       for (const item of fulfilled) {
@@ -171,7 +199,7 @@ export async function POST(request: Request) {
           console.error(`[flow/confirm] falló el conteo de cupo (${item.resource}/${item.tier}):`, err);
         }
 
-        captureServerEvent("ebook_purchase_confirmed", payment.email, {
+        captureServerEvent("ebook_purchase_confirmed", buyerEmail, {
           resource: item.resource,
           amount: item.amount,
           item_count: fulfilled.length,

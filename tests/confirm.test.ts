@@ -45,10 +45,25 @@ function flowWebhook(token: string | null) {
   });
 }
 
+/**
+ * Simula la respuesta REAL de `getStatus` de Flow. Dos detalles que este mock
+ * tenía mal y que dejaron pasar a producción una entrega fallida:
+ *
+ * - el email del comprador va en `payer`, no en `email`;
+ * - `amount` es un string, no un number.
+ *
+ * Con el mock devolviendo `email` y un number, los 114 tests quedaban verdes
+ * mientras el webhook real insertaba `email: undefined` y no entregaba nada.
+ */
 function mockFlowStatus(status: number, amount = 10800) {
   mockFetch.mockResolvedValue({
     ok: true,
-    json: async () => ({ status, email: "comprador@test.com", amount, flowOrder: 12345 }),
+    json: async () => ({
+      status,
+      payer: "comprador@test.com",
+      amount: String(amount),
+      flowOrder: 12345,
+    }),
   });
 }
 
@@ -119,6 +134,38 @@ describe("POST /api/flow/confirm", () => {
       expect.objectContaining({ resource: DEFAULT_EBOOK_RESOURCE, tier: "super-early", amount: 10800 })
     );
     expect(mockResendSend).toHaveBeenCalledOnce();
+  });
+
+  // Regresión: el email del comprador se guarda y se usa para enviar. Ningún
+  // test afirmaba esto, así que cuando el código leía `payment.email` (campo
+  // que Flow no devuelve) la suite seguía verde y un comprador real pagó
+  // $17.900 sin recibir el libro.
+  it("guarda el email que Flow devuelve en 'payer' y le envía ahí", async () => {
+    mockFlowStatus(2);
+    setupDb({ pendingResources: null });
+
+    await POST(flowWebhook("tok_email"));
+
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({ email: "comprador@test.com" })
+    );
+    expect(mockResendSend).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "comprador@test.com" })
+    );
+  });
+
+  it("no entrega ni inserta si Flow no devuelve el email del comprador", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ status: 2, amount: "10800", flowOrder: 12345 }),
+    });
+    setupDb({ pendingResources: null });
+
+    const res = await POST(flowWebhook("tok_sin_payer"));
+
+    expect(res.status).toBe(200);
+    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockResendSend).not.toHaveBeenCalled();
   });
 
   it("combo de 2 libros: inserta 2 filas, decrementa 2 cupos, manda 1 solo email", async () => {
