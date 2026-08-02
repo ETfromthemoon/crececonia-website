@@ -14,19 +14,30 @@
  *
  * Con los archivos en Storage, la entrega no depende del método de deploy.
  *
- * Uso:  npm run ebook:subir-pdfs
+ * Uso:  npm run ebook:subir-pdfs      (sube y después verifica)
+ *       npm run ebook:verificar      (solo verifica, no escribe nada)
  *
  * Es idempotente: vuelve a subir (upsert) y no falla si ya existen.
+ *
+ * Termina siempre verificando que TODO libro activo del catálogo tenga sus dos
+ * formatos en Storage. Un libro se pone a la venta cambiando `active: true` en
+ * lib/ebook-catalog.ts, y nada obligaba a que sus PDFs estuvieran arriba: el
+ * error se descubría recién cuando alguien pagaba y recibía un 503. Acá falla
+ * el comando, no la venta.
  */
 import fs from "fs";
 import path from "path";
-import { createClient } from "@supabase/supabase-js";
-import { EBOOK_STORAGE_BUCKET, storageObjectName } from "../lib/ebook-storage";
-import { EBOOK_CATALOG } from "../lib/ebook-catalog";
-
-const FORMATOS = ["movil", "a4"] as const;
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import {
+  EBOOK_STORAGE_BUCKET,
+  EBOOK_FORMATS as FORMATOS,
+  findMissingEbookFiles,
+  storageObjectName,
+} from "../lib/ebook-storage";
+import { EBOOK_CATALOG, getActiveCatalogEntries } from "../lib/ebook-catalog";
 
 async function main() {
+  const soloVerificar = process.argv.includes("--solo-verificar");
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
@@ -34,6 +45,11 @@ async function main() {
     process.exit(1);
   }
   const db = createClient(url, key, { auth: { persistSession: false } });
+
+  if (soloVerificar) {
+    await reportarVerificacion(db);
+    return;
+  }
 
   // El bucket debe ser privado: los PDFs se sirven solo a través de
   // /api/ebook/download, que valida que exista la compra.
@@ -87,10 +103,32 @@ async function main() {
   }
 
   console.log(`\nSubidos: ${subidos}${faltantes ? ` · Omitidos por no estar en disco: ${faltantes}` : ""}`);
-  if (!subidos) {
-    console.error("No se subió ningún archivo. Revisar que los PDFs estén en /private.");
+
+  // No se falla por `subidos === 0`: si los PDFs ya están en Storage y no están
+  // en este disco, la venta funciona igual. Lo que importa no es cuánto se
+  // subió, sino que todo libro activo quede descargable — eso es lo que se
+  // verifica ahora.
+  await reportarVerificacion(db);
+}
+
+async function reportarVerificacion(db: SupabaseClient): Promise<void> {
+  const faltan = await findMissingEbookFiles(db);
+  const activos = getActiveCatalogEntries();
+
+  if (faltan.length > 0) {
+    console.error(
+      `\nFALTAN PDFs de libros que están A LA VENTA — quien compre no va a poder descargar:`
+    );
+    faltan.forEach((f) => console.error(`  - ${f}`));
+    console.error(
+      `\nDejá el archivo en private/ con ese nombre y corré: npm run ebook:subir-pdfs`
+    );
     process.exit(1);
   }
+
+  console.log(
+    `\nEntrega OK: los ${activos.length} libro(s) a la venta tienen sus dos formatos en Storage.`
+  );
 }
 
 main().catch((err) => {

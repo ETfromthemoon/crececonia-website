@@ -107,6 +107,7 @@ seguir estos pasos en orden. No hace falta preguntar el enfoque — es mecánico
 4. **El PDF del libro**: dejar los archivos en `private/{slug}-{format}.pdf` (`movil` y `a4`, donde `slug`
    es el resource sin el prefijo `ebook:`) y **subirlos a Supabase Storage con `npm run ebook:subir-pdfs`**.
    `/api/ebook/download` los sirve desde el bucket privado `ebooks`, NO desde el disco del servidor.
+   El propio comando verifica al final que todo libro activo quede descargable y falla si falta algo.
 
    ⚠️ No alcanza con dejarlos en `private/`: esa carpeta está en `.gitignore` (este repo es **público** y el
    libro es un producto pago), así que los deploys por integración de Git —el camino normal— se construyen
@@ -140,10 +141,20 @@ seguir estos pasos en orden. No hace falta preguntar el enfoque — es mecánico
 Tres comandos, todos de solo lectura por defecto:
 
 ```bash
+npm run ebook:verificar   # ¿todo libro a la venta tiene sus PDFs en Storage? (solo lectura)
 npm run flow:contract     # ¿Flow sigue devolviendo los campos que necesita el webhook?
 npm run ebook:recuperar   # ¿hay pagos cobrados que no se entregaron? (dry-run)
-npm run ebook:subir-pdfs  # sube/actualiza los PDFs en el bucket privado de Storage
+npm run ebook:subir-pdfs  # sube/actualiza los PDFs en Storage y después verifica
 ```
+
+Los cuatro cargan `.env.local` solos (`--env-file-if-exists`), así que corren sin exportar nada a
+mano; en CI, donde ese archivo no existe, las variables siguen viniendo de los secrets.
+
+`ebook:verificar` es la barrera contra la falla más cara del sistema: poner un libro a la venta es
+solo cambiar `active: true` en `lib/ebook-catalog.ts`, y nada obligaba a que sus PDFs estuvieran
+subidos. **Corrélo después de activar un libro y antes de mandar tráfico**: si falta un formato,
+falla con el nombre exacto del archivo que hay que subir. `ebook:subir-pdfs` termina corriendo esta
+misma verificación, así que subir y verificar es un solo paso.
 
 `npm run ebook:recuperar -- --aplicar` inserta las compras faltantes; agregando `--enviar-email` también le
 manda el link de descarga y una disculpa al comprador. Sin esos flags no escribe ni envía nada.

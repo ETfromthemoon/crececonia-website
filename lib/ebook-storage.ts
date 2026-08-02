@@ -1,4 +1,5 @@
-import { DEFAULT_EBOOK_RESOURCE } from "./ebook-catalog";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { DEFAULT_EBOOK_RESOURCE, getActiveCatalogEntries } from "./ebook-catalog";
 
 /**
  * Bucket PRIVADO de Supabase Storage donde viven los PDFs de los ebooks.
@@ -28,4 +29,32 @@ export function storageObjectName(resource: string, format: EbookFormat): string
   if (resource === DEFAULT_EBOOK_RESOURCE) return `libro-${format}.pdf`;
   const slug = resource.replace(/^ebook:/, "");
   return `${slug}-${format}.pdf`;
+}
+
+export const EBOOK_FORMATS: readonly EbookFormat[] = ["movil", "a4"];
+
+/**
+ * Comprueba que cada libro A LA VENTA tenga sus dos formatos en Storage, es
+ * decir, que sea realmente descargable por quien lo compre.
+ *
+ * Existe porque poner un libro a la venta es solo cambiar `active: true` en
+ * ebook-catalog.ts, y nada obligaba a que sus PDFs estuvieran subidos. El
+ * desfase se descubría recién cuando alguien pagaba y recibía un 503.
+ *
+ * Devuelve los objetos faltantes; un arreglo vacío significa entrega sana.
+ */
+export async function findMissingEbookFiles(db: SupabaseClient): Promise<string[]> {
+  const { data, error } = await db.storage.from(EBOOK_STORAGE_BUCKET).list("", { limit: 1000 });
+  if (error) throw new Error(`No se pudo listar el bucket ${EBOOK_STORAGE_BUCKET}: ${error.message}`);
+
+  const presentes = new Set((data ?? []).map((f) => f.name));
+  const faltan: string[] = [];
+
+  for (const entry of getActiveCatalogEntries()) {
+    for (const format of EBOOK_FORMATS) {
+      const objeto = storageObjectName(entry.resource, format);
+      if (!presentes.has(objeto)) faltan.push(`${entry.resource} → ${objeto}`);
+    }
+  }
+  return faltan;
 }
