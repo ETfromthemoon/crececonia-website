@@ -9,6 +9,17 @@ import EbookImmersion from "@/components/EbookImmersion";
 import EbookCursorGlow from "@/components/EbookCursorGlow";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookProfileCard from "@/components/EbookProfileCard";
+import { getCrossSellEntries } from "@/lib/ebook-crossell";
+import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
+import { resolveBundleSelectionFromUrl } from "@/lib/ebook-bundles";
+
+// Necesario para que el bloque "sumá otros ebooks" de EbookPricing pase de
+// vacío a mostrar los 3 libros nuevos exactamente a su hora de lanzamiento,
+// sin depender de un deploy nuevo justo a esa hora — ver el comentario de
+// `visibleFrom` en lib/ebook-catalog.ts. Antes esta página era estática;
+// el costo es recalcular este Server Component por request (barato: es
+// lectura en memoria del catálogo, no una consulta a Supabase).
+export const dynamic = "force-dynamic";
 
 const SITE_URL = "https://www.crececonia.cl";
 const SLUG = "de-cero-a-claude-en-una-semana";
@@ -141,7 +152,20 @@ function EbookWhoIsFor() {
   );
 }
 
-export default function EbookPage() {
+type SearchParams = Record<string, string | string[] | undefined>;
+
+export default async function EbookPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const crossSellEntries = getCrossSellEntries(DEFAULT_EBOOK_RESOURCE);
+  const urlSelection = resolveBundleSelectionFromUrl(
+    await searchParams,
+    DEFAULT_EBOOK_RESOURCE,
+    crossSellEntries.map((e) => e.resource)
+  );
+
   return (
     <main className="monad">
       <EbookCursorGlow />
@@ -152,7 +176,11 @@ export default function EbookPage() {
       <EbookWhoIsFor />
       <EbookTOC />
       <EbookAuthor />
-      <EbookPricing resource="ebook:de-cero-a-claude-en-una-semana" />
+      <EbookPricing
+        resource={DEFAULT_EBOOK_RESOURCE}
+        crossSellEntries={crossSellEntries}
+        {...urlSelection}
+      />
       <EbookFAQ />
     </main>
   );

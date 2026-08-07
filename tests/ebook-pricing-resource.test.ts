@@ -9,9 +9,10 @@ describe("getOtherActiveEntries", () => {
     );
   });
 
-  it("cuando solo hay un libro activo, no hay otros que mostrar", () => {
+  it("con varios libros activos, devuelve todos menos el dado", () => {
     const others = getOtherActiveEntries("ebook:de-cero-a-claude-en-una-semana");
-    expect(others).toEqual([]);
+    expect(others.length).toBeGreaterThan(0);
+    expect(others.some((entry) => entry.resource === "ebook:claude-nivel-experto")).toBe(true);
   });
 
   it("un resource inactivo o inexistente no excluye nada, devuelve todos los activos", () => {
