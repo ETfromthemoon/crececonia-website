@@ -135,6 +135,18 @@ export function isCatalogEntryLive(
   return now >= new Date(entry.visibleFrom).getTime();
 }
 
+/**
+ * Vista previa privada para el dueño del sitio: permite comprar un libro
+ * gateado ANTES de su `visibleFrom`, sin abrirlo al público. Reusa
+ * ADMIN_SECRET (mismo secreto que ya gatea /admin/*) en vez de crear un
+ * secreto nuevo. Server-only — nunca comparar esto en código de cliente, la
+ * comparación real siempre pasa por acá para no duplicar la lógica (y el
+ * riesgo) en cada endpoint.
+ */
+export function isAdminPreviewKey(key: string | undefined | null): boolean {
+  return Boolean(key && process.env.ADMIN_SECRET && key === process.env.ADMIN_SECRET);
+}
+
 export function getLiveCatalogEntries(
   now?: number
 ): Extract<EbookCatalogEntry, { active: true }>[] {

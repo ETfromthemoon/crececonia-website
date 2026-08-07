@@ -6,6 +6,7 @@ import { flowSign, getFlowBase } from "@/lib/flow";
 import {
   getCatalogEntry,
   isCatalogEntryLive,
+  isAdminPreviewKey,
   DEFAULT_EBOOK_RESOURCE,
   EBOOK_CATALOG,
 } from "@/lib/ebook-catalog";
@@ -22,6 +23,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const email: string = body?.email ?? "";
   const discountCode: string | undefined = body?.discountCode || undefined;
+  const previewKey: string | undefined = body?.previewKey || undefined;
   const resources: string[] =
     Array.isArray(body?.resources) && body.resources.length > 0
       ? body.resources
@@ -53,7 +55,10 @@ export async function POST(request: Request) {
     // Defensa en profundidad: la página ya oculta el libro antes de su
     // `visibleFrom`, pero esto evita que alguien compre pegándole directo a
     // esta API antes del instante de lanzamiento acordado.
-    if (!isCatalogEntryLive(entry)) {
+    // `isAdminPreviewKey` es la única excepción: el dueño del sitio probando
+    // el checkout de un libro antes de esa hora, con un secreto que solo él
+    // conoce — nunca deja pasar a nadie más.
+    if (!isCatalogEntryLive(entry) && !isAdminPreviewKey(previewKey)) {
       return NextResponse.json({ error: `Recurso no disponible: ${resource}` }, { status: 400 });
     }
   }

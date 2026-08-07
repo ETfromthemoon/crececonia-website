@@ -270,6 +270,71 @@ describe("POST /api/flow/create — combos", () => {
     }
   });
 
+  it("200 con previewKey correcto: el dueño del sitio puede comprar antes del visibleFrom", async () => {
+    const originalSecret = process.env.ADMIN_SECRET;
+    process.env.ADMIN_SECRET = "test-secret-123";
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-07T10:00:00-04:00"));
+    flowOk();
+    try {
+      const res = await POST(
+        postJson({
+          email: "user@test.com",
+          resources: ["ebook:claude-nivel-experto"],
+          previewKey: "test-secret-123",
+        })
+      );
+      expect(res.status).toBe(200);
+    } finally {
+      vi.useRealTimers();
+      process.env.ADMIN_SECRET = originalSecret;
+    }
+  });
+
+  it("400 con previewKey incorrecto, aunque ADMIN_SECRET esté configurado", async () => {
+    const originalSecret = process.env.ADMIN_SECRET;
+    process.env.ADMIN_SECRET = "test-secret-123";
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-07T10:00:00-04:00"));
+    flowOk();
+    try {
+      const res = await POST(
+        postJson({
+          email: "user@test.com",
+          resources: ["ebook:claude-nivel-experto"],
+          previewKey: "adivinando-cualquier-cosa",
+        })
+      );
+      expect(res.status).toBe(400);
+      expect(mockFetch).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+      process.env.ADMIN_SECRET = originalSecret;
+    }
+  });
+
+  it("400 con previewKey correcto si ADMIN_SECRET no está configurado en el entorno", async () => {
+    const originalSecret = process.env.ADMIN_SECRET;
+    delete process.env.ADMIN_SECRET;
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-07T10:00:00-04:00"));
+    flowOk();
+    try {
+      const res = await POST(
+        postJson({
+          email: "user@test.com",
+          resources: ["ebook:claude-nivel-experto"],
+          previewKey: "",
+        })
+      );
+      expect(res.status).toBe(400);
+      expect(mockFetch).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+      process.env.ADMIN_SECRET = originalSecret;
+    }
+  });
+
   it("400 si se manda discountCode junto con 2+ resources", async () => {
     flowOk();
     const res = await POST(
