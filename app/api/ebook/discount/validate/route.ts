@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 import { validateDiscountCode } from "@/lib/discount-codes";
-import { DEFAULT_EBOOK_RESOURCE, getCatalogEntry, isCatalogEntryLive } from "@/lib/ebook-catalog";
+import {
+  DEFAULT_EBOOK_RESOURCE,
+  getCatalogEntry,
+  isCatalogEntryLive,
+  isAdminPreviewKey,
+} from "@/lib/ebook-catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -17,13 +22,14 @@ export async function POST(request: Request) {
   // efectivamente cobrado siempre fue correcto (Flow revalida contra el
   // resource real en /api/flow/create), pero el número mostrado no.
   const resource: string = body?.resource || DEFAULT_EBOOK_RESOURCE;
+  const previewKey: string | undefined = body?.previewKey || undefined;
 
   if (!code) {
     return NextResponse.json({ valid: false, reason: "Ingresa un código." }, { status: 400 });
   }
 
   const entry = getCatalogEntry(resource);
-  if (!entry || !entry.active || !isCatalogEntryLive(entry)) {
+  if (!entry || !entry.active || (!isCatalogEntryLive(entry) && !isAdminPreviewKey(previewKey))) {
     return NextResponse.json({ valid: false, reason: "Código no válido." }, { status: 400 });
   }
 

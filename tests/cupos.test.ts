@@ -52,6 +52,41 @@ describe("GET /api/ebook/cupos", () => {
     }
   });
 
+  it("con previewKey correcto, sí devuelve el precio de un libro que aún no llegó a su visibleFrom", async () => {
+    const originalSecret = process.env.ADMIN_SECRET;
+    process.env.ADMIN_SECRET = "test-secret-123";
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-07T10:00:00-04:00"));
+    mockGetCurrentPrice.mockResolvedValue({ price: 13700, tier: "early", remaining: 10, originalPrice: 19700 });
+    try {
+      const res = await GET(
+        new Request("https://test.com/api/ebook/cupos?resource=ebook:claude-nivel-experto&preview=test-secret-123")
+      );
+      expect(res.status).toBe(200);
+      expect(mockGetCurrentPrice).toHaveBeenCalledWith("ebook:claude-nivel-experto");
+    } finally {
+      vi.useRealTimers();
+      process.env.ADMIN_SECRET = originalSecret;
+    }
+  });
+
+  it("con previewKey incorrecto, sigue devolviendo 404", async () => {
+    const originalSecret = process.env.ADMIN_SECRET;
+    process.env.ADMIN_SECRET = "test-secret-123";
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-07T10:00:00-04:00"));
+    try {
+      const res = await GET(
+        new Request("https://test.com/api/ebook/cupos?resource=ebook:claude-nivel-experto&preview=adivinando")
+      );
+      expect(res.status).toBe(404);
+      expect(mockGetCurrentPrice).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+      process.env.ADMIN_SECRET = originalSecret;
+    }
+  });
+
   it("devuelve el fallback 200 si getCurrentPrice falla", async () => {
     mockGetCurrentPrice.mockResolvedValue({ price: 27000, tier: "regular", remaining: null, originalPrice: 27000 });
     mockGetCurrentPrice.mockRejectedValueOnce(new Error("DB down"));

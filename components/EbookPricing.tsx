@@ -41,6 +41,15 @@ type EbookPricingProps = {
   initialSelectedExtras?: string[];
   /** Código de descuento a auto-aplicar al montar (desde un link `?promo=CODIGO`). */
   initialPromoCode?: string;
+  /**
+   * Vista previa privada del dueño del sitio para probar el checkout de un
+   * libro ANTES de su `visibleFrom`, sin abrirlo al público — ver
+   * isAdminPreviewKey en lib/ebook-catalog.ts. Viaja en las requests a
+   * /api/ebook/cupos, /api/flow/create y /api/ebook/discount/validate, que
+   * son quienes de verdad validan el secreto contra ADMIN_SECRET; este
+   * componente solo lo reenvía, nunca decide nada con él.
+   */
+  previewKey?: string;
 };
 
 const TIER_LABELS: Record<string, { badge: string; discount: string }> = {
@@ -74,6 +83,7 @@ export default function EbookPricing({
   crossSellEntries = [],
   initialSelectedExtras,
   initialPromoCode,
+  previewKey,
 }: EbookPricingProps) {
   const otherActiveEbooks = crossSellEntries;
   const pricingVariant = useFeatureFlagVariantKey("ebook-pricing-variant") ?? "control";
@@ -104,7 +114,7 @@ export default function EbookPricing({
       // pudiendo mostrar un precio "con descuento" más alto que el tachado.
       // El monto real cobrado siempre fue correcto (Flow revalida contra el
       // resource real), pero el número que se mostraba antes de pagar no.
-      body: JSON.stringify({ code, resource }),
+      body: JSON.stringify({ code, resource, previewKey }),
     });
     const data = await res.json().catch(() => ({}));
     setApplyingDiscount(false);
@@ -145,8 +155,9 @@ export default function EbookPricing({
   }, []);
 
   useEffect(() => {
+    const previewQs = previewKey ? `&preview=${encodeURIComponent(previewKey)}` : "";
     const load = () =>
-      fetch(`/api/ebook/cupos?resource=${resource}`)
+      fetch(`/api/ebook/cupos?resource=${resource}${previewQs}`)
         .then((r) => r.json())
         .then(setPriceInfo)
         .catch(() => {});
@@ -154,7 +165,7 @@ export default function EbookPricing({
     load();
     const id = setInterval(load, 30000);
     return () => clearInterval(id);
-  }, [resource]);
+  }, [resource, previewKey]);
 
   useEffect(() => {
     trackEbookEvent("ebook_page_view", { resource, pricing_variant: pricingVariant });
@@ -195,7 +206,12 @@ export default function EbookPricing({
   const displayPrice = isCombo ? bundlePreview!.total : appliedDiscount?.finalPrice ?? basePrice;
   const formattedPrice = displayPrice.toLocaleString("es-CL");
   const formattedBasePrice = basePrice.toLocaleString("es-CL");
-  const formattedOriginal = (27000).toLocaleString("es-CL");
+  // Antes esto era un `27000` fijo, de cuando EbookPricing solo se usaba en
+  // el libro 1 (cuyo precio regular es, por coincidencia, ese mismo número).
+  // Al reusar el componente en libros con otro precio regular (9700/13700/
+  // 19700), el hardcode mostraba el "antes" equivocado. `priceInfo.originalPrice`
+  // ya lo devuelve la API por resource — solo faltaba usarlo.
+  const formattedOriginal = (priceInfo?.originalPrice ?? basePrice).toLocaleString("es-CL");
   const hasDiscount = tier !== "regular";
 
   function toggleExtra(extraResource: string, checked: boolean) {
@@ -234,6 +250,7 @@ export default function EbookPricing({
         email,
         resources: selectedResources,
         discountCode: isCombo ? undefined : appliedDiscount?.code,
+        previewKey,
       }),
     });
 

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   EBOOK_CATALOG,
   DEFAULT_EBOOK_RESOURCE,
@@ -7,6 +7,7 @@ import {
   isCatalogEntryLive,
   getLiveCatalogEntries,
   getOtherLiveEntries,
+  isAdminPreviewKey,
 } from "@/lib/ebook-catalog";
 
 const ANTES_DEL_LANZAMIENTO = new Date("2026-08-07T10:00:00-04:00").getTime();
@@ -119,5 +120,40 @@ describe("getLiveCatalogEntries / getOtherLiveEntries", () => {
     const othersDespues = getOtherLiveEntries(DEFAULT_EBOOK_RESOURCE, DESPUES_DEL_LANZAMIENTO);
     expect(othersDespues).toHaveLength(3);
     expect(othersDespues.every((e) => e.resource !== DEFAULT_EBOOK_RESOURCE)).toBe(true);
+  });
+});
+
+describe("isAdminPreviewKey", () => {
+  const ORIGINAL_SECRET = process.env.ADMIN_SECRET;
+
+  beforeEach(() => {
+    process.env.ADMIN_SECRET = "test-secret-123";
+  });
+
+  afterEach(() => {
+    process.env.ADMIN_SECRET = ORIGINAL_SECRET;
+  });
+
+  it("true cuando la key coincide exacto con ADMIN_SECRET", () => {
+    expect(isAdminPreviewKey("test-secret-123")).toBe(true);
+  });
+
+  it("false cuando la key no coincide", () => {
+    expect(isAdminPreviewKey("otra-cosa")).toBe(false);
+  });
+
+  it("false cuando no se manda ninguna key", () => {
+    expect(isAdminPreviewKey(undefined)).toBe(false);
+    expect(isAdminPreviewKey(null)).toBe(false);
+    expect(isAdminPreviewKey("")).toBe(false);
+  });
+
+  it("false si ADMIN_SECRET no está configurado en el entorno, aunque la key mande el string vacío", () => {
+    delete process.env.ADMIN_SECRET;
+    // Sin esto, un ADMIN_SECRET vacío/no seteado + una key vacía enviada por
+    // error ("") pasarían por === "" === "" — nunca debe alcanzar con "nada
+    // contra nada".
+    expect(isAdminPreviewKey("")).toBe(false);
+    expect(isAdminPreviewKey(undefined)).toBe(false);
   });
 });

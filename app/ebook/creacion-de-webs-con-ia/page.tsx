@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getCatalogEntry, isCatalogEntryLive } from "@/lib/ebook-catalog";
+import { getCatalogEntry, isCatalogEntryLive, isAdminPreviewKey } from "@/lib/ebook-catalog";
 import { getCrossSellEntries } from "@/lib/ebook-crossell";
 import { resolveBundleSelectionFromUrl } from "@/lib/ebook-bundles";
 import EbookComingSoon from "@/components/EbookComingSoon";
@@ -89,7 +89,11 @@ export default async function CreacionDeWebsConIAPage({
   const entry = getCatalogEntry(RESOURCE);
   if (!entry || !entry.active) notFound();
 
-  if (!isCatalogEntryLive(entry)) {
+  const params = await searchParams;
+  const previewKey = typeof params.preview === "string" ? params.preview : undefined;
+  const isPreview = isAdminPreviewKey(previewKey);
+
+  if (!isCatalogEntryLive(entry) && !isPreview) {
     return (
       <main className="monad">
         <EbookComingSoon
@@ -105,7 +109,7 @@ export default async function CreacionDeWebsConIAPage({
 
   const crossSellEntries = getCrossSellEntries(RESOURCE);
   const urlSelection = resolveBundleSelectionFromUrl(
-    await searchParams,
+    params,
     RESOURCE,
     crossSellEntries.map((e) => e.resource)
   );
@@ -144,7 +148,12 @@ export default async function CreacionDeWebsConIAPage({
         sections={SECTIONS}
       />
 
-      <EbookPricing resource={RESOURCE} crossSellEntries={crossSellEntries} {...urlSelection} />
+      <EbookPricing
+        resource={RESOURCE}
+        crossSellEntries={crossSellEntries}
+        previewKey={previewKey}
+        {...urlSelection}
+      />
       <EbookGenericFAQ faqs={FAQS} />
     </main>
   );
