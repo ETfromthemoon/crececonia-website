@@ -43,7 +43,7 @@ describe("determineTier", () => {
   });
 
   it("lanza para un resource que no está activo en el catálogo", () => {
-    expect(() => determineTier(10000, "ebook:agentes-de-ia")).toThrow(/no comprable/i);
+    expect(() => determineTier(10000, "ebook:no-existe")).toThrow(/no comprable/i);
   });
 });
 

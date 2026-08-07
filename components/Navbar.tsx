@@ -10,7 +10,7 @@ const NAV_LINKS = [
   { label: "Precio", href: "/#precio" },
   { label: "FAQ", href: "/#faq" },
   { label: "Conocimiento", href: "/centro" },
-  { label: "Ebook", href: "/ebook/de-cero-a-claude-en-una-semana", highlight: true },
+  { label: "Ebooks", href: "/ebooks", highlight: true },
 ] as const;
 
 const WHATSAPP_URL = whatsappUrl();

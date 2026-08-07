@@ -1,11 +1,19 @@
 import { NextResponse } from "next/server";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
-import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
+import { DEFAULT_EBOOK_RESOURCE, getCatalogEntry, isCatalogEntryLive } from "@/lib/ebook-catalog";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const resource = new URL(request.url).searchParams.get("resource") ?? DEFAULT_EBOOK_RESOURCE;
+
+  // No filtrar el precio de un libro que todavía no llegó a su hora de
+  // lanzamiento — aunque su página esté gateada, este endpoint es público.
+  const entry = getCatalogEntry(resource);
+  if (!entry || !entry.active || !isCatalogEntryLive(entry)) {
+    return NextResponse.json({ error: "No disponible." }, { status: 404 });
+  }
+
   const priceInfo = await getCurrentPrice(resource).catch(() => null);
 
   if (!priceInfo) {

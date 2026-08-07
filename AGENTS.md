@@ -99,14 +99,29 @@ seguir estos pasos en orden. No hace falta preguntar el enfoque — es mecánico
    CLP) y cuántos cupos super-early/early quiere ofrecer. Esto es una decisión de negocio, no técnica —
    no inventar números.
 2. **`lib/ebook-catalog.ts`**: cambiar la entrada del libro de `active: false` a `active: true` y agregarle
-   `tierPrices: { superEarly, early, regular }` con los valores confirmados. Es un discriminated union —
-   TypeScript exige `tierPrices` apenas se pone `active: true`, así que el build falla si falta.
-3. **Supabase — cupos**: insertar las filas de `ebook_cupos` para ese `resource` (una fila por tier
-   `super-early` y `early`, con `total` = cupos acordados y `used = 0`). El `resource` debe ser
-   exactamente el string del catálogo (ej. `ebook:agentes-de-ia`).
+   `tierPrices: { superEarly, early, regular }` con los valores confirmados, más `coverSrc` (portada en
+   `public/ebooks/{slug}.jpg`, ratio 1:1.6). Es un discriminated union — TypeScript exige `tierPrices` y
+   `coverSrc` apenas se pone `active: true`, así que el build falla si falta alguno.
+   - Si el lanzamiento tiene que activarse solo a una hora exacta (ej. un evento en vivo), agregar
+     `visibleFrom: "YYYY-MM-DDTHH:mm:ss±HH:mm"` (instante ISO con offset explícito — nunca una hora sin
+     zona horaria). `isCatalogEntryLive()` lo resuelve en runtime contra el reloj real del servidor, así
+     que la página, `/api/flow/create` y `/api/ebook/cupos` se abren solos sin necesidad de un deploy
+     nuevo a esa hora. Cualquier página o endpoint que dependa de esto DEBE forzar
+     `export const dynamic = "force-dynamic"` — si Next lo pre-renderiza en build time, la hora de
+     activación queda congelada para siempre en el HTML generado.
+3. **Supabase — cupos**: insertar las filas de `ebook_cupos` para ese `resource` (una fila por tier que
+   se quiera ofrecer — no hace falta `super-early` si el libro arranca directo en `early`, ver el libro 3
+   del lanzamiento de 2026-08-07 como ejemplo). `total` = cupos acordados, `used = 0`. El `resource` debe
+   ser exactamente el string del catálogo (ej. `ebook:agentes-de-ia`).
+   ⚠️ La primary key de `ebook_cupos` es `(resource, tier)` — si un insert falla con
+   `duplicate key value violates unique constraint "ebook_cupos_pkey"` al usar un `resource` nuevo, la PK
+   de la tabla se corrompió a solo `tier` (pasó una vez, en el lanzamiento de 2026-08-07). Arreglo:
+   `alter table ebook_cupos drop constraint ebook_cupos_pkey; alter table ebook_cupos add primary key (resource, tier);`
+   — no borra filas existentes, solo corrige la clave.
 4. **El PDF del libro**: dejar los archivos en `private/{slug}-{format}.pdf` (`movil` y `a4`, donde `slug`
    es el resource sin el prefijo `ebook:`) y **subirlos a Supabase Storage con `npm run ebook:subir-pdfs`**.
    `/api/ebook/download` los sirve desde el bucket privado `ebooks`, NO desde el disco del servidor.
+   El propio comando verifica al final que todo libro activo quede descargable y falla si falta algo.
 
    ⚠️ No alcanza con dejarlos en `private/`: esa carpeta está en `.gitignore` (este repo es **público** y el
    libro es un producto pago), así que los deploys por integración de Git —el camino normal— se construyen
@@ -115,16 +130,32 @@ seguir estos pasos en orden. No hace falta preguntar el enfoque — es mecánico
    subidas por CLI (`vercel --prod`), no a los deploys por git. Sin el archivo en Storage, nadie puede
    descargar.
 5. **Página de venta real**: los libros "coming-soon" hoy renderizan `EbookComingSoon` (solo waitlist, sin
-   precio). Activar el libro en el catálogo **no crea automáticamente una página de venta** — `EbookPricing`
-   está montado únicamente en `/ebook/de-cero-a-claude-en-una-semana/page.tsx` y solo ese componente sabe
-   ofrecer combos (los otros libros `active` aparecen ahí como checkbox de combo, no como venta
-   independiente). Para que el libro nuevo tenga su propia página de venta (hero + beneficios + FAQ +
-   bloque de precio propio), hay que construirla siguiendo el patrón de esa página — no es un flag, es
-   trabajo de UI real. Si por ahora alcanza con venderlo solo como parte de un combo desde la página del
-   libro 1, este paso se puede saltar.
-6. **`npm test && npm run build`**: confirmar que el build sigue verde (el catálogo generaliza tipos, un
-   error de `tierPrices` faltante se detecta acá).
-7. **Avisar a la waitlist** (`ebook_waitlist`, ver tabla en el punto de Backend abajo) — esto es manual
+   precio). Activar el libro en el catálogo **no crea automáticamente una página de venta** — hay que
+   construir `app/ebook/{slug}/page.tsx` siguiendo el patrón de los libros 2-4 (`claude-nivel-experto`,
+   `agentes-de-ia`, `creacion-de-webs-con-ia`): un componente `EbookGenericHero` + `EbookGenericTOC` +
+   `EbookGenericFAQ` (genéricos, parametrizables, en `components/`) más `EbookPricing` (que ya funciona
+   para cualquier `resource`) y un bloque de copy "para quién / quién no" propio del libro. Si el libro
+   tiene `visibleFrom`, la página debe chequear `isCatalogEntryLive(entry)` al principio y renderizar
+   `EbookComingSoon` mientras no llegue esa hora — ver cualquiera de esos 3 archivos como plantilla exacta.
+   Si por ahora alcanza con venderlo solo como parte de un combo desde la página del libro 1, este paso se
+   puede saltar (el checkbox de combo en `EbookPricing` lo ofrece solo con tenerlo `active` y vivo).
+6. **Cross-sell** (`lib/ebook-crossell.ts`): agregar el libro nuevo como key en `CROSS_SELL_GRAPH` con la
+   lista de libros que tiene sentido sugerirle a quien lo compra, en orden de prioridad. Si el libro no
+   se agrega ahí, cae al fallback genérico (`SIN_HISTORIAL` + el resto de libros vivos) — funciona, pero
+   no respeta ninguna lógica de "quién debería ver qué". Cualquier libro que no deba ofrecerse a un
+   visitante sin señales de experiencia previa (como pasa con "Claude a Nivel Experto") debe agregarse
+   también a `REQUIERE_SENAL_DE_EXPERIENCIA` en ese mismo archivo — ese set se aplica incluso en el
+   fallback, no solo en las listas explícitas.
+7. **Bundles nombrados** (`lib/ebook-bundles.ts`, `EBOOK_BUNDLES`): si el libro nuevo debería ofrecerse en
+   algún combo con nombre y pitch propios (a diferencia del combo libre por checkboxes), agregar una
+   entrada con `slug`, `title`, `pitch` y `resources` (el primer resource de la lista es el "libro ancla":
+   su página es donde se compra el bundle, vía `?bundle=slug` que preselecciona el resto). El precio del
+   bundle no se fija a mano — se calcula solo con `computeBundleTotal` sobre el precio vigente de cada
+   libro, aplicando `BUNDLE_DISCOUNT_RULES` (hoy: 2 libros=10%, 3=15%, 4=20%). Un bundle solo aparece en
+   `/ebooks` cuando TODOS sus libros ya están vivos (respeta `visibleFrom` de cada uno).
+8. **`npm test && npm run build`**: confirmar que el build sigue verde (el catálogo generaliza tipos, un
+   error de `tierPrices` o `coverSrc` faltante se detecta acá).
+9. **Avisar a la waitlist** (`ebook_waitlist`, ver tabla en el punto de Backend abajo) — esto es manual
    hoy, no hay automatización. Exportar los interesados en ESE libro:
    ```sql
    select email from ebook_waitlist where resource = 'ebook:agentes-de-ia' order by created_at;
@@ -132,18 +163,28 @@ seguir estos pasos en orden. No hace falta preguntar el enfoque — es mecánico
    y mandarles el aviso de lanzamiento a mano desde Resend (Broadcasts) o el proveedor de email que se use
    en ese momento. No enviar el email de lanzamiento como parte de este runbook automáticamente — es una
    decisión de timing del usuario, no del agente.
-8. **Deploy**: commit + push a una rama, PR, y el mismo flujo de siempre (ver "Deploy" arriba) — el merge a
-   `main` es responsabilidad del usuario, confirmarlo explícitamente antes de mergear.
+10. **Deploy**: commit + push a una rama, PR, y el mismo flujo de siempre (ver "Deploy" arriba) — el merge
+    a `main` es responsabilidad del usuario, confirmarlo explícitamente antes de mergear.
 
 ## Entregabilidad del ebook: cómo verificarla y repararla
 
 Tres comandos, todos de solo lectura por defecto:
 
 ```bash
+npm run ebook:verificar   # ¿todo libro a la venta tiene sus PDFs en Storage? (solo lectura)
 npm run flow:contract     # ¿Flow sigue devolviendo los campos que necesita el webhook?
 npm run ebook:recuperar   # ¿hay pagos cobrados que no se entregaron? (dry-run)
-npm run ebook:subir-pdfs  # sube/actualiza los PDFs en el bucket privado de Storage
+npm run ebook:subir-pdfs  # sube/actualiza los PDFs en Storage y después verifica
 ```
+
+Los cuatro cargan `.env.local` solos (`--env-file-if-exists`), así que corren sin exportar nada a
+mano; en CI, donde ese archivo no existe, las variables siguen viniendo de los secrets.
+
+`ebook:verificar` es la barrera contra la falla más cara del sistema: poner un libro a la venta es
+solo cambiar `active: true` en `lib/ebook-catalog.ts`, y nada obligaba a que sus PDFs estuvieran
+subidos. **Corrélo después de activar un libro y antes de mandar tráfico**: si falta un formato,
+falla con el nombre exacto del archivo que hay que subir. `ebook:subir-pdfs` termina corriendo esta
+misma verificación, así que subir y verificar es un solo paso.
 
 `npm run ebook:recuperar -- --aplicar` inserta las compras faltantes; agregando `--enviar-email` también le
 manda el link de descarga y una disculpa al comprador. Sin esos flags no escribe ni envía nada.

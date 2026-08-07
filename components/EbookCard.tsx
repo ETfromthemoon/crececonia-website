@@ -53,7 +53,9 @@ export default function EbookCard({
         style={{
           borderRadius: 16,
           overflow: "hidden",
-          aspectRatio: "3 / 4",
+          // Las portadas del catálogo comparten ratio 1:1.6 — usarlo evita
+          // recortes en la grilla en vez de forzar un 3:4 genérico.
+          aspectRatio: "1 / 1.6",
           background: "#141414",
           display: "flex",
           alignItems: "center",

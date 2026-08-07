@@ -241,13 +241,33 @@ describe("POST /api/flow/create — combos", () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("400 si algún resource está coming-soon (no active en el catálogo real)", async () => {
+  it("400 si algún resource no existe en el catálogo real", async () => {
     flowOk();
     const res = await POST(
-      postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE, "ebook:sitios-web-ia"] })
+      postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE, "ebook:no-existe-2"] })
     );
     expect(res.status).toBe(400);
     expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("400 si algún resource activo todavía no llegó a su visibleFrom (gating de lanzamiento)", async () => {
+    // Los 3 libros nuevos del catálogo real tienen visibleFrom fijado al
+    // 2026-08-07T20:50:00-04:00. Fija el reloj ANTES de esa hora para que
+    // este test no dependa de en qué momento real se ejecuta — sin esto,
+    // deja de probar el camino gateado apenas pasa esa fecha.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-07T10:00:00-04:00"));
+    flowOk();
+    try {
+      const res = await POST(
+        postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE, "ebook:claude-nivel-experto"] })
+      );
+      expect(res.status).toBe(400);
+      expect((await res.json()).error).toMatch(/no disponible/i);
+      expect(mockFetch).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("400 si se manda discountCode junto con 2+ resources", async () => {
@@ -292,15 +312,36 @@ describe("POST /api/flow/create — combos", () => {
     expect(res.status).toBe(400);
     expect(mockFetch).not.toHaveBeenCalled();
   });
+
+  it("200 y cobra con 10% de descuento un combo real de 2 libros después del lanzamiento", async () => {
+    // Primera prueba de regresión end-to-end con el catálogo real de 4
+    // libros (activado el 2026-08-07). Fija el reloj DESPUÉS de las 20:50
+    // para que los 3 libros nuevos, gateados por visibleFrom, cuenten como
+    // vivos — sin esto, isCatalogEntryLive rechazaría el combo antes de
+    // llegar a la matemática de descuento que este test verifica.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-07T21:00:00-04:00"));
+    flowOk();
+    try {
+      const res = await POST(
+        postJson({
+          email: "user@test.com",
+          resources: [DEFAULT_EBOOK_RESOURCE, "ebook:claude-nivel-experto"],
+        })
+      );
+      expect(res.status).toBe(200);
+      // El mock de getCurrentPrice de este describe devuelve 10800 para
+      // cualquier resource que no sea "ebook:agentes-de-ia" — 2 × 10800 =
+      // 21600 subtotal, 10% off (2 items) = 19440.
+      expect(flowBody().get("amount")).toBe("19440");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
-// La matemática del descuento por combo (10%/20% sobre 2-3 libros DISTINTOS)
-// ya está cubierta de forma exhaustiva y aislada en tests/ebook-bundles.test.ts
-// (computeBundleTotal es una función pura, no necesita mocks de Supabase/Flow).
-// Este archivo no repite esa matemática con 2 libros activos reales porque hoy
-// el catálogo real (lib/ebook-catalog.ts) solo tiene 1 libro `active` — no hay
-// forma de ejercitar ese camino sin mockear el catálogo, y hacerlo probaría un
-// escenario que no puede ocurrir en producción todavía. Cuando se active el
-// libro 2, agregar acá un test de combo real de 2 resources distintos con el
-// descuento del 10% verificado end-to-end es la primera prueba de regresión a
-// escribir.
+// La matemática pura del descuento por combo (10%/15%/20%) está cubierta de
+// forma exhaustiva y aislada en tests/ebook-bundles.test.ts (computeBundleTotal
+// es una función pura, no necesita mocks de Supabase/Flow). El test de arriba
+// cubre el camino end-to-end con el catálogo real: gating por visibleFrom +
+// validación de recursos + cálculo de monto, todo junto.

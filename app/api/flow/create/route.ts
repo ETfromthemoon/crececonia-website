@@ -3,7 +3,12 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 import { validateDiscountCode } from "@/lib/discount-codes";
 import { flowSign, getFlowBase } from "@/lib/flow";
-import { getCatalogEntry, DEFAULT_EBOOK_RESOURCE, EBOOK_CATALOG } from "@/lib/ebook-catalog";
+import {
+  getCatalogEntry,
+  isCatalogEntryLive,
+  DEFAULT_EBOOK_RESOURCE,
+  EBOOK_CATALOG,
+} from "@/lib/ebook-catalog";
 import { computeBundleTotal } from "@/lib/ebook-bundles";
 import { captureServerEvent } from "@/lib/posthog-server";
 
@@ -43,6 +48,12 @@ export async function POST(request: Request) {
   for (const resource of resources) {
     const entry = getCatalogEntry(resource);
     if (!entry || !entry.active) {
+      return NextResponse.json({ error: `Recurso no disponible: ${resource}` }, { status: 400 });
+    }
+    // Defensa en profundidad: la página ya oculta el libro antes de su
+    // `visibleFrom`, pero esto evita que alguien compre pegándole directo a
+    // esta API antes del instante de lanzamiento acordado.
+    if (!isCatalogEntryLive(entry)) {
       return NextResponse.json({ error: `Recurso no disponible: ${resource}` }, { status: 400 });
     }
   }

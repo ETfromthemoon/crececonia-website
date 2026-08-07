@@ -1,26 +1,12 @@
-import type { Metadata } from "next";
-import EbookComingSoon from "@/components/EbookComingSoon";
+import { redirect } from "next/navigation";
 
-const SITE_URL = "https://www.crececonia.cl";
-
-export const metadata: Metadata = {
-  title: "Curso de sitios web con IA — Próximamente · CrececonIA",
-  description:
-    "Curso completo de creación de sitios web con IA: landing corporativo y ecommerce, de cero a producción. En preparación — dejá tu contacto para enterarte cuando salga.",
-  alternates: { canonical: `${SITE_URL}/ebooks/sitios-web-ia` },
-  robots: { index: false, follow: true },
-};
-
-export default function SitiosWebIAPage() {
-  return (
-    <main className="monad">
-      <EbookComingSoon
-        title="Sitios web con IA."
-        description="Curso completo de creación de sitios web con IA: landing corporativo y ecommerce, de cero a producción. En preparación."
-        ghostWord="Sitios"
-        ctaSource="ebook-sitios-web-ia-proximamente"
-        resource="ebook:sitios-web-ia"
-      />
-    </main>
-  );
+// El resource "ebook:sitios-web-ia" se reemplazó por
+// "ebook:creacion-de-webs-con-ia" (scope real: Parte 1, landing + proyecto
+// AppFlow) antes de tener compradores, así que no hay entregas que romper.
+// Nota: quien haya dejado su email en la waitlist de este resource sigue
+// registrado bajo "ebook:sitios-web-ia" en ebook_waitlist — al avisar el
+// lanzamiento (paso manual, ver runbook en AGENTS.md) hay que exportar esa
+// lista además de la de "ebook:creacion-de-webs-con-ia".
+export default function SitiosWebIALegacyRedirect() {
+  redirect("/ebook/creacion-de-webs-con-ia");
 }
