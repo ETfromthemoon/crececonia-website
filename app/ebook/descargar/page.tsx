@@ -12,12 +12,11 @@ export const metadata: Metadata = {
 };
 
 /**
- * Ruta HEREDADA de recuperación. Todos los emails de compra enviados hasta el
- * 2026-08-07 apuntan a esta URL, así que no se puede borrar ni redirigir a
- * ciegas — se mantiene sirviendo el mismo componente genérico que
- * /ebook/descargar, que ya resuelve cualquier libro del catálogo (no solo el
- * libro 1, pese a lo que sugiere el path).
+ * Ruta canónica de recuperación, válida para CUALQUIER libro del catálogo.
+ * La ruta vieja (/ebook/de-cero-a-claude-en-una-semana/descargar) sigue
+ * funcionando con el mismo componente porque todos los emails ya enviados
+ * apuntan ahí.
  */
-export default function DescargarLegacyPage() {
+export default function DescargarPage() {
   return <EbookRecuperarDescarga />;
 }

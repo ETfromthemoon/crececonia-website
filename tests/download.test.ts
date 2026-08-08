@@ -26,13 +26,30 @@ function req(params: Record<string, string>) {
   return new Request(url.toString());
 }
 
-// Helper: chain de Supabase
-function dbChain(result: unknown) {
+// Helper: chain de Supabase.
+//
+// La búsqueda de la compra usa `.limit(1)`, que resuelve a un ARRAY de filas
+// (no a un objeto como maybeSingle). `dbChain` acepta la forma cómoda
+// `{ data: fila }` y la envuelve en array automáticamente, para que cada test
+// siga leyéndose como "esta es la fila que hay en la base".
+function dbChain(result: { data: unknown }) {
   const c: Record<string, unknown> = {};
-  ["select", "eq", "update", "single", "maybeSingle"].forEach((m) => {
+  ["select", "eq", "update", "single", "maybeSingle", "limit"].forEach((m) => {
     c[m] = vi.fn(() => c);
   });
-  const p = Promise.resolve(result);
+  const rows = result.data === null ? [] : [result.data];
+  const p = Promise.resolve({ ...result, data: rows });
+  (c as unknown as { then: typeof p.then }).then = p.then.bind(p);
+  return c;
+}
+
+/** Chain que devuelve una lista cruda de filas (para el caso de 0 filas). */
+function dbChainRows(rows: unknown[]) {
+  const c: Record<string, unknown> = {};
+  ["select", "eq", "update", "single", "maybeSingle", "limit"].forEach((m) => {
+    c[m] = vi.fn(() => c);
+  });
+  const p = Promise.resolve({ data: rows });
   (c as unknown as { then: typeof p.then }).then = p.then.bind(p);
   return c;
 }
@@ -184,12 +201,59 @@ describe("GET /api/ebook/download", () => {
     expect(res.headers.get("Content-Disposition")).toContain("De-cero-a-Claude-en-una-semana");
   });
 
-  it("no filtra por resource cuando la búsqueda es por email (comportamiento previo intacto)", async () => {
+  // ── 11. Recuperación por email: SIEMPRE filtra por resource ───────────────
+  //
+  // Acá vivía un test que afirmaba lo contrario ("no filtra por resource
+  // cuando la búsqueda es por email"), y por eso este bug llegó a producción
+  // con la suite en verde: el test codificaba la suposición equivocada.
+  //
+  // El daño real, verificado en producción antes del fix: alguien que compró
+  // SOLO "Claude a Nivel Experto" recuperaba con su email y recibía el PDF
+  // del libro 1 (1.790.473 bytes) — ni recibía lo que pagó, ni debía recibir
+  // gratis un libro que no compró.
+  it("filtra por resource también cuando la búsqueda es por email", async () => {
     const chain = dbChain({ data: { id: "uuid-6", email: "sergio@test.com" } });
     mockFrom.mockReturnValue(chain);
 
-    await GET(req({ email: "sergio@test.com" }));
-    const resourceCalls = chain.eq.mock.calls.filter((c: unknown[]) => c[0] === "resource");
-    expect(resourceCalls).toHaveLength(0);
+    await GET(req({ email: "sergio@test.com", resource: "ebook:claude-nivel-experto" }));
+    expect(chain.eq).toHaveBeenCalledWith("email", "sergio@test.com");
+    expect(chain.eq).toHaveBeenCalledWith("resource", "ebook:claude-nivel-experto");
+  });
+
+  it("entrega el PDF del libro pedido por email, no el del libro 1", async () => {
+    const chain = dbChain({ data: { id: "uuid-7", email: "sergio@test.com" } });
+    mockFrom.mockReturnValue(chain);
+
+    const res = await GET(
+      req({ email: "sergio@test.com", resource: "ebook:claude-nivel-experto", format: "a4" })
+    );
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Disposition")).toContain("Claude-a-Nivel-Experto");
+    expect(res.headers.get("Content-Disposition")).not.toContain("De-cero-a-Claude");
+    expect(mockStorageDownload).toHaveBeenCalledWith("claude-nivel-experto-a4.pdf");
+  });
+
+  it("404 por email cuando esa persona no compró ESE libro (aunque haya comprado otro)", async () => {
+    // La query filtra por (email, resource): si compró otro libro, esta
+    // consulta no devuelve filas y no corresponde entregar nada.
+    mockFrom.mockReturnValue(dbChainRows([]));
+
+    const res = await GET(
+      req({ email: "sergio@test.com", resource: "ebook:agentes-de-ia" })
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("no rompe cuando hay 2 filas del mismo libro y email (compró dos veces)", async () => {
+    // Antes esto usaba maybeSingle(), que falla con más de una fila y
+    // devolvía 404 a alguien que sí había pagado.
+    mockFrom.mockReturnValue(
+      dbChainRows([{ id: "uuid-8a", email: "dos@test.com" }])
+    );
+
+    const res = await GET(
+      req({ email: "dos@test.com", resource: "ebook:claude-nivel-experto" })
+    );
+    expect(res.status).toBe(200);
   });
 });

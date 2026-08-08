@@ -61,14 +61,25 @@ async function sendConfirmationEmail(
   token: string,
   resources: PendingResource[]
 ): Promise<void> {
-  const redownloadUrl = `${SITE_URL}/ebook/de-cero-a-claude-en-una-semana/descargar`;
+  // Ruta genérica: antes apuntaba a /ebook/de-cero-a-claude-en-una-semana/
+  // descargar, así que quien compraba otro libro recibía un link que, además
+  // de nombrar el libro equivocado, le entregaba el PDF equivocado.
+  const redownloadUrl = `${SITE_URL}/ebook/descargar`;
   const isBundle = resources.length > 1;
   const linksHtml = resources.map((r) => downloadLinkHtml(r.resource, email, token)).join("");
+
+  // El asunto también estaba fijo al libro 1: quien compraba "Claude a Nivel
+  // Experto" recibía un email titulado "Tu ebook: De cero a Claude en una
+  // semana".
+  const singleTitle = getCatalogEntry(resources[0]?.resource ?? "")?.title;
+  const subject = isBundle
+    ? "Tus ebooks de CrececonIA"
+    : `Tu ebook: ${singleTitle ?? "CrececonIA"}`;
 
   await getResend().emails.send({
     from: "CrececonIA <sergio@crececonia.cl>",
     to: email,
-    subject: isBundle ? "Tus ebooks de CrececonIA" : "Tu ebook: De cero a Claude en una semana",
+    subject,
     html: `
 <!DOCTYPE html>
 <html>

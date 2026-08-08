@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getPurchasedBooksByToken } from "@/lib/ebook-purchased-resources";
 
 export const metadata: Metadata = {
   title: "Compra exitosa — Ebook · CrececonIA",
   robots: { index: false, follow: false },
 };
+
+// Los libros comprados se resuelven por request desde el token de Flow —
+// nunca se puede prerenderizar.
+export const dynamic = "force-dynamic";
 
 export default async function SuccessPage({
   searchParams,
@@ -12,6 +17,11 @@ export default async function SuccessPage({
   searchParams: Promise<{ token?: string }>;
 }) {
   const { token } = await searchParams;
+
+  // Antes esta página linkeaba a /api/ebook/download SIN `resource`, que cae
+  // por defecto al libro 1: quien compraba cualquier otro libro descargaba
+  // el libro 1 justo después de pagar.
+  const books = token ? await getPurchasedBooksByToken(token) : [];
 
   return (
     <main className="monad pt-28">
@@ -88,72 +98,85 @@ export default async function SuccessPage({
               marginBottom: 40,
             }}
           >
-            Tu ebook{" "}
-            <strong style={{ color: "#000", fontWeight: 400 }}>
-              De cero a Claude en una semana
-            </strong>{" "}
-            está listo. Descargalo ahora — el link no vence.
+            {books.length === 1 ? (
+              <>
+                Tu ebook{" "}
+                <strong style={{ color: "#000", fontWeight: 400 }}>{books[0].title}</strong>{" "}
+                está listo. Descargalo ahora — el link no vence.
+              </>
+            ) : books.length > 1 ? (
+              <>
+                Tus <strong style={{ color: "#000", fontWeight: 400 }}>{books.length} ebooks</strong>{" "}
+                están listos. Descargalos ahora — los links no vencen.
+              </>
+            ) : (
+              <>Tu compra está confirmada. Descargá tus ebooks abajo — los links no vencen.</>
+            )}
           </p>
 
-          {token ? (
+          {token && books.length > 0 ? (
             <div style={{ marginBottom: 32 }}>
-              <p
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "0.68rem",
-                  letterSpacing: "0.15em",
-                  textTransform: "uppercase",
-                  color: "#4e4d4d",
-                  marginBottom: 16,
-                }}
-              >
-                Elige tu formato
-              </p>
-              <div
-                style={{
-                  display: "flex",
-                  gap: 12,
-                  justifyContent: "center",
-                  flexWrap: "wrap",
-                }}
-              >
-                <a
-                  href={`/api/ebook/download?token=${encodeURIComponent(token)}&format=movil`}
-                  className="btn-monad-fill"
-                  style={{ display: "inline-flex", gap: 8, alignItems: "center" }}
-                >
-                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                  Versión móvil
-                </a>
-                <a
-                  href={`/api/ebook/download?token=${encodeURIComponent(token)}&format=a4`}
-                  style={{
-                    display: "inline-flex",
-                    gap: 8,
-                    alignItems: "center",
-                    padding: "14px 28px",
-                    borderRadius: 100,
-                    border: "1.5px solid #242424",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "0.78rem",
-                    letterSpacing: "0.08em",
-                    color: "#242424",
-                    textDecoration: "none",
-                    background: "transparent",
-                  }}
-                >
-                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                  Versión A4
-                </a>
-              </div>
+              {books.map((book) => (
+                <div key={book.resource} style={{ marginBottom: 28 }}>
+                  <p
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.68rem",
+                      letterSpacing: "0.15em",
+                      textTransform: "uppercase",
+                      color: "#4e4d4d",
+                      marginBottom: 16,
+                    }}
+                  >
+                    {books.length > 1 ? book.title : "Elige tu formato"}
+                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 12,
+                      justifyContent: "center",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <a
+                      href={`/api/ebook/download?token=${encodeURIComponent(token)}&resource=${encodeURIComponent(book.resource)}&format=movil`}
+                      className="btn-monad-fill"
+                      style={{ display: "inline-flex", gap: 8, alignItems: "center" }}
+                    >
+                      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      Versión móvil
+                    </a>
+                    <a
+                      href={`/api/ebook/download?token=${encodeURIComponent(token)}&resource=${encodeURIComponent(book.resource)}&format=a4`}
+                      style={{
+                        display: "inline-flex",
+                        gap: 8,
+                        alignItems: "center",
+                        padding: "14px 28px",
+                        borderRadius: 100,
+                        border: "1.5px solid #242424",
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "0.78rem",
+                        letterSpacing: "0.08em",
+                        color: "#242424",
+                        textDecoration: "none",
+                        background: "transparent",
+                      }}
+                    >
+                      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      Versión A4
+                    </a>
+                  </div>
+                </div>
+              ))}
               <p
                 style={{
                   fontFamily: "var(--font-mono)",
@@ -182,7 +205,8 @@ export default async function SuccessPage({
                   lineHeight: 1.6,
                 }}
               >
-                Revisá tu email — te enviamos el link de descarga directo.
+                Estamos confirmando tu pago. Revisá tu email — te enviamos el link de descarga
+                directo apenas se acredite.
               </p>
             </div>
           )}
@@ -198,7 +222,7 @@ export default async function SuccessPage({
           >
             ¿Perdiste el link?{" "}
             <Link
-              href="/ebook/de-cero-a-claude-en-una-semana/descargar"
+              href="/ebook/descargar"
               style={{
                 color: "#242424",
                 textDecoration: "underline",

@@ -157,6 +157,39 @@ describe("POST /api/flow/confirm", () => {
     );
   });
 
+  it("el email nombra el libro comprado en el asunto, no siempre el libro 1", async () => {
+    // El asunto estaba fijo a "Tu ebook: De cero a Claude en una semana":
+    // quien compraba otro libro recibía un email titulado con el libro
+    // equivocado.
+    setupDb({
+      pendingResources: [
+        { resource: "ebook:claude-nivel-experto", tier: "early", amount: 13700 },
+      ],
+    });
+
+    await POST(flowWebhook("tok_subject"));
+
+    expect(mockResendSend).toHaveBeenCalledWith(
+      expect.objectContaining({ subject: "Tu ebook: Claude a Nivel Experto" })
+    );
+  });
+
+  it("el link de recuperación del email es genérico, no el del libro 1", async () => {
+    // Apuntaba a /ebook/de-cero-a-claude-en-una-semana/descargar, que además
+    // de nombrar el libro equivocado entregaba el PDF equivocado.
+    setupDb({
+      pendingResources: [
+        { resource: "ebook:claude-nivel-experto", tier: "early", amount: 13700 },
+      ],
+    });
+
+    await POST(flowWebhook("tok_recovery_link"));
+
+    const html = mockResendSend.mock.calls[0][0].html as string;
+    expect(html).toContain("/ebook/descargar");
+    expect(html).not.toContain("de-cero-a-claude-en-una-semana/descargar");
+  });
+
   it("no entrega ni inserta si Flow no devuelve el email del comprador", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
