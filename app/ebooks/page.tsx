@@ -77,6 +77,10 @@ export default async function EbooksPage() {
         description: bundle.pitch,
         href: `${anchorHref}?bundle=${bundle.slug}#comprar`,
         coverSrc: undefined as string | undefined,
+        // Un combo no tiene portada propia: se muestran las de sus libros.
+        coverSrcs: bundle.resources
+          .map((r) => EBOOK_CATALOG.find((e) => e.resource === r)?.coverSrc)
+          .filter((src): src is string => Boolean(src)),
         status: "available" as const,
         priceLabel: `$${totals.total.toLocaleString("es-CL")} CLP · ${totals.discountPercent}% off`,
       };

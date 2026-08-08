@@ -12,6 +12,11 @@ type Props = {
   description: string;
   href: string;
   coverSrc?: string;
+  /**
+   * Portadas de los libros que componen un combo. Un bundle no tiene portada
+   * propia, y sin esto la card mostraba un "?" gigante en el catálogo.
+   */
+  coverSrcs?: string[];
   status: "available" | "coming-soon";
   priceLabel?: string;
   index?: number;
@@ -27,11 +32,13 @@ export default function EbookCard({
   description,
   href,
   coverSrc,
+  coverSrcs,
   status,
   priceLabel,
   index = 0,
 }: Props) {
   const isComingSoon = status === "coming-soon";
+  const collage = coverSrcs ?? [];
 
   return (
     <motion.div
@@ -71,6 +78,44 @@ export default function EbookCard({
             sizes="(max-width: 640px) 100vw, 400px"
             style={{ objectFit: "cover" }}
           />
+        ) : collage.length > 0 ? (
+          // Combo: se muestran las portadas de los libros que incluye,
+          // superpuestas en abanico. Antes acá salía un "?" gigante.
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "12% 8%",
+            }}
+          >
+            {collage.map((src, i) => (
+              <div
+                key={src}
+                style={{
+                  position: "relative",
+                  width: `${Math.min(58, 92 / collage.length + 18)}%`,
+                  aspectRatio: "1 / 1.6",
+                  marginLeft: i === 0 ? 0 : "-16%",
+                  borderRadius: 6,
+                  overflow: "hidden",
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.45)",
+                  transform: `rotate(${(i - (collage.length - 1) / 2) * 4}deg)`,
+                  zIndex: i,
+                }}
+              >
+                <Image
+                  src={src}
+                  alt=""
+                  fill
+                  sizes="200px"
+                  style={{ objectFit: "cover" }}
+                />
+              </div>
+            ))}
+          </div>
         ) : (
           <span
             style={{
