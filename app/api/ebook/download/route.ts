@@ -54,14 +54,29 @@ export async function GET(request: Request) {
   const filterKey = token ? "flow_token" : "email";
   const filterValue = (token ?? email)!;
 
-  let purchaseQuery = db.from("ebook_purchases").select("id, email").eq(filterKey, filterValue);
-  if (token) {
-    // Un combo inserta varias filas bajo el mismo flow_token (una por libro)
-    // — sin este filtro, maybeSingle() encuentra 2+ filas y falla en vez de
-    // resolver cuál de los libros del combo se está pidiendo.
-    purchaseQuery = purchaseQuery.eq("resource", resource);
-  }
-  const { data } = await purchaseQuery.maybeSingle();
+  // El filtro por `resource` va SIEMPRE, en los dos caminos (token y email).
+  //
+  // Antes solo se aplicaba en el camino de token, y eso rompía la
+  // recuperación por email de dos formas a la vez, verificado en producción:
+  //   1. Quien compró SOLO un libro que no es el 1 recuperaba con su email y
+  //      recibía el PDF del libro 1 — porque `resource` cae por defecto a
+  //      DEFAULT_EBOOK_RESOURCE. No recibía lo que pagó, y recibía gratis un
+  //      libro que no compró.
+  //   2. Quien compró un combo (2+ filas con el mismo email) chocaba contra
+  //      maybeSingle(), que falla con más de una fila: recibía "No
+  //      encontramos una compra" pese a haber pagado.
+  //
+  // Se usa limit(1) en vez de maybeSingle() porque una misma persona puede
+  // comprar el mismo libro dos veces (el índice único es (flow_token,
+  // resource), no (email, resource)) — dos filas legítimas no deben
+  // convertirse en un 404.
+  const { data: rows } = await db
+    .from("ebook_purchases")
+    .select("id, email")
+    .eq(filterKey, filterValue)
+    .eq("resource", resource)
+    .limit(1);
+  const data = rows?.[0] ?? null;
 
   if (!data) {
     if (token) {
