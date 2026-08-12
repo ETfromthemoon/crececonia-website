@@ -21,7 +21,10 @@ function getActiveEntryOrThrow(resource: string) {
 export async function getCurrentPrice(resource: string): Promise<PriceInfo> {
   const entry = getActiveEntryOrThrow(resource);
   const db = getSupabaseAdmin();
-  const { data } = await db.from("ebook_cupos").select("*").eq("resource", resource);
+  const { data, error } = await db.from("ebook_cupos").select("*").eq("resource", resource);
+  if (error) {
+    throw new Error(`No se pudo leer los cupos de ${resource}: ${error.message}`);
+  }
   const cupos: Record<string, { total: number; used: number }> =
     Object.fromEntries((data ?? []).map((r) => [r.tier, r]));
 

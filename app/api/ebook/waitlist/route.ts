@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { addToWaitlist } from "@/lib/ebook-waitlist";
+import { getCatalogEntry } from "@/lib/ebook-catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,11 @@ export async function POST(request: Request) {
   }
   if (!resource || resource.length > MAX_RESOURCE_LENGTH) {
     return NextResponse.json({ error: "Falta el recurso." }, { status: 400 });
+  }
+
+  const entry = getCatalogEntry(resource);
+  if (!entry || !entry.active) {
+    return NextResponse.json({ error: "Recurso no disponible." }, { status: 400 });
   }
 
   try {

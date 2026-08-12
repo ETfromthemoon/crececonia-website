@@ -48,17 +48,17 @@ export default function EbookCard({
       transition={{ duration: 0.6, delay: index * 0.1, ease: EASE }}
       className={`${styles.glass} ${styles.glassHover}`}
       style={{
-        borderRadius: 32,
-        padding: 32,
+        borderRadius: 24,
+        padding: 20,
         display: "flex",
         flexDirection: "column",
-        gap: 20,
+        gap: 18,
         opacity: isComingSoon ? 0.88 : 1,
       }}
     >
       <div
         style={{
-          borderRadius: 16,
+          borderRadius: 14,
           overflow: "hidden",
           // Las portadas del catálogo comparten ratio 1:1.6 — usarlo evita
           // recortes en la grilla en vez de forzar un 3:4 genérico.
@@ -119,7 +119,7 @@ export default function EbookCard({
         ) : (
           <span
             style={{
-              fontFamily: "var(--font-serif-monad), Georgia, serif",
+              fontFamily: "var(--font-display), Arial, sans-serif",
               color: "rgba(246,243,241,0.15)",
               fontSize: "3rem",
             }}
@@ -151,12 +151,13 @@ export default function EbookCard({
       <div style={{ flex: 1 }}>
         <h3
           style={{
-            fontFamily: "var(--font-serif-monad), Georgia, serif",
-            fontWeight: 400,
-            fontSize: "1.2rem",
+            fontFamily: "var(--font-display), Arial, sans-serif",
+            fontWeight: 700,
+            letterSpacing: "-0.035em",
+            fontSize: "1.12rem",
             lineHeight: 1.3,
             color: "#000",
-            marginBottom: 8,
+            marginBottom: 7,
           }}
         >
           {title}
@@ -164,8 +165,8 @@ export default function EbookCard({
         <p
           style={{
             fontFamily: "var(--font-mono)",
-            fontSize: "0.8rem",
-            lineHeight: 1.7,
+            fontSize: "0.76rem",
+            lineHeight: 1.65,
             color: "#4e4d4d",
           }}
         >

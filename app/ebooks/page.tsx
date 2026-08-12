@@ -36,7 +36,11 @@ export default async function EbooksPage() {
 
       const live = isCatalogEntryLive(entry);
       const priceLabel = live
-        ? `$${(await getCurrentPrice(entry.resource)).price.toLocaleString("es-CL")} CLP`
+        ? `$${(
+            await getCurrentPrice(entry.resource).catch(() => ({
+              price: entry.tierPrices.regular,
+            }))
+          ).price.toLocaleString("es-CL")} CLP`
         : undefined;
 
       return {
@@ -63,7 +67,14 @@ export default async function EbooksPage() {
 
   const bundleCards = await Promise.all(
     visibleBundles.map(async (bundle) => {
-      const prices = await Promise.all(bundle.resources.map((r) => getCurrentPrice(r)));
+      const prices = await Promise.all(
+        bundle.resources.map(async (resource) => {
+          const entry = EBOOK_CATALOG.find((item) => item.resource === resource);
+          return getCurrentPrice(resource).catch(() => ({
+            price: entry?.active ? entry.tierPrices.regular : 0,
+          }));
+        })
+      );
       const totals = computeBundleTotal(
         bundle.resources.map((r, i) => ({ resource: r, price: prices[i].price }))
       );
@@ -89,11 +100,28 @@ export default async function EbooksPage() {
 
   return (
     <main className="monad">
-      <section className="section-y-spacious px-6">
+      <section className="section-y-spacious px-6" style={{ paddingBottom: 56 }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <EbookSectionHeading kicker="Biblioteca">
-            Ebooks de <em style={{ fontStyle: "italic" }}>CrececonIA.</em>
-          </EbookSectionHeading>
+          <div className="ebook-store-intro">
+            <EbookSectionHeading kicker="Biblioteca práctica">
+              Aprende IA con <em style={{ fontStyle: "italic" }}>un siguiente paso claro.</em>
+            </EbookSectionHeading>
+            <p className="ebook-store-lede">
+              Ebooks accionables para pasar de la curiosidad a una capacidad concreta: prompts,
+              workflows y sistemas que puedes aplicar desde hoy.
+            </p>
+            <div className="ebook-store-proof" aria-label="Qué incluye cada ebook">
+              <span>PDF inmediato</span>
+              <span>Formatos para leer y trabajar</span>
+              <span>Compra segura con Flow</span>
+            </div>
+          </div>
+
+          <div className="ebook-store-section-label">
+            <span>01</span>
+            <strong>Disponibles ahora</strong>
+            <i />
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {bookCards.map(({ key, ...card }, i) => (
