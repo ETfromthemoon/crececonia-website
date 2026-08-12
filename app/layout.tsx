@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Fraunces, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
+import { Inter, Fraunces, JetBrains_Mono, Source_Serif_4, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import PostHogProvider from "@/components/PostHogProvider";
@@ -9,7 +9,8 @@ import ChatWidget from "@/components/ChatWidget";
 import EbookPopup from "@/components/EbookPopup";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap" });
-const fraunces = Fraunces({ variable: "--font-display", subsets: ["latin"], style: ["normal", "italic"], display: "swap" });
+const fraunces = Fraunces({ variable: "--font-editorial", subsets: ["latin"], style: ["normal", "italic"], display: "swap" });
+const spaceGrotesk = Space_Grotesk({ variable: "--font-display", subsets: ["latin"], display: "swap" });
 const jetbrainsMono = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin"], display: "swap" });
 const sourceSerif4 = Source_Serif_4({ variable: "--font-serif-monad", subsets: ["latin"], weight: ["400"], style: ["normal", "italic"], display: "swap" });
 const SITE_URL = "https://crececonia.cl";
@@ -37,5 +38,5 @@ const jsonLd = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="es" data-theme="light" className={`${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable} ${sourceSerif4.variable} antialiased`}><head><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} /></head><body className="flex flex-col min-h-screen"><PostHogProvider><EvaluacionProvider><SmoothScroll />{children}<EvaluacionModal /><ChatWidget /><EbookPopup /></EvaluacionProvider></PostHogProvider></body></html>;
+  return <html lang="es" data-theme="light" className={`${inter.variable} ${fraunces.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${sourceSerif4.variable} antialiased`}><head><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} /></head><body className="flex flex-col min-h-screen"><PostHogProvider><EvaluacionProvider><SmoothScroll />{children}<EvaluacionModal /><ChatWidget /><EbookPopup /></EvaluacionProvider></PostHogProvider></body></html>;
 }

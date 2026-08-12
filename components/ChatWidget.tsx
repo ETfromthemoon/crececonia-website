@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 import { whatsappUrl } from "@/lib/contact";
 
 const API = "https://autodrive.cl";
@@ -43,6 +44,7 @@ const SALUDO_FALLBACK =
   "¡Hola! Soy el asistente de CrececonIA 👋 Puedo contarte cómo funciona un agente IA para tu negocio, cuánto cuesta y en cuánto tiempo queda listo.";
 
 export default function ChatWidget() {
+  const pathname = usePathname();
   const [open, setOpen]           = useState(false);
   const [messages, setMessages]   = useState<Message[]>([]);
   const [input, setInput]         = useState("");
@@ -123,6 +125,8 @@ export default function ChatWidget() {
   };
 
   const showQuickReplies = messages.length === 1 && !loading;
+
+  if (pathname === "/ia") return null;
 
   return (
     <>
