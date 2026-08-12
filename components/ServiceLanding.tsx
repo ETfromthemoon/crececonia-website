@@ -4,8 +4,9 @@ import QualificationForm from "@/components/QualificationForm";
 import { whatsappUrl } from "@/lib/contact";
 
 type Service = "aprender" | "mentoria" | "implementacion";
+type ServiceData = { kicker: string; title: string; lead: string; promise: string; proof: string; steps: string[]; features: string[]; resourceLinks?: { label: string; text: string; href: string }[] };
 
-const DATA: Record<Service, { kicker: string; title: string; lead: string; promise: string; proof: string; steps: string[]; features: string[] }> = {
+const DATA: Record<Service, ServiceData> = {
   aprender: {
     kicker: "Capa 01 · Autonomía",
     title: "Aprende IA con algo que puedas usar mañana.",
@@ -14,6 +15,11 @@ const DATA: Record<Service, { kicker: string; title: string; lead: string; promi
     proof: "Ebooks prácticos · workflows probados · recursos descargables",
     steps: ["Elige un punto de partida concreto.", "Aplica el workflow a tu contexto.", "Vuelve por el siguiente nivel cuando estés listo."],
     features: ["Ebooks paso a paso, sin teoría sobrante", "Skills y guías para integrarlo a tu forma de trabajar", "Recursos que puedes copiar, adaptar y repetir"],
+    resourceLinks: [
+      { label: "Ebooks pagados", text: "La biblioteca principal para avanzar con un método concreto.", href: "/ebooks" },
+      { label: "Guías prácticas", text: "Lecturas y recursos para resolver una pregunta puntual.", href: "/centro/guias" },
+      { label: "Skills", text: "Capacidades listas para llevar a tu propio flujo de trabajo.", href: "/centro/skills" },
+    ],
   },
   mentoria: {
     kicker: "Capa 02 · Dirección",
@@ -41,6 +47,7 @@ export default function ServiceLanding({ service }: { service: Service }) {
     <section className="service-hero site-container"><div className="service-hero-copy"><span className="eyebrow">{data.kicker}</span><h1>{data.title}</h1><p className="hero-lead">{data.lead}</p><div className="hero-actions"><a className="button button-dark" href="#calificar">Ver si esto es para mí <span>↓</span></a><a className="text-link" href="/ia">Volver al selector</a></div></div><div className="hero-signal"><span className="signal-index">0{service === "aprender" ? 1 : service === "mentoria" ? 2 : 3}</span><p>{data.promise}</p><div className="signal-line" /><span className="signal-caption">{data.proof}</span></div></section>
     <section className="service-band"><div className="site-container service-band-inner"><span>CrececonIA / {service}</span><span>Una escalera, no tres caminos desconectados.</span></div></section>
     <section className="service-content site-container"><div><span className="eyebrow">Cómo se ve</span><h2>Un siguiente paso que cabe en tu realidad.</h2></div><div className="service-features">{data.features.map((feature, index) => <div className="feature-row" key={feature}><span>0{index + 1}</span><p>{feature}</p></div>)}</div></section>
+    {data.resourceLinks && <section className="resource-section"><div className="site-container"><div className="steps-heading"><span className="eyebrow">Explora el núcleo</span><h2>Empieza por el formato que necesitas.</h2></div><div className="resource-grid">{data.resourceLinks.map((resource) => <a className="resource-link" href={resource.href} key={resource.href}><strong>{resource.label}</strong><span>{resource.text}</span><small>Entrar ↗</small></a>)}</div></div></section>}
     <section className="service-steps"><div className="site-container"><div className="steps-heading"><span className="eyebrow">El recorrido</span><h2>De la pregunta a la práctica.</h2></div><div className="steps-grid">{data.steps.map((step, index) => <div className="step-item" key={step}><span>0{index + 1}</span><p>{step}</p></div>)}</div></div></section>
     <section id="calificar" className="service-form-section site-container"><QualificationForm service={service} /></section>
     <section className="service-footer-cta"><div className="site-container"><p>¿Todavía no sabes qué capa es la tuya?</p><a href={whatsappUrl("Hola, necesito orientación para elegir entre aprender, mentoría o implementación.")} target="_blank" rel="noopener noreferrer" className="button button-light">Preguntar por WhatsApp <span>↗</span></a></div></section>
