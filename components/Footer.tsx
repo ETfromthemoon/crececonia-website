@@ -1,200 +1,25 @@
-"use client";
-
 import { whatsappUrl } from "@/lib/contact";
-
-const NAV_LINKS = [
-  { label: "Cómo funciona", href: "/#como-funciona" },
-  { label: "Casos", href: "/#casos" },
-  { label: "Precio", href: "/#precio" },
-  { label: "FAQ", href: "/#faq" },
-  // Mismo nombre que en el navbar: antes acá decía "Centro de Conocimiento"
-  // y arriba "Conocimiento" — el mismo link con dos nombres distintos.
-  { label: "Conocimiento", href: "/centro" },
-  { label: "Ebook", href: "/ebook/de-cero-a-claude-en-una-semana", highlight: true },
-];
-
-const linkStyle: React.CSSProperties = {
-  color: "var(--smoke)",
-  fontFamily: "var(--font-mono)",
-  letterSpacing: "0.1em",
-  fontSize: "0.75rem",
-  textTransform: "none",
-  lineHeight: 1.8,
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "8px",
-};
-
-const headerStyle: React.CSSProperties = {
-  color: "var(--bone)",
-  fontFamily: "var(--font-mono)",
-  letterSpacing: "0.14em",
-  fontSize: "0.7rem",
-  textTransform: "uppercase",
-  marginBottom: "16px",
-  fontWeight: 600,
-};
 
 export default function Footer() {
   return (
-    <footer
-      className="pt-16 pb-8 px-6 border-t"
-      style={{ borderColor: "var(--hairline)", background: "var(--carbon)" }}
-    >
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10 mb-12">
-          {/* Col 1 — Brand */}
-          <div className="col-span-2 sm:col-span-2 lg:col-span-1">
-            <a
-              href="/"
-              className="font-light text-xl tracking-tight inline-block mb-3"
-              style={{ fontFamily: "var(--font-display)", color: "var(--bone)" }}
-            >
-              Crece<em style={{ color: "var(--champagne)" }}>con</em>IA
-            </a>
-            <p
-              className="text-sm leading-relaxed"
-              style={{ color: "var(--ash)", fontWeight: 300, lineHeight: 1.7 }}
-            >
-              Agentes IA para empresas latinoamericanas.
-            </p>
-            <p
-              className="mt-4 text-xs"
-              style={{
-                color: "var(--smoke)",
-                fontFamily: "var(--font-mono)",
-                letterSpacing: "0.06em",
-              }}
-            >
-              Santiago, Chile
-            </p>
-          </div>
-
-          {/* Col 2 — Navegación */}
-          <div>
-            <p style={headerStyle}>Navegación</p>
-            <ul className="space-y-1.5">
-              {NAV_LINKS.map((l) => (
-                <li key={l.label}>
-                  <a
-                    href={l.href}
-                    style={{
-                      ...linkStyle,
-                      color:
-                        "highlight" in l && l.highlight
-                          ? "var(--champagne)"
-                          : "var(--smoke)",
-                    }}
-                    className="transition-colors"
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.color = "var(--champagne)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.color =
-                        "highlight" in l && l.highlight
-                          ? "var(--champagne)"
-                          : "var(--smoke)")
-                    }
-                  >
-                    {l.label}
-                    {"highlight" in l && l.highlight && (
-                      <span
-                        style={{
-                          fontSize: "0.55rem",
-                          background: "rgba(196,155,74,0.12)",
-                          color: "var(--champagne)",
-                          border: "1px solid rgba(196,155,74,0.25)",
-                          borderRadius: 2,
-                          padding: "1px 5px",
-                          letterSpacing: "0.12em",
-                          marginLeft: 2,
-                        }}
-                      >
-                        NUEVO
-                      </span>
-                    )}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Col 3 — Contacto */}
-          <div>
-            <p style={headerStyle}>Contacto</p>
-            <ul className="space-y-1.5">
-              <li>
-                <a
-                  href="mailto:sergio@crececonia.cl"
-                  style={linkStyle}
-                  className="transition-colors"
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.color = "var(--champagne)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.color = "var(--smoke)")
-                  }
-                >
-                  sergio@crececonia.cl
-                </a>
-              </li>
-              <li>
-                <a
-                  href={whatsappUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={linkStyle}
-                  className="transition-colors"
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.color = "var(--champagne)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.color = "var(--smoke)")
-                  }
-                >
-                  WhatsApp
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.linkedin.com/in/sergioastudillo"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={linkStyle}
-                  className="transition-colors"
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.color = "var(--champagne)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.color = "var(--smoke)")
-                  }
-                >
-                  LinkedIn
-                </a>
-              </li>
-            </ul>
-          </div>
+    <footer className="site-footer">
+      <div className="site-container footer-grid">
+        <div>
+          <a href="/" className="brand-mark">Crece<span>con</span>IA</a>
+          <p className="footer-note">IA aplicada con criterio, desde aprender hasta implementar.</p>
         </div>
-
-        {/* Separador + cierre. Acá había una segunda tanda de links a Email,
-            LinkedIn y WhatsApp — los mismos tres que ya están en la columna
-            de Contacto tres líneas más arriba, dentro de los mismos 200px. */}
-        <div
-          className="pt-6"
-          style={{ borderTop: "1px solid var(--hairline)" }}
-        >
-          <p
-            className="text-xs text-center sm:text-left"
-            style={{
-              color: "var(--smoke)",
-              fontFamily: "var(--font-mono)",
-              letterSpacing: "0.06em",
-            }}
-          >
-            &copy; 2026 CrececonIA. Todos los derechos reservados.
-          </p>
+        <div className="footer-links">
+          <a href="/ia">Enlace para Instagram</a>
+          <a href="/aprender">Aprender</a>
+          <a href="/mentoria">Mentoría</a>
+          <a href="/implementacion">Implementación</a>
+        </div>
+        <div className="footer-contact">
+          <span>¿Tienes una pregunta?</span>
+          <a href={whatsappUrl("Hola, tengo una pregunta sobre CrececonIA.")} target="_blank" rel="noopener noreferrer">Escríbenos por WhatsApp ↗</a>
         </div>
       </div>
+      <div className="site-container footer-bottom"><span>© 2026 CrececonIA</span><span>Santiago · Chile</span></div>
     </footer>
   );
 }
