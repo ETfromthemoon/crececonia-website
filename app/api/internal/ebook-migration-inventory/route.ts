@@ -56,10 +56,35 @@ export async function GET(request: Request) {
     .from("ebooks")
     .list("", { limit: 1000, offset: 0, sortBy: { column: "name", order: "asc" } });
 
+  const schemaResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/`, {
+    headers: {
+      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+      authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY ?? ""}`,
+      accept: "application/openapi+json",
+    },
+  });
+  const schemaDocument = (await schemaResponse.json().catch(() => null)) as {
+    definitions?: Record<string, { properties?: Record<string, unknown>; required?: string[] }>;
+    components?: { schemas?: Record<string, { properties?: Record<string, unknown>; required?: string[] }> };
+  } | null;
+  const schemas = schemaDocument?.definitions ?? schemaDocument?.components?.schemas ?? {};
+  const schema = Object.fromEntries(
+    tables.map((table) => {
+      const definition = schemas[table];
+      return [
+        table,
+        definition
+          ? { columns: definition.properties ?? {}, required: definition.required ?? [] }
+          : null,
+      ];
+    }),
+  );
+
   return Response.json(
     {
       generated_at: new Date().toISOString(),
       tables: Object.fromEntries(tableResults),
+      schema,
       storage: storageError
         ? { exists: false, object_count: null, objects: [], error: storageError.message }
         : {
