@@ -8,6 +8,7 @@ import EvaluacionModal from "@/components/EvaluacionModal";
 import ChatWidget from "@/components/ChatWidget";
 import EbookPopup from "@/components/EbookPopup";
 import "@/components/PopupSurfaces.css";
+import "@/components/ContrastOverrides.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap" });
 const fraunces = Fraunces({ variable: "--font-editorial", subsets: ["latin"], style: ["normal", "italic"], display: "swap" });

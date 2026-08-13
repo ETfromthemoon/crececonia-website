@@ -1,0 +1,60 @@
+/* High-contrast text layer. Loaded after the legacy visual tokens so the
+   public pages and dark interruptive surfaces use readable text consistently. */
+:root {
+  --contrast-champagne: #765719;
+  --contrast-champagne-2: #5e4513;
+  --contrast-muted: #4a4a4a;
+  --contrast-smoke: #626262;
+}
+.text-muted { color: var(--contrast-muted) !important; }
+.corporate-page,
+.service-page,
+.hub-page { --ink-soft: #4b4b4b; }
+.corporate-page .hero-location,
+.corporate-page .hero-lead,
+.corporate-page .hero-aside p,
+.corporate-page .method-copy p,
+.service-page .signal-caption,
+.service-page .qualify-intro p,
+.service-page .qualify-success p,
+.hub-page .hub-intro p,
+.hub-page .hub-link-copy span,
+.hub-page .hub-home-link { color: var(--contrast-muted); }
+.desktop-nav a,
+.footer-note,
+.footer-links a,
+.footer-contact a,
+.footer-bottom,
+.resource-link span,
+.qualify-form label { color: var(--contrast-muted); }
+.corporate-page .layer-copy > span,
+.service-page .hero-lead,
+.service-page .feature-row p,
+.service-page .steps-heading p,
+.service-page .method-copy p { color: var(--contrast-muted); }
+.skill-prose a,
+.skill-prose code,
+.skill-collapse > summary::after,
+.mobile-whatsapp { color: var(--contrast-champagne); }
+.btn-evaluacion { background: var(--contrast-champagne); border-color: var(--contrast-champagne); }
+
+/* The global theme is light, while these surfaces are intentionally dark. */
+.site-popup-shell,
+.ebook-popup-card,
+.site-chat-panel { color: #f2efe8; }
+.site-popup-shell p,
+.site-popup-shell label,
+.site-popup-shell span,
+.ebook-popup-card p,
+.ebook-popup-card label,
+.ebook-popup-card span { color: #d6d9df !important; }
+.site-popup-shell h2,
+.site-popup-shell h3,
+.ebook-popup-card h2,
+.ebook-popup-card h3,
+.site-popup-shell strong,
+.ebook-popup-card strong { color: #f2efe8 !important; }
+.site-popup-shell a,
+.ebook-popup-card a { color: #c6db70; }
+.site-chat-panel input { color: #f2efe8 !important; }
+.site-chat-panel input::placeholder { color: #aeb4bf !important; opacity: 1; }

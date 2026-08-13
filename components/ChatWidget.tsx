@@ -34,7 +34,7 @@ const TypingDots = () => (
       <span
         key={d}
         className="typing-dot w-1.5 h-1.5 rounded-full"
-        style={{ background: "var(--ash)", animationDelay: `${d}ms` }}
+        style={{ background: "#c3c8d0", animationDelay: `${d}ms` }}
       />
     ))}
   </div>
@@ -171,8 +171,8 @@ export default function ChatWidget() {
                   className="w-2 h-2 rounded-full"
                   style={{ background: "var(--success)", boxShadow: "0 0 6px var(--success)" }}
                 />
-                <span className="text-sm font-medium" style={{ color: "var(--bone)" }}>
-                  Crececon<em style={{ color: "var(--champagne)", fontStyle: "italic" }}>IA</em>
+                <span className="text-sm font-medium" style={{ color: "#f2efe8" }}>
+                  Crececon<em style={{ color: "#c6db70", fontStyle: "italic" }}>IA</em>
                 </span>
                 <span
                   className="text-[11px] px-1.5 py-0.5 rounded"
@@ -195,7 +195,7 @@ export default function ChatWidget() {
                     onClick={() => !loading && startSession()}
                     disabled={loading}
                     className="w-7 h-7 flex items-center justify-center transition-opacity hover:opacity-60 disabled:opacity-30"
-                    style={{ color: "var(--smoke)" }}
+                    style={{ color: "#aeb4bf" }}
                     aria-label="Nueva conversación"
                     title="Nueva conversación"
                   >
@@ -209,7 +209,7 @@ export default function ChatWidget() {
                 <button
                   onClick={() => setOpen(false)}
                   className="w-7 h-7 flex items-center justify-center text-lg leading-none transition-opacity hover:opacity-60"
-                  style={{ color: "var(--smoke)" }}
+                  style={{ color: "#aeb4bf" }}
                   aria-label="Cerrar chat"
                 >
                   ×
@@ -231,7 +231,7 @@ export default function ChatWidget() {
                         m.role === "user"
                           ? "var(--champagne)"
                           : "rgba(255,255,255,0.055)",
-                      color: m.role === "user" ? "var(--obsidian)" : "var(--ash)",
+                      color: m.role === "user" ? "#151618" : "#d6d9df",
                       borderRadius:
                         m.role === "user"
                           ? "12px 12px 3px 12px"
@@ -269,7 +269,7 @@ export default function ChatWidget() {
                   {m.lead_capturado && !m.sugerir_evaluacion && (
                     <span
                       className="text-[11px] mt-1"
-                      style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)" }}
+                      style={{ color: "#aeb4bf", fontFamily: "var(--font-mono)" }}
                     >
                       ✓ contacto guardado
                     </span>
@@ -326,8 +326,8 @@ export default function ChatWidget() {
             >
               <input
                 ref={inputRef}
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--smoke)]"
-                style={{ color: "var(--bone)" }}
+                className="flex-1 bg-transparent text-sm outline-none"
+                style={{ color: "#f2efe8" }}
                 placeholder="Escribe tu pregunta…"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -350,7 +350,7 @@ export default function ChatWidget() {
                 aria-label="Enviar"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                  stroke="var(--obsidian)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  stroke="#151618" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M22 2L11 13" /><path d="M22 2L15 22 11 13 2 9l20-7z" />
                 </svg>
               </button>
@@ -366,7 +366,7 @@ export default function ChatWidget() {
                 rel="noopener noreferrer"
                 className="transition-opacity hover:opacity-100"
                 style={{
-                  color: "var(--smoke)",
+                  color: "#aeb4bf",
                   fontSize: 10,
                   opacity: 0.65,
                   fontFamily: "var(--font-mono)",
@@ -410,7 +410,7 @@ export default function ChatWidget() {
               exit={{ rotate: 90, opacity: 0 }}
               transition={{ duration: 0.15 }}
               width="18" height="18" viewBox="0 0 24 24"
-              fill="none" stroke="var(--champagne)" strokeWidth="2.5" strokeLinecap="round"
+              fill="none" stroke="#c6db70" strokeWidth="2.5" strokeLinecap="round"
             >
               <path d="M18 6L6 18M6 6l12 12" />
             </motion.svg>
