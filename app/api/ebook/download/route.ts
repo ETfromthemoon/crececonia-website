@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { flowSign, getFlowBase } from "@/lib/flow";
 import { getCatalogEntry, DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
 import { EBOOK_STORAGE_BUCKET, storageObjectName } from "@/lib/ebook-storage";
+import { getPurchasedBooksByToken } from "@/lib/ebook-purchased-resources";
 
 const VALID_FORMATS = ["movil", "a4"] as const;
 type Format = (typeof VALID_FORMATS)[number];
@@ -18,76 +18,42 @@ function getDownloadFilename(resource: string, format: Format): string {
   return format === "a4" ? `${base}-A4.pdf` : `${base}.pdf`;
 }
 
-async function verifyTokenWithFlow(token: string): Promise<boolean> {
-  try {
-    const apiKey = process.env.FLOW_API_KEY;
-    const secretKey = process.env.FLOW_SECRET_KEY;
-    if (!apiKey || !secretKey) return false;
-    const params = { apiKey, token };
-    const s = flowSign(params, secretKey);
-    const url = `${getFlowBase()}/payment/getStatus?apiKey=${apiKey}&token=${token}&s=${s}`;
-    const res = await fetch(url);
-    if (!res.ok) return false;
-    const payment = await res.json();
-    return payment?.status === 2;
-  } catch {
-    return false;
-  }
-}
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const email = searchParams.get("email");
   const token = searchParams.get("token");
   const rawFormat = searchParams.get("format") ?? "movil";
   const format: Format = VALID_FORMATS.includes(rawFormat as Format)
     ? (rawFormat as Format)
     : "movil";
 
-  if (!email && !token) {
-    return NextResponse.json({ error: "Parámetros requeridos." }, { status: 400 });
+  if (!token) {
+    return NextResponse.json(
+      { error: "Pedí un nuevo enlace de descarga desde tu email." },
+      { status: 401 }
+    );
   }
 
   const resource = searchParams.get("resource") ?? DEFAULT_EBOOK_RESOURCE;
+  if (!getCatalogEntry(resource)) {
+    return NextResponse.json({ error: "Ebook no disponible." }, { status: 404 });
+  }
 
   const db = getSupabaseAdmin();
-  const filterKey = token ? "flow_token" : "email";
-  const filterValue = (token ?? email)!;
 
-  // El filtro por `resource` va SIEMPRE, en los dos caminos (token y email).
-  //
-  // Antes solo se aplicaba en el camino de token, y eso rompía la
-  // recuperación por email de dos formas a la vez, verificado en producción:
-  //   1. Quien compró SOLO un libro que no es el 1 recuperaba con su email y
-  //      recibía el PDF del libro 1 — porque `resource` cae por defecto a
-  //      DEFAULT_EBOOK_RESOURCE. No recibía lo que pagó, y recibía gratis un
-  //      libro que no compró.
-  //   2. Quien compró un combo (2+ filas con el mismo email) chocaba contra
-  //      maybeSingle(), que falla con más de una fila: recibía "No
-  //      encontramos una compra" pese a haber pagado.
-  //
-  // Se usa limit(1) en vez de maybeSingle() porque una misma persona puede
-  // comprar el mismo libro dos veces (el índice único es (flow_token,
-  // resource), no (email, resource)) — dos filas legítimas no deben
-  // convertirse en un 404.
+  // El token y el resource deben coincidir en una compra registrada. Durante
+  // la carrera normal webhook/retorno, el manifiesto pendiente se consulta
+  // con Flow y autoriza solo los recursos incluidos en esa misma orden.
   const { data: rows } = await db
     .from("ebook_purchases")
     .select("id, email")
-    .eq(filterKey, filterValue)
+    .eq("flow_token", token)
     .eq("resource", resource)
     .limit(1);
   const data = rows?.[0] ?? null;
 
   if (!data) {
-    if (token) {
-      const paid = await verifyTokenWithFlow(token);
-      if (!paid) {
-        return NextResponse.json(
-          { error: "No encontramos una compra con esos datos." },
-          { status: 404 }
-        );
-      }
-    } else {
+    const pendingBooks = await getPurchasedBooksByToken(token);
+    if (!pendingBooks.some((book) => book.resource === resource)) {
       return NextResponse.json(
         { error: "No encontramos una compra con esos datos." },
         { status: 404 }

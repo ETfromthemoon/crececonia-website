@@ -3,22 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
-type Status = "idle" | "loading" | "found" | "not-found" | "error";
-type PurchasedBook = { resource: string; title: string };
-
-const DownloadIcon = () => (
-  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-    <polyline points="7 10 12 15 17 10" />
-    <line x1="12" y1="15" x2="12" y2="3" />
-  </svg>
-);
-
-function downloadUrl(email: string, resource: string, format: "movil" | "a4") {
-  return `/api/ebook/download?email=${encodeURIComponent(email)}&resource=${encodeURIComponent(
-    resource
-  )}&format=${format}`;
-}
+type Status = "idle" | "loading" | "sent" | "error";
 
 /**
  * Recuperación de descarga por email, para CUALQUIER libro del catálogo.
@@ -28,15 +13,13 @@ function downloadUrl(email: string, resource: string, format: "movil" | "a4") {
  * comprador de otro libro recibía el PDF equivocado (y gratis uno que no
  * compró), y un comprador de combo recibía "no encontramos tu compra".
  *
- * Ahora primero pregunta a /api/ebook/purchases qué compró ese email, y
- * ofrece exactamente esos libros, cada uno en sus dos formatos.
+ * Ahora envía enlaces nuevos al mismo email. El navegador no lista compras
+ * ni usa una dirección como credencial de descarga.
  */
 export default function EbookRecuperarDescarga() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
-  const [verifiedEmail, setVerifiedEmail] = useState("");
-  const [books, setBooks] = useState<PurchasedBook[]>([]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,7 +28,11 @@ export default function EbookRecuperarDescarga() {
     setErrorMsg("");
 
     try {
-      const res = await fetch(`/api/ebook/purchases?email=${encodeURIComponent(email)}`);
+      const res = await fetch("/api/ebook/recover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -54,17 +41,7 @@ export default function EbookRecuperarDescarga() {
         return;
       }
 
-      if (!data.books || data.books.length === 0) {
-        setErrorMsg(
-          "No encontramos una compra con ese email. Verificá que sea el mismo email que usaste al comprar."
-        );
-        setStatus("not-found");
-        return;
-      }
-
-      setBooks(data.books);
-      setVerifiedEmail(email);
-      setStatus("found");
+      setStatus("sent");
     } catch {
       setErrorMsg("Error de conexión. Intenta nuevamente.");
       setStatus("error");
@@ -106,7 +83,7 @@ export default function EbookRecuperarDescarga() {
               padding: "28px 24px",
             }}
           >
-            {status === "found" ? (
+            {status === "sent" ? (
               <div>
                 <p
                   style={{
@@ -118,7 +95,7 @@ export default function EbookRecuperarDescarga() {
                     textAlign: "center",
                   }}
                 >
-                  COMPRA VERIFICADA
+                  EMAIL ENVIADO
                 </p>
                 <p
                   className="text-sm"
@@ -130,81 +107,13 @@ export default function EbookRecuperarDescarga() {
                     textAlign: "center",
                   }}
                 >
-                  {books.length === 1
-                    ? "Elegí el formato que querés descargar:"
-                    : `Encontramos ${books.length} libros en tu compra:`}
+                  Si existe una compra asociada a este email, vas a recibir enlaces nuevos en unos minutos.
                 </p>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                  {books.map((book) => (
-                    <div key={book.resource}>
-                      {books.length > 1 && (
-                        <p
-                          style={{
-                            color: "var(--bone)",
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "0.78rem",
-                            letterSpacing: "0.06em",
-                            marginBottom: 10,
-                          }}
-                        >
-                          {book.title}
-                        </p>
-                      )}
-                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                        <a
-                          href={downloadUrl(verifiedEmail, book.resource, "movil")}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 8,
-                            padding: "12px 20px",
-                            background: "var(--champagne)",
-                            color: "var(--obsidian)",
-                            borderRadius: 2,
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "0.78rem",
-                            letterSpacing: "0.08em",
-                            textDecoration: "none",
-                          }}
-                        >
-                          <DownloadIcon />
-                          Versión móvil (recomendada)
-                        </a>
-                        <a
-                          href={downloadUrl(verifiedEmail, book.resource, "a4")}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 8,
-                            padding: "12px 20px",
-                            background: "transparent",
-                            border: "1px solid rgba(255,255,255,0.15)",
-                            color: "var(--ash)",
-                            borderRadius: 2,
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "0.78rem",
-                            letterSpacing: "0.08em",
-                            textDecoration: "none",
-                          }}
-                        >
-                          <DownloadIcon />
-                          Versión A4 (para imprimir)
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
                 <div style={{ textAlign: "center" }}>
                   <button
                     onClick={() => {
                       setStatus("idle");
                       setEmail("");
-                      setVerifiedEmail("");
-                      setBooks([]);
                     }}
                     style={{
                       color: "var(--smoke)",
@@ -259,7 +168,7 @@ export default function EbookRecuperarDescarga() {
                   }}
                 />
 
-                {(status === "not-found" || status === "error") && (
+                {status === "error" && (
                   <p
                     style={{
                       color: "rgba(217,106,106,0.9)",

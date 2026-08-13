@@ -17,7 +17,7 @@ function formatFunnelSection(report: AnalyticsReport): string {
     `Funnel (últimos ${report.windowDays} días):`,
     ...lines,
     `  Conversión total (page_view → purchase_confirmed): ${pct(conversion)}`,
-    `  Tasa de combo (ebook_combo_toggle / page_view): ${pct(report.comboToggleRate)}`,
+    `  Tasa de selección de oferta (offer_selected / page_view): ${pct(report.offerSelectionRate)}`,
   ].join("\n");
 }
 

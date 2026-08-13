@@ -10,3 +10,9 @@ export function trackEbookEvent(name: string, properties: Record<string, unknown
   if (!posthog.__loaded) return;
   posthog.capture(name, properties);
 }
+
+/** Identificador anónimo del navegador para unir eventos cliente/servidor. */
+export function getEbookAnalyticsDistinctId(): string | undefined {
+  if (!posthog.__loaded) return undefined;
+  return posthog.get_distinct_id();
+}

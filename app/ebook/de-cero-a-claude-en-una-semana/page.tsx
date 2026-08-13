@@ -15,6 +15,7 @@ import { getCrossSellEntries } from "@/lib/ebook-crossell";
 import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
 import { EBOOK_PRODUCT_THEATER_CONTENT } from "@/lib/ebook-product-theater";
 import { resolveBundleSelectionFromUrl } from "@/lib/ebook-bundles";
+import { getEbookBundleOffers } from "@/lib/ebook-offers";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 
 // Necesario para que el bloque "sumá otros ebooks" de EbookPricing pase de
@@ -164,6 +165,7 @@ export default async function EbookPage({
   searchParams: Promise<SearchParams>;
 }) {
   const crossSellEntries = getCrossSellEntries(DEFAULT_EBOOK_RESOURCE);
+  const bundleOffers = getEbookBundleOffers(DEFAULT_EBOOK_RESOURCE);
   const crossSellPrices = Object.fromEntries(await Promise.all(crossSellEntries.map(async (entry) => [
     entry.resource,
     (await getCurrentPrice(entry.resource).catch(() => ({ price: entry.tierPrices.regular }))).price,
@@ -202,6 +204,7 @@ export default async function EbookPage({
         resource={DEFAULT_EBOOK_RESOURCE}
         crossSellEntries={crossSellEntries}
         crossSellPrices={crossSellPrices}
+        bundleOffers={bundleOffers}
         {...urlSelection}
       />
       <EbookFAQ />

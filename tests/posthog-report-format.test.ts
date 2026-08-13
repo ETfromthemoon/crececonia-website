@@ -7,12 +7,13 @@ function baseReport(overrides: Partial<AnalyticsReport> = {}): AnalyticsReport {
     windowDays: 7,
     funnel: [
       { step: "page_view", count: 100 },
-      { step: "combo_toggle", count: 10 },
-      { step: "checkout_started", count: 20 },
+      { step: "offer_view", count: 15 },
+      { step: "offer_selected", count: 10 },
+      { step: "checkout_created", count: 20 },
       { step: "purchase_confirmed", count: 8 },
     ],
     byVariant: [],
-    comboToggleRate: 0.1,
+    offerSelectionRate: 0.1,
     generatedAt: "2026-07-30T00:00:00.000Z",
     ...overrides,
   };

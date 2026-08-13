@@ -2,8 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const HOGQL_RESPONSE = {
   results: [
-    ["ebook_combo_toggle", null, 18],
-    ["ebook_checkout_started", null, 22],
+    ["ebook_bundle_offer_view", null, 18],
+    ["ebook_bundle_offer_selected", null, 12],
+    ["ebook_checkout_created", null, 22],
     ["ebook_page_view", "control", 61],
     ["ebook_page_view", "variant-b", 59],
     ["ebook_purchase_confirmed", "control", 3],
@@ -35,7 +36,7 @@ describe("fetchAnalyticsReport", () => {
     );
   });
 
-  it("parsea la respuesta de HogQL en funnel, byVariant y comboToggleRate", async () => {
+  it("parsea la respuesta de HogQL en funnel, variantes y selección de oferta", async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => HOGQL_RESPONSE,
@@ -50,12 +51,13 @@ describe("fetchAnalyticsReport", () => {
     expect(report.funnel).toEqual(
       expect.arrayContaining([
         { step: "page_view", count: 120 },
-        { step: "combo_toggle", count: 18 },
-        { step: "checkout_started", count: 22 },
+        { step: "offer_view", count: 18 },
+        { step: "offer_selected", count: 12 },
+        { step: "checkout_created", count: 22 },
         { step: "purchase_confirmed", count: 9 },
       ])
     );
-    expect(report.comboToggleRate).toBeCloseTo(18 / 120);
+    expect(report.offerSelectionRate).toBeCloseTo(12 / 120);
     expect(report.byVariant).toEqual(
       expect.arrayContaining([
         {

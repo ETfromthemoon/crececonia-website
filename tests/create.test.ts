@@ -11,13 +11,19 @@ const { mockGetCurrentPrice } = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/ebook-pricing", () => ({ getCurrentPrice: mockGetCurrentPrice }));
 
-const { mockPendingInsert, mockValidateDiscount } = vi.hoisted(() => ({
+const { mockPendingInsert, mockPendingDelete, mockValidateDiscount } = vi.hoisted(() => ({
   mockPendingInsert: vi.fn().mockResolvedValue({ error: null }),
+  mockPendingDelete: vi.fn().mockResolvedValue({ error: null }),
   mockValidateDiscount: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase", () => ({
-  getSupabaseAdmin: () => ({ from: () => ({ insert: mockPendingInsert }) }),
+  getSupabaseAdmin: () => ({
+    from: () => ({
+      insert: mockPendingInsert,
+      delete: () => ({ eq: mockPendingDelete }),
+    }),
+  }),
 }));
 
 vi.mock("@/lib/discount-codes", () => ({
@@ -198,24 +204,26 @@ describe("POST /api/flow/create — 1 solo libro (comportamiento existente)", ()
     expect(order).not.toContain("super-early");
   });
 
-  it("la venta sigue si falla el registro de la orden pendiente", async () => {
+  it("no inicia Flow si falla el registro de la orden pendiente", async () => {
     flowOk();
     mockPendingInsert.mockResolvedValueOnce({ error: { message: "DB down" } });
     const res = await POST(postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE] }));
-    expect(res.status).toBe(200);
-    expect((await res.json()).redirectUrl).toContain("tok_ok");
+    expect(res.status).toBe(503);
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("captura ebook_checkout_started con el resource, tier y cantidad de items", async () => {
+  it("captura una orden de checkout canónica con resource, monto y cantidad de items", async () => {
     flowOk();
     await POST(postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE] }));
     expect(mockCaptureServerEvent).toHaveBeenCalledWith(
-      "ebook_checkout_started",
+      "ebook_checkout_created",
       "user@test.com",
       expect.objectContaining({
         resource: DEFAULT_EBOOK_RESOURCE,
         item_count: 1,
         has_discount_code: false,
+        amount: 10800,
+        order_id: expect.stringMatching(/^ebook-/),
       })
     );
   });

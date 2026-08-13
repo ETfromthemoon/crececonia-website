@@ -93,10 +93,10 @@ describe("computeBundleTotal", () => {
 });
 
 describe("EBOOK_BUNDLES", () => {
-  it("tiene los 4 bundles nombrados del lanzamiento", () => {
+  it("tiene las rutas comerciales nombradas", () => {
     const slugs = EBOOK_BUNDLES.map((b) => b.slug).sort();
     expect(slugs).toEqual(
-      ["coleccion-completa", "ruta-constructor", "ruta-negocio", "ruta-operador"].sort()
+      ["coleccion-completa", "ruta-automatizacion", "ruta-constructor", "ruta-negocio", "ruta-operador"].sort()
     );
   });
 
@@ -116,12 +116,9 @@ describe("EBOOK_BUNDLES", () => {
     }
   });
 
-  it("todo bundle incluye el libro ancla (De cero a Claude) primero", () => {
-    // El link de compra de cada bundle apunta a la página del primer resource
-    // (?bundle=slug preselecciona el resto) — si el ancla no fuera el primero,
-    // el link llevaría a la página equivocada.
+  it("cada bundle tiene un libro ancla válido para abrir su propia página", () => {
     for (const bundle of EBOOK_BUNDLES) {
-      expect(bundle.resources[0]).toBe("ebook:de-cero-a-claude-en-una-semana");
+      expect(getCatalogEntry(bundle.resources[0])?.active).toBe(true);
     }
   });
 
@@ -148,6 +145,13 @@ describe("EBOOK_BUNDLES", () => {
     expect(bundle.resources).toEqual([
       "ebook:de-cero-a-claude-en-una-semana",
       "ebook:creacion-de-webs-con-ia",
+    ]);
+  });
+
+  it("Ruta Automatización une Claude Experto con Agentes de IA", () => {
+    expect(getBundle("ruta-automatizacion")?.resources).toEqual([
+      "ebook:claude-nivel-experto",
+      "ebook:agentes-de-ia",
     ]);
   });
 

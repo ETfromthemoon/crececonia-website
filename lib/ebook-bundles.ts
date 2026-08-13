@@ -120,6 +120,12 @@ export const EBOOK_BUNDLES: EbookBundle[] = [
     pitch: "Para quien quiere construir y lanzar sitios. 244 páginas, de los fundamentos al proyecto real.",
     resources: ["ebook:de-cero-a-claude-en-una-semana", "ebook:creacion-de-webs-con-ia"],
   },
+  {
+    slug: "ruta-automatizacion",
+    title: "Ruta Automatización",
+    pitch: "Convierte dominio avanzado de Claude en agentes que resuelven trabajo real. Sin programar.",
+    resources: ["ebook:claude-nivel-experto", "ebook:agentes-de-ia"],
+  },
 ];
 
 export function getBundle(slug: string): EbookBundle | undefined {
@@ -128,6 +134,7 @@ export function getBundle(slug: string): EbookBundle | undefined {
 
 export interface EbookPricingUrlSelection {
   initialSelectedExtras?: string[];
+  initialOfferId?: string;
   initialPromoCode?: string;
 }
 
@@ -147,10 +154,13 @@ export function resolveBundleSelectionFromUrl(
   const bundleSlug = typeof searchParams.bundle === "string" ? searchParams.bundle : undefined;
   const bundle = bundleSlug ? getBundle(bundleSlug) : undefined;
 
-  if (bundle) {
+  if (bundle?.resources.includes(resource)) {
     const live = new Set(liveResources);
+    const initialSelectedExtras = bundle.resources.filter((r) => r !== resource && live.has(r));
+    if (initialSelectedExtras.length !== bundle.resources.length - 1) return {};
     return {
-      initialSelectedExtras: bundle.resources.filter((r) => r !== resource && live.has(r)),
+      initialSelectedExtras,
+      initialOfferId: bundle.slug,
     };
   }
 

@@ -11,6 +11,7 @@ import {
   EBOOK_CATALOG,
 } from "@/lib/ebook-catalog";
 import { computeBundleTotal } from "@/lib/ebook-bundles";
+import { getOfferIdForResources } from "@/lib/ebook-offers";
 import { captureServerEvent } from "@/lib/posthog-server";
 
 const SITE_URL = process.env.SITE_URL ?? "https://www.crececonia.cl";
@@ -19,11 +20,28 @@ function randomId(): string {
   return Math.random().toString(36).slice(2, 8);
 }
 
+async function discardPendingOrder(db: ReturnType<typeof getSupabaseAdmin>, commerceOrder: string) {
+  try {
+    const { error } = await db.from("ebook_pending_orders").delete().eq("commerce_order", commerceOrder);
+    if (error) console.error(`[flow/create] no se pudo limpiar ${commerceOrder}:`, error.message);
+  } catch (err) {
+    console.error(`[flow/create] no se pudo limpiar ${commerceOrder}:`, err);
+  }
+}
+
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const email: string = body?.email ?? "";
   const discountCode: string | undefined = body?.discountCode || undefined;
   const previewKey: string | undefined = body?.previewKey || undefined;
+  const analyticsDistinctId =
+    typeof body?.analyticsDistinctId === "string" && body.analyticsDistinctId.length <= 200
+      ? body.analyticsDistinctId
+      : undefined;
+  const pricingVariant =
+    typeof body?.pricingVariant === "string" && body.pricingVariant.length <= 80
+      ? body.pricingVariant
+      : undefined;
   const resources: string[] =
     Array.isArray(body?.resources) && body.resources.length > 0
       ? body.resources
@@ -109,25 +127,25 @@ export async function POST(request: Request) {
     resource,
     tier: priceInfos[i].tier,
     amount: discountCode ? finalAmount : bundle.items[i].amount,
+    analytics_distinct_id: analyticsDistinctId,
+    pricing_variant: pricingVariant,
   }));
 
-  // Guardar el detalle es contabilidad, no un requisito para cobrar: si
-  // Supabase falla acá NO abortamos la venta. El webhook de confirmación tiene
-  // fallback (reconstruye el tier desde el monto, para 1 solo libro) para
-  // cuando no encuentra la fila.
-  try {
-    const { error: pendingError } = await getSupabaseAdmin()
-      .from("ebook_pending_orders")
-      .insert({
-        commerce_order: commerceOrder,
-        resources: pendingResources,
-        discount_code: appliedCode ?? null,
-      });
-    if (pendingError) throw new Error(pendingError.message);
-  } catch (err) {
-    console.error(
-      `[flow/create] no se registró la orden pendiente ${commerceOrder} (resources=${resources.join(",")}):`,
-      err
+  // El manifiesto es la fuente de verdad de entrega del combo. Si no puede
+  // persistirse, no se puede iniciar un cobro que luego no sabríamos entregar.
+  const db = getSupabaseAdmin();
+  const { error: pendingError } = await db
+    .from("ebook_pending_orders")
+    .insert({
+      commerce_order: commerceOrder,
+      resources: pendingResources,
+      discount_code: appliedCode ?? null,
+    });
+  if (pendingError) {
+    console.error(`[flow/create] no se registró la orden pendiente ${commerceOrder}:`, pendingError.message);
+    return NextResponse.json(
+      { error: "No pudimos preparar tu orden. Intenta nuevamente." },
+      { status: 503 }
     );
   }
 
@@ -161,6 +179,7 @@ export async function POST(request: Request) {
   });
 
   if (!flowRes.ok) {
+    await discardPendingOrder(db, commerceOrder);
     return NextResponse.json(
       { error: "Error al conectar con el proveedor de pago." },
       { status: 502 }
@@ -169,18 +188,29 @@ export async function POST(request: Request) {
 
   const data = await flowRes.json();
   if (!data.url || !data.token) {
+    await discardPendingOrder(db, commerceOrder);
     return NextResponse.json(
       { error: "Respuesta inesperada del proveedor de pago." },
       { status: 502 }
     );
   }
 
-  captureServerEvent("ebook_checkout_started", email, {
-    resource: resources[0],
-    tier: priceInfos[0].tier,
-    item_count: resources.length,
-    has_discount_code: Boolean(discountCode),
-  }).catch((err) => console.error("[flow/create] falló el evento de PostHog:", err));
+  const offerId = getOfferIdForResources(resources);
+  try {
+    await captureServerEvent("ebook_checkout_created", analyticsDistinctId ?? email, {
+      resource: resources[0],
+      tier: priceInfos[0].tier,
+      item_count: resources.length,
+      has_discount_code: Boolean(discountCode),
+      resources,
+      offer_id: offerId,
+      amount: finalAmount,
+      order_id: commerceOrder,
+      pricing_variant: pricingVariant,
+    });
+  } catch (err) {
+    console.error("[flow/create] falló el evento de PostHog:", err);
+  }
 
-  return NextResponse.json({ redirectUrl: `${data.url}?token=${data.token}` });
+  return NextResponse.json({ redirectUrl: `${data.url}?token=${data.token}`, orderId: commerceOrder });
 }

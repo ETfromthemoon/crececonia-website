@@ -1,6 +1,11 @@
 const PROJECT_ID = "533562"; // Settings → General → Project ID en el dashboard de PostHog
 
-export type FunnelStep = "page_view" | "combo_toggle" | "checkout_started" | "purchase_confirmed";
+export type FunnelStep =
+  | "page_view"
+  | "offer_view"
+  | "offer_selected"
+  | "checkout_created"
+  | "purchase_confirmed";
 
 export interface FunnelStepResult {
   step: FunnelStep;
@@ -19,14 +24,15 @@ export interface AnalyticsReport {
   windowDays: number;
   funnel: FunnelStepResult[];
   byVariant: VariantComparison[];
-  comboToggleRate: number;
+  offerSelectionRate: number;
   generatedAt: string;
 }
 
 const EVENT_TO_STEP: Record<string, FunnelStep> = {
   ebook_page_view: "page_view",
-  ebook_combo_toggle: "combo_toggle",
-  ebook_checkout_started: "checkout_started",
+  ebook_bundle_offer_view: "offer_view",
+  ebook_bundle_offer_selected: "offer_selected",
+  ebook_checkout_created: "checkout_created",
   ebook_purchase_confirmed: "purchase_confirmed",
 };
 
@@ -36,7 +42,7 @@ async function runHogQlQuery(apiKey: string, host: string, sinceIso: string): Pr
   const query = `
     SELECT event, JSONExtractString(properties, 'pricing_variant') AS variant, count() AS total
     FROM events
-    WHERE event IN ('ebook_page_view', 'ebook_combo_toggle', 'ebook_checkout_started', 'ebook_purchase_confirmed')
+    WHERE event IN ('ebook_page_view', 'ebook_bundle_offer_view', 'ebook_bundle_offer_selected', 'ebook_checkout_created', 'ebook_purchase_confirmed')
       AND timestamp >= '${sinceIso}'
     GROUP BY event, variant
   `;
@@ -80,8 +86,9 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
 
   const funnelTotals: Record<FunnelStep, number> = {
     page_view: 0,
-    combo_toggle: 0,
-    checkout_started: 0,
+    offer_view: 0,
+    offer_selected: 0,
+    checkout_created: 0,
     purchase_confirmed: 0,
   };
 
@@ -104,7 +111,7 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
         purchasesConfirmed: 0,
       };
       if (step === "page_view") entry.pageViews += total;
-      if (step === "checkout_started") entry.checkoutsStarted += total;
+      if (step === "checkout_created") entry.checkoutsStarted += total;
       if (step === "purchase_confirmed") entry.purchasesConfirmed += total;
       variantTotals.set(variant, entry);
     }
@@ -121,14 +128,14 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
     conversionRate: totals.pageViews > 0 ? totals.purchasesConfirmed / totals.pageViews : 0,
   }));
 
-  const comboToggleRate =
-    funnelTotals.page_view > 0 ? funnelTotals.combo_toggle / funnelTotals.page_view : 0;
+  const offerSelectionRate =
+    funnelTotals.page_view > 0 ? funnelTotals.offer_selected / funnelTotals.page_view : 0;
 
   return {
     windowDays,
     funnel,
     byVariant,
-    comboToggleRate,
+    offerSelectionRate,
     generatedAt: now.toISOString(),
   };
 }

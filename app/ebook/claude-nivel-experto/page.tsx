@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getCatalogEntry, isCatalogEntryLive, isAdminPreviewKey } from "@/lib/ebook-catalog";
 import { getCrossSellEntries } from "@/lib/ebook-crossell";
 import { resolveBundleSelectionFromUrl } from "@/lib/ebook-bundles";
+import { getEbookBundleOffers } from "@/lib/ebook-offers";
 import EbookComingSoon from "@/components/EbookComingSoon";
 import EbookGenericHero from "@/components/EbookGenericHero";
 import EbookGenericTOC from "@/components/EbookGenericTOC";
@@ -88,6 +89,7 @@ export default async function ClaudeNivelExpertoPage({
   }
 
   const crossSellEntries = getCrossSellEntries(RESOURCE);
+  const bundleOffers = getEbookBundleOffers(RESOURCE);
   const crossSellPrices = Object.fromEntries(await Promise.all(crossSellEntries.map(async (item) => [
     item.resource,
     (await getCurrentPrice(item.resource).catch(() => ({ price: item.tierPrices.regular }))).price,
@@ -153,6 +155,7 @@ export default async function ClaudeNivelExpertoPage({
         resource={RESOURCE}
         crossSellEntries={crossSellEntries}
         crossSellPrices={crossSellPrices}
+        bundleOffers={bundleOffers}
         previewKey={previewKey}
         {...urlSelection}
       />

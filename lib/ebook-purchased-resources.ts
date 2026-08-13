@@ -41,8 +41,9 @@ export async function getPurchasedBooksByToken(token: string): Promise<Purchased
     return withTitles(purchases.map((row) => row.resource));
   }
 
-  // Fallback: el webhook todavía no confirmó. Reconstruir desde la orden
-  // pendiente, que se guarda al crear el pago.
+  // Fallback: Flow redirige y confirma en paralelo. Solo se usa el manifiesto
+  // pendiente si Flow confirma que el pago está acreditado; antes se podía
+  // mostrar una descarga a partir de un token que aún no estaba pagado.
   try {
     const apiKey = process.env.FLOW_API_KEY;
     const secretKey = process.env.FLOW_SECRET_KEY;
@@ -56,6 +57,7 @@ export async function getPurchasedBooksByToken(token: string): Promise<Purchased
     if (!res.ok) return [];
 
     const payment = await res.json();
+    if (payment?.status !== 2) return [];
     const commerceOrder: string | undefined = payment?.commerceOrder;
     if (!commerceOrder) return [];
 

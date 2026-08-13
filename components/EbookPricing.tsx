@@ -5,7 +5,8 @@ import type { PriceInfo } from "@/lib/ebook-pricing";
 import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-resource-ids";
 import type { EbookCatalogEntry } from "@/lib/ebook-catalog";
 import { computeBundleTotal } from "@/lib/ebook-bundles";
-import { trackEbookEvent } from "@/lib/analytics";
+import type { EbookBundleOffer } from "@/lib/ebook-offers";
+import { getEbookAnalyticsDistinctId, trackEbookEvent } from "@/lib/analytics";
 import { useFeatureFlagVariantKey } from "posthog-js/react";
 import EbookSectionHeading from "./EbookSectionHeading";
 import EbookSoldCounter from "./EbookSoldCounter";
@@ -42,6 +43,10 @@ type EbookPricingProps = {
    * revela nombres de combos y qué libros los componen antes del anuncio.
    */
   initialSelectedExtras?: string[];
+  /** Ofertas comerciales ya filtradas en el servidor. */
+  bundleOffers?: EbookBundleOffer[];
+  /** Identidad de la oferta activada desde un link de bundle. */
+  initialOfferId?: string;
   /** Código de descuento a auto-aplicar al montar (desde un link `?promo=CODIGO`). */
   initialPromoCode?: string;
   /**
@@ -86,6 +91,8 @@ export default function EbookPricing({
   crossSellEntries = [],
   crossSellPrices = {},
   initialSelectedExtras,
+  bundleOffers = [],
+  initialOfferId,
   initialPromoCode,
   previewKey,
 }: EbookPricingProps) {
@@ -102,6 +109,7 @@ export default function EbookPricing({
   const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
   const [isDiscountOpen, setIsDiscountOpen] = useState(Boolean(initialPromoCode));
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
+  const [selectedOfferId, setSelectedOfferId] = useState<string | undefined>(initialOfferId);
 
   async function handleApplyDiscount(codeOverride?: string) {
     const code = codeOverride ?? discountInput;
@@ -149,6 +157,7 @@ export default function EbookPricing({
 
     if (initialSelectedExtras && initialSelectedExtras.length > 0) {
       setSelectedExtras(initialSelectedExtras);
+      setSelectedOfferId(initialOfferId);
       return; // el combo y el código de descuento son mutuamente excluyentes
     }
 
@@ -175,6 +184,18 @@ export default function EbookPricing({
   useEffect(() => {
     trackEbookEvent("ebook_page_view", { resource, pricing_variant: pricingVariant });
   }, [resource, pricingVariant]);
+
+  useEffect(() => {
+    for (const offer of bundleOffers) {
+      trackEbookEvent("ebook_bundle_offer_view", {
+        resource,
+        offer_id: offer.id,
+        item_count: offer.resources.length,
+        resources: offer.resources,
+        pricing_variant: pricingVariant,
+      });
+    }
+  }, [bundleOffers, pricingVariant, resource]);
 
   const tier = priceInfo?.tier ?? "regular";
   const tierInfo = TIER_LABELS[tier] ?? TIER_LABELS.regular;
@@ -226,10 +247,24 @@ export default function EbookPricing({
     // El combo y el código de descuento nunca se combinan — sumar un libro
     // limpia cualquier código ya aplicado.
     setAppliedDiscount(null);
+    setSelectedOfferId(undefined);
     trackEbookEvent("ebook_combo_toggle", {
       resource,
       extra_resource: extraResource,
       action: checked ? "add" : "remove",
+      pricing_variant: pricingVariant,
+    });
+  }
+
+  function selectOffer(offer: EbookBundleOffer) {
+    setSelectedExtras(offer.extras);
+    setSelectedOfferId(offer.id);
+    setAppliedDiscount(null);
+    trackEbookEvent("ebook_bundle_offer_selected", {
+      resource,
+      offer_id: offer.id,
+      item_count: offer.resources.length,
+      resources: offer.resources,
       pricing_variant: pricingVariant,
     });
   }
@@ -240,10 +275,12 @@ export default function EbookPricing({
     setStatus("loading");
     setErrorMsg("");
 
-    trackEbookEvent("ebook_checkout_started", {
+    trackEbookEvent("ebook_checkout_requested", {
       resource,
       tier,
       item_count: selectedResources.length,
+      resources: selectedResources,
+      offer_id: selectedOfferId,
       has_discount_code: Boolean(appliedDiscount),
       pricing_variant: pricingVariant,
     });
@@ -256,6 +293,8 @@ export default function EbookPricing({
         resources: selectedResources,
         discountCode: isCombo ? undefined : appliedDiscount?.code,
         previewKey,
+        analyticsDistinctId: getEbookAnalyticsDistinctId(),
+        pricingVariant,
       }),
     });
 
@@ -373,6 +412,47 @@ export default function EbookPricing({
 
           {/* Form */}
           <form onSubmit={handleSubmit} style={{ padding: "28px 36px", display: "flex", flexDirection: "column" }}>
+            {bundleOffers.length > 0 && (
+              <div style={{ marginBottom: 18 }}>
+                <p
+                  style={{
+                    color: "#4e4d4d",
+                    fontSize: "0.75rem",
+                    fontFamily: "var(--font-mono)",
+                    letterSpacing: "0.08em",
+                    marginBottom: 8,
+                  }}
+                >
+                  Rutas recomendadas
+                </p>
+                {bundleOffers.map((offer) => (
+                  <button
+                    key={offer.id}
+                    type="button"
+                    onClick={() => selectOffer(offer)}
+                    aria-pressed={selectedOfferId === offer.id}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      background: selectedOfferId === offer.id ? "rgba(113,134,65,0.12)" : "transparent",
+                      border: "1px solid rgba(0,0,0,0.14)",
+                      borderRadius: 12,
+                      padding: "10px 12px",
+                      color: "#242424",
+                      marginBottom: 8,
+                      fontFamily: "var(--font-mono)",
+                    }}
+                  >
+                    <span style={{ display: "block", fontSize: "0.8rem" }}>{offer.title}</span>
+                    <span style={{ display: "block", color: "#4e4d4d", fontSize: "0.7rem", lineHeight: 1.45, marginTop: 4 }}>
+                      {offer.pitch}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
             {otherActiveEbooks.length > 0 && (
               <div style={{ marginBottom: 18 }}>
                 <p
