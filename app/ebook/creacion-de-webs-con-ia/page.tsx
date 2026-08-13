@@ -10,6 +10,7 @@ import EbookGenericFAQ from "@/components/EbookGenericFAQ";
 import EbookPricing from "@/components/EbookPricing";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookCursorGlow from "@/components/EbookCursorGlow";
+import EbookPageFrame from "@/components/EbookPageFrame";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 
 export const dynamic = "force-dynamic";
@@ -96,7 +97,7 @@ export default async function CreacionDeWebsConIAPage({
 
   if (!isCatalogEntryLive(entry) && !isPreview) {
     return (
-      <main className="monad">
+      <EbookPageFrame currentResource={RESOURCE}>
         <EbookComingSoon
           title="Creación de Webs con IA."
           description="Diseña y lanza sitios web completos usando inteligencia artificial, sin escribir código desde cero. Disponible muy pronto."
@@ -104,7 +105,7 @@ export default async function CreacionDeWebsConIAPage({
           ctaSource="ebook-creacion-webs-proximamente"
           resource={RESOURCE}
         />
-      </main>
+      </EbookPageFrame>
     );
   }
 
@@ -120,7 +121,7 @@ export default async function CreacionDeWebsConIAPage({
   );
 
   return (
-    <main className="monad">
+    <EbookPageFrame currentResource={RESOURCE}>
       <EbookCursorGlow />
       <EbookGenericHero
         resource={RESOURCE}
@@ -161,6 +162,6 @@ export default async function CreacionDeWebsConIAPage({
         {...urlSelection}
       />
       <EbookGenericFAQ faqs={FAQS} />
-    </main>
+    </EbookPageFrame>
   );
 }

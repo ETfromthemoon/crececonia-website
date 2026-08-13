@@ -7,14 +7,13 @@ import { whatsappUrl } from "@/lib/contact";
 
 const API = "https://autodrive.cl";
 
-const CHAT_WHATSAPP_URL = whatsappUrl("Hola! Vengo del chat de la web. Quiero un agente IA para mi negocio");
-
 type Message = {
   id: string;
   role: "user" | "bot";
   content: string;
   sugerir_evaluacion?: boolean;
   lead_capturado?: boolean;
+  fallback?: boolean;
 };
 
 // Alineadas con lo que la landing realmente vende (agente IA en 48h, USD
@@ -50,7 +49,7 @@ export default function ChatWidget() {
   const [input, setInput]         = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [loading, setLoading]     = useState(false);
-  const [initDone, setInitDone]   = useState(false);
+  const [whatsappMessage, setWhatsappMessage] = useState("");
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
@@ -65,12 +64,22 @@ export default function ChatWidget() {
     if (open) setTimeout(() => inputRef.current?.focus(), 120);
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
+
   // Una sola función para abrir sesión: antes initSession y resetChat tenían
   // el mismo fetch y el mismo fallback duplicados línea por línea.
   const startSession = useCallback(async () => {
     setMessages([]);
     setInput("");
     setSessionId(null);
+    setWhatsappMessage("");
     try {
       const r = await fetch(`${API}/api/public/widget/inicio`, {
         method: "POST",
@@ -82,14 +91,17 @@ export default function ChatWidget() {
       setSessionId(j.session_id);
       setMessages([{ id: "init", role: "bot", content: j.mensaje }]);
     } catch {
-      setMessages([{ id: "init", role: "bot", content: SALUDO_FALLBACK }]);
+      setMessages([{ id: "init", role: "bot", content: SALUDO_FALLBACK, fallback: true }]);
     }
   }, []);
 
   const handleOpen = () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
     setOpen(true);
-    if (!initDone) {
-      setInitDone(true);
+    if (!sessionId) {
       startSession();
     }
   };
@@ -99,6 +111,23 @@ export default function ChatWidget() {
     if (!trimmed || loading) return;
 
     const userMsg: Message = { id: `u-${Date.now()}`, role: "user", content: trimmed };
+
+    if (!sessionId) {
+      setWhatsappMessage(trimmed);
+      setMessages((prev) => [
+        ...prev,
+        userMsg,
+        {
+          id: `f-${Date.now()}`,
+          role: "bot",
+          fallback: true,
+          content: "No pudimos conectar el asistente en este momento. Puedes continuar por WhatsApp con tu consulta preparada.",
+        },
+      ]);
+      setInput("");
+      return;
+    }
+
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setLoading(true);
@@ -121,9 +150,16 @@ export default function ChatWidget() {
       };
       setMessages((prev) => [...prev, botMsg]);
     } catch {
+      setSessionId(null);
+      setWhatsappMessage(trimmed);
       setMessages((prev) => [
         ...prev,
-        { id: `e-${Date.now()}`, role: "bot", content: "Disculpa, hubo un error. Intenta de nuevo." },
+        {
+          id: `e-${Date.now()}`,
+          role: "bot",
+          fallback: true,
+          content: "No pudimos completar esa respuesta. Puedes continuar por WhatsApp con tu consulta preparada.",
+        },
       ]);
     } finally {
       setLoading(false);
@@ -131,6 +167,11 @@ export default function ChatWidget() {
   };
 
   const showQuickReplies = messages.length === 1 && !loading;
+  const directChatUrl = whatsappUrl(
+    whatsappMessage
+      ? `Hola, vengo del chat de CrececonIA. Mi consulta es: ${whatsappMessage}`
+      : "Hola, vengo del chat de CrececonIA y quiero orientación.",
+  );
 
   if (pathname === "/ia") return null;
 
@@ -146,6 +187,9 @@ export default function ChatWidget() {
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className="site-chat-panel fixed z-[60] w-[92vw] sm:w-[380px]"
+            role="dialog"
+            aria-modal="false"
+            aria-label="Asistente de CrececonIA"
             style={{
               bottom: "calc(3.5rem + 24px + 12px)", // above the FAB
               right: 16,
@@ -252,7 +296,7 @@ export default function ChatWidget() {
                     <motion.a
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
-                      href={CHAT_WHATSAPP_URL}
+                      href={directChatUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-2 text-xs px-3 py-2 transition-opacity hover:opacity-80"
@@ -265,6 +309,26 @@ export default function ChatWidget() {
                       }}
                     >
                       Quiero mi agente IA →
+                    </motion.a>
+                  )}
+
+                  {m.fallback && (
+                    <motion.a
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      href={directChatUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 text-xs px-3 py-2 transition-opacity hover:opacity-80"
+                      style={{
+                        background: "rgba(198,219,112,0.12)",
+                        border: "1px solid rgba(198,219,112,0.35)",
+                        color: "#c6db70",
+                        borderRadius: 9,
+                        fontWeight: 500,
+                      }}
+                    >
+                      Continuar por WhatsApp →
                     </motion.a>
                   )}
 
@@ -364,7 +428,7 @@ export default function ChatWidget() {
                 del bot, no tiene que buscar un CTA fuera del panel. */}
             <div className="text-center pb-2.5">
               <a
-                href={CHAT_WHATSAPP_URL}
+                href={directChatUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-opacity hover:opacity-100"

@@ -10,6 +10,7 @@ import EbookGenericFAQ from "@/components/EbookGenericFAQ";
 import EbookPricing from "@/components/EbookPricing";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookCursorGlow from "@/components/EbookCursorGlow";
+import EbookPageFrame from "@/components/EbookPageFrame";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 
 export const dynamic = "force-dynamic";
@@ -114,7 +115,7 @@ export default async function AgentesDeIAPage({
 
   if (!isCatalogEntryLive(entry) && !isPreview) {
     return (
-      <main className="monad">
+      <EbookPageFrame currentResource={RESOURCE}>
         <EbookComingSoon
           title="Agentes de IA."
           description="La guía para diseñar, automatizar y desplegar agentes de IA en tu negocio — sin la teoría de siempre. Disponible muy pronto."
@@ -122,7 +123,7 @@ export default async function AgentesDeIAPage({
           ctaSource="ebook-agentes-ia-proximamente"
           resource={RESOURCE}
         />
-      </main>
+      </EbookPageFrame>
     );
   }
 
@@ -138,7 +139,7 @@ export default async function AgentesDeIAPage({
   );
 
   return (
-    <main className="monad">
+    <EbookPageFrame currentResource={RESOURCE}>
       <EbookCursorGlow />
       <EbookGenericHero
         resource={RESOURCE}
@@ -177,6 +178,6 @@ export default async function AgentesDeIAPage({
         {...urlSelection}
       />
       <EbookGenericFAQ faqs={FAQS} />
-    </main>
+    </EbookPageFrame>
   );
 }

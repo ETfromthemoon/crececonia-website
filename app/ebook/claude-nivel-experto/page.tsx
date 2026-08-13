@@ -10,6 +10,7 @@ import EbookGenericFAQ from "@/components/EbookGenericFAQ";
 import EbookPricing from "@/components/EbookPricing";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookCursorGlow from "@/components/EbookCursorGlow";
+import EbookPageFrame from "@/components/EbookPageFrame";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 
 // Gating por hora de lanzamiento (visibleFrom en el catálogo) — no se puede
@@ -73,7 +74,7 @@ export default async function ClaudeNivelExpertoPage({
 
   if (!isCatalogEntryLive(entry) && !isPreview) {
     return (
-      <main className="monad">
+      <EbookPageFrame currentResource={RESOURCE}>
         <EbookComingSoon
           title="Claude a Nivel Experto."
           description="Las técnicas que usan los power users para dejar de conversar con Claude y ponerlo a trabajar solo. Disponible muy pronto."
@@ -81,7 +82,7 @@ export default async function ClaudeNivelExpertoPage({
           ctaSource="ebook-claude-nivel-experto-proximamente"
           resource={RESOURCE}
         />
-      </main>
+      </EbookPageFrame>
     );
   }
 
@@ -97,7 +98,7 @@ export default async function ClaudeNivelExpertoPage({
   );
 
   return (
-    <main className="monad">
+    <EbookPageFrame currentResource={RESOURCE}>
       <EbookCursorGlow />
       <EbookGenericHero
         resource={RESOURCE}
@@ -154,6 +155,6 @@ export default async function ClaudeNivelExpertoPage({
         {...urlSelection}
       />
       <EbookGenericFAQ faqs={FAQS} />
-    </main>
+    </EbookPageFrame>
   );
 }

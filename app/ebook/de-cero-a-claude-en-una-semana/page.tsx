@@ -9,6 +9,7 @@ import EbookImmersion from "@/components/EbookImmersion";
 import EbookCursorGlow from "@/components/EbookCursorGlow";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookProfileCard from "@/components/EbookProfileCard";
+import EbookPageFrame from "@/components/EbookPageFrame";
 import { getCrossSellEntries } from "@/lib/ebook-crossell";
 import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
 import { resolveBundleSelectionFromUrl } from "@/lib/ebook-bundles";
@@ -172,7 +173,7 @@ export default async function EbookPage({
   );
 
   return (
-    <main className="monad">
+    <EbookPageFrame currentResource={DEFAULT_EBOOK_RESOURCE}>
       <EbookCursorGlow />
       <EbookHero />
       <EbookImmersion />
@@ -188,6 +189,6 @@ export default async function EbookPage({
         {...urlSelection}
       />
       <EbookFAQ />
-    </main>
+    </EbookPageFrame>
   );
 }
