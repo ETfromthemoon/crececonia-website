@@ -91,7 +91,7 @@ export default function EmailPopup() {
             className="fixed inset-0 z-[81] flex items-center justify-center px-6 pointer-events-none"
           >
             <div
-              className="relative w-full max-w-md p-8 pointer-events-auto"
+              className="site-popup-shell relative w-full max-w-md p-8 pointer-events-auto"
               style={{
                 background: "var(--carbon)",
                 border: "1px solid rgba(217,179,106,0.2)",

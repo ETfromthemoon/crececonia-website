@@ -1,0 +1,57 @@
+/* Shared visual language for the site's interruptive surfaces. */
+.site-popup-shell {
+  background: linear-gradient(135deg, rgba(156,174,227,.13), transparent 42%), #17191b !important;
+  border: 1px solid rgba(198,219,112,.24) !important;
+  border-top: 2px solid #c6db70 !important;
+  border-radius: 18px !important;
+  box-shadow: 0 28px 90px rgba(0,0,0,.56), 0 0 0 1px rgba(156,174,227,.06) !important;
+  overflow: hidden;
+}
+.site-popup-shell::after {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  right: -90px;
+  bottom: -110px;
+  border: 1px solid rgba(156,174,227,.22);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.site-popup-shell h2,
+.site-popup-shell h3 {
+  font-family: var(--font-display), Arial, sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: -.045em !important;
+}
+.site-popup-shell input,
+.site-popup-shell textarea,
+.site-popup-shell select {
+  border-radius: 9px !important;
+  border-color: rgba(156,174,227,.28) !important;
+  background: rgba(10,12,14,.52) !important;
+}
+.site-popup-shell button[type="submit"],
+.site-popup-shell a[class*="cta"] {
+  border-radius: 9px !important;
+  background: #c6db70 !important;
+  color: #151618 !important;
+  box-shadow: 0 8px 24px rgba(198,219,112,.16);
+}
+.site-popup-shell-wide { max-height: calc(100vh - 48px); overflow-y: auto; }
+.site-chat-panel {
+  background: linear-gradient(145deg, rgba(156,174,227,.12), transparent 44%), #17191b !important;
+  border: 1px solid rgba(198,219,112,.26) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 26px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(156,174,227,.06) !important;
+  overflow: hidden;
+}
+.site-chat-fab {
+  border-radius: 14px !important;
+  background: #c6db70 !important;
+  border-color: rgba(198,219,112,.72) !important;
+  box-shadow: 0 12px 30px rgba(198,219,112,.22) !important;
+}
+@media (max-width: 639px) {
+  .site-popup-shell { border-radius: 18px 18px 0 0 !important; }
+}

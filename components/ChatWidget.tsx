@@ -139,7 +139,7 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed z-[60] w-[92vw] sm:w-[380px]"
+            className="site-chat-panel fixed z-[60] w-[92vw] sm:w-[380px]"
             style={{
               bottom: "calc(3.5rem + 24px + 12px)", // above the FAB
               right: 16,
@@ -382,7 +382,7 @@ export default function ChatWidget() {
         onClick={handleOpen}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.93 }}
-        className="fixed z-[61] flex items-center justify-center shadow-2xl"
+        className="site-chat-fab fixed z-[61] flex items-center justify-center shadow-2xl"
         style={{
           bottom: 16,
           right: 16,

@@ -136,7 +136,7 @@ export default function EvaluacionModal() {
             className="fixed inset-0 z-[91] flex items-center justify-center px-4 py-6 pointer-events-none overflow-y-auto"
           >
             <div
-              className="relative w-full max-w-xl my-auto pointer-events-auto"
+              className="site-popup-shell site-popup-shell-wide relative w-full max-w-xl my-auto pointer-events-auto"
               style={{
                 background: "var(--carbon)",
                 border: "1px solid rgba(217,179,106,0.22)",
