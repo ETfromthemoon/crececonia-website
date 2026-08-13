@@ -10,7 +10,9 @@ import EbookGenericFAQ from "@/components/EbookGenericFAQ";
 import EbookPricing from "@/components/EbookPricing";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookPageFrame from "@/components/EbookPageFrame";
+import EbookProductTheater from "@/components/EbookProductTheater";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
+import { EBOOK_PRODUCT_THEATER_CONTENT } from "@/lib/ebook-product-theater";
 
 export const dynamic = "force-dynamic";
 
@@ -126,19 +128,21 @@ export default async function CreacionDeWebsConIAPage({
         eyebrow="Ebook · CrececonIA · Vertical técnica · Parte 1"
         title="Creación de Webs"
         titleAccent="con IA."
-        description="Diseña y lanza sitios web completos usando inteligencia artificial, sin escribir código desde cero. 70 páginas, con un proyecto real de principio a fin."
+        description="Una metodología de ocho iteraciones para diseñar, construir y publicar una web con Claude Code. 70 páginas y un proyecto real, desde el setup hasta el lanzamiento."
         coverSrc={entry.coverSrc}
         coverAlt="Portada del ebook Creación de Webs con IA"
       />
 
+      <EbookProductTheater content={EBOOK_PRODUCT_THEATER_CONTENT[RESOURCE]} />
+
       <section className="section-y px-6">
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
-          <EbookSectionHeading kicker="Para quién es" align="left" maxWidth={720}>
-            Perfil técnico o semi-técnico{" "}
-            <em style={{ fontStyle: "italic" }}>que quiere construir de verdad.</em>
+          <EbookSectionHeading kicker="Punto de entrada" align="left" maxWidth={720}>
+            Este libro empieza donde termina la curiosidad:{" "}
+            <em style={{ fontStyle: "italic" }}>cuando quieres construir de verdad.</em>
           </EbookSectionHeading>
           <p style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: "#000", lineHeight: 1.85 }}>
-            Este libro usa Claude Code como herramienta central de desarrollo — el Nivel 3 de{" "}
+            Está pensado para un perfil técnico o semi-técnico. Usa Claude Code como herramienta central — el Nivel 3 de{" "}
             <a href="/ebook/de-cero-a-claude-en-una-semana" style={{ color: "#718641", textDecoration: "underline" }}>
               De cero a Claude en una semana
             </a>{" "}

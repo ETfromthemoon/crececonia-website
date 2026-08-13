@@ -1,0 +1,133 @@
+.proofBand {
+  background: #c6db70;
+  color: #151618;
+  border-block: 1px solid rgba(21, 22, 24, 0.22);
+}
+
+.proofInner {
+  width: min(1160px, calc(100% - 48px));
+  min-height: 104px;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.proofItem {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px 18px;
+  border-right: 1px solid rgba(21, 22, 24, 0.18);
+}
+
+.proofItem:first-child { border-left: 1px solid rgba(21, 22, 24, 0.18); }
+.proofItem strong { font: 500 clamp(1.8rem, 3vw, 2.6rem)/1 var(--font-serif-monad), Georgia, serif; }
+.proofItem span { font: 600 0.63rem/1.2 var(--font-mono); letter-spacing: 0.09em; text-transform: uppercase; }
+
+.theater {
+  width: min(1180px, calc(100% - 48px));
+  margin-inline: auto;
+  padding-block: clamp(88px, 11vw, 156px);
+  display: grid;
+  grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1.5fr);
+  gap: clamp(48px, 8vw, 112px);
+  align-items: start;
+}
+
+.theaterIntro { padding-top: 24px; }
+.kicker {
+  margin-bottom: 18px;
+  color: #657638;
+  font: 600 0.66rem/1.3 var(--font-mono);
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.theaterIntro h2,
+.journeyHeader h2,
+.outcomeHeading h2 {
+  color: #151618;
+  font-family: var(--font-serif-monad), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+
+.theaterIntro h2 { font-size: clamp(2rem, 4.2vw, 3.65rem); line-height: 1.04; }
+.theaterIntro > p:not(.kicker) { max-width: 470px; margin-top: 28px; color: #454640; font-size: 0.95rem; line-height: 1.8; }
+.textCta { display: inline-flex; gap: 12px; margin-top: 28px; color: #151618; font: 600 0.7rem var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid #718641; padding-bottom: 5px; }
+
+.previewRail {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 44px 28px;
+}
+
+.previewFigure:nth-child(even) { transform: translateY(72px); }
+.pageFrame { position: relative; padding: 10px; background: #fff; border: 1px solid rgba(21, 22, 24, 0.13); box-shadow: 0 30px 70px -34px rgba(21, 22, 24, 0.42); transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease; }
+.previewFigure:hover .pageFrame { transform: translateY(-7px); box-shadow: 0 38px 78px -34px rgba(21, 22, 24, 0.5); }
+.pageImage { width: 100%; height: auto; display: block; background: #f7f1e5; }
+.pageNumber { position: absolute; right: 18px; bottom: 16px; min-width: 30px; padding: 5px 7px; background: #151618; color: #f6f3f1; text-align: center; font: 0.58rem var(--font-mono); letter-spacing: 0.08em; }
+.previewFigure figcaption { display: grid; gap: 4px; margin-top: 15px; }
+.previewFigure figcaption strong { color: #151618; font: 500 0.82rem var(--font-mono); }
+.previewFigure figcaption span { color: #5b5c55; font: 0.72rem/1.55 var(--font-mono); }
+
+.journey {
+  padding: clamp(88px, 10vw, 140px) max(24px, calc((100vw - 1160px) / 2));
+  background: #151618;
+  color: #f6f3f1;
+}
+
+.journeyHeader { max-width: 750px; margin-bottom: 64px; }
+.journeyHeader .kicker { color: #c6db70; }
+.journeyHeader h2 { color: #f6f3f1; font-size: clamp(2.15rem, 5vw, 4.4rem); line-height: 1.02; }
+.journeyList { display: grid; grid-template-columns: repeat(3, 1fr); list-style: none; padding: 0; margin: 0; counter-reset: journey; border-top: 1px solid rgba(246, 243, 241, 0.24); }
+.journeyList li { position: relative; display: grid; grid-template-columns: auto 1fr; gap: 20px; padding: 30px 28px 0 0; border-right: 1px solid rgba(246, 243, 241, 0.18); }
+.journeyList li + li { padding-left: 28px; }
+.journeyList li:last-child { border-right: 0; }
+.stepNumber { color: #c6db70; font: 0.68rem var(--font-mono); letter-spacing: 0.12em; }
+.journeyList h3 { color: #f6f3f1; font: 500 1.1rem var(--font-mono); margin-bottom: 12px; }
+.journeyList p { color: rgba(246, 243, 241, 0.7); font-size: 0.82rem; line-height: 1.75; }
+
+.outcome {
+  width: min(1040px, calc(100% - 48px));
+  margin-inline: auto;
+  padding-block: clamp(88px, 10vw, 140px);
+}
+
+.outcomeHeading { max-width: 820px; }
+.outcomeHeading h2 { font-size: clamp(2rem, 4.6vw, 3.8rem); line-height: 1.06; }
+.outcomeCompare { margin-top: 60px; display: grid; grid-template-columns: 1fr auto 1fr; gap: 30px; align-items: center; padding-block: 32px; border-block: 1px solid rgba(21, 22, 24, 0.18); }
+.outcomeCompare > div:not(.outcomeArrow) { display: grid; gap: 12px; }
+.outcomeCompare span { color: #657638; font: 600 0.64rem var(--font-mono); letter-spacing: 0.14em; text-transform: uppercase; }
+.outcomeCompare p { color: #242520; font: 400 clamp(1rem, 2vw, 1.25rem)/1.55 var(--font-mono); }
+.outcomeArrow { color: #718641; font: 400 2.4rem var(--font-serif-monad), Georgia, serif; }
+
+@media (max-width: 840px) {
+  .proofInner { grid-template-columns: repeat(2, 1fr); }
+  .proofItem:nth-child(2) { border-right: 0; }
+  .proofItem:nth-child(3) { border-left: 1px solid rgba(21, 22, 24, 0.18); border-top: 1px solid rgba(21, 22, 24, 0.18); }
+  .proofItem:nth-child(4) { border-top: 1px solid rgba(21, 22, 24, 0.18); }
+  .theater { grid-template-columns: 1fr; }
+  .theaterIntro { max-width: 680px; }
+  .journeyList { grid-template-columns: 1fr; }
+  .journeyList li, .journeyList li + li { padding: 26px 0; border-right: 0; border-bottom: 1px solid rgba(246, 243, 241, 0.18); }
+  .journeyList li:last-child { border-bottom: 0; }
+}
+
+@media (max-width: 620px) {
+  .proofInner, .theater, .outcome { width: min(100% - 32px, 1180px); }
+  .proofItem { justify-content: flex-start; min-height: 78px; padding: 18px 12px; gap: 7px; }
+  .proofItem strong { font-size: 1.65rem; }
+  .proofItem span { font-size: 0.54rem; }
+  .previewRail { display: flex; gap: 18px; margin-inline: -16px; padding: 0 16px 20px; overflow-x: auto; scroll-snap-type: x mandatory; }
+  .previewFigure, .previewFigure:nth-child(even) { flex: 0 0 78vw; transform: none; scroll-snap-align: center; }
+  .journey { padding-inline: 20px; }
+  .outcomeCompare { grid-template-columns: 1fr; gap: 22px; }
+  .outcomeArrow { transform: rotate(90deg); width: min-content; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pageFrame { transition: none; }
+  .previewFigure:hover .pageFrame { transform: none; }
+}
