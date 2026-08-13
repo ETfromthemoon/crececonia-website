@@ -11,6 +11,7 @@ import EbookPricing from "@/components/EbookPricing";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookPageFrame from "@/components/EbookPageFrame";
 import EbookProductTheater from "@/components/EbookProductTheater";
+import EbookFit from "@/components/EbookFit";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 import { EBOOK_PRODUCT_THEATER_CONTENT } from "@/lib/ebook-product-theater";
 
@@ -166,6 +167,21 @@ export default async function AgentesDeIAPage({
           </p>
         </div>
       </section>
+
+      <EbookFit
+        title={<>Antes de construir un agente, necesitas elegir un proceso que lo justifique. <em style={{ fontStyle: "italic" }}>Este libro te ayuda a tomar esa decisión.</em></>}
+        forYou={[
+          "Tienes una tarea repetitiva y quieres evaluar si vale la pena automatizarla.",
+          "Quieres construir un primer agente sin código y entender sus límites antes de escalar.",
+          "Buscas un marco para decidir qué automatizar, qué no y cuándo pedir implementación.",
+        ]}
+        notFor={[
+          "Necesitas que alguien conecte herramientas, construya el sistema y dé soporte por ti.",
+          "Todavía no puedes nombrar un proceso repetitivo que quieras mejorar.",
+          "Buscas un chatbot genérico o una promesa de automatización sin revisar el proceso.",
+        ]}
+        alternative={{ href: "/implementacion", label: "Revisar implementación si ya tienes un caso concreto" }}
+      />
 
       <EbookGenericTOC
         title={<>7 partes, 21 capítulos,{" "}<em style={{ fontStyle: "italic" }}>un caso real de punta a punta.</em></>}

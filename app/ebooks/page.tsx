@@ -62,11 +62,11 @@ export default async function EbooksPage() {
         <div className="ebook-store-shell ebook-store-hero-grid">
           <div>
             <span className="ebook-store-kicker">Biblioteca CrececonIA · 04 títulos</span>
-            <h1>No compres más información. Elige tu <em>siguiente capacidad.</em></h1>
+            <h1>Elige el conocimiento que necesitas <em>aplicar esta semana.</em></h1>
           </div>
           <div className="ebook-store-hero-aside">
-            <p>Cuatro rutas prácticas para aprender Claude, operarlo a nivel avanzado, automatizar un negocio o construir una web.</p>
-            <a href="#catalogo">Explorar la biblioteca <span>↓</span></a>
+            <p>Cuatro rutas prácticas para aprender Claude, operarlo a nivel avanzado, automatizar un negocio o construir una web. Compra solo la que coincide con tu punto de partida.</p>
+            <a href="#elegir">Elegir mi ebook <span>↓</span></a>
           </div>
         </div>
         <div className="ebook-store-signal" aria-label="Beneficios de compra">
@@ -74,11 +74,19 @@ export default async function EbooksPage() {
         </div>
       </section>
 
+      <section id="elegir" className="ebook-store-decision">
+        <div className="ebook-store-shell ebook-store-decision-grid">
+          <div><span>Antes de elegir</span><h2>Esta ruta es para avanzar por tu cuenta.</h2></div>
+          <div><strong>Elige un ebook si</strong><p>quieres aprender y ejecutar con una ruta práctica, sin depender de sesiones ni soporte 1:1.</p></div>
+          <div><strong>No lo elijas si</strong><p>necesitas adaptar una solución a tu caso o que alguien la implemente. Revisa mentoría o implementación antes de comprar por impulso.</p></div>
+        </div>
+      </section>
+
       <section id="catalogo" className="ebook-store-catalog">
         <div className="ebook-store-shell">
           <div className="ebook-store-heading">
             <div><span>01 / Biblioteca</span><h2>Empieza por el resultado que necesitas.</h2></div>
-            <p>Cada libro funciona solo. Si buscas una progresión completa, elige una ruta más abajo.</p>
+            <p>Cada libro funciona solo. Lee para quién es y para quién no antes de elegir; si buscas una progresión completa, revisa las rutas más abajo.</p>
           </div>
           <div className="ebook-store-grid">{bookCards.map(({ key, ...card }, index) => <EbookCard key={key} index={index} {...card} />)}</div>
         </div>

@@ -10,6 +10,7 @@ import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookProfileCard from "@/components/EbookProfileCard";
 import EbookPageFrame from "@/components/EbookPageFrame";
 import EbookProductTheater from "@/components/EbookProductTheater";
+import EbookFit from "@/components/EbookFit";
 import { getCrossSellEntries } from "@/lib/ebook-crossell";
 import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
 import { EBOOK_PRODUCT_THEATER_CONTENT } from "@/lib/ebook-product-theater";
@@ -181,6 +182,20 @@ export default async function EbookPage({
       <EbookProblem />
       <EbookBenefits />
       <EbookWhoIsFor />
+      <EbookFit
+        title={<>Este ebook te da una ruta para aprender por tu cuenta. <em style={{ fontStyle: "italic" }}>No reemplaza acompañamiento ni implementación.</em></>}
+        forYou={[
+          "Quieres aprender Claude y Claude Code con un método, no acumular prompts sueltos.",
+          "Puedes reservar tiempo semanal para practicar sobre trabajo o proyectos reales.",
+          "Buscas fundamentos antes de pasar a agentes, automatizaciones o desarrollo web.",
+        ]}
+        notFor={[
+          "Necesitas que alguien adapte cada paso a tu caso o revise tu trabajo 1:1.",
+          "Quieres que construyan una automatización o sistema para tu negocio.",
+          "Solo buscas una lista rápida de prompts sin entender cuándo usarlos.",
+        ]}
+        alternative={{ href: "/mentoria", label: "Revisar mentoría si necesitas acompañamiento" }}
+      />
       <EbookTOC />
       <EbookAuthor />
       <EbookPricing
