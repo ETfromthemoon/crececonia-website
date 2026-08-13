@@ -7,7 +7,22 @@
   border-radius: 18px !important;
   box-shadow: 0 28px 90px rgba(0,0,0,.56), 0 0 0 1px rgba(156,174,227,.06) !important;
   overflow: hidden;
+  color: #f2efe8;
 }
+.site-popup-shell p,
+.site-popup-shell label,
+.site-popup-shell span,
+.ebook-popup-card p,
+.ebook-popup-card label,
+.ebook-popup-card span { color: #d6d9df !important; }
+.site-popup-shell h2,
+.site-popup-shell h3,
+.ebook-popup-card h2,
+.ebook-popup-card h3,
+.site-popup-shell strong,
+.ebook-popup-card strong { color: #f2efe8 !important; }
+.site-popup-shell a,
+.ebook-popup-card a { color: #c6db70; }
 .site-popup-shell::after,
 .ebook-popup-card::after {
   content: "";
@@ -54,7 +69,10 @@
   border-radius: 18px !important;
   box-shadow: 0 26px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(156,174,227,.06) !important;
   overflow: hidden;
+  color: #f2efe8;
 }
+.site-chat-panel input { color: #f2efe8 !important; }
+.site-chat-panel input::placeholder { color: #aeb4bf !important; opacity: 1; }
 .site-chat-fab {
   border-radius: 14px !important;
   background: #c6db70 !important;

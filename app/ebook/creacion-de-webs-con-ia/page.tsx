@@ -10,6 +10,7 @@ import EbookGenericFAQ from "@/components/EbookGenericFAQ";
 import EbookPricing from "@/components/EbookPricing";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookCursorGlow from "@/components/EbookCursorGlow";
+import { getCurrentPrice } from "@/lib/ebook-pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -108,6 +109,10 @@ export default async function CreacionDeWebsConIAPage({
   }
 
   const crossSellEntries = getCrossSellEntries(RESOURCE);
+  const crossSellPrices = Object.fromEntries(await Promise.all(crossSellEntries.map(async (item) => [
+    item.resource,
+    (await getCurrentPrice(item.resource).catch(() => ({ price: item.tierPrices.regular }))).price,
+  ])));
   const urlSelection = resolveBundleSelectionFromUrl(
     params,
     RESOURCE,
@@ -151,6 +156,7 @@ export default async function CreacionDeWebsConIAPage({
       <EbookPricing
         resource={RESOURCE}
         crossSellEntries={crossSellEntries}
+        crossSellPrices={crossSellPrices}
         previewKey={previewKey}
         {...urlSelection}
       />

@@ -30,6 +30,9 @@ type EbookPricingProps = {
    * viaje al navegador antes de tiempo.
    */
   crossSellEntries?: LiveCatalogEntry[];
+  /** Precios vigentes resueltos en servidor para que la vista previa del combo
+   * coincida con el monto que /api/flow/create vuelve a calcular. */
+  crossSellPrices?: Record<string, number>;
   /**
    * Extras a preseleccionar al montar (desde un link `?bundle=slug`), ya
    * resueltos y filtrados a libros vivos por el Server Component — mismo
@@ -81,6 +84,7 @@ type AppliedDiscount = { code: string; finalPrice: number };
 export default function EbookPricing({
   resource = DEFAULT_EBOOK_RESOURCE,
   crossSellEntries = [],
+  crossSellPrices = {},
   initialSelectedExtras,
   initialPromoCode,
   previewKey,
@@ -198,7 +202,7 @@ export default function EbookPricing({
           price:
             itemResource === resource
               ? basePrice
-              : otherActiveByResource.get(itemResource)!.tierPrices.regular,
+              : crossSellPrices[itemResource] ?? otherActiveByResource.get(itemResource)!.tierPrices.regular,
         }))
       )
     : null;

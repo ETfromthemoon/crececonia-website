@@ -23,7 +23,7 @@ export interface HubItem {
 
 async function getJSON(path: string): Promise<unknown> {
   try {
-    const r = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
+    const r = await fetch(`${API_BASE}${path}`, { next: { revalidate: 300 } });
     if (!r.ok) return null;
     return await r.json();
   } catch {

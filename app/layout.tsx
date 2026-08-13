@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "CrececonIA — Aprende, recibe dirección e implementa IA.", description: "Ebooks, mentoría e implementación de IA para personas y empresas.", images: ["/og-image.png"] },
   alternates: { canonical: SITE_URL },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
-  icons: { icon: [{ url: "/favicon-32.png", type: "image/png", sizes: "32x32" }, { url: "/icon.svg", type: "image/svg+xml" }] },
+  icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }] },
 };
 
 const jsonLd = {

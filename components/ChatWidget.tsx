@@ -72,7 +72,10 @@ export default function ChatWidget() {
     setInput("");
     setSessionId(null);
     try {
-      const r = await fetch(`${API}/api/public/widget/inicio`, { method: "POST" });
+      const r = await fetch(`${API}/api/public/widget/inicio`, {
+        method: "POST",
+        signal: AbortSignal.timeout(10000),
+      });
       if (!r.ok) throw new Error("No se pudo iniciar el chat");
       const j = await r.json();
       if (!j.session_id || !j.mensaje) throw new Error("Respuesta de chat incompleta");
@@ -177,9 +180,9 @@ export default function ChatWidget() {
                 <span
                   className="text-[11px] px-1.5 py-0.5 rounded"
                   style={{
-                    color: "var(--champagne)",
-                    background: "rgba(217,179,106,0.08)",
-                    border: "1px solid rgba(217,179,106,0.15)",
+                    color: "#c6db70",
+                    background: "rgba(198,219,112,0.1)",
+                    border: "1px solid rgba(198,219,112,0.26)",
                     fontFamily: "var(--font-mono)",
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
@@ -229,7 +232,7 @@ export default function ChatWidget() {
                     style={{
                       background:
                         m.role === "user"
-                          ? "var(--champagne)"
+                          ? "#c6db70"
                           : "rgba(255,255,255,0.055)",
                       color: m.role === "user" ? "#151618" : "#d6d9df",
                       borderRadius:

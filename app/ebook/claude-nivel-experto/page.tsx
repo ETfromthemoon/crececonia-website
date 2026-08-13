@@ -10,6 +10,7 @@ import EbookGenericFAQ from "@/components/EbookGenericFAQ";
 import EbookPricing from "@/components/EbookPricing";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookCursorGlow from "@/components/EbookCursorGlow";
+import { getCurrentPrice } from "@/lib/ebook-pricing";
 
 // Gating por hora de lanzamiento (visibleFrom en el catálogo) — no se puede
 // prerenderizar en build time o la activación de las 20:50 nunca ocurriría
@@ -85,6 +86,10 @@ export default async function ClaudeNivelExpertoPage({
   }
 
   const crossSellEntries = getCrossSellEntries(RESOURCE);
+  const crossSellPrices = Object.fromEntries(await Promise.all(crossSellEntries.map(async (item) => [
+    item.resource,
+    (await getCurrentPrice(item.resource).catch(() => ({ price: item.tierPrices.regular }))).price,
+  ])));
   const urlSelection = resolveBundleSelectionFromUrl(
     params,
     RESOURCE,
@@ -144,6 +149,7 @@ export default async function ClaudeNivelExpertoPage({
       <EbookPricing
         resource={RESOURCE}
         crossSellEntries={crossSellEntries}
+        crossSellPrices={crossSellPrices}
         previewKey={previewKey}
         {...urlSelection}
       />
