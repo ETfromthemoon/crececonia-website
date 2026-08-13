@@ -155,7 +155,7 @@ export default function ProtocoloBPIPage() {
     <>
       <Navbar />
       <main
-        className="min-h-screen"
+        className="bpi-page min-h-screen"
         style={{ background: "var(--obsidian)", paddingTop: 112 }}
       >
         {/* ====== HERO ====== */}

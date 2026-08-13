@@ -221,7 +221,7 @@ export default function Page() {
   return (
     <>
       <Navbar />
-      <main style={{ background: "var(--obsidian)", minHeight: "100vh" }}>
+      <main className="appointment-page" style={{ background: "var(--obsidian)", minHeight: "100vh" }}>
         <Suspense fallback={<div className="pt-32 px-6 text-center" style={{ color: "var(--smoke)" }}>Cargando…</div>}>
           <SolicitarContent />
         </Suspense>

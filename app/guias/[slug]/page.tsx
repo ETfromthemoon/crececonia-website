@@ -91,7 +91,7 @@ export default async function GuiaPage({
     <>
       <Navbar />
       <EmailPopup />
-      <main className="min-h-screen pb-32" style={{ background: "var(--obsidian)", paddingTop: 112 }}>
+      <main className="knowledge-detail min-h-screen pb-32" style={{ background: "var(--obsidian)", paddingTop: 112 }}>
         {/* Breadcrumb */}
         <div className="px-6 pt-10 pb-2 max-w-3xl mx-auto">
           <Link

@@ -63,7 +63,7 @@ export default async function TemaPage({
       <Navbar />
       <EmailPopup />
       <main
-        className="min-h-screen"
+        className="knowledge-page min-h-screen"
         style={{ background: "var(--obsidian)", paddingTop: 112 }}
       >
         {/* Header del tema */}

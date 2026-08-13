@@ -58,3 +58,53 @@
 .ebook-popup-card a { color: #c6db70; }
 .site-chat-panel input { color: #f2efe8 !important; }
 .site-chat-panel input::placeholder { color: #aeb4bf !important; opacity: 1; }
+
+/* Shared light surface for the non-ebook public routes. This lets older
+   content-heavy pages inherit the current corporate interface without
+   rewriting their verified copy or data flows. */
+.bpi-page,
+.knowledge-page,
+.knowledge-detail,
+.appointment-page {
+  --obsidian: #f5f2eb;
+  --graphite: #e8e2d7;
+  --carbon: #fffdf8;
+  --bone: #161719;
+  --ash: #4b4b4b;
+  --smoke: #626262;
+  --champagne: #765719;
+  --champagne-2: #5e4513;
+  --gold-soft: rgba(118,87,25,.09);
+  color: #161719;
+}
+.bpi-page .gradient-text,
+.knowledge-page .gradient-text,
+.knowledge-detail .gradient-text,
+.appointment-page .gradient-text {
+  background: none;
+  color: #765719;
+  -webkit-text-fill-color: currentColor;
+}
+.bpi-page article {
+  border-radius: 16px !important;
+  border-color: rgba(21,22,24,.16) !important;
+  box-shadow: 0 14px 36px rgba(21,22,24,.06);
+}
+.bpi-page .section-y,
+.knowledge-page section,
+.knowledge-detail section,
+.appointment-page > div {
+  position: relative;
+}
+.bpi-page .eyebrow,
+.knowledge-page .eyebrow,
+.knowledge-detail .eyebrow,
+.appointment-page .eyebrow { color: #765719; }
+.knowledge-page .hub-card,
+.knowledge-detail .hub-card { border-radius: 14px; }
+.knowledge-page .text-sm,
+.knowledge-page .text-base,
+.knowledge-detail .text-sm,
+.knowledge-detail .text-base,
+.appointment-page .text-sm,
+.appointment-page .text-base { color: #4b4b4b; }
