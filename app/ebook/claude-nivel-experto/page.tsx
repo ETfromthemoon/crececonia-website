@@ -9,7 +9,8 @@ import EbookGenericTOC from "@/components/EbookGenericTOC";
 import EbookGenericFAQ from "@/components/EbookGenericFAQ";
 import EbookPricing from "@/components/EbookPricing";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
-import EbookCursorGlow from "@/components/EbookCursorGlow";
+import EbookPageFrame from "@/components/EbookPageFrame";
+import { getCurrentPrice } from "@/lib/ebook-pricing";
 
 // Gating por hora de lanzamiento (visibleFrom en el catálogo) — no se puede
 // prerenderizar en build time o la activación de las 20:50 nunca ocurriría
@@ -72,7 +73,7 @@ export default async function ClaudeNivelExpertoPage({
 
   if (!isCatalogEntryLive(entry) && !isPreview) {
     return (
-      <main className="monad">
+      <EbookPageFrame currentResource={RESOURCE}>
         <EbookComingSoon
           title="Claude a Nivel Experto."
           description="Las técnicas que usan los power users para dejar de conversar con Claude y ponerlo a trabajar solo. Disponible muy pronto."
@@ -80,11 +81,15 @@ export default async function ClaudeNivelExpertoPage({
           ctaSource="ebook-claude-nivel-experto-proximamente"
           resource={RESOURCE}
         />
-      </main>
+      </EbookPageFrame>
     );
   }
 
   const crossSellEntries = getCrossSellEntries(RESOURCE);
+  const crossSellPrices = Object.fromEntries(await Promise.all(crossSellEntries.map(async (item) => [
+    item.resource,
+    (await getCurrentPrice(item.resource).catch(() => ({ price: item.tierPrices.regular }))).price,
+  ])));
   const urlSelection = resolveBundleSelectionFromUrl(
     params,
     RESOURCE,
@@ -92,8 +97,7 @@ export default async function ClaudeNivelExpertoPage({
   );
 
   return (
-    <main className="monad">
-      <EbookCursorGlow />
+    <EbookPageFrame currentResource={RESOURCE}>
       <EbookGenericHero
         resource={RESOURCE}
         eyebrow="Ebook · CrececonIA · Upgrade"
@@ -115,7 +119,7 @@ export default async function ClaudeNivelExpertoPage({
               display: "flex",
               flexDirection: "column",
               gap: 20,
-              borderLeft: "2px solid rgba(207,218,245,0.9)",
+              borderLeft: "2px solid rgba(198,219,112,0.9)",
               paddingLeft: 24,
             }}
           >
@@ -127,7 +131,7 @@ export default async function ClaudeNivelExpertoPage({
               No es para vos si nunca usaste Claude. Este libro no explica qué es un prompt ni cómo
               abrirlo — arranca directo en delegación, contexto y orquestación. Si es tu primera vez,
               empezá por{" "}
-              <a href="/ebook/de-cero-a-claude-en-una-semana" style={{ color: "#8fa3d9", textDecoration: "underline" }}>
+              <a href="/ebook/de-cero-a-claude-en-una-semana" style={{ color: "#718641", textDecoration: "underline" }}>
                 De cero a Claude en una semana
               </a>
               , la base de todo el catálogo.
@@ -144,10 +148,11 @@ export default async function ClaudeNivelExpertoPage({
       <EbookPricing
         resource={RESOURCE}
         crossSellEntries={crossSellEntries}
+        crossSellPrices={crossSellPrices}
         previewKey={previewKey}
         {...urlSelection}
       />
       <EbookGenericFAQ faqs={FAQS} />
-    </main>
+    </EbookPageFrame>
   );
 }

@@ -56,7 +56,7 @@ function SolicitarContent() {
     }
   }
 
-  const INPUT_CLASS = "w-full bg-transparent border-0 border-b border-white/10 px-0 py-3 text-base text-bone placeholder-smoke focus:border-champagne focus:outline-none transition-colors";
+  const INPUT_CLASS = "w-full bg-transparent border-0 border-b border-[rgba(22,23,25,0.22)] px-0 py-3 text-base text-bone placeholder-smoke focus:border-champagne focus:outline-none transition-colors";
   const LABEL_CLASS = "block text-[11px] font-medium uppercase tracking-[0.14em] text-smoke mb-2";
 
   if (done) {
@@ -221,7 +221,7 @@ export default function Page() {
   return (
     <>
       <Navbar />
-      <main style={{ background: "var(--obsidian)", minHeight: "100vh" }}>
+      <main className="appointment-page" style={{ background: "var(--obsidian)", minHeight: "100vh" }}>
         <Suspense fallback={<div className="pt-32 px-6 text-center" style={{ color: "var(--smoke)" }}>Cargando…</div>}>
           <SolicitarContent />
         </Suspense>

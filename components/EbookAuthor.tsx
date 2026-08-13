@@ -115,7 +115,7 @@ export default function EbookAuthor() {
 
             <div style={{ marginTop: 20 }}>
               <a
-                href="/#manifiesto"
+                href="/"
                 style={{
                   color: "#242424",
                   textDecoration: "underline",

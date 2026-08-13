@@ -42,10 +42,14 @@ describe("ebook-catalog", () => {
     );
   });
 
-  it("todo libro activo trae tierPrices y coverSrc", () => {
+  it("todo libro activo trae precios, portada y metadata visual escalable", () => {
     for (const entry of getActiveCatalogEntries()) {
       expect(entry.tierPrices.regular).toBeGreaterThan(0);
       expect(entry.coverSrc).toMatch(/^\/ebooks\//);
+      expect(entry.storeProfile.level.length).toBeGreaterThan(0);
+      expect(entry.storeProfile.outcome.length).toBeGreaterThan(0);
+      expect(entry.storeProfile.audience.length).toBeGreaterThan(0);
+      expect(entry.storeProfile.pageCount).toBeGreaterThan(0);
     }
   });
 

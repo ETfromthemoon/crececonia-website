@@ -111,6 +111,11 @@ describe("getCurrentPrice", () => {
     expect(result.tier).toBe("regular");
   });
 
+  it("lanza si Supabase devuelve un error de lectura", async () => {
+    mockFrom.mockReturnValue(makeChain({ data: null, error: { message: "DB down" } }));
+    await expect(getCurrentPrice(DEFAULT_EBOOK_RESOURCE)).rejects.toThrow(/DB down/i);
+  });
+
   it("filtra la consulta de cupos por resource", async () => {
     const chain = makeChain({ data: [] });
     mockFrom.mockReturnValue(chain);

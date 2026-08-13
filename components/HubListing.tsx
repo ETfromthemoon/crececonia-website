@@ -17,7 +17,7 @@ export default function HubListing({
   emptyLabel: string;
 }) {
   return (
-    <main className="min-h-screen" style={{ background: "var(--obsidian)", paddingTop: 112 }}>
+    <main className="knowledge-page min-h-screen" style={{ background: "var(--obsidian)", paddingTop: 112 }}>
       {/* Header */}
       <section className="relative py-24 px-6 overflow-hidden">
         <div

@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 import { whatsappUrl } from "@/lib/contact";
 
 const API = "https://autodrive.cl";
-
-const CHAT_WHATSAPP_URL = whatsappUrl("Hola! Vengo del chat de la web. Quiero un agente IA para mi negocio");
 
 type Message = {
   id: string;
@@ -14,6 +13,7 @@ type Message = {
   content: string;
   sugerir_evaluacion?: boolean;
   lead_capturado?: boolean;
+  fallback?: boolean;
 };
 
 // Alineadas con lo que la landing realmente vende (agente IA en 48h, USD
@@ -33,7 +33,7 @@ const TypingDots = () => (
       <span
         key={d}
         className="typing-dot w-1.5 h-1.5 rounded-full"
-        style={{ background: "var(--ash)", animationDelay: `${d}ms` }}
+        style={{ background: "#c3c8d0", animationDelay: `${d}ms` }}
       />
     ))}
   </div>
@@ -43,12 +43,13 @@ const SALUDO_FALLBACK =
   "¡Hola! Soy el asistente de CrececonIA 👋 Puedo contarte cómo funciona un agente IA para tu negocio, cuánto cuesta y en cuánto tiempo queda listo.";
 
 export default function ChatWidget() {
+  const pathname = usePathname();
   const [open, setOpen]           = useState(false);
   const [messages, setMessages]   = useState<Message[]>([]);
   const [input, setInput]         = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [loading, setLoading]     = useState(false);
-  const [initDone, setInitDone]   = useState(false);
+  const [whatsappMessage, setWhatsappMessage] = useState("");
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
@@ -63,26 +64,44 @@ export default function ChatWidget() {
     if (open) setTimeout(() => inputRef.current?.focus(), 120);
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
+
   // Una sola función para abrir sesión: antes initSession y resetChat tenían
   // el mismo fetch y el mismo fallback duplicados línea por línea.
   const startSession = useCallback(async () => {
     setMessages([]);
     setInput("");
     setSessionId(null);
+    setWhatsappMessage("");
     try {
-      const r = await fetch(`${API}/api/public/widget/inicio`, { method: "POST" });
+      const r = await fetch(`${API}/api/public/widget/inicio`, {
+        method: "POST",
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!r.ok) throw new Error("No se pudo iniciar el chat");
       const j = await r.json();
+      if (!j.session_id || !j.mensaje) throw new Error("Respuesta de chat incompleta");
       setSessionId(j.session_id);
       setMessages([{ id: "init", role: "bot", content: j.mensaje }]);
     } catch {
-      setMessages([{ id: "init", role: "bot", content: SALUDO_FALLBACK }]);
+      setMessages([{ id: "init", role: "bot", content: SALUDO_FALLBACK, fallback: true }]);
     }
   }, []);
 
   const handleOpen = () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
     setOpen(true);
-    if (!initDone) {
-      setInitDone(true);
+    if (!sessionId) {
       startSession();
     }
   };
@@ -92,6 +111,23 @@ export default function ChatWidget() {
     if (!trimmed || loading) return;
 
     const userMsg: Message = { id: `u-${Date.now()}`, role: "user", content: trimmed };
+
+    if (!sessionId) {
+      setWhatsappMessage(trimmed);
+      setMessages((prev) => [
+        ...prev,
+        userMsg,
+        {
+          id: `f-${Date.now()}`,
+          role: "bot",
+          fallback: true,
+          content: "No pudimos conectar el asistente en este momento. Puedes continuar por WhatsApp con tu consulta preparada.",
+        },
+      ]);
+      setInput("");
+      return;
+    }
+
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setLoading(true);
@@ -103,19 +139,27 @@ export default function ChatWidget() {
         body: JSON.stringify({ session_id: sessionId, mensaje: trimmed }),
         signal: AbortSignal.timeout(20000),
       });
+      if (!r.ok) throw new Error("No se pudo enviar el mensaje");
       const j = await r.json();
       const botMsg: Message = {
         id:                  `b-${Date.now()}`,
         role:                "bot",
-        content:             j.respuesta,
+        content:             j.respuesta || "No pude interpretar eso. Intenta de nuevo o escríbenos por WhatsApp.",
         sugerir_evaluacion:  j.sugerir_evaluacion,
         lead_capturado:      j.lead_capturado,
       };
       setMessages((prev) => [...prev, botMsg]);
     } catch {
+      setSessionId(null);
+      setWhatsappMessage(trimmed);
       setMessages((prev) => [
         ...prev,
-        { id: `e-${Date.now()}`, role: "bot", content: "Disculpa, hubo un error. Intenta de nuevo." },
+        {
+          id: `e-${Date.now()}`,
+          role: "bot",
+          fallback: true,
+          content: "No pudimos completar esa respuesta. Puedes continuar por WhatsApp con tu consulta preparada.",
+        },
       ]);
     } finally {
       setLoading(false);
@@ -123,6 +167,13 @@ export default function ChatWidget() {
   };
 
   const showQuickReplies = messages.length === 1 && !loading;
+  const directChatUrl = whatsappUrl(
+    whatsappMessage
+      ? `Hola, vengo del chat de CrececonIA. Mi consulta es: ${whatsappMessage}`
+      : "Hola, vengo del chat de CrececonIA y quiero orientación.",
+  );
+
+  if (pathname === "/ia") return null;
 
   return (
     <>
@@ -135,7 +186,10 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed z-[60] w-[92vw] sm:w-[380px]"
+            className="site-chat-panel fixed z-[60] w-[92vw] sm:w-[380px]"
+            role="dialog"
+            aria-modal="false"
+            aria-label="Asistente de CrececonIA"
             style={{
               bottom: "calc(3.5rem + 24px + 12px)", // above the FAB
               right: 16,
@@ -149,7 +203,7 @@ export default function ChatWidget() {
             <div
               style={{
                 position: "absolute", top: 0, left: 0, right: 0, height: 1,
-                background: "linear-gradient(90deg, transparent, var(--champagne), transparent)",
+                background: "linear-gradient(90deg, transparent, #c6db70, #9caee3, transparent)",
                 opacity: 0.5, borderRadius: "10px 10px 0 0",
               }}
             />
@@ -164,15 +218,15 @@ export default function ChatWidget() {
                   className="w-2 h-2 rounded-full"
                   style={{ background: "var(--success)", boxShadow: "0 0 6px var(--success)" }}
                 />
-                <span className="text-sm font-medium" style={{ color: "var(--bone)" }}>
-                  Crececon<em style={{ color: "var(--champagne)", fontStyle: "italic" }}>IA</em>
+                <span className="text-sm font-medium" style={{ color: "#f2efe8" }}>
+                  Crececon<em style={{ color: "#c6db70", fontStyle: "italic" }}>IA</em>
                 </span>
                 <span
                   className="text-[11px] px-1.5 py-0.5 rounded"
                   style={{
-                    color: "var(--champagne)",
-                    background: "rgba(217,179,106,0.08)",
-                    border: "1px solid rgba(217,179,106,0.15)",
+                    color: "#c6db70",
+                    background: "rgba(198,219,112,0.1)",
+                    border: "1px solid rgba(198,219,112,0.26)",
                     fontFamily: "var(--font-mono)",
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
@@ -188,7 +242,7 @@ export default function ChatWidget() {
                     onClick={() => !loading && startSession()}
                     disabled={loading}
                     className="w-7 h-7 flex items-center justify-center transition-opacity hover:opacity-60 disabled:opacity-30"
-                    style={{ color: "var(--smoke)" }}
+                    style={{ color: "#aeb4bf" }}
                     aria-label="Nueva conversación"
                     title="Nueva conversación"
                   >
@@ -202,7 +256,7 @@ export default function ChatWidget() {
                 <button
                   onClick={() => setOpen(false)}
                   className="w-7 h-7 flex items-center justify-center text-lg leading-none transition-opacity hover:opacity-60"
-                  style={{ color: "var(--smoke)" }}
+                  style={{ color: "#aeb4bf" }}
                   aria-label="Cerrar chat"
                 >
                   ×
@@ -222,9 +276,9 @@ export default function ChatWidget() {
                     style={{
                       background:
                         m.role === "user"
-                          ? "var(--champagne)"
+                          ? "#c6db70"
                           : "rgba(255,255,255,0.055)",
-                      color: m.role === "user" ? "var(--obsidian)" : "var(--ash)",
+                      color: m.role === "user" ? "#151618" : "#d6d9df",
                       borderRadius:
                         m.role === "user"
                           ? "12px 12px 3px 12px"
@@ -242,15 +296,15 @@ export default function ChatWidget() {
                     <motion.a
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
-                      href={CHAT_WHATSAPP_URL}
+                      href={directChatUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-2 text-xs px-3 py-2 transition-opacity hover:opacity-80"
                       style={{
-                        background: "rgba(217,179,106,0.12)",
-                        border: "1px solid rgba(217,179,106,0.35)",
-                        color: "var(--champagne)",
-                        borderRadius: 4,
+                        background: "rgba(198,219,112,0.12)",
+                        border: "1px solid rgba(198,219,112,0.35)",
+                        color: "#c6db70",
+                        borderRadius: 9,
                         fontWeight: 500,
                       }}
                     >
@@ -258,11 +312,31 @@ export default function ChatWidget() {
                     </motion.a>
                   )}
 
+                  {m.fallback && (
+                    <motion.a
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      href={directChatUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 text-xs px-3 py-2 transition-opacity hover:opacity-80"
+                      style={{
+                        background: "rgba(198,219,112,0.12)",
+                        border: "1px solid rgba(198,219,112,0.35)",
+                        color: "#c6db70",
+                        borderRadius: 9,
+                        fontWeight: 500,
+                      }}
+                    >
+                      Continuar por WhatsApp →
+                    </motion.a>
+                  )}
+
                   {/* Confirmación lead capturado */}
                   {m.lead_capturado && !m.sugerir_evaluacion && (
                     <span
                       className="text-[11px] mt-1"
-                      style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)" }}
+                      style={{ color: "#aeb4bf", fontFamily: "var(--font-mono)" }}
                     >
                       ✓ contacto guardado
                     </span>
@@ -297,10 +371,10 @@ export default function ChatWidget() {
                       onClick={() => sendMessage(q)}
                       className="text-xs px-2.5 py-1.5 transition-all hover:opacity-80 active:scale-95"
                       style={{
-                        border: "1px solid rgba(217,179,106,0.25)",
-                        color: "var(--champagne)",
-                        borderRadius: 4,
-                        background: "rgba(217,179,106,0.07)",
+                        border: "1px solid rgba(156,174,227,0.3)",
+                        color: "#c6db70",
+                        borderRadius: 9,
+                        background: "rgba(156,174,227,0.1)",
                       }}
                     >
                       {q}
@@ -319,8 +393,8 @@ export default function ChatWidget() {
             >
               <input
                 ref={inputRef}
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--smoke)]"
-                style={{ color: "var(--bone)" }}
+                className="flex-1 bg-transparent text-sm outline-none"
+                style={{ color: "#f2efe8" }}
                 placeholder="Escribe tu pregunta…"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -337,13 +411,13 @@ export default function ChatWidget() {
                 disabled={!input.trim() || loading}
                 className="w-8 h-8 flex-shrink-0 flex items-center justify-center transition-all disabled:opacity-30 hover:opacity-80 active:scale-90"
                 style={{
-                  background: "var(--champagne)",
-                  borderRadius: 6,
+                  background: "#c6db70",
+                  borderRadius: 9,
                 }}
                 aria-label="Enviar"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                  stroke="var(--obsidian)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  stroke="#151618" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M22 2L11 13" /><path d="M22 2L15 22 11 13 2 9l20-7z" />
                 </svg>
               </button>
@@ -354,12 +428,12 @@ export default function ChatWidget() {
                 del bot, no tiene que buscar un CTA fuera del panel. */}
             <div className="text-center pb-2.5">
               <a
-                href={CHAT_WHATSAPP_URL}
+                href={directChatUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-opacity hover:opacity-100"
                 style={{
-                  color: "var(--smoke)",
+                  color: "#aeb4bf",
                   fontSize: 10,
                   opacity: 0.65,
                   fontFamily: "var(--font-mono)",
@@ -376,21 +450,21 @@ export default function ChatWidget() {
       {/* ── Botón flotante ─────────────────────────────────────────────── */}
       <motion.button
         onClick={handleOpen}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.93 }}
-        className="fixed z-[61] flex items-center justify-center shadow-2xl"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="site-chat-fab fixed z-[61] flex items-center justify-center shadow-2xl"
         style={{
           bottom: 16,
           right: 16,
           width: 52,
           height: 52,
-          borderRadius: "50%",
-          background: open ? "var(--carbon)" : "var(--champagne)",
-          border: "1px solid rgba(217,179,106,0.45)",
+          borderRadius: 14,
+          background: open ? "#17191b" : "#c6db70",
+          border: "1px solid rgba(198,219,112,0.72)",
           boxShadow: open
-            ? "0 4px 20px rgba(0,0,0,0.4)"
-            : "0 4px 24px rgba(217,179,106,0.35)",
-          transition: "background 0.2s, box-shadow 0.2s",
+            ? "0 8px 24px rgba(0,0,0,0.36)"
+            : "0 12px 30px rgba(198,219,112,0.22)",
+          transition: "background 0.2s, box-shadow 0.2s, transform 0.2s",
         }}
         aria-label={open ? "Cerrar chat" : "Abrir chat de ayuda"}
       >
@@ -403,7 +477,7 @@ export default function ChatWidget() {
               exit={{ rotate: 90, opacity: 0 }}
               transition={{ duration: 0.15 }}
               width="18" height="18" viewBox="0 0 24 24"
-              fill="none" stroke="var(--champagne)" strokeWidth="2.5" strokeLinecap="round"
+              fill="none" stroke="#c6db70" strokeWidth="2.5" strokeLinecap="round"
             >
               <path d="M18 6L6 18M6 6l12 12" />
             </motion.svg>

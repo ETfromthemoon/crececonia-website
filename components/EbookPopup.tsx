@@ -8,24 +8,9 @@ const STORAGE_KEY = "crececonia_ebook_popup_v1";
 const COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 const DELAY_MS = 4_000;
 
-interface PriceData {
-  price: number;
-  tier: string;
-  remaining: number | null;
-  originalPrice: number;
-}
-
 export default function EbookPopup() {
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
-  const [priceData, setPriceData] = useState<PriceData | null>(null);
-
-  useEffect(() => {
-    fetch("/api/ebook/cupos")
-      .then((r) => r.json())
-      .then(setPriceData)
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (pathname !== "/") return;
@@ -49,17 +34,6 @@ export default function EbookPopup() {
     }
     setVisible(false);
   }
-
-  const formattedPrice = priceData?.price
-    ? priceData.price.toLocaleString("es-CL")
-    : null;
-
-  const tierLabel =
-    priceData?.tier === "super-early"
-      ? "Super Early · 60% OFF"
-      : priceData?.tier === "early"
-        ? "Early Adopters · 33% OFF"
-        : null;
 
   return (
     <AnimatePresence>
@@ -105,9 +79,9 @@ export default function EbookPopup() {
             transition={{ duration: 0.3, ease: "easeOut" }}
             role="dialog"
             aria-modal="true"
-            aria-label="Nuevo ebook de CrececonIA"
+            aria-label="Biblioteca de ebooks de CrececonIA"
             onClick={(e) => e.stopPropagation()}
-            className="ebook-popup-card"
+            className="site-popup-shell ebook-popup-card"
           >
             <style>{`
               .ebook-popup-card {
@@ -195,7 +169,7 @@ export default function EbookPopup() {
                 marginBottom: 20,
               }}
             >
-              Nuevo · Ebook
+              Biblioteca · 4 rutas prácticas
             </p>
 
             <h2
@@ -210,9 +184,9 @@ export default function EbookPopup() {
                 letterSpacing: "-0.01em",
               }}
             >
-              De cero a Claude
+              Elige la capacidad
               <br />
-              <em style={{ color: "var(--champagne)", fontStyle: "italic" }}>en una semana</em>
+              <em style={{ color: "var(--champagne)", fontStyle: "italic" }}>que quieres construir</em>
             </h2>
 
             <p
@@ -225,53 +199,15 @@ export default function EbookPopup() {
                 marginBottom: 20,
               }}
             >
-              Lo que la documentación oficial no te enseña. Dominá Claude en 7 días — aunque nunca hayas usado IA antes.
+              Aprende Claude, automatiza con agentes o construye una web con IA. La tienda te muestra por dónde empezar y qué ruta sigue después.
             </p>
-
-            {formattedPrice && (
-              <div
-                style={{
-                  display: "inline-flex",
-                  flexDirection: "column",
-                  gap: 6,
-                  background: "rgba(217,179,106,0.08)",
-                  border: "1px solid rgba(217,179,106,0.25)",
-                  borderRadius: 3,
-                  padding: "8px 14px",
-                  marginBottom: 24,
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "0.72rem",
-                    color: "var(--champagne)",
-                    letterSpacing: "0.06em",
-                  }}
-                >
-                  ${formattedPrice} CLP
-                </span>
-                {tierLabel && (
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "0.6rem",
-                      color: "var(--smoke)",
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    {tierLabel}
-                  </span>
-                )}
-              </div>
-            )}
 
             <div
               className="ebook-popup-actions"
               style={{ display: "flex", alignItems: "center", gap: 20 }}
             >
               <a
-                href="/ebook/de-cero-a-claude-en-una-semana"
+                href="/ebooks"
                 onClick={dismiss}
                 className="ebook-popup-cta"
                 style={{
@@ -290,7 +226,7 @@ export default function EbookPopup() {
                   fontWeight: 500,
                 }}
               >
-                Ver el ebook
+                Explorar la biblioteca
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>

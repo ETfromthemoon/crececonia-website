@@ -155,7 +155,7 @@ export default function ProtocoloBPIPage() {
     <>
       <Navbar />
       <main
-        className="min-h-screen"
+        className="bpi-page min-h-screen"
         style={{ background: "var(--obsidian)", paddingTop: 112 }}
       >
         {/* ====== HERO ====== */}
@@ -330,7 +330,7 @@ export default function ProtocoloBPIPage() {
                           color:
                             idx === 2
                               ? "var(--champagne)"
-                              : "rgba(231,229,221,0.85)",
+                              : "var(--bone)",
                         }}
                       >
                         {stage.letter}
@@ -699,11 +699,11 @@ export default function ProtocoloBPIPage() {
                 Solicitar Test de Fit
               </WAButton>
               <Link
-                href="/#manifiesto"
+                href="/"
                 className="btn-ghost btn-lg"
                 style={{ minWidth: 160 }}
               >
-                Lo que creemos
+                Volver al inicio
               </Link>
             </div>
           </div>

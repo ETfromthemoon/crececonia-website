@@ -27,7 +27,12 @@ export async function GET(request: Request) {
 
   if (!priceInfo) {
     return NextResponse.json(
-      { price: 27000, tier: "regular", remaining: null, originalPrice: 27000 },
+      {
+        price: entry.tierPrices.regular,
+        tier: "regular",
+        remaining: null,
+        originalPrice: entry.tierPrices.regular,
+      },
       {
         status: 200,
         headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" },

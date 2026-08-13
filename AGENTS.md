@@ -14,14 +14,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ## Commands
 
 ```bash
-npm run dev      # local dev (Turbopack)
 npm run build    # production build (also typechecks)
 npm test         # vitest run — unit/integration tests
-npm run test:watch
-vercel --prod    # manual deploy; NOT normally needed (see Deploy below)
 ```
 
 There is no `lint` or `typecheck` script — `npm run build` typechecks.
+Visual review is done exclusively through the GitHub pull request's Vercel
+Preview Deployment. Do not start a local page server or use localhost URLs as
+a visual deliverable.
 
 **There IS a test suite** (`tests/`, vitest): `pricing`, `create`, `confirm`, `download`, `discount-codes`. It covers the ebook payment path — pricing tiers, Flow order creation, the Flow confirmation webhook, discount-code validation/redemption, and gated downloads. **Run `npm test` after touching anything under `lib/ebook-*`, `lib/discount-codes.ts`, `app/api/flow/*`, or `app/api/ebook/*`** — these mock Supabase and Flow, so a change to how those are called (e.g. swapping a `.from().update()` for an `.rpc()`) breaks the tests even when the build passes.
 

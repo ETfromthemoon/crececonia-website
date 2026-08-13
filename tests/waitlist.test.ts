@@ -50,6 +50,14 @@ describe("POST /api/ebook/waitlist", () => {
     expect(mockInsert).not.toHaveBeenCalled();
   });
 
+  it("rechaza un recurso que no existe en el catálogo", async () => {
+    const res = await POST(
+      waitlistRequest({ email: "lead@test.com", resource: "ebook:inventado" })
+    );
+    expect(res.status).toBe(400);
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
   it("guarda el email en la waitlist propia y envía confirmación por Resend", async () => {
     setupDb(null);
     const res = await POST(

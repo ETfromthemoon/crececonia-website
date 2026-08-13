@@ -11,6 +11,13 @@ export type EbookSeries = {
   part: number;
 };
 
+export type EbookStoreProfile = {
+  level: string;
+  outcome: string;
+  audience: string;
+  pageCount: number;
+};
+
 export type EbookCatalogEntry =
   | {
       resource: string;
@@ -35,6 +42,7 @@ export type EbookCatalogEntry =
        */
       visibleFrom?: string;
       series?: EbookSeries;
+      storeProfile: EbookStoreProfile;
     }
   | {
       resource: string;
@@ -43,6 +51,7 @@ export type EbookCatalogEntry =
       href: string;
       coverSrc: string;
       active: false;
+      storeProfile: EbookStoreProfile;
     };
 
 // Reexportado desde lib/ebook-resource-ids.ts (ver el comentario de ese
@@ -70,6 +79,7 @@ export const EBOOK_CATALOG: EbookCatalogEntry[] = [
     coverSrc: "/ebooks/de-cero-a-claude-en-una-semana.jpg",
     active: true,
     tierPrices: { superEarly: 10800, early: 17900, regular: 27000 },
+    storeProfile: { level: "Base", outcome: "Dominar Claude desde cero y usarlo con un método claro.", audience: "Si estás empezando o todavía lo usas como un chat.", pageCount: 150 },
     // Ya está en venta — sin visibleFrom, siempre visible.
   },
   {
@@ -80,6 +90,7 @@ export const EBOOK_CATALOG: EbookCatalogEntry[] = [
     coverSrc: "/ebooks/claude-nivel-experto.jpg",
     active: true,
     tierPrices: { superEarly: 9700, early: 13700, regular: 19700 },
+    storeProfile: { level: "Avanzado", outcome: "Pasar de conversar con Claude a operarlo con autonomía.", audience: "Si ya tienes experiencia y quieres profundizar.", pageCount: 71 },
     visibleFrom: LANZAMIENTO_2026_08_07,
   },
   {
@@ -90,6 +101,7 @@ export const EBOOK_CATALOG: EbookCatalogEntry[] = [
     coverSrc: "/ebooks/agentes-de-ia.jpg",
     active: true,
     tierPrices: { superEarly: 10800, early: 17900, regular: 27000 },
+    storeProfile: { level: "Negocio", outcome: "Diseñar agentes que automaticen trabajo real del negocio.", audience: "Si diriges un negocio y no quieres programar.", pageCount: 137 },
     visibleFrom: LANZAMIENTO_2026_08_07,
   },
   {
@@ -100,6 +112,7 @@ export const EBOOK_CATALOG: EbookCatalogEntry[] = [
     coverSrc: "/ebooks/creacion-de-webs-con-ia.jpg",
     active: true,
     tierPrices: { superEarly: 9700, early: 13700, regular: 19700 },
+    storeProfile: { level: "Constructor", outcome: "Diseñar y lanzar un sitio completo con IA paso a paso.", audience: "Si quieres construir una web mediante un proyecto real.", pageCount: 70 },
     visibleFrom: LANZAMIENTO_2026_08_07,
     series: { name: "Creación de Webs con IA", part: 1 },
   },

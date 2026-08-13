@@ -1,190 +1,47 @@
-"use client";
-
-import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import styles from "./EbookCinematic.module.css";
-
-const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
 
 type Props = {
   title: string;
   description: string;
   href: string;
   coverSrc?: string;
-  /**
-   * Portadas de los libros que componen un combo. Un bundle no tiene portada
-   * propia, y sin esto la card mostraba un "?" gigante en el catálogo.
-   */
   coverSrcs?: string[];
   status: "available" | "coming-soon";
   priceLabel?: string;
+  level?: string;
+  outcome?: string;
+  audience?: string;
+  pageCount?: number;
+  itemCount?: number;
+  variant?: "book" | "route";
   index?: number;
 };
 
-/**
- * Card de catálogo para /ebooks. Pensada para crecer: cada ebook nuevo es
- * una entrada más en la lista que pasa a app/ebooks/page.tsx, sin tocar
- * este componente.
- */
-export default function EbookCard({
-  title,
-  description,
-  href,
-  coverSrc,
-  coverSrcs,
-  status,
-  priceLabel,
-  index = 0,
-}: Props) {
+export default function EbookCard({ title, description, href, coverSrc, coverSrcs = [], status, priceLabel, level, outcome, audience, pageCount, itemCount, variant = "book", index = 0 }: Props) {
   const isComingSoon = status === "coming-soon";
-  const collage = coverSrcs ?? [];
+  if (variant === "route") {
+    return (
+      <article className="ebook-route-card" style={{ "--route-index": index } as React.CSSProperties}>
+        <div className="ebook-route-covers" aria-hidden="true">{coverSrcs.map((src, coverIndex) => <div key={src} style={{ transform: `translateX(${coverIndex * 19}px) rotate(${(coverIndex - 1.5) * 3}deg)`, zIndex: coverIndex }}><Image src={src} alt="" fill sizes="140px" /></div>)}</div>
+        <div className="ebook-route-copy"><span>{String(index + 1).padStart(2, "0")} · {itemCount} libros</span><h3>{title}</h3><p>{description}</p><Link href={href}><strong>{priceLabel}</strong><span>Elegir ruta →</span></Link></div>
+      </article>
+    );
+  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
-      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.6, delay: index * 0.1, ease: EASE }}
-      className={`${styles.glass} ${styles.glassHover}`}
-      style={{
-        borderRadius: 32,
-        padding: 32,
-        display: "flex",
-        flexDirection: "column",
-        gap: 20,
-        opacity: isComingSoon ? 0.88 : 1,
-      }}
-    >
-      <div
-        style={{
-          borderRadius: 16,
-          overflow: "hidden",
-          // Las portadas del catálogo comparten ratio 1:1.6 — usarlo evita
-          // recortes en la grilla en vez de forzar un 3:4 genérico.
-          aspectRatio: "1 / 1.6",
-          background: "#141414",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          position: "relative",
-        }}
-      >
-        {coverSrc ? (
-          <Image
-            src={coverSrc}
-            alt={title}
-            fill
-            sizes="(max-width: 640px) 100vw, 400px"
-            style={{ objectFit: "cover" }}
-          />
-        ) : collage.length > 0 ? (
-          // Combo: se muestran las portadas de los libros que incluye,
-          // superpuestas en abanico. Antes acá salía un "?" gigante.
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "12% 8%",
-            }}
-          >
-            {collage.map((src, i) => (
-              <div
-                key={src}
-                style={{
-                  position: "relative",
-                  width: `${Math.min(58, 92 / collage.length + 18)}%`,
-                  aspectRatio: "1 / 1.6",
-                  marginLeft: i === 0 ? 0 : "-16%",
-                  borderRadius: 6,
-                  overflow: "hidden",
-                  boxShadow: "0 10px 30px rgba(0,0,0,0.45)",
-                  transform: `rotate(${(i - (collage.length - 1) / 2) * 4}deg)`,
-                  zIndex: i,
-                }}
-              >
-                <Image
-                  src={src}
-                  alt=""
-                  fill
-                  sizes="200px"
-                  style={{ objectFit: "cover" }}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <span
-            style={{
-              fontFamily: "var(--font-serif-monad), Georgia, serif",
-              color: "rgba(246,243,241,0.15)",
-              fontSize: "3rem",
-            }}
-          >
-            ?
-          </span>
-        )}
-        {isComingSoon && (
-          <span
-            style={{
-              position: "absolute",
-              top: 12,
-              left: 12,
-              background: "rgba(20,20,20,0.85)",
-              color: "#f6f3f1",
-              fontFamily: "var(--font-mono)",
-              fontSize: "0.65rem",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              padding: "4px 10px",
-              borderRadius: 100,
-            }}
-          >
-            Próximamente
-          </span>
-        )}
-      </div>
-
-      <div style={{ flex: 1 }}>
-        <h3
-          style={{
-            fontFamily: "var(--font-serif-monad), Georgia, serif",
-            fontWeight: 400,
-            fontSize: "1.2rem",
-            lineHeight: 1.3,
-            color: "#000",
-            marginBottom: 8,
-          }}
-        >
-          {title}
-        </h3>
-        <p
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "0.8rem",
-            lineHeight: 1.7,
-            color: "#4e4d4d",
-          }}
-        >
-          {description}
-        </p>
-      </div>
-
-      <Link
-        href={href}
-        className="btn-monad-fill"
-        style={{
-          textAlign: "center",
-          background: isComingSoon ? "transparent" : "#242424",
-          color: isComingSoon ? "#242424" : "#f6f3f1",
-          border: isComingSoon ? "1px solid rgba(0,0,0,0.25)" : "1px solid #242424",
-        }}
-      >
-        {isComingSoon ? "Avísame cuando esté" : priceLabel ?? "Ver ebook"}
+    <article className="ebook-product-card" style={{ "--book-index": index } as React.CSSProperties}>
+      <Link href={href} className="ebook-product-cover" aria-label={`Ver ${title}`}>
+        <Image src={coverSrc!} alt={`Portada de ${title}`} fill sizes="(max-width: 720px) 86vw, (max-width: 1100px) 42vw, 270px" priority={index < 2} />
+        {isComingSoon && <span>Próximamente</span>}
       </Link>
-    </motion.div>
+      <div className="ebook-product-copy">
+        <div className="ebook-product-meta"><span>{String(index + 1).padStart(2, "0")} / {level}</span><span>{pageCount}+ páginas</span></div>
+        <h3>{title}</h3>
+        <p className="ebook-product-outcome">{outcome ?? description}</p>
+        <p className="ebook-product-audience">{audience}</p>
+        <Link href={href} className="ebook-product-action"><span>{isComingSoon ? "Avísame cuando esté" : "Ver ebook"}</span><strong>{priceLabel ?? "Próximamente"}</strong></Link>
+      </div>
+    </article>
   );
 }

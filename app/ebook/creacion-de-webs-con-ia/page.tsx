@@ -9,7 +9,8 @@ import EbookGenericTOC from "@/components/EbookGenericTOC";
 import EbookGenericFAQ from "@/components/EbookGenericFAQ";
 import EbookPricing from "@/components/EbookPricing";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
-import EbookCursorGlow from "@/components/EbookCursorGlow";
+import EbookPageFrame from "@/components/EbookPageFrame";
+import { getCurrentPrice } from "@/lib/ebook-pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -95,7 +96,7 @@ export default async function CreacionDeWebsConIAPage({
 
   if (!isCatalogEntryLive(entry) && !isPreview) {
     return (
-      <main className="monad">
+      <EbookPageFrame currentResource={RESOURCE}>
         <EbookComingSoon
           title="Creación de Webs con IA."
           description="Diseña y lanza sitios web completos usando inteligencia artificial, sin escribir código desde cero. Disponible muy pronto."
@@ -103,11 +104,15 @@ export default async function CreacionDeWebsConIAPage({
           ctaSource="ebook-creacion-webs-proximamente"
           resource={RESOURCE}
         />
-      </main>
+      </EbookPageFrame>
     );
   }
 
   const crossSellEntries = getCrossSellEntries(RESOURCE);
+  const crossSellPrices = Object.fromEntries(await Promise.all(crossSellEntries.map(async (item) => [
+    item.resource,
+    (await getCurrentPrice(item.resource).catch(() => ({ price: item.tierPrices.regular }))).price,
+  ])));
   const urlSelection = resolveBundleSelectionFromUrl(
     params,
     RESOURCE,
@@ -115,8 +120,7 @@ export default async function CreacionDeWebsConIAPage({
   );
 
   return (
-    <main className="monad">
-      <EbookCursorGlow />
+    <EbookPageFrame currentResource={RESOURCE}>
       <EbookGenericHero
         resource={RESOURCE}
         eyebrow="Ebook · CrececonIA · Vertical técnica · Parte 1"
@@ -135,7 +139,7 @@ export default async function CreacionDeWebsConIAPage({
           </EbookSectionHeading>
           <p style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: "#000", lineHeight: 1.85 }}>
             Este libro usa Claude Code como herramienta central de desarrollo — el Nivel 3 de{" "}
-            <a href="/ebook/de-cero-a-claude-en-una-semana" style={{ color: "#8fa3d9", textDecoration: "underline" }}>
+            <a href="/ebook/de-cero-a-claude-en-una-semana" style={{ color: "#718641", textDecoration: "underline" }}>
               De cero a Claude en una semana
             </a>{" "}
             cubre esa base. Si ya la manejás, arrancá directo acá.
@@ -151,10 +155,11 @@ export default async function CreacionDeWebsConIAPage({
       <EbookPricing
         resource={RESOURCE}
         crossSellEntries={crossSellEntries}
+        crossSellPrices={crossSellPrices}
         previewKey={previewKey}
         {...urlSelection}
       />
       <EbookGenericFAQ faqs={FAQS} />
-    </main>
+    </EbookPageFrame>
   );
 }

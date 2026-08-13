@@ -1,47 +1,18 @@
 import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
-import PainPoints from "@/components/PainPoints";
-import HowItWorks from "@/components/HowItWorks";
-import SocialProof from "@/components/SocialProof";
-import Pricing from "@/components/Pricing";
-import Objections from "@/components/Objections";
-import FAQ from "@/components/FAQ";
-import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
+import { whatsappUrl } from "@/lib/contact";
 
-/**
- * Orden pensado como arco: dolor → cómo se resuelve → prueba → oferta →
- * autoselección → objeciones finales → cierre.
- *
- * Dos cosas cambiaron respecto de la versión anterior:
- *
- * 1. `Objections` ("Esto NO es para ti si:") estaba en posición 2, apenas
- *    después del hero. Descalificar al visitante antes de que le duela algo
- *    y antes de generar deseo corta el momentum: la autoselección recién
- *    funciona cuando el lector ya quiere el producto y necesita permiso
- *    para descartarse. Ahora va después del precio.
- *
- * 2. `UseCases` y `Services` salieron. `Services` era `Pricing` escrito de
- *    nuevo (mismos features, y su bloque de Garantía ya vive en Pricing).
- *    `UseCases` repetía los mismos rubros que `SocialProof` pero sin
- *    números — su única función real ("¿aplica a mi rubro?") la resuelve
- *    una línea en el hero.
- */
+const layers = [
+  { number: "01", icon: "↗", title: "Quiero aprender", text: "Guías y ebooks para implementar IA por tu cuenta.", href: "/aprender", note: "Ebooks · skills · recursos" },
+  { number: "02", icon: "◎", title: "Quiero acompañamiento", text: "Mentoría personalizada para aplicar IA a tu trabajo o negocio.", href: "/mentoria", note: "Mentoría · dirección · foco" },
+  { number: "03", icon: "◒", title: "Quiero que lo implementen", text: "Sistemas, automatizaciones y soluciones de IA desarrolladas para ti.", href: "/implementacion", note: "Agentes · sistemas · operación" },
+];
+
 export default function Home() {
-  return (
-    <>
-      <Navbar />
-      <main>
-        <Hero />
-        <PainPoints />
-        <HowItWorks />
-        <SocialProof />
-        <Pricing />
-        <Objections />
-        <FAQ />
-        <FinalCTA />
-      </main>
-      <Footer />
-    </>
-  );
+  return <><Navbar /><main className="corporate-page">
+    <section className="corporate-hero site-container"><div className="corporate-hero-top"><span className="eyebrow">CrececonIA · IA aplicada</span><span className="hero-location">Santiago / remoto</span></div><div className="corporate-hero-grid"><div><h1>La IA no es un destino. Es una <em>escalera.</em></h1><p className="hero-lead">Aprende lo necesario, recibe dirección cuando la necesites y construye sistemas que hagan avanzar tu negocio.</p><div className="hero-actions"><a className="button button-dark" href="#escalera">Encontrar mi siguiente paso <span>↓</span></a><a className="text-link" href="/ia">Abrir enlace para Instagram ↗</a></div></div><div className="hero-aside"><span className="aside-mark">IA<span>×</span>contexto</span><p>CrececonIA conecta criterio, acompañamiento e implementación para que cada persona entre por el nivel que realmente necesita.</p></div></div></section>
+    <section id="escalera" className="layers-section"><div className="site-container"><div className="section-heading"><span className="eyebrow">Tres formas de avanzar</span><h2>Elige la puerta.<br /><em>Nosotros cuidamos el camino.</em></h2></div><div className="layers-list">{layers.map((layer) => <a href={layer.href} className="layer-row" key={layer.href}><span className="layer-number">{layer.number}</span><span className="layer-icon">{layer.icon}</span><span className="layer-copy"><strong>{layer.title}</strong><span>{layer.text}</span></span><span className="layer-note">{layer.note}</span><span className="layer-arrow">↗</span></a>)}</div></div></section>
+    <section className="corporate-method site-container"><div className="method-statement"><span className="eyebrow">El alma de la marca</span><h2>Antes de automatizar, hay que entender qué debe cambiar.</h2></div><div className="method-copy"><p>El Protocolo BPI vive detrás de cada recomendación: una forma de mirar el negocio antes de llenar la operación de herramientas.</p><a href="/protocolo-bpi" className="text-link">Conocer el protocolo ↗</a></div></section>
+    <section className="corporate-cta"><div className="site-container cta-inner"><div><span className="eyebrow">¿Te ayudamos a ubicarte?</span><h2>Empieza por una conversación simple.</h2></div><a href={whatsappUrl("Hola, vengo de CrececonIA y quiero encontrar mi siguiente paso en la escalera de servicios.")} target="_blank" rel="noopener noreferrer" className="button button-light">Hablar por WhatsApp <span>↗</span></a></div></section>
+  </main><Footer /></>;
 }

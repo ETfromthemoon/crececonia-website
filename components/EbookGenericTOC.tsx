@@ -23,7 +23,7 @@ export default function EbookGenericTOC({ kicker = "Contenido", title, sections 
   const inView = useInView(ref, { once: true, margin: "-60px" });
 
   return (
-    <section className="section-y px-6" style={{ background: "rgba(207,218,245,0.18)" }}>
+    <section className="section-y px-6" style={{ background: "rgba(198,219,112,0.14)" }}>
       <div style={{ maxWidth: 800, margin: "0 auto" }}>
         <EbookSectionHeading kicker={kicker}>{title}</EbookSectionHeading>
 
@@ -36,7 +36,7 @@ export default function EbookGenericTOC({ kicker = "Contenido", title, sections 
                   fontSize: "0.72rem",
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
-                  color: "#8fa3d9",
+                  color: "#718641",
                   marginBottom: 4,
                   paddingBottom: 12,
                   borderBottom: "1px solid rgba(0,0,0,0.08)",
@@ -64,7 +64,7 @@ export default function EbookGenericTOC({ kicker = "Contenido", title, sections 
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        background: "#cfdaf5",
+                        background: "#e4efb6",
                         borderRadius: 8,
                         color: "#242424",
                         fontSize: "0.66rem",

@@ -9,7 +9,8 @@ import EbookGenericTOC from "@/components/EbookGenericTOC";
 import EbookGenericFAQ from "@/components/EbookGenericFAQ";
 import EbookPricing from "@/components/EbookPricing";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
-import EbookCursorGlow from "@/components/EbookCursorGlow";
+import EbookPageFrame from "@/components/EbookPageFrame";
+import { getCurrentPrice } from "@/lib/ebook-pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -113,7 +114,7 @@ export default async function AgentesDeIAPage({
 
   if (!isCatalogEntryLive(entry) && !isPreview) {
     return (
-      <main className="monad">
+      <EbookPageFrame currentResource={RESOURCE}>
         <EbookComingSoon
           title="Agentes de IA."
           description="La guía para diseñar, automatizar y desplegar agentes de IA en tu negocio — sin la teoría de siempre. Disponible muy pronto."
@@ -121,11 +122,15 @@ export default async function AgentesDeIAPage({
           ctaSource="ebook-agentes-ia-proximamente"
           resource={RESOURCE}
         />
-      </main>
+      </EbookPageFrame>
     );
   }
 
   const crossSellEntries = getCrossSellEntries(RESOURCE);
+  const crossSellPrices = Object.fromEntries(await Promise.all(crossSellEntries.map(async (item) => [
+    item.resource,
+    (await getCurrentPrice(item.resource).catch(() => ({ price: item.tierPrices.regular }))).price,
+  ])));
   const urlSelection = resolveBundleSelectionFromUrl(
     params,
     RESOURCE,
@@ -133,8 +138,7 @@ export default async function AgentesDeIAPage({
   );
 
   return (
-    <main className="monad">
-      <EbookCursorGlow />
+    <EbookPageFrame currentResource={RESOURCE}>
       <EbookGenericHero
         resource={RESOURCE}
         eyebrow="Ebook · CrececonIA · Aplicación al negocio"
@@ -167,10 +171,11 @@ export default async function AgentesDeIAPage({
       <EbookPricing
         resource={RESOURCE}
         crossSellEntries={crossSellEntries}
+        crossSellPrices={crossSellPrices}
         previewKey={previewKey}
         {...urlSelection}
       />
       <EbookGenericFAQ faqs={FAQS} />
-    </main>
+    </EbookPageFrame>
   );
 }

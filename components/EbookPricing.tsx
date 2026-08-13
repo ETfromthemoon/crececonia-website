@@ -30,6 +30,9 @@ type EbookPricingProps = {
    * viaje al navegador antes de tiempo.
    */
   crossSellEntries?: LiveCatalogEntry[];
+  /** Precios vigentes resueltos en servidor para que la vista previa del combo
+   * coincida con el monto que /api/flow/create vuelve a calcular. */
+  crossSellPrices?: Record<string, number>;
   /**
    * Extras a preseleccionar al montar (desde un link `?bundle=slug`), ya
    * resueltos y filtrados a libros vivos por el Server Component — mismo
@@ -81,6 +84,7 @@ type AppliedDiscount = { code: string; finalPrice: number };
 export default function EbookPricing({
   resource = DEFAULT_EBOOK_RESOURCE,
   crossSellEntries = [],
+  crossSellPrices = {},
   initialSelectedExtras,
   initialPromoCode,
   previewKey,
@@ -96,6 +100,7 @@ export default function EbookPricing({
   const [applyingDiscount, setApplyingDiscount] = useState(false);
   const [discountError, setDiscountError] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
+  const [isDiscountOpen, setIsDiscountOpen] = useState(Boolean(initialPromoCode));
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
 
   async function handleApplyDiscount(codeOverride?: string) {
@@ -198,7 +203,7 @@ export default function EbookPricing({
           price:
             itemResource === resource
               ? basePrice
-              : otherActiveByResource.get(itemResource)!.tierPrices.regular,
+              : crossSellPrices[itemResource] ?? otherActiveByResource.get(itemResource)!.tierPrices.regular,
         }))
       )
     : null;
@@ -367,7 +372,7 @@ export default function EbookPricing({
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} style={{ padding: "28px 36px" }}>
+          <form onSubmit={handleSubmit} style={{ padding: "28px 36px", display: "flex", flexDirection: "column" }}>
             {otherActiveEbooks.length > 0 && (
               <div style={{ marginBottom: 18 }}>
                 <p
@@ -411,8 +416,8 @@ export default function EbookPricing({
               </div>
             )}
 
-            {!appliedDiscount && !isCombo && (
-              <div style={{ marginBottom: 18 }}>
+            {!appliedDiscount && !isCombo && isDiscountOpen && (
+              <div id="ebook-discount-panel" style={{ marginBottom: 18, order: 3 }}>
                 <label
                   htmlFor="ebook-discount"
                   style={{
@@ -424,7 +429,7 @@ export default function EbookPricing({
                     marginBottom: 8,
                   }}
                 >
-                  ¿Tienes un código de descuento?
+                  Código de descuento
                 </label>
                 <div style={{ display: "flex", gap: 8 }}>
                   <input
@@ -488,6 +493,7 @@ export default function EbookPricing({
               htmlFor="ebook-email"
               style={{
                 display: "block",
+                order: 1,
                 color: "#4e4d4d",
                 fontSize: "0.75rem",
                 fontFamily: "var(--font-mono)",
@@ -505,6 +511,7 @@ export default function EbookPricing({
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@email.com"
               style={{
+                order: 2,
                 width: "100%",
                 background: "#f6f3f1",
                 border: "1px solid rgba(0,0,0,0.2)",
@@ -519,9 +526,40 @@ export default function EbookPricing({
               }}
             />
 
+            {!appliedDiscount && !isCombo && !isDiscountOpen && (
+              <button
+                type="button"
+                onClick={() => setIsDiscountOpen(true)}
+                aria-expanded={false}
+                aria-controls="ebook-discount-panel"
+                style={{
+                  order: 3,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  width: "100%",
+                  padding: "12px 0 2px",
+                  border: 0,
+                  borderTop: "1px solid rgba(0,0,0,0.12)",
+                  background: "transparent",
+                  color: "#4e4d4d",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.7rem",
+                  textAlign: "left",
+                }}
+              >
+                <span>¿Tienes un código de descuento?</span>
+                <span style={{ color: "#718641", textDecoration: "underline", textUnderlineOffset: 3 }}>
+                  Ingresarlo
+                </span>
+              </button>
+            )}
+
             {errorMsg && (
               <p
                 style={{
+                  order: 4,
                   color: "#c0392b",
                   fontSize: "0.8rem",
                   marginBottom: 12,
@@ -538,6 +576,7 @@ export default function EbookPricing({
               disabled={status === "loading"}
               className="btn-monad-fill"
               style={{
+                order: 5,
                 width: "100%",
                 cursor: status === "loading" ? "wait" : "pointer",
               }}

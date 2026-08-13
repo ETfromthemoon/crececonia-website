@@ -6,12 +6,13 @@ import EbookAuthor from "@/components/EbookAuthor";
 import EbookPricing from "@/components/EbookPricing";
 import EbookFAQ from "@/components/EbookFAQ";
 import EbookImmersion from "@/components/EbookImmersion";
-import EbookCursorGlow from "@/components/EbookCursorGlow";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookProfileCard from "@/components/EbookProfileCard";
+import EbookPageFrame from "@/components/EbookPageFrame";
 import { getCrossSellEntries } from "@/lib/ebook-crossell";
 import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
 import { resolveBundleSelectionFromUrl } from "@/lib/ebook-bundles";
+import { getCurrentPrice } from "@/lib/ebook-pricing";
 
 // Necesario para que el bloque "sumá otros ebooks" de EbookPricing pase de
 // vacío a mostrar los 3 libros nuevos exactamente a su hora de lanzamiento,
@@ -68,7 +69,7 @@ function EbookProblem() {
             display: "flex",
             flexDirection: "column",
             gap: 20,
-            borderLeft: "2px solid rgba(207,218,245,0.9)",
+            borderLeft: "2px solid rgba(198,219,112,0.9)",
             paddingLeft: 24,
           }}
         >
@@ -160,6 +161,10 @@ export default async function EbookPage({
   searchParams: Promise<SearchParams>;
 }) {
   const crossSellEntries = getCrossSellEntries(DEFAULT_EBOOK_RESOURCE);
+  const crossSellPrices = Object.fromEntries(await Promise.all(crossSellEntries.map(async (entry) => [
+    entry.resource,
+    (await getCurrentPrice(entry.resource).catch(() => ({ price: entry.tierPrices.regular }))).price,
+  ])));
   const urlSelection = resolveBundleSelectionFromUrl(
     await searchParams,
     DEFAULT_EBOOK_RESOURCE,
@@ -167,8 +172,7 @@ export default async function EbookPage({
   );
 
   return (
-    <main className="monad">
-      <EbookCursorGlow />
+    <EbookPageFrame currentResource={DEFAULT_EBOOK_RESOURCE}>
       <EbookHero />
       <EbookImmersion />
       <EbookProblem />
@@ -179,9 +183,10 @@ export default async function EbookPage({
       <EbookPricing
         resource={DEFAULT_EBOOK_RESOURCE}
         crossSellEntries={crossSellEntries}
+        crossSellPrices={crossSellPrices}
         {...urlSelection}
       />
       <EbookFAQ />
-    </main>
+    </EbookPageFrame>
   );
 }
