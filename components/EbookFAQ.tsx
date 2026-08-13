@@ -51,7 +51,7 @@ export default function EbookFAQ() {
                 style={{
                   borderBottom: "1px solid rgba(0,0,0,0.1)",
                   borderTop: idx === 0 ? "1px solid rgba(0,0,0,0.1)" : "none",
-                  background: isOpen ? "rgba(207,218,245,0.16)" : "transparent",
+                  background: isOpen ? "rgba(198,219,112,0.16)" : "transparent",
                   transition: "background 0.35s ease",
                   borderRadius: isOpen ? 12 : 0,
                 }}

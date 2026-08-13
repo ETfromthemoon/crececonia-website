@@ -929,29 +929,27 @@ h1, h2, h3 { color:var(--ink-deep); }
   color: #000;
 }
 
-/* Individual ebook pages keep their product editorial content while using the
-   same site navigation and wayfinding as the rest of CrececonIA. */
-.ebook-detail-page { padding-top: 76px; }
+/* Individual ebook pages retain a compact library bar, leaving the editorial
+   product view to lead while scrolling. */
+.ebook-detail-page { padding-top: 0; }
 .ebook-library-nav {
-  position: sticky;
-  top: 76px;
-  z-index: 35;
-  background: rgba(246,243,241,.94);
+  position: relative;
+  z-index: 1;
+  background: #f6f3f1;
   border-bottom: 1px solid rgba(21,22,24,.16);
-  backdrop-filter: blur(14px);
 }
 .ebook-library-nav-inner {
   width: min(1180px, calc(100% - 48px));
-  min-height: 52px;
+  min-height: 40px;
   margin-inline: auto;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 14px;
 }
 .ebook-library-index {
   flex: 0 0 auto;
   color: #151618;
-  font: 600 .64rem var(--font-mono);
+  font: 600 .57rem var(--font-mono);
   letter-spacing: .1em;
   text-transform: uppercase;
 }
@@ -967,10 +965,10 @@ h1, h2, h3 { color:var(--ink-deep); }
 .ebook-library-links::-webkit-scrollbar { display: none; }
 .ebook-library-links a {
   flex: 0 0 auto;
-  padding: 7px 9px;
+  padding: 5px 8px;
   border-radius: 6px;
   color: #62615d;
-  font: .65rem/1.2 var(--font-mono);
+  font: .58rem/1.2 var(--font-mono);
   letter-spacing: .01em;
   transition: background .2s ease, color .2s ease;
 }
@@ -979,8 +977,8 @@ h1, h2, h3 { color:var(--ink-deep); }
 .ebook-library-nav a:focus-visible { outline: 2px solid #718641; outline-offset: 3px; }
 @media (max-width:720px) {
   .ebook-library-nav-inner { width: min(100% - 32px,1180px); gap: 12px; }
-  .ebook-library-index { font-size: .58rem; }
-  .ebook-library-links a { padding-inline: 8px; font-size: .6rem; }
+  .ebook-library-index { font-size: .54rem; }
+  .ebook-library-links a { padding-inline: 7px; font-size: .55rem; }
 }
 
 .btn-monad-fill {

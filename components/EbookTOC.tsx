@@ -40,7 +40,7 @@ export default function EbookTOC() {
   const inView = useInView(ref, { once: true, margin: "-60px" });
 
   return (
-    <section className="section-y px-6" style={{ background: "rgba(207,218,245,0.18)" }}>
+    <section className="section-y px-6" style={{ background: "rgba(198,219,112,0.14)" }}>
       <div style={{ maxWidth: 800, margin: "0 auto" }}>
         <EbookSectionHeading kicker="Contenido">
           Lo que vas a aprender,{" "}
@@ -68,7 +68,7 @@ export default function EbookTOC() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: "#cfdaf5",
+                    background: "#e4efb6",
                     borderRadius: 8,
                     color: "#242424",
                     fontSize: "0.7rem",
@@ -119,7 +119,7 @@ export default function EbookTOC() {
                     marginTop: 22,
                     height: 1,
                     background:
-                      "linear-gradient(to right, rgba(111,134,201,0.4), rgba(0,0,0,0.08) 60%)",
+                      "linear-gradient(to right, rgba(113,134,65,0.45), rgba(0,0,0,0.08) 60%)",
                     transformOrigin: "left",
                   }}
                 />

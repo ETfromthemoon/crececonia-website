@@ -9,7 +9,6 @@ import EbookGenericTOC from "@/components/EbookGenericTOC";
 import EbookGenericFAQ from "@/components/EbookGenericFAQ";
 import EbookPricing from "@/components/EbookPricing";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
-import EbookCursorGlow from "@/components/EbookCursorGlow";
 import EbookPageFrame from "@/components/EbookPageFrame";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 
@@ -140,7 +139,6 @@ export default async function AgentesDeIAPage({
 
   return (
     <EbookPageFrame currentResource={RESOURCE}>
-      <EbookCursorGlow />
       <EbookGenericHero
         resource={RESOURCE}
         eyebrow="Ebook · CrececonIA · Aplicación al negocio"

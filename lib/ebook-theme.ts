@@ -5,4 +5,4 @@
  * copy-pasted hex strings.
  */
 export const EBOOK_COLD_BG = "#141414";
-export const EBOOK_ACCENT = "#8fa3d9";
+export const EBOOK_ACCENT = "#c6db70";

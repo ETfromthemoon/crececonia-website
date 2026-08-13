@@ -6,7 +6,6 @@ import EbookAuthor from "@/components/EbookAuthor";
 import EbookPricing from "@/components/EbookPricing";
 import EbookFAQ from "@/components/EbookFAQ";
 import EbookImmersion from "@/components/EbookImmersion";
-import EbookCursorGlow from "@/components/EbookCursorGlow";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookProfileCard from "@/components/EbookProfileCard";
 import EbookPageFrame from "@/components/EbookPageFrame";
@@ -70,7 +69,7 @@ function EbookProblem() {
             display: "flex",
             flexDirection: "column",
             gap: 20,
-            borderLeft: "2px solid rgba(207,218,245,0.9)",
+            borderLeft: "2px solid rgba(198,219,112,0.9)",
             paddingLeft: 24,
           }}
         >
@@ -174,7 +173,6 @@ export default async function EbookPage({
 
   return (
     <EbookPageFrame currentResource={DEFAULT_EBOOK_RESOURCE}>
-      <EbookCursorGlow />
       <EbookHero />
       <EbookImmersion />
       <EbookProblem />
