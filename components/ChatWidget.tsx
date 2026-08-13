@@ -73,7 +73,9 @@ export default function ChatWidget() {
     setSessionId(null);
     try {
       const r = await fetch(`${API}/api/public/widget/inicio`, { method: "POST" });
+      if (!r.ok) throw new Error("No se pudo iniciar el chat");
       const j = await r.json();
+      if (!j.session_id || !j.mensaje) throw new Error("Respuesta de chat incompleta");
       setSessionId(j.session_id);
       setMessages([{ id: "init", role: "bot", content: j.mensaje }]);
     } catch {
@@ -105,11 +107,12 @@ export default function ChatWidget() {
         body: JSON.stringify({ session_id: sessionId, mensaje: trimmed }),
         signal: AbortSignal.timeout(20000),
       });
+      if (!r.ok) throw new Error("No se pudo enviar el mensaje");
       const j = await r.json();
       const botMsg: Message = {
         id:                  `b-${Date.now()}`,
         role:                "bot",
-        content:             j.respuesta,
+        content:             j.respuesta || "No pude interpretar eso. Intenta de nuevo o escríbenos por WhatsApp.",
         sugerir_evaluacion:  j.sugerir_evaluacion,
         lead_capturado:      j.lead_capturado,
       };
@@ -153,7 +156,7 @@ export default function ChatWidget() {
             <div
               style={{
                 position: "absolute", top: 0, left: 0, right: 0, height: 1,
-                background: "linear-gradient(90deg, transparent, var(--champagne), transparent)",
+                background: "linear-gradient(90deg, transparent, #c6db70, #9caee3, transparent)",
                 opacity: 0.5, borderRadius: "10px 10px 0 0",
               }}
             />
@@ -251,10 +254,10 @@ export default function ChatWidget() {
                       rel="noopener noreferrer"
                       className="mt-2 text-xs px-3 py-2 transition-opacity hover:opacity-80"
                       style={{
-                        background: "rgba(217,179,106,0.12)",
-                        border: "1px solid rgba(217,179,106,0.35)",
-                        color: "var(--champagne)",
-                        borderRadius: 4,
+                        background: "rgba(198,219,112,0.12)",
+                        border: "1px solid rgba(198,219,112,0.35)",
+                        color: "#c6db70",
+                        borderRadius: 9,
                         fontWeight: 500,
                       }}
                     >
@@ -301,10 +304,10 @@ export default function ChatWidget() {
                       onClick={() => sendMessage(q)}
                       className="text-xs px-2.5 py-1.5 transition-all hover:opacity-80 active:scale-95"
                       style={{
-                        border: "1px solid rgba(217,179,106,0.25)",
-                        color: "var(--champagne)",
-                        borderRadius: 4,
-                        background: "rgba(217,179,106,0.07)",
+                        border: "1px solid rgba(156,174,227,0.3)",
+                        color: "#c6db70",
+                        borderRadius: 9,
+                        background: "rgba(156,174,227,0.1)",
                       }}
                     >
                       {q}
@@ -341,8 +344,8 @@ export default function ChatWidget() {
                 disabled={!input.trim() || loading}
                 className="w-8 h-8 flex-shrink-0 flex items-center justify-center transition-all disabled:opacity-30 hover:opacity-80 active:scale-90"
                 style={{
-                  background: "var(--champagne)",
-                  borderRadius: 6,
+                  background: "#c6db70",
+                  borderRadius: 9,
                 }}
                 aria-label="Enviar"
               >
@@ -380,21 +383,21 @@ export default function ChatWidget() {
       {/* ── Botón flotante ─────────────────────────────────────────────── */}
       <motion.button
         onClick={handleOpen}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.93 }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         className="site-chat-fab fixed z-[61] flex items-center justify-center shadow-2xl"
         style={{
           bottom: 16,
           right: 16,
           width: 52,
           height: 52,
-          borderRadius: "50%",
-          background: open ? "var(--carbon)" : "var(--champagne)",
-          border: "1px solid rgba(217,179,106,0.45)",
+          borderRadius: 14,
+          background: open ? "#17191b" : "#c6db70",
+          border: "1px solid rgba(198,219,112,0.72)",
           boxShadow: open
-            ? "0 4px 20px rgba(0,0,0,0.4)"
-            : "0 4px 24px rgba(217,179,106,0.35)",
-          transition: "background 0.2s, box-shadow 0.2s",
+            ? "0 8px 24px rgba(0,0,0,0.36)"
+            : "0 12px 30px rgba(198,219,112,0.22)",
+          transition: "background 0.2s, box-shadow 0.2s, transform 0.2s",
         }}
         aria-label={open ? "Cerrar chat" : "Abrir chat de ayuda"}
       >
