@@ -11,6 +11,7 @@ import EbookPricing from "@/components/EbookPricing";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookPageFrame from "@/components/EbookPageFrame";
 import EbookProductTheater from "@/components/EbookProductTheater";
+import EbookFit from "@/components/EbookFit";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 import { EBOOK_PRODUCT_THEATER_CONTENT } from "@/lib/ebook-product-theater";
 
@@ -150,6 +151,21 @@ export default async function CreacionDeWebsConIAPage({
           </p>
         </div>
       </section>
+
+      <EbookFit
+        title={<>Este libro empieza donde termina la curiosidad: <em style={{ fontStyle: "italic" }}>cuando quieres construir de verdad.</em></>}
+        forYou={[
+          "Tienes un perfil técnico o semi-técnico y quieres trabajar con Claude Code.",
+          "Quieres construir una landing real, revisarla y publicarla siguiendo un método.",
+          "Ya manejas las bases de Claude Code o estás dispuesto a estudiarlas antes de comenzar.",
+        ]}
+        notFor={[
+          "Buscas que alguien diseñe, programe y publique tu sitio por ti.",
+          "Esperas un curso completo de ecommerce, SaaS o sitios corporativos avanzados.",
+          "Nunca has usado Claude Code y no quieres partir por la base necesaria.",
+        ]}
+        alternative={{ href: "/ebook/de-cero-a-claude-en-una-semana", label: "Empezar por la base de Claude Code" }}
+      />
 
       <EbookGenericTOC
         title={<>16 capítulos, 3 partes,{" "}<em style={{ fontStyle: "italic" }}>un proyecto real de punta a punta.</em></>}

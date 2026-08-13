@@ -1,5 +1,3 @@
-import { whatsappUrl } from "@/lib/contact";
-
 export default function Footer() {
   return (
     <footer className="site-footer">
@@ -18,8 +16,8 @@ export default function Footer() {
           <a href="/ia">Enlace para Instagram</a>
         </div>
         <div className="footer-contact">
-          <span>¿Tienes una pregunta?</span>
-          <a href={whatsappUrl("Hola, tengo una pregunta sobre CrececonIA.")} target="_blank" rel="noopener noreferrer">Escríbenos por WhatsApp →</a>
+          <span>¿No sabes por dónde empezar?</span>
+          <a href="/ia">Elige tu siguiente paso →</a>
         </div>
       </div>
       <div className="site-container footer-bottom"><span>© 2026 CrececonIA</span><span>Santiago · Chile</span></div>
