@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import { marked } from "marked";
 import GuiaCodeCopy from "@/components/GuiaCodeCopy";
 import { whatsappUrl } from "@/lib/contact";
+import { createPageMetadata } from "@/lib/seo";
 
 const API_BASE = "https://autodrive.cl";
 
@@ -61,10 +62,12 @@ export async function generateMetadata({
   const { slug } = await params;
   const guia = await fetchGuia(slug);
   if (!guia) return { title: "Guía no encontrada" };
-  return {
+  return createPageMetadata({
     title: `${guia.titulo} — Guías CrececonIA`,
     description: guia.descripcion,
-  };
+    path: `/guias/${slug}`,
+    type: "article",
+  });
 }
 
 export default async function GuiaPage({

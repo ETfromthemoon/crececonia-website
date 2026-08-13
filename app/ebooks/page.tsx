@@ -1,18 +1,16 @@
-import type { Metadata } from "next";
 import EbookCard from "@/components/EbookCard";
 import { EBOOK_CATALOG, isCatalogEntryLive } from "@/lib/ebook-catalog";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 import { EBOOK_BUNDLES, computeBundleTotal } from "@/lib/ebook-bundles";
-
-const SITE_URL = "https://www.crececonia.cl";
+import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata = createPageMetadata({
   title: "Ebooks de IA aplicada — CrececonIA",
   description: "Elige una ruta práctica para dominar Claude, crear agentes de IA o construir sitios web con IA. Descarga inmediata en PDF móvil y A4.",
-  alternates: { canonical: `${SITE_URL}/ebooks` },
-};
+  path: "/ebooks",
+});
 
 export default async function EbooksPage() {
   const bookCards = await Promise.all(EBOOK_CATALOG.map(async (entry) => {

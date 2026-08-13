@@ -14,18 +14,18 @@ import EbookProductTheater from "@/components/EbookProductTheater";
 import EbookFit from "@/components/EbookFit";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 import { EBOOK_PRODUCT_THEATER_CONTENT } from "@/lib/ebook-product-theater";
+import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-const SITE_URL = "https://www.crececonia.cl";
 const RESOURCE = "ebook:agentes-de-ia";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Agentes de IA para tu Negocio — Ebook · CrececonIA",
   description:
     "Automatiza tareas con agentes inteligentes que aprenden a trabajar por ti dentro de Claude. Para dueños de negocio, sin programar.",
-  alternates: { canonical: `${SITE_URL}/ebook/agentes-de-ia` },
-};
+  path: "/ebook/agentes-de-ia",
+});
 
 const SECTIONS = [
   {

@@ -8,6 +8,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { marked } from "marked";
+import { createPageMetadata } from "@/lib/seo";
 
 const API_BASE = "https://autodrive.cl";
 
@@ -78,10 +79,12 @@ export async function generateMetadata({
   const { slug } = await params;
   const skill = await fetchSkill(slug);
   if (!skill) return { title: "Skill no encontrada" };
-  return {
+  return createPageMetadata({
     title: `${skill.titulo} — Skills CrececonIA`,
     description: skill.descripcion_corta,
-  };
+    path: `/skills/${slug}`,
+    type: "article",
+  });
 }
 
 export default async function SkillPage({

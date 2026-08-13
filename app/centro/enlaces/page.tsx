@@ -3,13 +3,14 @@ import Footer from "@/components/Footer";
 import EmailPopup from "@/components/EmailPopup";
 import HubListing from "@/components/HubListing";
 import { getHubItems } from "@/lib/hub";
-import type { Metadata } from "next";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = createPageMetadata({
   title: "Links curados — Centro de Conocimiento · CrececonIA",
   description:
     "Los mejores artículos, herramientas, videos y repositorios sobre IA para negocios, seleccionados por Crececonia.",
-};
+  path: "/centro/enlaces",
+});
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

@@ -13,11 +13,11 @@ export default function Footer() {
           <a href="/ebooks">Ebooks</a>
           <a href="/centro">Centro de conocimiento</a>
           <a href="/protocolo-bpi">Método BPI</a>
-          <a href="/ia">Enlace para Instagram</a>
+          <a href="/ia">Elegir mi ruta</a>
         </div>
         <div className="footer-contact">
-          <span>¿No sabes por dónde empezar?</span>
-          <a href="/ia">Elige tu siguiente paso →</a>
+          <span>¿No sabes qué servicio te conviene?</span>
+          <a href="/ia">Comparar rutas y requisitos →</a>
         </div>
       </div>
       <div className="site-container footer-bottom"><span>© 2026 CrececonIA</span><span>Santiago · Chile</span></div>

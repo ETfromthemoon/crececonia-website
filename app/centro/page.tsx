@@ -4,13 +4,14 @@ import EmailPopup from "@/components/EmailPopup";
 import CentroBrowser, { type TemaResumen } from "@/components/CentroBrowser";
 import { getHubItems } from "@/lib/hub";
 import { TEMAS } from "@/lib/temas";
-import type { Metadata } from "next";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = createPageMetadata({
   title: "Centro de Conocimiento — CrececonIA",
   description:
     "Todo el conocimiento de Crececonia en un solo lugar: skills, guías y enlaces, organizados por objetivo. Encontrá lo que te sirve para crecer.",
-};
+  path: "/centro",
+});
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

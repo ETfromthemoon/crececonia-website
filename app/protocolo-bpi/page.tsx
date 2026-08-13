@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { WAButton } from "@/components/GradientButton";
 
-const SITE_URL = "https://crececonia.cl";
+const SITE_URL = "https://www.crececonia.cl";
 
 export const metadata: Metadata = {
   title: "Protocolo BPI — Bases · Procesos · IA · CrececonIA",

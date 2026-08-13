@@ -7,6 +7,7 @@ import HubCard from "@/components/HubCard";
 import { getHubItems, TIPO_LABEL, type HubTipo } from "@/lib/hub";
 import { TEMAS_POR_ID, type TemaId } from "@/lib/temas";
 import type { Metadata } from "next";
+import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -30,10 +31,11 @@ export async function generateMetadata({
   const { tema } = await params;
   const t = getTema(tema);
   if (!t) return { title: "Centro de Conocimiento — CrececonIA" };
-  return {
+  return createPageMetadata({
     title: `${t.titulo} — Centro de Conocimiento · CrececonIA`,
     description: t.descripcion,
-  };
+    path: `/centro/${tema}`,
+  });
 }
 
 export default async function TemaPage({

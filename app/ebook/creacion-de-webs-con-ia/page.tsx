@@ -14,18 +14,18 @@ import EbookProductTheater from "@/components/EbookProductTheater";
 import EbookFit from "@/components/EbookFit";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 import { EBOOK_PRODUCT_THEATER_CONTENT } from "@/lib/ebook-product-theater";
+import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-const SITE_URL = "https://www.crececonia.cl";
 const RESOURCE = "ebook:creacion-de-webs-con-ia";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Creación de Webs con IA · Parte 1 — Ebook · CrececonIA",
   description:
     "Diseña y lanza sitios web completos usando inteligencia artificial, sin escribir código desde cero. Proyecto real con Next.js y Claude Code.",
-  alternates: { canonical: `${SITE_URL}/ebook/creacion-de-webs-con-ia` },
-};
+  path: "/ebook/creacion-de-webs-con-ia",
+});
 
 const SECTIONS = [
   {

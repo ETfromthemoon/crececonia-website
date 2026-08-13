@@ -3,13 +3,14 @@ import Footer from "@/components/Footer";
 import EmailPopup from "@/components/EmailPopup";
 import HubListing from "@/components/HubListing";
 import { getHubItems } from "@/lib/hub";
-import type { Metadata } from "next";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = createPageMetadata({
   title: "Skills para Claude Code — Centro de Conocimiento · CrececonIA",
   description:
     "Todas las skills de Crececonia para Claude Code. Descarga, copia y empieza a usarlas en segundos.",
-};
+  path: "/centro/skills",
+});
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

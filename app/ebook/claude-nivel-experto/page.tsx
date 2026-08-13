@@ -13,21 +13,21 @@ import EbookPageFrame from "@/components/EbookPageFrame";
 import EbookProductTheater from "@/components/EbookProductTheater";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 import { EBOOK_PRODUCT_THEATER_CONTENT } from "@/lib/ebook-product-theater";
+import { createPageMetadata } from "@/lib/seo";
 
 // Gating por hora de lanzamiento (visibleFrom en el catálogo) — no se puede
 // prerenderizar en build time o la activación de las 20:50 nunca ocurriría
 // sola. Ver el comentario de `visibleFrom` en lib/ebook-catalog.ts.
 export const dynamic = "force-dynamic";
 
-const SITE_URL = "https://www.crececonia.cl";
 const RESOURCE = "ebook:claude-nivel-experto";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Claude a Nivel Experto — Ebook · CrececonIA",
   description:
     "Las técnicas que usan los power users para dejar de conversar con Claude y ponerlo a trabajar solo. Delegación, contexto, orquestación multi-agente.",
-  alternates: { canonical: `${SITE_URL}/ebook/claude-nivel-experto` },
-};
+  path: "/ebook/claude-nivel-experto",
+});
 
 const TOPICS = [
   { title: "Delegación real", desc: "Dejar de pedirle a Claude que responda y empezar a pedirle que resuelva de punta a punta." },

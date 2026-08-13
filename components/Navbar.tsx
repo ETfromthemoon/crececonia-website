@@ -3,17 +3,17 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { whatsappUrl } from "@/lib/contact";
 
 const NAV_LINKS = [
-  { label: "La escalera", href: "/#escalera" },
   { label: "Aprender", href: "/aprender" },
-  { label: "Biblioteca", href: "/ebooks" },
   { label: "Mentoría", href: "/mentoria" },
   { label: "Implementación", href: "/implementacion" },
 ] as const;
 
-const WHATSAPP_URL = whatsappUrl("Hola, quiero entender qué capa de CrececonIA es mejor para mí.");
+function isCurrentLink(pathname: string, href: (typeof NAV_LINKS)[number]["href"]) {
+  if (href === "/aprender") return pathname === "/aprender" || pathname === "/ebooks" || pathname.startsWith("/ebook/");
+  return pathname === href;
+}
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -50,16 +50,12 @@ export default function Navbar() {
         </a>
         <nav className="desktop-nav" aria-label="Navegación principal">
           {NAV_LINKS.map((link) => {
-            const isCurrent = link.href === "/#escalera"
-              ? pathname === "/"
-              : link.href === "/ebooks"
-                ? pathname === "/ebooks" || pathname.startsWith("/ebook/")
-                : pathname === link.href;
+            const isCurrent = isCurrentLink(pathname, link.href);
             return <a key={link.href} href={link.href} aria-current={isCurrent ? "page" : undefined}>{link.label}</a>;
           })}
         </nav>
         <div className="nav-actions">
-          <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="nav-cta">Hablemos</a>
+          <a href="/ia" className="nav-cta" aria-current={pathname === "/ia" ? "page" : undefined}>Elegir mi ruta</a>
           <button
             className="menu-toggle"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -82,14 +78,10 @@ export default function Navbar() {
             aria-label="Navegación móvil"
           >
             {NAV_LINKS.map((link) => {
-              const isCurrent = link.href === "/#escalera"
-                ? pathname === "/"
-                : link.href === "/ebooks"
-                  ? pathname === "/ebooks" || pathname.startsWith("/ebook/")
-                  : pathname === link.href;
+              const isCurrent = isCurrentLink(pathname, link.href);
               return <a key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)} aria-current={isCurrent ? "page" : undefined}>{link.label}</a>;
             })}
-            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="mobile-whatsapp" onClick={() => setMobileMenuOpen(false)}>Hablar por WhatsApp →</a>
+            <a href="/ia" className="mobile-route-cta" onClick={() => setMobileMenuOpen(false)} aria-current={pathname === "/ia" ? "page" : undefined}>Elegir mi ruta →</a>
           </motion.nav>
         )}
       </AnimatePresence>
