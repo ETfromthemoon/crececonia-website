@@ -12,6 +12,7 @@ import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookPageFrame from "@/components/EbookPageFrame";
 import EbookProductTheater from "@/components/EbookProductTheater";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
+import { EBOOK_PRODUCT_THEATER_CONTENT } from "@/lib/ebook-product-theater";
 
 export const dynamic = "force-dynamic";
 
@@ -132,7 +133,7 @@ export default async function CreacionDeWebsConIAPage({
         coverAlt="Portada del ebook Creación de Webs con IA"
       />
 
-      <EbookProductTheater />
+      <EbookProductTheater content={EBOOK_PRODUCT_THEATER_CONTENT[RESOURCE]} />
 
       <section className="section-y px-6">
         <div style={{ maxWidth: 720, margin: "0 auto" }}>

@@ -9,8 +9,10 @@ import EbookImmersion from "@/components/EbookImmersion";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookProfileCard from "@/components/EbookProfileCard";
 import EbookPageFrame from "@/components/EbookPageFrame";
+import EbookProductTheater from "@/components/EbookProductTheater";
 import { getCrossSellEntries } from "@/lib/ebook-crossell";
 import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
+import { EBOOK_PRODUCT_THEATER_CONTENT } from "@/lib/ebook-product-theater";
 import { resolveBundleSelectionFromUrl } from "@/lib/ebook-bundles";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 
@@ -175,6 +177,7 @@ export default async function EbookPage({
     <EbookPageFrame currentResource={DEFAULT_EBOOK_RESOURCE}>
       <EbookHero />
       <EbookImmersion />
+      <EbookProductTheater content={EBOOK_PRODUCT_THEATER_CONTENT[DEFAULT_EBOOK_RESOURCE]} />
       <EbookProblem />
       <EbookBenefits />
       <EbookWhoIsFor />

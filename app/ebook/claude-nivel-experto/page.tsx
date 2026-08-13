@@ -10,7 +10,9 @@ import EbookGenericFAQ from "@/components/EbookGenericFAQ";
 import EbookPricing from "@/components/EbookPricing";
 import EbookSectionHeading from "@/components/EbookSectionHeading";
 import EbookPageFrame from "@/components/EbookPageFrame";
+import EbookProductTheater from "@/components/EbookProductTheater";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
+import { EBOOK_PRODUCT_THEATER_CONTENT } from "@/lib/ebook-product-theater";
 
 // Gating por hora de lanzamiento (visibleFrom en el catálogo) — no se puede
 // prerenderizar en build time o la activación de las 20:50 nunca ocurriría
@@ -107,6 +109,8 @@ export default async function ClaudeNivelExpertoPage({
         coverSrc={entry.coverSrc}
         coverAlt="Portada del ebook Claude a Nivel Experto"
       />
+
+      <EbookProductTheater content={EBOOK_PRODUCT_THEATER_CONTENT[RESOURCE]} />
 
       <section className="section-y px-6">
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
