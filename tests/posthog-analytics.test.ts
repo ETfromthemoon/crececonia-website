@@ -87,4 +87,33 @@ describe("fetchAnalyticsReport", () => {
     const { fetchAnalyticsReport } = await import("@/lib/posthog-analytics");
     await expect(fetchAnalyticsReport(7, new Date("2026-07-30"))).rejects.toThrow(/401/);
   });
+
+  it("agrega métricas del ecosistema y recomendaciones desde la respuesta extendida", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        results: [
+          ["ecosystem_page_view", null, "landing", 0, 100],
+          ["ecosystem_link_clicked", null, "landing", 0, 8],
+          ["ecosystem_scroll_depth", null, "landing", 90, 12],
+          ["evaluation_opened", null, "landing", 0, 10],
+          ["evaluation_submit_succeeded", null, "landing", 0, 2],
+        ],
+      }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const { fetchAnalyticsReport } = await import("@/lib/posthog-analytics");
+    const report = await fetchAnalyticsReport(7, new Date("2026-07-30"));
+
+    expect(report.ecosystem).toMatchObject({
+      pageViews: 100,
+      linkClicks: 8,
+      scrollDepth90: 12,
+      evaluationOpened: 10,
+      evaluationSucceeded: 2,
+    });
+    expect(report.byPageType).toEqual([{ pageType: "landing", pageViews: 100 }]);
+    expect(report.recommendations?.length).toBeGreaterThan(0);
+  });
 });

@@ -2,7 +2,9 @@ import { fetchAnalyticsReport } from "../lib/posthog-analytics";
 import { formatAnalyticsReport } from "../lib/posthog-report-format";
 
 async function main() {
-  const windowDaysArg = process.argv[2];
+  const args = process.argv.slice(2);
+  const json = args.includes("--json");
+  const windowDaysArg = args.find((arg) => arg !== "--json");
   const windowDays = windowDaysArg ? Number(windowDaysArg) : 7;
 
   if (!Number.isFinite(windowDays) || windowDays <= 0) {
@@ -11,7 +13,7 @@ async function main() {
   }
 
   const report = await fetchAnalyticsReport(windowDays, new Date());
-  console.log(formatAnalyticsReport(report));
+  console.log(json ? JSON.stringify(report, null, 2) : formatAnalyticsReport(report));
 }
 
 main().catch((err) => {

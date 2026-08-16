@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { trackEvent } from "@/lib/analytics";
 
 const API_URL = "https://autodrive.cl/api/public/solicitar-llamada";
 
@@ -36,6 +37,7 @@ function SolicitarContent() {
     }
     setLoading(true);
     setError("");
+    trackEvent("appointment_submitted", { channel: "calendar_request" });
     try {
       const r = await fetch(API_URL, {
         method: "POST",
@@ -46,10 +48,13 @@ function SolicitarContent() {
       const j = await r.json();
       if (r.ok && j.ok) {
         setDone(true);
+        trackEvent("appointment_submit_succeeded");
       } else {
+        trackEvent("appointment_submit_failed", { reason: "remote_rejected" });
         setError(j.detail || "Algo salió mal. Intenta de nuevo o escríbenos a sergio@crececonia.cl.");
       }
     } catch {
+      trackEvent("appointment_submit_failed", { reason: "network" });
       setError("No pudimos enviar la solicitud. Por favor escríbenos a sergio@crececonia.cl.");
     } finally {
       setLoading(false);

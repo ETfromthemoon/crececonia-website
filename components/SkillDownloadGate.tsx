@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 const API_BASE = "https://autodrive.cl";
 
@@ -32,6 +33,7 @@ export default function SkillDownloadGate({
     }
     setError("");
     setEnviando(true);
+    trackEvent("skill_download_requested", { slug, file_type: archivoTipo });
     try {
       const r = await fetch(`${API_BASE}/api/public/skills/${slug}/request-download`, {
         method: "POST",
@@ -45,10 +47,12 @@ export default function SkillDownloadGate({
       }
       // Disparar descarga real
       window.location.href = `${API_BASE}${d.download_url}`;
+      trackEvent("skill_download_succeeded", { slug, file_type: archivoTipo });
       // Cerrar modal después de un breve delay
       setTimeout(() => setOpen(false), 500);
     } catch {
       setError("Error de red");
+      trackEvent("skill_download_failed", { slug, reason: "network" });
     } finally {
       setEnviando(false);
     }

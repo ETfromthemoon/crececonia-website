@@ -9,6 +9,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "posthog:report": "tsx --env-file-if-exists=.env.local scripts/posthog-report.ts",
+    "posthog:email": "tsx --env-file-if-exists=.env.local scripts/posthog-report-email.ts",
     "flow:contract": "tsx --env-file-if-exists=.env.local scripts/flow-contract-check.ts",
     "ebook:recuperar": "tsx --env-file-if-exists=.env.local scripts/recuperar-entregas.ts",
     "ebook:subir-pdfs": "tsx --env-file-if-exists=.env.local scripts/subir-ebooks-storage.ts",
