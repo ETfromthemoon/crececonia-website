@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { trackEvent } from "@/lib/analytics";
 
 const STORAGE_KEY = "crececonia_subscribed";
 const DISMISS_KEY = "crececonia_popup_dismissed_at";
@@ -29,7 +30,10 @@ export default function EmailPopup() {
     const dismissedAt = Number(localStorage.getItem(DISMISS_KEY) ?? 0);
     if (dismissedAt && Date.now() - dismissedAt < DISMISS_COOLDOWN_MS) return;
 
-    const timer = setTimeout(() => setVisible(true), DELAY_MS);
+    const timer = setTimeout(() => {
+      setVisible(true);
+      trackEvent("newsletter_prompt_shown", { placement: "content_popup" });
+    }, DELAY_MS);
     return () => clearTimeout(timer);
   }, []);
 
@@ -44,6 +48,7 @@ export default function EmailPopup() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("loading");
+    trackEvent("newsletter_signup_submitted", { placement: "content_popup" });
 
     try {
       // Llamada directa al backend autodrive.cl
@@ -56,13 +61,16 @@ export default function EmailPopup() {
 
       if (res.ok) {
         setStatus("success");
+        trackEvent("newsletter_signup_succeeded", { placement: "content_popup" });
         localStorage.setItem(STORAGE_KEY, "1");
         setTimeout(() => setVisible(false), 3000);
       } else {
         setStatus("error");
+        trackEvent("newsletter_signup_failed", { placement: "content_popup", reason: "remote_rejected" });
       }
     } catch {
       setStatus("error");
+      trackEvent("newsletter_signup_failed", { placement: "content_popup", reason: "network" });
     }
   }
 

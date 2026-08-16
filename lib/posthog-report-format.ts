@@ -1,4 +1,4 @@
-import type { AnalyticsReport, VariantComparison } from "./posthog-analytics";
+import type { AnalyticsReport, EcosystemMetrics, VariantComparison } from "./posthog-analytics";
 
 const MIN_SAMPLE_SIZE = 30;
 const MIN_RELATIVE_DIFFERENCE = 0.2; // 20% relativo, no 20 puntos porcentuales absolutos
@@ -49,12 +49,45 @@ function formatVariantSection(byVariant: VariantComparison[]): string {
   return `Comparación de variantes: ${detail}. Diferencia insuficiente para recomendar un cambio (menor al ${(MIN_RELATIVE_DIFFERENCE * 100).toFixed(0)}% relativo).`;
 }
 
+function formatEcosystemSection(metrics?: EcosystemMetrics, byPageType: AnalyticsReport["byPageType"] = []): string {
+  if (!metrics) return "Métricas del ecosistema: no disponibles en esta versión del reporte.";
+
+  const pages = byPageType.length > 0
+    ? byPageType.map((item) => `${item.pageType}=${item.pageViews}`).join(", ")
+    : "sin desglose por categoría";
+
+  return [
+    "Métricas del ecosistema:",
+    `  eventos totales: ${metrics.eventCount}`,
+    `  pageviews propios: ${metrics.pageViews} (${pages}) · enlaces/secciones: ${metrics.linkClicks}/${metrics.sectionViews}`,
+    `  CTA semánticos: ${metrics.ctaClicks} · evaluación abierta/enviada/completada: ${metrics.evaluationOpened}/${metrics.evaluationSubmitted}/${metrics.evaluationSucceeded}`,
+    `  chat abierto/mensajes/fallbacks: ${metrics.chatOpened}/${metrics.chatMessages}/${metrics.chatFallbacks}`,
+    `  newsletter prompts/suscripciones: ${metrics.newsletterPrompts}/${metrics.newsletterSignups}`,
+    `  skills vistas/descargas: ${metrics.skillViews}/${metrics.skillDownloads}`,
+    `  checkouts solicitados/fallidos/creados/compras: ${metrics.ebookCheckoutRequests}/${metrics.ebookCheckoutFailures}/${metrics.ebookCheckouts}/${metrics.purchases}`,
+    `  llamadas solicitadas/completadas: ${metrics.appointmentSubmissions}/${metrics.appointmentSuccesses}`,
+    `  calificaciones enviadas: ${metrics.qualificationSubmissions}`,
+    `  profundidad 90%: ${metrics.scrollDepth90}`,
+  ].join("\n");
+}
+
+function formatRecommendations(recommendations?: string[]): string {
+  if (!recommendations || recommendations.length === 0) {
+    return "Sugerencias: no hay una recomendación prioritaria clara en esta ventana; mantener la instrumentación y acumular volumen.";
+  }
+  return ["Sugerencias para la página:", ...recommendations.map((item) => `  - ${item}`)].join("\n");
+}
+
 export function formatAnalyticsReport(report: AnalyticsReport): string {
   return [
     `Reporte de analytics — generado ${report.generatedAt}`,
     "",
     formatFunnelSection(report),
     "",
+    formatEcosystemSection(report.ecosystem, report.byPageType),
+    "",
     formatVariantSection(report.byVariant),
+    "",
+    formatRecommendations(report.recommendations),
   ].join("\n");
 }

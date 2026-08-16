@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 type Ctx = {
   open: boolean;
@@ -23,6 +24,7 @@ export function EvaluacionProvider({ children }: { children: ReactNode }) {
         abrir: (src = "default") => {
           setSource(src);
           setOpen(true);
+          trackEvent("evaluation_opened", { source: src });
         },
         cerrar: () => setOpen(false),
       }}

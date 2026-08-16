@@ -201,6 +201,13 @@ la detectaron los tests** porque los mocks replicaban la suposición equivocada 
 
 ## Reporte de analytics de PostHog
 
+La implementación vigente amplía el reporte al ecosistema completo: pageviews,
+secciones, scroll, CTA, evaluación, chat, newsletter, skills, ebooks,
+llamadas y formularios. También expone `GET /api/analytics/report?days=7`
+protegido por `ANALYTICS_REPORT_SECRET` (fallback `ADMIN_SECRET`) o
+`CRON_SECRET`; `npm run posthog:report -- 7 --json` sirve como acceso local de
+máquina.
+
 `npm run posthog:report -- [dias]` (default 7) imprime un resumen del funnel de venta de ebooks
 (`lib/posthog-analytics.ts` + `lib/posthog-report-format.ts`): conteos por etapa, tasa de combo, y
 comparación de conversión por `pricing_variant` cuando hay volumen suficiente (mínimo 30 vistas por

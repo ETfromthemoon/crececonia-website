@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { whatsappUrl } from "@/lib/contact";
+import { trackEvent } from "@/lib/analytics";
 
 const API = "https://autodrive.cl";
 
@@ -90,8 +91,10 @@ export default function ChatWidget() {
       if (!j.session_id || !j.mensaje) throw new Error("Respuesta de chat incompleta");
       setSessionId(j.session_id);
       setMessages([{ id: "init", role: "bot", content: j.mensaje }]);
+      trackEvent("chat_session_started", { status: "connected" });
     } catch {
       setMessages([{ id: "init", role: "bot", content: SALUDO_FALLBACK, fallback: true }]);
+      trackEvent("chat_session_started", { status: "fallback" });
     }
   }, []);
 
@@ -101,6 +104,7 @@ export default function ChatWidget() {
       return;
     }
     setOpen(true);
+    trackEvent("chat_opened");
     if (!sessionId) {
       startSession();
     }
@@ -111,6 +115,7 @@ export default function ChatWidget() {
     if (!trimmed || loading) return;
 
     const userMsg: Message = { id: `u-${Date.now()}`, role: "user", content: trimmed };
+    trackEvent("chat_message_sent", { message_type: "free_text" });
 
     if (!sessionId) {
       setWhatsappMessage(trimmed);
@@ -149,6 +154,11 @@ export default function ChatWidget() {
         lead_capturado:      j.lead_capturado,
       };
       setMessages((prev) => [...prev, botMsg]);
+      trackEvent("chat_response_received", {
+        suggested_evaluation: Boolean(j.sugerir_evaluacion),
+        lead_captured: Boolean(j.lead_capturado),
+      });
+      if (j.lead_capturado) trackEvent("chat_lead_captured");
     } catch {
       setSessionId(null);
       setWhatsappMessage(trimmed);
@@ -161,6 +171,7 @@ export default function ChatWidget() {
           content: "No pudimos completar esa respuesta. Puedes continuar por WhatsApp con tu consulta preparada.",
         },
       ]);
+      trackEvent("chat_fallback", { reason: "message_request_failed" });
     } finally {
       setLoading(false);
     }
@@ -429,6 +440,7 @@ export default function ChatWidget() {
             <div className="text-center pb-2.5">
               <a
                 href={directChatUrl}
+                onClick={() => trackEvent("chat_whatsapp_clicked")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-opacity hover:opacity-100"

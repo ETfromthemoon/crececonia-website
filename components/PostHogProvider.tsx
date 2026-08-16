@@ -2,6 +2,7 @@
 
 import posthog from "posthog-js";
 import { PostHogProvider as PostHogReactProvider } from "posthog-js/react";
+import PostHogEcosystemTracker from "./PostHogEcosystemTracker";
 
 /**
  * Se llama en el scope del módulo, no en un useEffect: los efectos de un
@@ -17,8 +18,15 @@ if (typeof window !== "undefined" && !posthog.__loaded) {
   if (key) {
     posthog.init(key, {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
-      capture_pageview: true,
+      capture_pageview: "history_change",
+      capture_pageleave: "if_capture_pageview",
+      autocapture: true,
       person_profiles: "identified_only",
+      respect_dnt: true,
+      session_recording: {
+        maskAllInputs: true,
+        maskTextClass: "ph-mask",
+      },
     });
   }
 }
@@ -31,5 +39,10 @@ if (typeof window !== "undefined" && !posthog.__loaded) {
  * romper build/dev.
  */
 export default function PostHogProvider({ children }: { children: React.ReactNode }) {
-  return <PostHogReactProvider client={posthog}>{children}</PostHogReactProvider>;
+  return (
+    <PostHogReactProvider client={posthog}>
+      <PostHogEcosystemTracker />
+      {children}
+    </PostHogReactProvider>
+  );
 }

@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { whatsappUrl } from "@/lib/contact";
+import { trackEvent } from "@/lib/analytics";
 
 type Service = "mentoria" | "implementacion";
 type Result = "qualified" | "not-ready" | null;
@@ -71,6 +72,7 @@ export default function QualificationForm({ service }: { service: Service }) {
 
     if (!canContinue) {
       setState("not-ready");
+      trackEvent("qualification_not_ready", { service });
       return;
     }
 
@@ -88,6 +90,7 @@ export default function QualificationForm({ service }: { service: Service }) {
 
     window.open(whatsappUrl(message), "_blank", "noopener,noreferrer");
     setState("qualified");
+    trackEvent("qualification_submitted", { service, channel: "whatsapp" });
   }
 
   if (state === "qualified") {

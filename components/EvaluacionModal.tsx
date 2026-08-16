@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEvaluacion } from "./EvaluacionProvider";
+import { trackEvent } from "@/lib/analytics";
 
 const API_URL = "https://autodrive.cl/api/public/evaluacion";
 
@@ -89,6 +90,7 @@ export default function EvaluacionModal() {
   async function enviar() {
     setLoading(true);
     setError("");
+    trackEvent("evaluation_submitted", { source, form_step: step });
     try {
       const r = await fetch(API_URL, {
         method: "POST",
@@ -99,12 +101,15 @@ export default function EvaluacionModal() {
       const j = await r.json();
       if (r.ok && j.ok) {
         setDone(true);
+        trackEvent("evaluation_submit_succeeded", { source });
       } else {
+        trackEvent("evaluation_submit_failed", { source, reason: "remote_rejected" });
         setError(j.detail || "Algo salió mal. Intenta de nuevo.");
       }
     } catch {
       // Aún así marcamos como done — el backend probablemente lo procesó
       setDone(true);
+      trackEvent("evaluation_submit_succeeded", { source, delivery_status: "unknown" });
     } finally {
       setLoading(false);
     }
@@ -396,7 +401,10 @@ export default function EvaluacionModal() {
                         {step < 3 ? (
                           <button
                             type="button"
-                            onClick={() => setStep(step + 1)}
+                            onClick={() => {
+                              trackEvent("evaluation_step_completed", { source, step });
+                              setStep(step + 1);
+                            }}
                             disabled={(step === 1 && !step1Valid) || (step === 2 && !step2Valid)}
                             className="px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                             style={{

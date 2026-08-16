@@ -1,6 +1,7 @@
 "use client";
 
 import { useEvaluacion } from "./EvaluacionProvider";
+import { trackEvent } from "@/lib/analytics";
 
 export default function EvaluacionLink({
   children,
@@ -17,7 +18,10 @@ export default function EvaluacionLink({
   return (
     <button
       type="button"
-      onClick={() => abrir(source)}
+      onClick={() => {
+        trackEvent("ecosystem_cta_clicked", { cta: "evaluation", source });
+        abrir(source);
+      }}
       className={className}
       style={{ background: "none", border: "none", cursor: "pointer", padding: 0, ...style }}
     >

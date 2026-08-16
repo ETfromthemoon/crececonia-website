@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useEvaluacion } from "./EvaluacionProvider";
+import { trackEvent } from "@/lib/analytics";
 
 const SPARKLE_ICON = (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -47,7 +48,10 @@ export function WAButton({
   return (
     <motion.button
       type="button"
-      onClick={() => abrir(source)}
+      onClick={() => {
+        trackEvent("ecosystem_cta_clicked", { cta: "evaluation", source });
+        abrir(source);
+      }}
       className={`btn-evaluacion${size === "lg" ? " btn-lg" : ""} ${className}`}
       style={glowStyle}
       onMouseMove={handleMouseMove}
