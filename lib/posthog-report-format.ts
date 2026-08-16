@@ -64,7 +64,7 @@ function formatEcosystemSection(metrics?: EcosystemMetrics, byPageType: Analytic
     `  chat abierto/mensajes/fallbacks: ${metrics.chatOpened}/${metrics.chatMessages}/${metrics.chatFallbacks}`,
     `  newsletter prompts/suscripciones: ${metrics.newsletterPrompts}/${metrics.newsletterSignups}`,
     `  skills vistas/descargas: ${metrics.skillViews}/${metrics.skillDownloads}`,
-    `  checkouts solicitados/creados/compras: ${metrics.ebookCheckoutRequests}/${metrics.ebookCheckouts}/${metrics.purchases}`,
+    `  checkouts solicitados/fallidos/creados/compras: ${metrics.ebookCheckoutRequests}/${metrics.ebookCheckoutFailures}/${metrics.ebookCheckouts}/${metrics.purchases}`,
     `  llamadas solicitadas/completadas: ${metrics.appointmentSubmissions}/${metrics.appointmentSuccesses}`,
     `  calificaciones enviadas: ${metrics.qualificationSubmissions}`,
     `  profundidad 90%: ${metrics.scrollDepth90}`,

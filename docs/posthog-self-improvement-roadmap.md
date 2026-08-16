@@ -8,6 +8,12 @@ observacional y la decisión de cambiar el sitio sigue siendo manual.
 
 ## Lo que existe hoy
 
+- El reporte normaliza `ebook_checkout_started` como fallback historico de
+  `ebook_checkout_created`, para que cambios de instrumentacion no borren el
+  funnel anterior.
+- Los fallos tecnicos del checkout se registran como `ebook_checkout_failed`
+  con una categoria tecnica, sin email, datos de pago ni texto libre.
+
 - PostHog observa el ecosistema completo: navegación, secciones visibles,
   scroll, enlaces, CTA, evaluación, chat, newsletter, skills, ebooks,
   llamadas y formularios de calificación.

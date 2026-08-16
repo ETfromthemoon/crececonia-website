@@ -43,6 +43,7 @@ export interface EcosystemMetrics {
   skillDownloadRequests: number;
   skillDownloads: number;
   ebookCheckoutRequests: number;
+  ebookCheckoutFailures: number;
   ebookCheckouts: number;
   purchases: number;
   appointmentSubmissions: number;
@@ -70,6 +71,10 @@ const EVENT_TO_STEP: Record<string, FunnelStep> = {
   ebook_purchase_confirmed: "purchase_confirmed",
 };
 
+// Older client builds emitted this name before the server-side Flow event was
+// standardized. It remains a fallback so historical reports do not lose data.
+const LEGACY_CHECKOUT_EVENT = "ebook_checkout_started";
+
 const ECOSYSTEM_EVENTS = [
   "ecosystem_page_view",
   "ecosystem_link_clicked",
@@ -96,6 +101,8 @@ const ECOSYSTEM_EVENTS = [
   "skill_download_succeeded",
   "skill_download_failed",
   "ebook_checkout_requested",
+  "ebook_checkout_failed",
+  LEGACY_CHECKOUT_EVENT,
   "ebook_combo_toggle",
   "ebook_checkout_created",
   "ebook_purchase_confirmed",
@@ -129,6 +136,7 @@ function createEmptyMetrics(): EcosystemMetrics {
     skillDownloadRequests: 0,
     skillDownloads: 0,
     ebookCheckoutRequests: 0,
+    ebookCheckoutFailures: 0,
     ebookCheckouts: 0,
     purchases: 0,
     appointmentSubmissions: 0,
@@ -155,6 +163,7 @@ const EVENT_TO_METRIC: Record<string, keyof EcosystemMetrics> = {
   skill_download_requested: "skillDownloadRequests",
   skill_download_succeeded: "skillDownloads",
   ebook_checkout_requested: "ebookCheckoutRequests",
+  ebook_checkout_failed: "ebookCheckoutFailures",
   ebook_checkout_created: "ebookCheckouts",
   ebook_purchase_confirmed: "purchases",
   appointment_submitted: "appointmentSubmissions",
@@ -232,6 +241,10 @@ export function buildAnalyticsRecommendations(
     recommendations.push("Hay intención de compra pero ningún checkout creado: revisar errores del endpoint de Flow y la continuidad del formulario de pago.");
   }
 
+  if (metrics.ebookCheckoutFailures > 0) {
+    recommendations.push(`Se registraron ${metrics.ebookCheckoutFailures} fallos de checkout: revisar la categoria del error y el proveedor de pago antes de cambiar precios o copy.`);
+  }
+
   if (metrics.ebookCheckouts > 0 && metrics.purchases === 0) {
     recommendations.push("Hay checkouts creados pero ninguna compra confirmada: revisar webhook/confirmación de Flow y la entrega posterior antes de optimizar precios.");
   }
@@ -283,8 +296,15 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
   const metrics = createEmptyMetrics();
   const pageTypeTotals = new Map<string, number>();
   const variantTotals = new Map<string, { pageViews: number; checkoutsStarted: number; purchasesConfirmed: number }>();
+  const legacyCheckoutByVariant = new Map<string, number>();
+  let legacyCheckoutTotal = 0;
 
   for (const [event, variant, pageType, depthPercent, total] of rows) {
+    if (event === LEGACY_CHECKOUT_EVENT) {
+      legacyCheckoutTotal += total;
+      if (variant) legacyCheckoutByVariant.set(variant, (legacyCheckoutByVariant.get(variant) ?? 0) + total);
+    }
+
     const step = EVENT_TO_STEP[event];
     if (step) funnelTotals[step] += total;
 
@@ -302,6 +322,17 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
       if (step === "page_view") entry.pageViews += total;
       if (step === "checkout_created") entry.checkoutsStarted += total;
       if (step === "purchase_confirmed") entry.purchasesConfirmed += total;
+      variantTotals.set(variant, entry);
+    }
+  }
+
+  // Prefer the canonical server event. If only the legacy client event exists,
+  // use it as a fallback so the funnel remains continuous across deployments.
+  if (funnelTotals.checkout_created === 0 && legacyCheckoutTotal > 0) {
+    funnelTotals.checkout_created = legacyCheckoutTotal;
+    for (const [variant, total] of legacyCheckoutByVariant) {
+      const entry = variantTotals.get(variant) ?? { pageViews: 0, checkoutsStarted: 0, purchasesConfirmed: 0 };
+      entry.checkoutsStarted += total;
       variantTotals.set(variant, entry);
     }
   }

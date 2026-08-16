@@ -5,6 +5,7 @@ const HOGQL_RESPONSE = {
     ["ebook_bundle_offer_view", null, 18],
     ["ebook_bundle_offer_selected", null, 12],
     ["ebook_checkout_created", null, 22],
+    ["ebook_checkout_failed", null, 2],
     ["ebook_page_view", "control", 61],
     ["ebook_page_view", "variant-b", 59],
     ["ebook_purchase_confirmed", "control", 3],
@@ -58,6 +59,7 @@ describe("fetchAnalyticsReport", () => {
       ])
     );
     expect(report.offerSelectionRate).toBeCloseTo(12 / 120);
+    expect(report.ecosystem?.ebookCheckoutFailures).toBe(2);
     expect(report.byVariant).toEqual(
       expect.arrayContaining([
         {
@@ -86,6 +88,33 @@ describe("fetchAnalyticsReport", () => {
 
     const { fetchAnalyticsReport } = await import("@/lib/posthog-analytics");
     await expect(fetchAnalyticsReport(7, new Date("2026-07-30"))).rejects.toThrow(/401/);
+  });
+
+  it("usa ebook_checkout_started como fallback historico si no existe el evento canonico", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        results: [
+          ["ebook_page_view", "control", 10],
+          ["ebook_checkout_started", "control", 4],
+          ["ebook_purchase_confirmed", "control", 1],
+        ],
+      }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const { fetchAnalyticsReport } = await import("@/lib/posthog-analytics");
+    const report = await fetchAnalyticsReport(7, new Date("2026-07-30"));
+
+    expect(report.funnel).toEqual(
+      expect.arrayContaining([{ step: "checkout_created", count: 4 }])
+    );
+    expect(report.ecosystem?.ebookCheckouts).toBe(4);
+    expect(report.byVariant).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ variant: "control", checkoutsStarted: 4 }),
+      ])
+    );
   });
 
   it("agrega métricas del ecosistema y recomendaciones desde la respuesta extendida", async () => {

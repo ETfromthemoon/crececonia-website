@@ -29,6 +29,21 @@ async function discardPendingOrder(db: ReturnType<typeof getSupabaseAdmin>, comm
   }
 }
 
+async function captureCheckoutFailure(
+  distinctId: string | undefined,
+  reason: string,
+  properties: Record<string, unknown> = {}
+): Promise<void> {
+  try {
+    await captureServerEvent("ebook_checkout_failed", distinctId ?? "anonymous", {
+      reason,
+      ...properties,
+    });
+  } catch (err) {
+    console.error("[flow/create] falló el evento de checkout fallido:", err);
+  }
+}
+
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const email: string = body?.email ?? "";
@@ -88,7 +103,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const priceInfos = await Promise.all(resources.map((r) => getCurrentPrice(r))).catch(() => null);
+  const priceInfos = await Promise.all(resources.map((r) => getCurrentPrice(r))).catch(async () => {
+    await captureCheckoutFailure(analyticsDistinctId, "price_lookup_failed", {
+      item_count: resources.length,
+    });
+    return null;
+  });
   if (!priceInfos) {
     return NextResponse.json(
       { error: "No se pudo obtener el precio. Intenta nuevamente." },
@@ -143,6 +163,9 @@ export async function POST(request: Request) {
     });
   if (pendingError) {
     console.error(`[flow/create] no se registró la orden pendiente ${commerceOrder}:`, pendingError.message);
+    await captureCheckoutFailure(analyticsDistinctId, "pending_order_failed", {
+      item_count: resources.length,
+    });
     return NextResponse.json(
       { error: "No pudimos preparar tu orden. Intenta nuevamente." },
       { status: 503 }
@@ -180,6 +203,10 @@ export async function POST(request: Request) {
 
   if (!flowRes.ok) {
     await discardPendingOrder(db, commerceOrder);
+    await captureCheckoutFailure(analyticsDistinctId, "provider_http_error", {
+      item_count: resources.length,
+      provider_status: flowRes.status,
+    });
     return NextResponse.json(
       { error: "Error al conectar con el proveedor de pago." },
       { status: 502 }
@@ -189,6 +216,9 @@ export async function POST(request: Request) {
   const data = await flowRes.json();
   if (!data.url || !data.token) {
     await discardPendingOrder(db, commerceOrder);
+    await captureCheckoutFailure(analyticsDistinctId, "provider_invalid_response", {
+      item_count: resources.length,
+    });
     return NextResponse.json(
       { error: "Respuesta inesperada del proveedor de pago." },
       { status: 502 }
