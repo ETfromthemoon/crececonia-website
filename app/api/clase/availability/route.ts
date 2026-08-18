@@ -1,38 +1,22 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { CLASS_PRODUCT_KEY } from "@/lib/class-product";
+import type { ClassAvailabilityRow } from "@/lib/class-product";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const db = getSupabaseAdmin();
-  const commerce = db.schema("commerce");
-  await commerce.rpc("release_expired_class_reservations");
-
-  const { data: product, error: productError } = await commerce
-    .from("products")
-    .select("id,name,status")
-    .eq("product_key", CLASS_PRODUCT_KEY)
-    .eq("status", "active")
-    .maybeSingle();
-  if (productError || !product) {
+  await db.rpc("release_expired_class_reservations");
+  const { data: rows, error: availabilityError } = await db.rpc("class_product_availability");
+  const availability = (rows ?? []) as ClassAvailabilityRow[];
+  if (availabilityError || availability.length === 0) {
     return NextResponse.json({ error: "Producto no disponible." }, { status: 503 });
   }
 
-  const { data: offers, error: offersError } = await commerce
-    .from("product_offers")
-    .select("id,offer_key,label,amount_minor,total_cupos,sold_cupos,reserved_cupos,sort_order")
-    .eq("product_id", product.id)
-    .eq("status", "active")
-    .order("sort_order", { ascending: true });
-  if (offersError) {
-    return NextResponse.json({ error: "No pudimos consultar los cupos." }, { status: 503 });
-  }
-
   return NextResponse.json({
-    product: { name: product.name },
-    offers: (offers ?? []).map((offer) => ({
-      id: offer.id,
+    product: { name: availability[0].product_name },
+    offers: availability.map((offer) => ({
+      id: offer.offer_id,
       offerKey: offer.offer_key,
       label: offer.label,
       amount: offer.amount_minor,

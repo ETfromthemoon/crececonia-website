@@ -11,3 +11,16 @@ export const CLASS_BOOK_RESOURCES = [
   "ebook:agentes-de-ia",
   "ebook:creacion-de-webs-con-ia",
 ] as const;
+
+export type ClassAvailabilityRow = {
+  product_id: string;
+  product_name: string;
+  offer_id: string;
+  offer_key: string;
+  label: string;
+  amount_minor: number;
+  total_cupos: number;
+  sold_cupos: number;
+  reserved_cupos: number;
+  sort_order: number;
+};
