@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { CLASS_PATH, CLASS_PRODUCT_KEY, CLASS_TITLE } from "@/lib/class-product";
+import { CLASS_PATH, CLASS_TITLE, type ClassAvailabilityRow } from "@/lib/class-product";
 import { flowSign, getFlowBase } from "@/lib/flow";
 
 const SITE_URL = process.env.SITE_URL ?? "https://www.crececonia.cl";
@@ -14,7 +14,7 @@ function isValidEmail(value: unknown): value is string {
 }
 
 async function releaseOrder(commerceOrder: string) {
-  await getSupabaseAdmin().schema("commerce").rpc("release_class_order", { p_commerce_order: commerceOrder });
+  await getSupabaseAdmin().rpc("release_class_order", { p_commerce_order: commerceOrder });
 }
 
 export async function POST(request: Request) {
@@ -25,31 +25,18 @@ export async function POST(request: Request) {
   if (!/^[a-z0-9-]{3,80}$/.test(offerKey)) return NextResponse.json({ error: "Tramo de precio inválido." }, { status: 400 });
 
   const db = getSupabaseAdmin();
-  const commerce = db.schema("commerce");
-  const { data: product, error: productError } = await commerce
-    .from("products")
-    .select("id,name,status")
-    .eq("product_key", CLASS_PRODUCT_KEY)
-    .eq("status", "active")
-    .maybeSingle();
-  if (productError || !product) return NextResponse.json({ error: "Producto no disponible." }, { status: 503 });
-
-  const { data: offer, error: offerError } = await commerce
-    .from("product_offers")
-    .select("id,label,amount_minor,total_cupos,sold_cupos,reserved_cupos,status")
-    .eq("product_id", product.id)
-    .eq("offer_key", offerKey)
-    .eq("status", "active")
-    .maybeSingle();
-  if (offerError || !offer) return NextResponse.json({ error: "Ese tramo ya no está disponible." }, { status: 409 });
+  const { data: availabilityRows, error: availabilityError } = await db.rpc("class_product_availability");
+  const availability = (availabilityRows ?? []) as ClassAvailabilityRow[];
+  const offer = availability.find((candidate) => candidate.offer_key === offerKey);
+  if (availabilityError || !offer) return NextResponse.json({ error: "Ese tramo ya no está disponible." }, { status: 409 });
   if (offer.sold_cupos + offer.reserved_cupos >= offer.total_cupos) {
     return NextResponse.json({ error: "Ese tramo se agotó. Elige otro cupo." }, { status: 409 });
   }
 
   const commerceOrder = `class-${Date.now()}-${randomId()}`;
-  const { data: orderRows, error: orderError } = await commerce.rpc("create_class_order", {
-    p_product_id: product.id,
-    p_offer_id: offer.id,
+  const { data: orderRows, error: orderError } = await db.rpc("create_class_order", {
+    p_product_id: offer.product_id,
+    p_offer_id: offer.offer_id,
     p_commerce_order: commerceOrder,
     p_email: email,
     p_amount_minor: offer.amount_minor,

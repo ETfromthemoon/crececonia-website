@@ -1,6 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { flowSign, getFlowBase } from "@/lib/flow";
-import { CLASS_PRODUCT_KEY } from "@/lib/class-product";
 import { sendClassAccessEmail } from "@/lib/class-delivery-email";
 
 interface FlowPayment {
@@ -41,23 +40,17 @@ export async function POST(request: Request) {
       return retry("respuesta inválida de Flow");
     }
 
-    const commerce = getSupabaseAdmin().schema("commerce");
-    const { data: order, error: orderError } = await commerce
-      .from("class_orders")
-      .select("id,product_id,offer_id,email,amount_minor,status,email_sent_at")
-      .eq("commerce_order", commerceOrder)
-      .maybeSingle();
+    const db = getSupabaseAdmin();
+    const { data: orderRows, error: orderError } = await db.rpc("get_class_order", { p_commerce_order: commerceOrder });
+    const order = orderRows?.[0];
     if (orderError) return retry(`no se pudo leer la orden ${commerceOrder}`, orderError.message);
     if (!order) return retry(`pago sin orden ${commerceOrder}`);
 
-    if (order.product_id !== (await commerce.from("products").select("id").eq("product_key", CLASS_PRODUCT_KEY).maybeSingle()).data?.id) {
-      return retry(`producto incorrecto en ${commerceOrder}`);
-    }
     if (order.amount_minor !== paidAmount || order.email.toLowerCase() !== payment.payer.toLowerCase()) {
       return retry(`el pago no coincide con la orden ${commerceOrder}`);
     }
 
-    const { data: finalized, error: finalizeError } = await commerce.rpc("finalize_class_order", {
+    const { data: finalized, error: finalizeError } = await db.rpc("finalize_class_order", {
       p_commerce_order: commerceOrder,
       p_flow_token: token,
       p_flow_order: payment.flowOrder,
@@ -65,25 +58,14 @@ export async function POST(request: Request) {
     });
     if (finalizeError || finalized !== true) return retry(`no se pudo confirmar ${commerceOrder}`, finalizeError?.message);
 
-    const { data: offer, error: offerError } = await commerce
-      .from("product_offers")
-      .select("label")
-      .eq("id", order.offer_id)
-      .maybeSingle();
-    if (offerError || !offer) return retry(`no se pudo leer el tramo ${commerceOrder}`, offerError?.message);
-
     if (!order.email_sent_at) {
       try {
-        await sendClassAccessEmail({ email: order.email, offerLabel: offer.label, amount: paidAmount, orderId: commerceOrder });
+        await sendClassAccessEmail({ email: order.email, offerLabel: order.offer_label, amount: paidAmount, orderId: commerceOrder });
       } catch (error) {
         return retry(`no se pudo enviar la confirmación de ${commerceOrder}`, error);
       }
-      const { error: emailUpdateError } = await commerce
-        .from("class_orders")
-        .update({ email_sent_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-        .eq("id", order.id)
-        .is("email_sent_at", null);
-      if (emailUpdateError) return retry(`no se pudo cerrar la entrega de ${commerceOrder}`, emailUpdateError.message);
+      const { data: emailMarked, error: emailUpdateError } = await db.rpc("mark_class_order_email_sent", { p_order_id: order.order_id });
+      if (emailUpdateError || emailMarked !== true) return retry(`no se pudo cerrar la entrega de ${commerceOrder}`, emailUpdateError?.message);
     }
 
     return new Response("OK", { status: 200 });
