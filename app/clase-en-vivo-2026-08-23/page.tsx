@@ -56,14 +56,14 @@ const TOPICS = [
 const INCLUDED = [
   "Skills para construir y editar la página con un agente de código.",
   "Guía completa del proceso para repetirlo después de la clase.",
-  "Pack de cuatro libros de IA para sitios web y e-commerce.",
+  "Colección de cuatro libros Creación de Webs con IA · Partes 1 a 4.",
 ];
 
 const BOOKS = [
-  "De cero a Claude en una semana",
-  "Claude a Nivel Experto",
-  "Agentes de IA para tu Negocio",
   "Creación de Webs con IA · Parte 1",
+  "Creación de Webs con IA · Parte 2: Sitios Corporativos",
+  "Creación de Webs con IA · Parte 3: eCommerce",
+  "Creación de Webs con IA · Parte 4: SaaS y Dashboards",
 ];
 
 export default async function ClassPage({

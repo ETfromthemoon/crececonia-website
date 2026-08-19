@@ -59,11 +59,11 @@ export default async function EbooksPage() {
       <section className="ebook-store-hero">
         <div className="ebook-store-shell ebook-store-hero-grid">
           <div>
-            <span className="ebook-store-kicker">Biblioteca CrececonIA · 04 títulos</span>
+            <span className="ebook-store-kicker">Biblioteca CrececonIA · 07 títulos</span>
             <h1>Elige el conocimiento que necesitas <em>aplicar esta semana.</em></h1>
           </div>
           <div className="ebook-store-hero-aside">
-            <p>Cuatro rutas prácticas para aprender Claude, operarlo a nivel avanzado, automatizar un negocio o construir una web. Compra solo la que coincide con tu punto de partida.</p>
+            <p>Rutas prácticas para aprender Claude, operar un negocio o construir sitios corporativos, eCommerce y productos SaaS con IA. Compra solo la que coincide con tu punto de partida.</p>
             <a href="#elegir">Elegir mi ebook <span>↓</span></a>
           </div>
         </div>

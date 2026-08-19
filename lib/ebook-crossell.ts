@@ -4,6 +4,9 @@ const DE_CERO = "ebook:de-cero-a-claude-en-una-semana";
 const CLAUDE_EXPERTO = "ebook:claude-nivel-experto";
 const AGENTES = "ebook:agentes-de-ia";
 const WEBS = "ebook:creacion-de-webs-con-ia";
+const WEB_PARTE_2 = "ebook:creacion-de-webs-con-ia-parte-2";
+const WEB_PARTE_3 = "ebook:creacion-de-webs-con-ia-parte-3";
+const WEB_PARTE_4 = "ebook:creacion-de-webs-con-ia-parte-4";
 
 /**
  * Grafo dirigido de sugerencias: qué ofrecer, y en qué orden, en la página de
@@ -25,7 +28,10 @@ const WEBS = "ebook:creacion-de-webs-con-ia";
 const CROSS_SELL_GRAPH: Record<string, string[]> = {
   [DE_CERO]: [CLAUDE_EXPERTO, AGENTES, WEBS],
   [AGENTES]: [CLAUDE_EXPERTO, DE_CERO],
-  [WEBS]: [DE_CERO],
+  [WEBS]: [WEB_PARTE_2, WEB_PARTE_3, WEB_PARTE_4, DE_CERO],
+  [WEB_PARTE_2]: [WEBS, WEB_PARTE_3, WEB_PARTE_4],
+  [WEB_PARTE_3]: [WEBS, WEB_PARTE_2, WEB_PARTE_4],
+  [WEB_PARTE_4]: [WEBS, WEB_PARTE_2, WEB_PARTE_3],
   [CLAUDE_EXPERTO]: [AGENTES],
 };
 
