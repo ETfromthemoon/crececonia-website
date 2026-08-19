@@ -46,6 +46,11 @@ export default function ClassCheckout() {
     [offers, selectedOfferKey]
   );
 
+  const currentOffer = useMemo(
+    () => offers.find((offer) => offer.remaining > 0),
+    [offers]
+  );
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedOffer || !email) return;
@@ -70,28 +75,25 @@ export default function ClassCheckout() {
     <section id="reservar" className="class-checkout site-container">
       <div className="class-checkout-heading">
         <span className="eyebrow">Reserva tu lugar</span>
-        <h2>El precio cambia cuando se agota cada tramo.</h2>
-        <p>Selecciona un cupo disponible y continúa al pago seguro de Flow.</p>
+        <h2>Reserva con el precio actual.</h2>
+        <p>El siguiente valor se activa cuando se agota el tramo vigente.</p>
       </div>
       <div className="class-offer-grid">
-        {offers.map((offer) => {
-          const soldOut = offer.remaining <= 0;
-          const selected = offer.offerKey === selectedOfferKey;
-          return (
-            <button
-              key={offer.offerKey}
-              type="button"
-              className={`class-offer ${selected ? "is-selected" : ""} ${soldOut ? "is-sold-out" : ""}`}
-              disabled={soldOut || status === "loading"}
-              onClick={() => setSelectedOfferKey(offer.offerKey)}
-              aria-pressed={selected}
-            >
-              <span>{offer.label}</span>
-              <strong>{formatPrice(offer.amount)}</strong>
-              <small>{soldOut ? "Agotado" : `${offer.remaining} de ${offer.totalCupos} disponibles`}</small>
-            </button>
-          );
-        })}
+        {currentOffer ? (
+          <button
+            key={currentOffer.offerKey}
+            type="button"
+            className="class-offer is-selected"
+            disabled={status === "loading"}
+            onClick={() => setSelectedOfferKey(currentOffer.offerKey)}
+            aria-pressed="true"
+          >
+            <span>{currentOffer.label}</span>
+            <strong>{formatPrice(currentOffer.amount)}</strong>
+          </button>
+        ) : (
+          <p className="class-checkout-error">Todos los cupos están reservados.</p>
+        )}
       </div>
       <form className="class-checkout-form" onSubmit={handleSubmit}>
         <label htmlFor="class-email">Correo donde recibirás la confirmación</label>
