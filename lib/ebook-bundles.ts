@@ -103,6 +103,17 @@ export const EBOOK_BUNDLES: EbookBundle[] = [
     ],
   },
   {
+    slug: "coleccion-web",
+    title: "Colección Web Completa",
+    pitch: "Las cuatro partes para construir sitios, tiendas y productos web con IA. 426 páginas de proyectos reales.",
+    resources: [
+      "ebook:creacion-de-webs-con-ia",
+      "ebook:creacion-de-webs-con-ia-parte-2",
+      "ebook:creacion-de-webs-con-ia-parte-3",
+      "ebook:creacion-de-webs-con-ia-parte-4",
+    ],
+  },
+  {
     slug: "ruta-operador",
     title: "Ruta Operador",
     pitch: "Dominar la herramienta de principio a fin. 245 páginas, la progresión más limpia del catálogo.",

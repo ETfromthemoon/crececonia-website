@@ -6,10 +6,10 @@ export const CLASS_START = "2026-08-23T18:00:00-04:00";
 export const CLASS_END = "2026-08-23T20:30:00-04:00";
 export const CLASS_SESSION_LABEL = "Domingo 23 de agosto · 18:00 a 20:30 h";
 export const CLASS_BOOK_RESOURCES = [
-  "ebook:de-cero-a-claude-en-una-semana",
-  "ebook:claude-nivel-experto",
-  "ebook:agentes-de-ia",
   "ebook:creacion-de-webs-con-ia",
+  "ebook:creacion-de-webs-con-ia-parte-2",
+  "ebook:creacion-de-webs-con-ia-parte-3",
+  "ebook:creacion-de-webs-con-ia-parte-4",
 ] as const;
 
 export type ClassAvailabilityRow = {
