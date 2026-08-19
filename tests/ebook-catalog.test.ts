@@ -28,15 +28,18 @@ describe("ebook-catalog", () => {
     expect(getCatalogEntry("ebook:no-existe")).toBeUndefined();
   });
 
-  it("el catálogo del lanzamiento 2026-08-07 tiene los 4 libros, todos activos", () => {
+  it("el catálogo del lanzamiento 2026-08-07 tiene los 7 libros, todos activos", () => {
     const active = getActiveCatalogEntries();
-    expect(active).toHaveLength(4);
+    expect(active).toHaveLength(7);
     const resources = active.map((e) => e.resource).sort();
     expect(resources).toEqual(
       [
         "ebook:agentes-de-ia",
         "ebook:claude-nivel-experto",
         "ebook:creacion-de-webs-con-ia",
+        "ebook:creacion-de-webs-con-ia-parte-2",
+        "ebook:creacion-de-webs-con-ia-parte-3",
+        "ebook:creacion-de-webs-con-ia-parte-4",
         "ebook:de-cero-a-claude-en-una-semana",
       ].sort()
     );
@@ -112,9 +115,9 @@ describe("getLiveCatalogEntries / getOtherLiveEntries", () => {
     expect(live.map((e) => e.resource)).toEqual([DEFAULT_EBOOK_RESOURCE]);
   });
 
-  it("después del lanzamiento, los 4 libros están vivos", () => {
+  it("después del lanzamiento, los 7 libros están vivos", () => {
     const live = getLiveCatalogEntries(DESPUES_DEL_LANZAMIENTO);
-    expect(live).toHaveLength(4);
+    expect(live).toHaveLength(7);
   });
 
   it("getOtherLiveEntries excluye el resource dado y respeta el gating", () => {
@@ -122,7 +125,7 @@ describe("getLiveCatalogEntries / getOtherLiveEntries", () => {
     expect(others).toEqual([]);
 
     const othersDespues = getOtherLiveEntries(DEFAULT_EBOOK_RESOURCE, DESPUES_DEL_LANZAMIENTO);
-    expect(othersDespues).toHaveLength(3);
+    expect(othersDespues).toHaveLength(6);
     expect(othersDespues.every((e) => e.resource !== DEFAULT_EBOOK_RESOURCE)).toBe(true);
   });
 });

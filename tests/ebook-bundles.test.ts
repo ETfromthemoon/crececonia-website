@@ -96,7 +96,7 @@ describe("EBOOK_BUNDLES", () => {
   it("tiene las rutas comerciales nombradas", () => {
     const slugs = EBOOK_BUNDLES.map((b) => b.slug).sort();
     expect(slugs).toEqual(
-      ["coleccion-completa", "ruta-automatizacion", "ruta-constructor", "ruta-negocio", "ruta-operador"].sort()
+      ["coleccion-completa", "coleccion-web", "ruta-automatizacion", "ruta-constructor", "ruta-negocio", "ruta-operador"].sort()
     );
   });
 

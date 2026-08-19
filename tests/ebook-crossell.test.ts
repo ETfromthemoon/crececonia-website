@@ -22,8 +22,13 @@ describe("getCrossSellEntries — grafo dirigido", () => {
     expect(resourcesOf(AGENTES, DESPUES_DEL_LANZAMIENTO)).toEqual([CLAUDE_EXPERTO, DE_CERO]);
   });
 
-  it("Creación de Webs sugiere De Cero a Claude", () => {
-    expect(resourcesOf(WEBS, DESPUES_DEL_LANZAMIENTO)).toEqual([DE_CERO]);
+  it("Creación de Webs sugiere las partes siguientes y luego De Cero a Claude", () => {
+    expect(resourcesOf(WEBS, DESPUES_DEL_LANZAMIENTO)).toEqual([
+      "ebook:creacion-de-webs-con-ia-parte-2",
+      "ebook:creacion-de-webs-con-ia-parte-3",
+      "ebook:creacion-de-webs-con-ia-parte-4",
+      DE_CERO,
+    ]);
   });
 
   it("Claude Experto sugiere Agentes de IA (aplicación directa)", () => {
