@@ -162,7 +162,7 @@ export async function POST(request: Request) {
         item_count: resources.length,
         amount: paidAmount,
         discount_code: discountCode,
-        discount_percent: getComboDiscountPercent(resources.length),
+        discount_percent: getComboDiscountPercent(resources.length, resources.map((item) => item.resource)),
         offer_id: getOfferIdForResources(resources.map((item) => item.resource)),
         order_id: commerceOrder,
         pricing_variant: resources.find((item) => item.pricing_variant)?.pricing_variant,
