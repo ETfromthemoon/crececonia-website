@@ -73,47 +73,51 @@ export default function ClassCheckout() {
 
   return (
     <section id="reservar" className="class-checkout site-container">
-      <div className="class-checkout-heading">
-        <span className="eyebrow">Reserva tu lugar</span>
-        <h2>Reserva con el precio actual.</h2>
-        <p>El siguiente valor se activa cuando se agota el tramo vigente.</p>
-      </div>
-      <div className="class-offer-grid">
-        {currentOffer ? (
-          <button
-            key={currentOffer.offerKey}
-            type="button"
-            className="class-offer is-selected"
-            disabled={status === "loading"}
-            onClick={() => setSelectedOfferKey(currentOffer.offerKey)}
-            aria-pressed="true"
-          >
-            <span>{currentOffer.label}</span>
-            <strong>{formatPrice(currentOffer.amount)}</strong>
-          </button>
-        ) : (
-          <p className="class-checkout-error">Todos los cupos están reservados.</p>
-        )}
-      </div>
-      <form className="class-checkout-form" onSubmit={handleSubmit}>
-        <label htmlFor="class-email">Correo donde recibirás la confirmación</label>
-        <div className="class-checkout-row">
-          <input
-            id="class-email"
-            type="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="tu@correo.com"
-            autoComplete="email"
-          />
-          <button className="button button-dark" type="submit" disabled={!selectedOffer || status === "loading"}>
-            {status === "loading" ? "Preparando…" : `Pagar ${selectedOffer ? formatPrice(selectedOffer.amount) : ""}`} <span>→</span>
-          </button>
+      <div className="class-checkout-layout">
+        <div className="class-checkout-heading">
+          <span className="eyebrow">Reserva tu lugar</span>
+          <h2>Reserva con el precio actual.</h2>
+          <p>El siguiente valor se activa cuando se agota el tramo vigente.</p>
         </div>
-        <p className="class-checkout-note">Tu cupo se reserva durante 30 minutos mientras completas el pago.</p>
-        {error && <p className="class-checkout-error" role="alert">{error}</p>}
-      </form>
+        <div className="class-checkout-panel">
+          <div className="class-offer-grid">
+            {currentOffer ? (
+              <button
+                key={currentOffer.offerKey}
+                type="button"
+                className="class-offer is-selected"
+                disabled={status === "loading"}
+                onClick={() => setSelectedOfferKey(currentOffer.offerKey)}
+                aria-pressed="true"
+              >
+                <span>{currentOffer.label}</span>
+                <strong>{formatPrice(currentOffer.amount)}</strong>
+              </button>
+            ) : (
+              <p className="class-checkout-error">Todos los cupos están reservados.</p>
+            )}
+          </div>
+          <form className="class-checkout-form" onSubmit={handleSubmit}>
+            <label htmlFor="class-email">Correo donde recibirás la confirmación</label>
+            <div className="class-checkout-row">
+              <input
+                id="class-email"
+                type="email"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="tu@correo.com"
+                autoComplete="email"
+              />
+              <button className="button button-dark" type="submit" disabled={!selectedOffer || status === "loading"}>
+                {status === "loading" ? "Preparando…" : `Pagar ${selectedOffer ? formatPrice(selectedOffer.amount) : ""}`} <span>→</span>
+              </button>
+            </div>
+            <p className="class-checkout-note">Tu cupo se reserva durante 30 minutos mientras completas el pago.</p>
+            {error && <p className="class-checkout-error" role="alert">{error}</p>}
+          </form>
+        </div>
+      </div>
     </section>
   );
 }

@@ -15,6 +15,17 @@ describe("getComboDiscountPercent", () => {
   it("20% para más de 4 (usa el tramo más alto que aplica)", () => {
     expect(getComboDiscountPercent(5)).toBe(20);
   });
+
+  it("25% para la Colección Web Completa", () => {
+    expect(
+      getComboDiscountPercent(4, [
+        "ebook:creacion-de-webs-con-ia",
+        "ebook:creacion-de-webs-con-ia-parte-2",
+        "ebook:creacion-de-webs-con-ia-parte-3",
+        "ebook:creacion-de-webs-con-ia-parte-4",
+      ])
+    ).toBe(25);
+  });
 });
 
 describe("computeBundleTotal", () => {
