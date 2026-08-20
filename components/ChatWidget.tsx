@@ -6,15 +6,11 @@ import { usePathname } from "next/navigation";
 import { whatsappUrl } from "@/lib/contact";
 import { trackEvent } from "@/lib/analytics";
 
-const API = "https://autodrive.cl";
-
 type Message = {
   id: string;
   role: "user" | "bot";
   content: string;
-  sugerir_evaluacion?: boolean;
-  lead_capturado?: boolean;
-  fallback?: boolean;
+  showWhatsappCta?: boolean;
 };
 
 // Alineadas con lo que la landing realmente vende (agente IA en 48h, USD
@@ -40,20 +36,60 @@ const TypingDots = () => (
   </div>
 );
 
-const SALUDO_FALLBACK =
-  "¡Hola! Soy el asistente de CrececonIA 👋 Puedo contarte cómo funciona un agente IA para tu negocio, cuánto cuesta y en cuánto tiempo queda listo.";
+const INITIAL_MESSAGE =
+  "¡Hola! Soy el asistente de CrececonIA 👋 Te ayudo a entender si un agente IA calza con tu negocio, cuánto cuesta y en cuánto tiempo puede estar funcionando.";
+
+function buildReply(message: string): Pick<Message, "content" | "showWhatsappCta"> {
+  const text = message.toLocaleLowerCase("es-CL");
+
+  if (/(cu[aá]nto|precio|costo|vale|valor|presupuesto)/.test(text)) {
+    return {
+      content:
+        "El servicio cuesta USD 297 al mes, más USD 200 de configuración inicial por única vez. Incluye la implementación y el acompañamiento para dejar el agente atendiendo consultas reales.",
+      showWhatsappCta: true,
+    };
+  }
+
+  if (/(cu[aá]ndo|tiempo|demora|r[aá]pido|48|implement)/.test(text)) {
+    return {
+      content:
+        "Normalmente queda listo en 48 horas desde que tenemos la información básica de tu negocio. Partimos entendiendo tus preguntas frecuentes, procesos y el tono con que atiendes.",
+      showWhatsappCta: true,
+    };
+  }
+
+  if (/(sirve|negocio|empresa|rubro|industria|funciona|calza|encaja)/.test(text)) {
+    return {
+      content:
+        "Suele funcionar muy bien cuando el equipo repite respuestas, pierde tiempo persiguiendo información o necesita atender consultas fuera de horario. Cuéntame qué hace tu empresa o qué tarea se repite más y te orientamos con un caso concreto.",
+    };
+  }
+
+  if (/(whatsapp|cliente|venta|ventas|soporte|atenci[oó]n|consulta)/.test(text)) {
+    return {
+      content:
+        "Podemos diseñar un agente para responder consultas, calificar interesados y ordenar la información antes de que intervenga tu equipo. La mejor forma de validar el alcance es revisar un ejemplo real de esas consultas contigo.",
+      showWhatsappCta: true,
+    };
+  }
+
+  return {
+    content:
+      "Gracias por contármelo. Para decirte si vale la pena automatizarlo, necesitamos entender qué consulta o proceso se repite y qué resultado esperas. Puedes dejar ese contexto aquí o hablar con nosotros por WhatsApp para revisarlo contigo.",
+    showWhatsappCta: true,
+  };
+}
 
 export default function ChatWidget() {
   const pathname = usePathname();
   const [open, setOpen]           = useState(false);
   const [messages, setMessages]   = useState<Message[]>([]);
   const [input, setInput]         = useState("");
-  const [sessionId, setSessionId] = useState<string | null>(null);
   const [loading, setLoading]     = useState(false);
-  const [whatsappMessage, setWhatsappMessage] = useState("");
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
+  const replyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Auto-scroll
   useEffect(() => {
@@ -74,28 +110,21 @@ export default function ChatWidget() {
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [open]);
 
-  // Una sola función para abrir sesión: antes initSession y resetChat tenían
-  // el mismo fetch y el mismo fallback duplicados línea por línea.
-  const startSession = useCallback(async () => {
+  useEffect(() => () => {
+    if (replyTimerRef.current) clearTimeout(replyTimerRef.current);
+  }, []);
+
+  // El endpoint remoto que antes iniciaba las sesiones fue retirado. El
+  // recorrido es local para que abrir el widget nunca dependa de un servicio
+  // ajeno al sitio ni deje al visitante en una pantalla de error.
+  const startSession = useCallback(() => {
+    if (replyTimerRef.current) clearTimeout(replyTimerRef.current);
+    replyTimerRef.current = null;
     setMessages([]);
     setInput("");
-    setSessionId(null);
-    setWhatsappMessage("");
-    try {
-      const r = await fetch(`${API}/api/public/widget/inicio`, {
-        method: "POST",
-        signal: AbortSignal.timeout(10000),
-      });
-      if (!r.ok) throw new Error("No se pudo iniciar el chat");
-      const j = await r.json();
-      if (!j.session_id || !j.mensaje) throw new Error("Respuesta de chat incompleta");
-      setSessionId(j.session_id);
-      setMessages([{ id: "init", role: "bot", content: j.mensaje }]);
-      trackEvent("chat_session_started", { status: "connected" });
-    } catch {
-      setMessages([{ id: "init", role: "bot", content: SALUDO_FALLBACK, fallback: true }]);
-      trackEvent("chat_session_started", { status: "fallback" });
-    }
+    setLoading(false);
+    setMessages([{ id: "init", role: "bot", content: INITIAL_MESSAGE }]);
+    trackEvent("chat_session_started", { status: "local" });
   }, []);
 
   const handleOpen = () => {
@@ -105,7 +134,7 @@ export default function ChatWidget() {
     }
     setOpen(true);
     trackEvent("chat_opened");
-    if (!sessionId) {
+    if (messages.length === 0) {
       startSession();
     }
   };
@@ -117,70 +146,35 @@ export default function ChatWidget() {
     const userMsg: Message = { id: `u-${Date.now()}`, role: "user", content: trimmed };
     trackEvent("chat_message_sent", { message_type: "free_text" });
 
-    if (!sessionId) {
-      setWhatsappMessage(trimmed);
-      setMessages((prev) => [
-        ...prev,
-        userMsg,
-        {
-          id: `f-${Date.now()}`,
-          role: "bot",
-          fallback: true,
-          content: "No pudimos conectar el asistente en este momento. Puedes continuar por WhatsApp con tu consulta preparada.",
-        },
-      ]);
-      setInput("");
-      return;
-    }
-
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setLoading(true);
 
-    try {
-      const r = await fetch(`${API}/api/public/widget/mensaje`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId, mensaje: trimmed }),
-        signal: AbortSignal.timeout(20000),
-      });
-      if (!r.ok) throw new Error("No se pudo enviar el mensaje");
-      const j = await r.json();
-      const botMsg: Message = {
-        id:                  `b-${Date.now()}`,
-        role:                "bot",
-        content:             j.respuesta || "No pude interpretar eso. Intenta de nuevo o escríbenos por WhatsApp.",
-        sugerir_evaluacion:  j.sugerir_evaluacion,
-        lead_capturado:      j.lead_capturado,
-      };
-      setMessages((prev) => [...prev, botMsg]);
-      trackEvent("chat_response_received", {
-        suggested_evaluation: Boolean(j.sugerir_evaluacion),
-        lead_captured: Boolean(j.lead_capturado),
-      });
-      if (j.lead_capturado) trackEvent("chat_lead_captured");
-    } catch {
-      setSessionId(null);
-      setWhatsappMessage(trimmed);
+    replyTimerRef.current = setTimeout(() => {
+      const reply = buildReply(trimmed);
       setMessages((prev) => [
         ...prev,
         {
-          id: `e-${Date.now()}`,
+          id: `b-${Date.now()}`,
           role: "bot",
-          fallback: true,
-          content: "No pudimos completar esa respuesta. Puedes continuar por WhatsApp con tu consulta preparada.",
+          ...reply,
         },
       ]);
-      trackEvent("chat_fallback", { reason: "message_request_failed" });
-    } finally {
       setLoading(false);
-    }
+      trackEvent("chat_response_received", { source: "local" });
+      replyTimerRef.current = null;
+    }, 350);
   };
 
   const showQuickReplies = messages.length === 1 && !loading;
+  const conversationSummary = messages
+    .filter((message) => message.role === "user")
+    .slice(-3)
+    .map((message) => message.content)
+    .join(" | ");
   const directChatUrl = whatsappUrl(
-    whatsappMessage
-      ? `Hola, vengo del chat de CrececonIA. Mi consulta es: ${whatsappMessage}`
+    conversationSummary
+      ? `Hola, vengo del chat de CrececonIA. Mi consulta es: ${conversationSummary}`
       : "Hola, vengo del chat de CrececonIA y quiero orientación.",
   );
 
@@ -299,11 +293,7 @@ export default function ChatWidget() {
                     {m.content}
                   </div>
 
-                  {/* CTA cuando el bot detecta intención de compra. Va al
-                      mismo WhatsApp que el resto de la landing: antes abría
-                      el formulario de 3 pasos del Protocolo BPI, que es otro
-                      producto y otro embudo. */}
-                  {m.sugerir_evaluacion && (
+                  {m.showWhatsappCta && (
                     <motion.a
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -319,38 +309,8 @@ export default function ChatWidget() {
                         fontWeight: 500,
                       }}
                     >
-                      Quiero mi agente IA →
+                      Revisar mi caso por WhatsApp →
                     </motion.a>
-                  )}
-
-                  {m.fallback && (
-                    <motion.a
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      href={directChatUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-2 text-xs px-3 py-2 transition-opacity hover:opacity-80"
-                      style={{
-                        background: "rgba(198,219,112,0.12)",
-                        border: "1px solid rgba(198,219,112,0.35)",
-                        color: "#c6db70",
-                        borderRadius: 9,
-                        fontWeight: 500,
-                      }}
-                    >
-                      Continuar por WhatsApp →
-                    </motion.a>
-                  )}
-
-                  {/* Confirmación lead capturado */}
-                  {m.lead_capturado && !m.sugerir_evaluacion && (
-                    <span
-                      className="text-[11px] mt-1"
-                      style={{ color: "#aeb4bf", fontFamily: "var(--font-mono)" }}
-                    >
-                      ✓ contacto guardado
-                    </span>
                   )}
                 </div>
               ))}
