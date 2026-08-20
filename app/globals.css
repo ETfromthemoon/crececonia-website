@@ -1359,7 +1359,7 @@ h1, h2, h3 { color:var(--ink-deep); }
 /* ===== Aula privada · Clase de páginas con IA ===== */
 .aula-page { --aula-ink:#111313; --aula-paper:#f4f0e7; --aula-lime:#c6ee35; --aula-dim:#6a6963; min-height:100svh; background:var(--aula-paper); color:var(--aula-ink); }
 .aula-shell { width:min(1180px,calc(100% - 48px)); margin-inline:auto; }
-.aula-hero { overflow:hidden; padding:30px 0 72px; color:#f4f0e7; background:#0b0d0d; }
+.aula-hero { position:relative; overflow:hidden; padding:30px 0 72px; color:#f4f0e7; background:#0b0d0d; }
 .aula-hero::before { content:""; position:absolute; width:min(58vw,780px); height:min(58vw,780px); right:-17vw; top:-36vw; border-radius:50%; background:radial-gradient(circle,rgba(198,238,53,.23),transparent 68%); pointer-events:none; }
 .aula-eyebrow,.aula-overline,.aula-section-heading>span,.aula-route>span,.aula-timeline>span,.aula-runway span,.aula-checklist-head span,.aula-lesson-body>div>span,.aula-advanced b,.aula-alert b,.aula-after-grid span,.aula-faq>span { font:600 .57rem/1.3 var(--font-mono); letter-spacing:.13em; text-transform:uppercase; }
 .aula-eyebrow { position:relative; display:flex; align-items:center; gap:10px; color:rgba(244,240,231,.62); }

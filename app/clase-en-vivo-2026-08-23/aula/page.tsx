@@ -11,5 +11,5 @@ export default async function ClassAulaPage({ searchParams }: { searchParams: Pr
   const { token } = await searchParams;
   if (!verifyClassHubToken(token)) notFound();
   const safeToken = token as string;
-  return <ClassAula token={safeToken} sessionUrl={process.env.CLASS_SESSION_URL?.trim()} groupUrl={process.env.CLASS_WHATSAPP_GROUP_URL?.trim()} supportEmail={process.env.CLASS_SUPPORT_EMAIL?.trim() || "sergio@crececonia.cl"} presentationHref={`${CLASS_SLIDES_PATH}?token=${encodeURIComponent(safeToken)}`} />;
+  return <ClassAula token={safeToken} sessionUrl={process.env.CLASS_SESSION_URL?.trim()} groupUrl={process.env.CLASS_WHATSAPP_GROUP_URL?.trim()} recordingUrl={process.env.CLASS_RECORDING_URL?.trim()} supportEmail={process.env.CLASS_SUPPORT_EMAIL?.trim() || "sergio@crececonia.cl"} presentationHref={`${CLASS_SLIDES_PATH}?token=${encodeURIComponent(safeToken)}`} />;
 }

@@ -8,6 +8,7 @@ type Props = {
   token: string;
   sessionUrl?: string;
   groupUrl?: string;
+  recordingUrl?: string;
   supportEmail: string;
   presentationHref: string;
 };
@@ -36,7 +37,7 @@ function Lesson({ lesson }: { lesson: ClassLesson }) {
     </div>
   </details>;
 }
-export default function ClassAula({ token, sessionUrl, groupUrl, supportEmail, presentationHref }: Props) {
+export default function ClassAula({ token, sessionUrl, groupUrl, recordingUrl, supportEmail, presentationHref }: Props) {
   const [checked, setChecked] = useState<boolean[]>(() => preparation.map(() => false));
   const [activeView, setActiveView] = useState<"hoy" | "guias" | "recursos" | "continuidad">("hoy");
 
@@ -98,7 +99,7 @@ export default function ClassAula({ token, sessionUrl, groupUrl, supportEmail, p
 
     {activeView === "continuidad" && <section className="aula-section aula-shell">
       <div className="aula-section-heading"><span>04 · Después</span><h2>La clase termina; tu implementación no.</h2><p>La forma más rápida de mejorar una web es publicarla, observarla y corregir una cosa importante por vez.</p></div>
-      <div className="aula-after-grid"><article><span>Reto de 7 días</span><h3>Una mejora útil al día.</h3><p>Publica, aclara el mensaje, agrega prueba, revisa móvil, crea contenido, mide la acción y elige el siguiente bloque.</p><a href={download("reto-7-dias")}>Descargar plan <b>↓</b></a></article><article><span>Canal de dudas</span><h3>Pregunta con contexto.</h3><p>Envía URL o captura, expectativa, resultado real, lo que intentaste y el error completo. Así la respuesta llega al problema, no a una suposición.</p><a href={`mailto:${supportEmail}?subject=Duda%20postclase%20-%20mi%20p%C3%A1gina`}>Escribir a soporte <b>↗</b></a></article><article><span>Apoyo adicional</span><h3>Cuando tu siguiente paso necesita más alcance.</h3><p>Mentoría para decidir y revisar; implementación para e-commerce, integraciones, automatizaciones o una web completa que requiera equipo.</p><a href="/mentoria">Ver mentoría <b>↗</b></a></article></div>
+      <div className="aula-after-grid"><article><span>Reto de 7 días</span><h3>Una mejora útil al día.</h3><p>Publica, aclara el mensaje, agrega prueba, revisa móvil, crea contenido, mide la acción y elige el siguiente bloque.</p><a href={download("reto-7-dias")}>Descargar plan <b>↓</b></a></article><article><span>{recordingUrl ? "Grabación disponible" : "Canal de dudas"}</span><h3>{recordingUrl ? "Vuelve a mirar el paso que necesitas." : "Pregunta con contexto."}</h3><p>{recordingUrl ? "La grabación se habilita como un apoyo para retomar una configuración, un prompt o un despliegue. Úsala junto con las plantillas, no como reemplazo de tu propia práctica." : "Envía URL o captura, expectativa, resultado real, lo que intentaste y el error completo. Así la respuesta llega al problema, no a una suposición."}</p><a href={recordingUrl ?? `mailto:${supportEmail}?subject=Duda%20postclase%20-%20mi%20p%C3%A1gina`} target={recordingUrl ? "_blank" : undefined} rel={recordingUrl ? "noreferrer" : undefined}>{recordingUrl ? "Ver grabación" : "Escribir a soporte"} <b>↗</b></a></article><article><span>Apoyo adicional</span><h3>Cuando tu siguiente paso necesita más alcance.</h3><p>Mentoría para decidir y revisar; implementación para e-commerce, integraciones, automatizaciones o una web completa que requiera equipo.</p><a href="/mentoria">Ver mentoría <b>↗</b></a></article></div>
       <div className="aula-faq"><span>Preguntas frecuentes</span>{CLASS_FAQS.map(([question, answer]) => <details key={question}><summary>{question}<b>+</b></summary><p>{answer}</p></details>)}</div>
     </section>}
   </main>;
