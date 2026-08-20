@@ -73,11 +73,15 @@ export default function ClassCheckout() {
 
   return (
     <section id="reservar" className="class-checkout site-container">
+      <div className="class-checkout-waves" aria-hidden="true"><span /><span /><span /></div>
       <div className="class-checkout-layout">
         <div className="class-checkout-heading">
-          <span className="eyebrow">Reserva tu lugar</span>
-          <h2>Reserva con el precio actual.</h2>
-          <p>El siguiente valor se activa cuando se agota el tramo vigente.</p>
+          <span className="eyebrow">Tu acceso empieza aquí</span>
+          <h2>Reserva el precio activo. <em>Después construimos.</em></h2>
+          <p>Deja tu correo, completa el pago y llega a la clase con tu lugar, guía, skills y pack de libros asegurados.</p>
+          <div className="class-checkout-proof" aria-label="Lo que incluye tu reserva">
+            <span>Clase en vivo</span><span>Skills + guía</span><span>4 ebooks</span>
+          </div>
         </div>
         <div className="class-checkout-panel">
           <div className="class-offer-grid">
@@ -90,16 +94,18 @@ export default function ClassCheckout() {
                 onClick={() => setSelectedOfferKey(currentOffer.offerKey)}
                 aria-pressed="true"
               >
-                <span>{currentOffer.label}</span>
-                <strong>{formatPrice(currentOffer.amount)}</strong>
+                <span className="class-offer-label">{currentOffer.label}</span>
+                <strong className="class-offer-price">{formatPrice(currentOffer.amount)}</strong>
+                <small>Precio activo ahora</small>
               </button>
             ) : (
               <p className="class-checkout-error">Todos los cupos están reservados.</p>
             )}
           </div>
           <form className="class-checkout-form" onSubmit={handleSubmit}>
-            <label htmlFor="class-email">Correo donde recibirás la confirmación</label>
-            <div className="class-checkout-row">
+            <div className="class-email-field">
+              <span className="class-email-step">01 / Reserva tu acceso</span>
+              <label htmlFor="class-email">Escribe el correo donde recibirás tu confirmación</label>
               <input
                 id="class-email"
                 type="email"
@@ -109,11 +115,14 @@ export default function ClassCheckout() {
                 placeholder="tu@correo.com"
                 autoComplete="email"
               />
+              <span className="class-email-prompt" aria-hidden="true">Tu acceso, Zoom y materiales llegarán aquí</span>
+            </div>
+            <div className="class-checkout-row">
               <button className="button button-dark" type="submit" disabled={!selectedOffer || status === "loading"}>
-                {status === "loading" ? "Preparando…" : `Pagar ${selectedOffer ? formatPrice(selectedOffer.amount) : ""}`} <span>→</span>
+                {status === "loading" ? "Preparando tu reserva…" : `Quiero reservar por ${selectedOffer ? formatPrice(selectedOffer.amount) : ""}`} <span>↗</span>
               </button>
             </div>
-            <p className="class-checkout-note">Tu cupo se reserva durante 30 minutos mientras completas el pago.</p>
+            <p className="class-checkout-note">Tu cupo queda reservado durante 30 minutos mientras completas el pago. El siguiente precio se activa cuando se agota este tramo.</p>
             {error && <p className="class-checkout-error" role="alert">{error}</p>}
           </form>
         </div>
