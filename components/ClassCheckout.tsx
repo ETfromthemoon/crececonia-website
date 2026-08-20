@@ -115,7 +115,7 @@ export default function ClassCheckout() {
                 placeholder="tu@correo.com"
                 autoComplete="email"
               />
-              <span className="class-email-prompt" aria-hidden="true">Tu acceso, Zoom y materiales llegarán aquí</span>
+              <span className="class-email-prompt" aria-hidden="true">Tu acceso a Google Meet y materiales llegarán aquí</span>
             </div>
             <div className="class-checkout-row">
               <button className="button button-dark" type="submit" disabled={!selectedOffer || status === "loading"}>
