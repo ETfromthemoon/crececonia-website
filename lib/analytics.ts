@@ -30,10 +30,18 @@ export function getPageType(pathname: string): PageType {
 function routeProperties(): AnalyticsProperties {
   if (typeof window === "undefined") return {};
 
+  const searchParams = new URLSearchParams(window.location.search);
+
   return {
     route: window.location.pathname,
     page_type: getPageType(window.location.pathname),
     analytics_schema_version: 1,
+    // PostHog guarda los UTM en los pageviews, pero los eventos propios no
+    // siempre los heredan en reportes y funnels.
+    utm_source: searchParams.get("utm_source") || undefined,
+    utm_medium: searchParams.get("utm_medium") || undefined,
+    utm_campaign: searchParams.get("utm_campaign") || undefined,
+    utm_content: searchParams.get("utm_content") || undefined,
   };
 }
 
