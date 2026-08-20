@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     await sendOrganizerChecklist("blocked", 0);
     return NextResponse.json({ ok: false, reason: "CLASS_SESSION_URL pendiente" }, { status: 409 });
   }
-  const { sentCount } = await deliverClassOrders("session-2h");
-  await sendOrganizerChecklist("2h", sentCount);
+  const { sentCount } = await deliverClassOrders("session-10m");
+  await sendOrganizerChecklist("10m", sentCount);
   return NextResponse.json({ ok: true, sentCount });
 }
