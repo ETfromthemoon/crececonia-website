@@ -4,6 +4,8 @@
   "regions": ["gru1"],
   "crons": [
     { "path": "/api/cron/class-delivery/initial", "schedule": "0 16 21 8 *" },
+    { "path": "/api/cron/class-reminder/1h", "schedule": "0 21 23 8 *" },
+    { "path": "/api/cron/class-reminder/10m", "schedule": "50 21 23 8 *" },
     { "path": "/api/cron/class-follow-up", "schedule": "0 16 * * *" }
   ],
   "headers": [
