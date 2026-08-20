@@ -10,18 +10,18 @@ type Message = {
   id: string;
   role: "user" | "bot";
   content: string;
-  showWhatsappCta?: boolean;
+  nextStep?: NextStep;
 };
 
-// Alineadas con lo que la landing realmente vende (agente IA en 48h, USD
-// 297/mes). Antes preguntaban por el "Protocolo BPI" y el "Test de Fit",
-// términos que la landing no menciona ni explica en ninguna parte — el
-// visitante abría el chat y lo primero que veía era un producto del que
-// nunca oyó hablar.
+type NextStep = "ebooks" | "mentoria" | "implementacion" | "web" | "whatsapp" | "selector";
+
+// Basadas en SVC-IA de OPS. El widget ayuda a orientar el caso, pero no
+// aprueba alcance ni reemplaza la revisión comercial o de seguridad.
 const QUICK_REPLIES = [
-  "¿Cuánto cuesta?",
-  "¿Sirve para mi negocio?",
-  "¿En cuánto tiempo está listo?",
+  "Quiero aprender por mi cuenta",
+  "Necesito mentoría y dirección",
+  "Quiero mejorar un proceso",
+  "Necesito una web informativa",
 ];
 
 const TypingDots = () => (
@@ -37,46 +37,95 @@ const TypingDots = () => (
 );
 
 const INITIAL_MESSAGE =
-  "¡Hola! Soy el asistente de CrececonIA 👋 Te ayudo a entender si un agente IA calza con tu negocio, cuánto cuesta y en cuánto tiempo puede estar funcionando.";
+  "¡Hola! Soy el orientador de CrececonIA 👋 Te ayudo a elegir el siguiente paso: aprender por tu cuenta, mentoría, implementación de IA o una web informativa. Cuéntame qué necesitas lograr.";
 
-function buildReply(message: string): Pick<Message, "content" | "showWhatsappCta"> {
+function buildReply(message: string): Pick<Message, "content" | "nextStep"> {
   const text = message.toLocaleLowerCase("es-CL");
+
+  if (/(dato sensible|salud|banco|financ|pagar|borrar|publicar|administrador|credencial|permiso)/.test(text)) {
+    return {
+      content:
+        "Por los datos o acciones involucradas, este caso requiere una revisión especial. No compartas credenciales por aquí: cualquier propuesta debe definir permisos mínimos, controles humanos, pruebas y aprobación antes de producción.",
+      nextStep: "whatsapp",
+    };
+  }
+
+  if (/(ebook|e-book|libro|gu[ií]a|skill|aprender por mi cuenta|autodidact|curso|material)/.test(text)) {
+    return {
+      content:
+        "Para avanzar de forma autónoma, la biblioteca reúne ebooks, guías y skills aplicables. Elige el recurso según tu objetivo y nivel; no requiere llamada previa.",
+      nextStep: "ebooks",
+    };
+  }
+
+  if (/(mentor[ií]a|mentor|acompa[nñ]amiento|clases|roadmap|aprender conmigo|direcci[oó]n)/.test(text)) {
+    return {
+      content:
+        "La mentoría es para quien quiere aprender y ejecutar con un roadmap propio. Incluye cuatro clases personalizadas mensuales, ejercicios, feedback y seguimiento; tú mantienes la responsabilidad de aplicar el trabajo entre sesiones.",
+      nextStep: "mentoria",
+    };
+  }
+
+  if (/(p[aá]gina web|sitio web|landing|web corporativa|dominio|dise[nñ]ar mi web|hacer una web)/.test(text)) {
+    return {
+      content:
+        "Podemos evaluar una landing o web corporativa informativa. El servicio incluye diseño, desarrollo, texto basado en tus activos, dos rondas de revisión y entrega; ecommerce, logins, reservas e integraciones no aprobadas se evalúan aparte.",
+      nextStep: "web",
+    };
+  }
 
   if (/(cu[aá]nto|precio|costo|vale|valor|presupuesto)/.test(text)) {
     return {
       content:
-        "El servicio cuesta USD 297 al mes, más USD 200 de configuración inicial por única vez. Incluye la implementación y el acompañamiento para dejar el agente atendiendo consultas reales.",
-      showWhatsappCta: true,
+        "Depende de la vía: mentoría cuesta 397.000 CLP netos más IVA por ciclo mensual; el diagnóstico BPI, 200.000 CLP netos más IVA. Una implementación se cotiza por alcance y la operación según sistemas, criticidad y SLA. Los ebooks muestran su precio final en la biblioteca.",
+      nextStep: "selector",
     };
   }
 
-  if (/(cu[aá]ndo|tiempo|demora|r[aá]pido|48|implement)/.test(text)) {
+  if (/(operaci[oó]n|mantenci[oó]n|mantenimiento|monitoreo|sla|soporte permanente)/.test(text)) {
     return {
       content:
-        "Normalmente queda listo en 48 horas desde que tenemos la información básica de tu negocio. Partimos entendiendo tus preguntas frecuentes, procesos y el tono con que atiendes.",
-      showWhatsappCta: true,
+        "La operación y mantención se revisan para soluciones ya entregadas que tienen responsable, runbook y una línea base. El nivel de servicio y el fee mensual se confirman según sistemas y criticidad; no se promete un SLA sin definirlo.",
+      nextStep: "whatsapp",
     };
   }
 
-  if (/(sirve|negocio|empresa|rubro|industria|funciona|calza|encaja)/.test(text)) {
+  if (/(necesito|quiero|busco).{0,25}implement|implementaci[oó]n de ia|automatizar un proceso|construir una soluci[oó]n|agente|automatizaci[oó]n/.test(text)) {
     return {
       content:
-        "Suele funcionar muy bien cuando el equipo repite respuestas, pierde tiempo persiguiendo información o necesita atender consultas fuera de horario. Cuéntame qué hace tu empresa o qué tarea se repite más y te orientamos con un caso concreto.",
+        "La implementación aplica cuando existe un proceso concreto, un responsable, datos y una métrica de éxito. Primero revisamos alcance, integraciones, riesgos y controles; luego se define una propuesta con plazo, anticipo y pagos por hitos.",
+      nextStep: "implementacion",
     };
   }
 
-  if (/(whatsapp|cliente|venta|ventas|soporte|atenci[oó]n|consulta)/.test(text)) {
+  if (/(cu[aá]ndo|tiempo|demora|r[aá]pido|48)/.test(text)) {
     return {
       content:
-        "Podemos diseñar un agente para responder consultas, calificar interesados y ordenar la información antes de que intervenga tu equipo. La mejor forma de validar el alcance es revisar un ejemplo real de esas consultas contigo.",
-      showWhatsappCta: true,
+        "El diagnóstico BPI toma dos semanas desde que están completos los accesos y la información. Para implementación, el plazo se define en la propuesta porque depende del proceso, datos, sistemas, controles y pruebas requeridas.",
+      nextStep: "implementacion",
+    };
+  }
+
+  if (/(sirve|negocio|empresa|rubro|industria|funciona|calza|encaja|proceso|diagn[oó]stico|auditor[ií]a|hoja de ruta)/.test(text)) {
+    return {
+      content:
+        "El diagnóstico BPI sirve para procesos manuales, fragmentados o poco observables donde hay una oportunidad concreta de automatización o asistencia. Mapeamos el proceso, priorizamos oportunidades y riesgos, estimamos el trabajo y dejamos una hoja de ruta; no compromete una implementación automática.",
+      nextStep: "implementacion",
+    };
+  }
+
+  if (/(whatsapp|cliente|venta|ventas|atenci[oó]n|consulta|api|integraci[oó]n|sistema)/.test(text)) {
+    return {
+      content:
+        "Podemos evaluar una solución para ese proceso, pero primero necesitamos conocer su inicio y fin, quién es responsable, el volumen, los sistemas y datos involucrados, y qué mejora medible esperan. Las integraciones, permisos y proveedores se revisan antes de aprobar alcance.",
+      nextStep: "implementacion",
     };
   }
 
   return {
     content:
-      "Gracias por contármelo. Para decirte si vale la pena automatizarlo, necesitamos entender qué consulta o proceso se repite y qué resultado esperas. Puedes dejar ese contexto aquí o hablar con nosotros por WhatsApp para revisarlo contigo.",
-    showWhatsappCta: true,
+      "Para recomendar el camino correcto, cuéntanos si quieres aprender por tu cuenta, avanzar con mentoría, mejorar un proceso con IA o crear una presencia web informativa. También puedes ver el selector de alternativas.",
+    nextStep: "selector",
   };
 }
 
@@ -177,6 +226,14 @@ export default function ChatWidget() {
       ? `Hola, vengo del chat de CrececonIA. Mi consulta es: ${conversationSummary}`
       : "Hola, vengo del chat de CrececonIA y quiero orientación.",
   );
+  const nextStepLinks: Record<NextStep, { href: string; label: string; external?: boolean }> = {
+    ebooks: { href: "/ebooks", label: "Explorar ebooks y recursos" },
+    mentoria: { href: "/mentoria#requisitos", label: "Ver requisitos de mentoría" },
+    implementacion: { href: "/implementacion#requisitos", label: "Evaluar implementación" },
+    web: { href: directChatUrl, label: "Revisar proyecto web por WhatsApp", external: true },
+    whatsapp: { href: directChatUrl, label: "Revisar mi caso por WhatsApp", external: true },
+    selector: { href: "/ia", label: "Ver todas las alternativas" },
+  };
 
   if (pathname === "/ia") return null;
 
@@ -293,13 +350,14 @@ export default function ChatWidget() {
                     {m.content}
                   </div>
 
-                  {m.showWhatsappCta && (
+                  {m.nextStep && (
                     <motion.a
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
-                      href={directChatUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={nextStepLinks[m.nextStep].href}
+                      target={nextStepLinks[m.nextStep].external ? "_blank" : undefined}
+                      rel={nextStepLinks[m.nextStep].external ? "noopener noreferrer" : undefined}
+                      onClick={() => trackEvent("chat_service_recommended", { service: m.nextStep })}
                       className="mt-2 text-xs px-3 py-2 transition-opacity hover:opacity-80"
                       style={{
                         background: "rgba(198,219,112,0.12)",
@@ -309,7 +367,7 @@ export default function ChatWidget() {
                         fontWeight: 500,
                       }}
                     >
-                      Revisar mi caso por WhatsApp →
+                      {nextStepLinks[m.nextStep].label} →
                     </motion.a>
                   )}
                 </div>
@@ -366,7 +424,7 @@ export default function ChatWidget() {
                 ref={inputRef}
                 className="flex-1 bg-transparent text-sm outline-none"
                 style={{ color: "#f2efe8" }}
-                placeholder="Escribe tu pregunta…"
+                placeholder="Cuéntanos qué necesitas lograr…"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
