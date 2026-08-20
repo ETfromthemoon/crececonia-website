@@ -2,7 +2,7 @@ import { getSupabaseAdmin } from "./supabase";
 import { sendClassAccessEmail, sendClassOrganizerReminder, sendClassSessionEmail } from "./class-delivery-email";
 import { sendEbookDeliveryEmail } from "./ebook-delivery-email";
 
-export type ClassDeliveryKind = "welcome" | "ebooks" | "session-24h" | "session-2h";
+export type ClassDeliveryKind = "welcome" | "ebooks" | "session-1h" | "session-10m";
 
 type ClaimedDelivery = {
   event_id: string;
@@ -40,7 +40,7 @@ export async function deliverClassOrders(kind: ClassDeliveryKind, commerceOrder?
         if (grantsError) throw new Error(grantsError.message);
         await sendEbookDeliveryEmail({ email: delivery.email, grants: grants ?? [] });
       } else {
-        await sendClassSessionEmail({ email: delivery.email, timing: kind === "session-24h" ? "24h" : "2h" });
+        await sendClassSessionEmail({ email: delivery.email, timing: kind === "session-1h" ? "1h" : "10m" });
       }
       const { error: completeError } = await db.rpc("complete_class_delivery", { p_event_id: delivery.event_id });
       if (completeError) throw new Error(completeError.message);
@@ -60,7 +60,7 @@ export async function getClassDeliverySummary(): Promise<DeliverySummary> {
   return (data?.[0] ?? { paid_count: 0 }) as DeliverySummary;
 }
 
-export async function sendOrganizerChecklist(timing: "24h" | "2h" | "blocked", sentCount: number) {
+export async function sendOrganizerChecklist(timing: "1h" | "10m" | "blocked", sentCount: number) {
   const summary = await getClassDeliverySummary();
   const sessionReady = Boolean(process.env.CLASS_SESSION_URL?.trim());
   await sendClassOrganizerReminder({ timing, paidCount: summary.paid_count, sentCount, sessionReady });

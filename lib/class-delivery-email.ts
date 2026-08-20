@@ -54,21 +54,21 @@ export async function sendClassAccessEmail({
     from: "CrececonIA <sergio@crececonia.cl>",
     to: email,
     subject: "Tu cupo está confirmado · Clase de páginas con IA",
-    html: shell("¡Tu lugar está confirmado!", `<p style="color:#A8A29E;font-size:15px;line-height:1.7;margin:0 0 28px;">Compraste el tramo <strong style="color:#F5F5F4;">${escapeHtml(offerLabel)}</strong> por <strong style="color:#F5F5F4;">$${amount.toLocaleString("es-CL")} CLP</strong>.</p>${classDetailsHtml()}${groupBlock()}${sessionBlock()}<p style="color:#A8A29E;font-size:14px;line-height:1.7;margin:0 0 28px;">Incluye skills, guía completa y la colección de cuatro libros <strong style="color:#F5F5F4;">Creación de Webs con IA · Partes 1 a 4</strong>.</p>`, `Orden: ${escapeHtml(orderId)}<br/>Si necesitas ayuda, responde este correo.`),
+    html: shell("¡Tu lugar está confirmado!", `<p style="color:#A8A29E;font-size:15px;line-height:1.7;margin:0 0 28px;">Compraste el tramo <strong style="color:#F5F5F4;">${escapeHtml(offerLabel)}</strong> por <strong style="color:#F5F5F4;">$${amount.toLocaleString("es-CL")} CLP</strong>.</p>${classDetailsHtml()}${groupBlock()}<p style="color:#A8A29E;font-size:14px;line-height:1.7;margin:0 0 28px;">El enlace de Zoom llegará solamente por correo <strong style="color:#F5F5F4;">60 minutos antes</strong> y se reenviará <strong style="color:#F5F5F4;">10 minutos antes</strong> de comenzar.</p><p style="color:#A8A29E;font-size:14px;line-height:1.7;margin:0 0 28px;">Incluye skills, guía completa y la colección de cuatro libros <strong style="color:#F5F5F4;">Creación de Webs con IA · Partes 1 a 4</strong>.</p>`, `Orden: ${escapeHtml(orderId)}<br/>Si necesitas ayuda, responde este correo.`),
   });
 }
 
-export async function sendClassSessionEmail({ email, timing }: { email: string; timing: "24h" | "2h" }) {
+export async function sendClassSessionEmail({ email, timing }: { email: string; timing: "1h" | "10m" }) {
   const sessionUrl = process.env.CLASS_SESSION_URL?.trim();
   if (!sessionUrl) throw new Error("CLASS_SESSION_URL no está configurada.");
-  const intro = timing === "24h"
-    ? "La sala ya está lista. Guarda este correo: mañana nos vemos en vivo."
-    : "Comenzamos pronto. Ten este enlace a mano para entrar a la clase.";
+  const intro = timing === "1h"
+    ? "Falta una hora. Guarda este correo: aquí está tu acceso personal a la sala."
+    : "Comenzamos en 10 minutos. Usa este enlace para entrar a la clase.";
   await getResend().emails.send({
     from: "CrececonIA <sergio@crececonia.cl>",
     to: email,
-    subject: timing === "24h" ? "Tu enlace para la clase de mañana" : "Comenzamos pronto · enlace de tu clase",
-    html: shell(timing === "24h" ? "Tu sala está lista" : "Comenzamos pronto", `<p style="color:#A8A29E;font-size:15px;line-height:1.7;margin:0 0 28px;">${intro}</p>${classDetailsHtml()}${sessionBlock()}${groupBlock()}<p style="color:#A8A29E;font-size:14px;line-height:1.7;margin:0 0 28px;">Llega 5 minutos antes, ten a mano tu computador y revisa que puedas usar audio. Los cuatro ebooks y la guía se mantienen disponibles para ti.</p>`, "Si necesitas ayuda, responde este correo."),
+    subject: timing === "1h" ? "Tu enlace de Zoom · comenzamos en una hora" : "Comenzamos en 10 minutos · entra aquí",
+    html: shell(timing === "1h" ? "Tu sala está lista" : "Comenzamos en 10 minutos", `<p style="color:#A8A29E;font-size:15px;line-height:1.7;margin:0 0 28px;">${intro}</p>${classDetailsHtml()}${sessionBlock()}<p style="color:#A8A29E;font-size:14px;line-height:1.7;margin:0 0 28px;">Llega 5 minutos antes, ten a mano tu computador y revisa que puedas usar audio. Los cuatro ebooks y la guía se mantienen disponibles para ti.</p>`, "Si necesitas ayuda, responde este correo."),
   });
 }
 
@@ -78,17 +78,17 @@ export async function sendClassOrganizerReminder({
   sentCount,
   sessionReady,
 }: {
-  timing: "24h" | "2h" | "blocked";
+  timing: "1h" | "10m" | "blocked";
   paidCount: number;
   sentCount: number;
   sessionReady: boolean;
 }) {
   const recipient = process.env.CLASS_ORGANIZER_EMAIL?.trim() || "sergio@crececonia.cl";
-  const label = timing === "24h" ? "Checklist: faltan 24 horas" : timing === "2h" ? "Checklist: faltan 2 horas" : "Acción requerida: falta la sala";
-  const actions = timing === "24h"
-    ? "Confirma que el enlace de Zoom abre, deja los materiales listos, fija el enlace en WhatsApp y revisa el listado de asistentes."
-    : timing === "2h"
-      ? "Abre Zoom 15 minutos antes, activa la sala de espera, deja el chat habilitado y fija el mensaje de entrada en WhatsApp."
+  const label = timing === "1h" ? "Checklist: falta una hora" : timing === "10m" ? "Checklist: faltan 10 minutos" : "Acción requerida: falta la sala";
+  const actions = timing === "1h"
+    ? "El enlace se acaba de enviar por correo a los compradores. Confirma que Zoom abre, deja los materiales listos y revisa el listado de asistentes."
+    : timing === "10m"
+      ? "El enlace se reenvió por correo. Abre Zoom ahora, activa la sala de espera y deja el chat habilitado."
       : "Configura CLASS_SESSION_URL con el enlace de Zoom y vuelve a ejecutar el recordatorio. No se ha enviado ningún enlace de sala a compradores.";
   await getResend().emails.send({
     from: "CrececonIA <sergio@crececonia.cl>",
