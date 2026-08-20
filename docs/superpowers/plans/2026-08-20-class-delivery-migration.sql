@@ -86,44 +86,43 @@ $$;
 
 create or replace function public.grant_class_ebook_delivery(p_commerce_order text)
 returns table (resource text, token text)
-language plpgsql
+language sql
 security definer
 set search_path = ''
 as $$
-declare
-  v_email text;
-  v_token text;
-  v_flow_order bigint;
-begin
-  select c.email, c.flow_token, c.flow_order
-    into v_email, v_token, v_flow_order
-  from commerce.class_orders c
-  where c.commerce_order = p_commerce_order and c.status = 'paid';
-
-  if v_email is null or v_token is null then
-    raise exception 'paid class order not found';
-  end if;
-
   insert into commerce.ebook_purchases (email, amount, flow_token, flow_order, tier, resource)
-  select v_email, 0, v_token, v_flow_order, 'class-included', resources.resource
-  from (values
+  select c.email, 0, c.flow_token, c.flow_order, 'class-included', resources.resource
+  from commerce.class_orders c
+  cross join (values
     ('ebook:creacion-de-webs-con-ia'),
     ('ebook:creacion-de-webs-con-ia-parte-2'),
     ('ebook:creacion-de-webs-con-ia-parte-3'),
     ('ebook:creacion-de-webs-con-ia-parte-4')
   ) as resources(resource)
+  where c.commerce_order = p_commerce_order
+    and c.status = 'paid'
+    and c.flow_token is not null
   on conflict (flow_token, resource) do nothing;
 
-  return query
-  select resources.resource, v_token
-  from (values
+  select resources.resource, c.flow_token
+  from commerce.class_orders c
+  cross join (values
     ('ebook:creacion-de-webs-con-ia'),
     ('ebook:creacion-de-webs-con-ia-parte-2'),
     ('ebook:creacion-de-webs-con-ia-parte-3'),
     ('ebook:creacion-de-webs-con-ia-parte-4')
-  ) as resources(resource);
-end;
+  ) as resources(resource)
+  where c.commerce_order = p_commerce_order
+    and c.status = 'paid'
+    and c.flow_token is not null;
 $$;
+
+-- The earlier PL/pgSQL version had an OUT parameter called `resource`, which
+-- PostgreSQL treated as ambiguous against the resources(resource) values table.
+-- The SQL implementation above deliberately qualifies every data column.
+
+--
+-- End function.
 
 create or replace function public.class_delivery_summary()
 returns table (paid_count integer)
