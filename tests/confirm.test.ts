@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockSendEmail, mockCapture, mockDecrement, mockRedeem, mockInsert, mockDelete } = vi.hoisted(() => ({
+const { mockSendEmail, mockPurchaseNotice, mockCapture, mockDecrement, mockRedeem, mockInsert, mockDelete } = vi.hoisted(() => ({
   mockSendEmail: vi.fn().mockResolvedValue(undefined),
+  mockPurchaseNotice: vi.fn().mockResolvedValue(undefined),
   mockCapture: vi.fn().mockResolvedValue(undefined),
   mockDecrement: vi.fn().mockResolvedValue(undefined),
   mockRedeem: vi.fn().mockResolvedValue(true),
@@ -10,6 +11,7 @@ const { mockSendEmail, mockCapture, mockDecrement, mockRedeem, mockInsert, mockD
 }));
 
 vi.mock("@/lib/ebook-delivery-email", () => ({ sendEbookDeliveryEmail: mockSendEmail }));
+vi.mock("@/lib/purchase-notification-email", () => ({ sendPurchaseNotification: mockPurchaseNotice }));
 vi.mock("@/lib/posthog-server", () => ({ captureServerEvent: mockCapture }));
 vi.mock("@/lib/ebook-pricing", () => ({ decrementCupo: mockDecrement }));
 vi.mock("@/lib/discount-codes", () => ({ redeemDiscountCode: mockRedeem }));
@@ -121,6 +123,12 @@ describe("POST /api/flow/confirm", () => {
       "anon-1",
       expect.objectContaining({ item_count: 2, amount: 19_440, order_id: "ebook-123-abc123" })
     );
+    expect(mockPurchaseNotice).toHaveBeenCalledWith(expect.objectContaining({
+      kind: "Ebook",
+      buyerEmail: "comprador@test.com",
+      amount: 19_440,
+      orderId: "ebook-123-abc123",
+    }));
     expect(mockDelete).toHaveBeenCalledOnce();
   });
 

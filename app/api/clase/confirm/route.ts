@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { flowSign, getFlowBase } from "@/lib/flow";
 import { deliverClassOrders, deliverLateClassAccessIfNeeded } from "@/lib/class-delivery";
+import { sendPurchaseNotification } from "@/lib/purchase-notification-email";
 
 interface FlowPayment {
   status: number;
@@ -64,6 +65,18 @@ export async function POST(request: Request) {
       await deliverLateClassAccessIfNeeded(commerceOrder);
     } catch (error) {
       return retry(`no se pudo enviar la entrega de ${commerceOrder}`, error);
+    }
+
+    try {
+      await sendPurchaseNotification({
+        kind: "Clase en vivo",
+        buyerEmail: order.email,
+        amount: paidAmount,
+        orderId: commerceOrder,
+        items: ["Construye una página desde cero con inteligencia artificial", order.offer_label],
+      });
+    } catch (error) {
+      console.error(`[class/confirm] no se pudo notificar la compra ${commerceOrder}:`, error);
     }
 
     return new Response("OK", { status: 200 });
