@@ -5,6 +5,9 @@ const DE_CERO = "ebook:de-cero-a-claude-en-una-semana";
 const CLAUDE_EXPERTO = "ebook:claude-nivel-experto";
 const AGENTES = "ebook:agentes-de-ia";
 const WEBS = "ebook:creacion-de-webs-con-ia";
+const WEB_PARTE_2 = "ebook:creacion-de-webs-con-ia-parte-2";
+const WEB_PARTE_3 = "ebook:creacion-de-webs-con-ia-parte-3";
+const WEB_PARTE_4 = "ebook:creacion-de-webs-con-ia-parte-4";
 
 /**
  * Las ofertas nombradas son una decisión comercial separada del grafo de
@@ -16,7 +19,10 @@ const OFFER_RULES: Record<string, string[]> = {
   [DE_CERO]: ["ruta-operador", "ruta-negocio", "ruta-constructor"],
   [CLAUDE_EXPERTO]: ["ruta-automatizacion"],
   [AGENTES]: ["ruta-negocio", "ruta-automatizacion"],
-  [WEBS]: ["ruta-constructor"],
+  [WEBS]: ["ruta-constructor", "coleccion-web"],
+  [WEB_PARTE_2]: ["coleccion-web"],
+  [WEB_PARTE_3]: ["coleccion-web"],
+  [WEB_PARTE_4]: ["coleccion-web"],
 };
 
 export type EbookBundleOffer = {

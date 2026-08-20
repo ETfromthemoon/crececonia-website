@@ -8,8 +8,9 @@ export interface BundleRule {
  * ebook #5 no requiere tocar esto — solo agregar la entrada al catálogo
  * (lib/ebook-catalog.ts) y decidir si el tramo de 5+ necesita su propia regla.
  *
- * Tabla fijada para el lanzamiento del 2026-08-07 con el catálogo de 4
- * libros: 2 libros = 10%, 3 = 15%, 4 (la Colección Completa) = 20%.
+ * Tabla base fijada para el lanzamiento del 2026-08-07: 2 libros = 10%,
+ * 3 = 15%, 4 libros = 20%. La Colección Web Completa tiene una regla
+ * comercial propia de 25% y se resuelve por sus resources exactos.
  */
 export const BUNDLE_DISCOUNT_RULES: BundleRule[] = [
   { minItems: 1, discountPercent: 0 },
@@ -18,7 +19,21 @@ export const BUNDLE_DISCOUNT_RULES: BundleRule[] = [
   { minItems: 4, discountPercent: 20 },
 ];
 
-export function getComboDiscountPercent(itemCount: number): number {
+const COLECCION_WEB_RESOURCES = [
+  "ebook:creacion-de-webs-con-ia",
+  "ebook:creacion-de-webs-con-ia-parte-2",
+  "ebook:creacion-de-webs-con-ia-parte-3",
+  "ebook:creacion-de-webs-con-ia-parte-4",
+];
+
+function isColeccionWeb(resources: readonly string[] | undefined): boolean {
+  if (!resources || resources.length !== COLECCION_WEB_RESOURCES.length) return false;
+  const selected = new Set(resources);
+  return COLECCION_WEB_RESOURCES.every((resource) => selected.has(resource));
+}
+
+export function getComboDiscountPercent(itemCount: number, resources?: readonly string[]): number {
+  if (isColeccionWeb(resources)) return 25;
   const applicable = BUNDLE_DISCOUNT_RULES.filter((rule) => rule.minItems <= itemCount);
   if (applicable.length === 0) return 0;
   return Math.max(...applicable.map((rule) => rule.discountPercent));
@@ -54,7 +69,7 @@ export function computeBundleTotal(items: BundleItemInput[]): BundleTotal {
   }
 
   const subtotal = items.reduce((sum, item) => sum + item.price, 0);
-  const discountPercent = getComboDiscountPercent(items.length);
+  const discountPercent = getComboDiscountPercent(items.length, items.map((item) => item.resource));
   const total = Math.round(subtotal * (1 - discountPercent / 100));
   const discountAmount = subtotal - total;
 
@@ -100,6 +115,17 @@ export const EBOOK_BUNDLES: EbookBundle[] = [
       "ebook:claude-nivel-experto",
       "ebook:agentes-de-ia",
       "ebook:creacion-de-webs-con-ia",
+    ],
+  },
+  {
+    slug: "coleccion-web",
+    title: "Colección Web Completa",
+    pitch: "Las cuatro partes para construir sitios, tiendas y productos web con IA. 426 páginas de proyectos reales y 25% de descuento.",
+    resources: [
+      "ebook:creacion-de-webs-con-ia",
+      "ebook:creacion-de-webs-con-ia-parte-2",
+      "ebook:creacion-de-webs-con-ia-parte-3",
+      "ebook:creacion-de-webs-con-ia-parte-4",
     ],
   },
   {

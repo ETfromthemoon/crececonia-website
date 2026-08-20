@@ -20,6 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/centro/skills", changeFrequency: "weekly", priority: 0.7 },
     { path: "/centro/enlaces", changeFrequency: "weekly", priority: 0.6 },
     { path: "/ebooks", changeFrequency: "weekly", priority: 0.8 },
+    { path: "/clase-en-vivo-2026-08-23", changeFrequency: "daily", priority: 0.9 },
   ];
   const hubItems = await getHubItems();
   const hubDetailRoutes = hubItems
