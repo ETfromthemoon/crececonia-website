@@ -1,9 +1,9 @@
 import { getSupabaseAdmin } from "./supabase";
-import { sendClassAccessEmail, sendClassOrganizerReminder, sendClassSessionEmail } from "./class-delivery-email";
+import { sendClassAccessEmail, sendClassFollowUpEmail, sendClassOrganizerReminder, sendClassSessionEmail } from "./class-delivery-email";
 import { sendEbookDeliveryEmail } from "./ebook-delivery-email";
 import { CLASS_END, CLASS_START } from "./class-product";
 
-export type ClassDeliveryKind = "welcome" | "ebooks" | "session-1h" | "session-10m" | "session-late";
+export type ClassDeliveryKind = "welcome" | "ebooks" | "session-1h" | "session-10m" | "session-late" | "follow-up";
 
 type ClaimedDelivery = {
   event_id: string;
@@ -40,6 +40,8 @@ export async function deliverClassOrders(kind: ClassDeliveryKind, commerceOrder?
         });
         if (grantsError) throw new Error(grantsError.message);
         await sendEbookDeliveryEmail({ email: delivery.email, grants: grants ?? [] });
+      } else if (kind === "follow-up") {
+        await sendClassFollowUpEmail({ email: delivery.email, orderId: delivery.commerce_order });
       } else {
         const timing = kind === "session-1h" ? "1h" : kind === "session-10m" ? "10m" : "late";
         await sendClassSessionEmail({ email: delivery.email, timing });

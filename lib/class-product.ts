@@ -1,5 +1,7 @@
 export const CLASS_PRODUCT_KEY = "clase:clase-en-vivo-2026-08-23";
 export const CLASS_PATH = "/clase-en-vivo-2026-08-23";
+export const CLASS_HUB_PATH = "/clase-en-vivo-2026-08-23/aula";
+export const CLASS_SLIDES_PATH = "/clase-en-vivo-2026-08-23/aula/presentacion";
 export const CLASS_TITLE = "Construye una página desde cero con inteligencia artificial";
 export const CLASS_DATE_LABEL = "Domingo 23 de agosto";
 export const CLASS_START = "2026-08-23T18:00:00-04:00";
