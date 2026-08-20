@@ -6,6 +6,7 @@ import { sendEbookDeliveryEmail } from "@/lib/ebook-delivery-email";
 import { getOfferIdForResources } from "@/lib/ebook-offers";
 import { getComboDiscountPercent } from "@/lib/ebook-bundles";
 import { captureServerEvent } from "@/lib/posthog-server";
+import { sendPurchaseNotification } from "@/lib/purchase-notification-email";
 
 interface FlowPayment {
   status: number;
@@ -143,6 +144,22 @@ export async function POST(request: Request) {
       });
     } catch (err) {
       return retry(`no se pudo enviar la entrega de ${commerceOrder}`, err);
+    }
+
+    // La alerta al dueño es observabilidad: no debe reintentar ni duplicar la
+    // entrega del comprador si el buzón de notificaciones falla.
+    if (inserted.length > 0) {
+      try {
+        await sendPurchaseNotification({
+          kind: "Ebook",
+          buyerEmail,
+          amount: paidAmount,
+          orderId: commerceOrder,
+          items: resources.map((item) => item.resource),
+        });
+      } catch (err) {
+        console.error(`[flow/confirm] no se pudo notificar la compra ${commerceOrder}:`, err);
+      }
     }
 
     if (discountCode && resources.length === 1 && inserted.length > 0) {
