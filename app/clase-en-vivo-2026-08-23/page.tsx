@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import ClassCheckout from "@/components/ClassCheckout";
 import Footer from "@/components/Footer";
+import { ImageStreamHero } from "@/components/ui/image-stream-hero";
 import JsonLd from "@/components/JsonLd";
 import Navbar from "@/components/Navbar";
 import {
@@ -66,6 +68,23 @@ const BOOKS = [
   "Creación de Webs con IA · Parte 4: SaaS y Dashboards",
 ];
 
+const STREAM_IMAGES = [
+  { src: "/clases/clase-construye-pagina-portada.png", alt: "Portada de la clase" },
+  { src: "/ebooks/creacion-de-webs-con-ia.jpg", alt: "Creación de Webs con IA" },
+  { src: "/ebooks/creacion-de-webs-con-ia-parte-2.png", alt: "Sitios Corporativos con IA" },
+  { src: "/ebooks/previews/creacion-webs/metodologia-8-iteraciones.webp", alt: "Metodología de las ocho iteraciones" },
+  { src: "/ebooks/creacion-de-webs-con-ia-parte-3.png", alt: "eCommerce con IA" },
+  { src: "/ebooks/previews/creacion-webs/proyecto-appflow.webp", alt: "Proyecto AppFlow" },
+  { src: "/ebooks/creacion-de-webs-con-ia-parte-4.png", alt: "SaaS y Dashboards con IA" },
+];
+
+const BOOK_COVERS = [
+  "/ebooks/creacion-de-webs-con-ia.jpg",
+  "/ebooks/creacion-de-webs-con-ia-parte-2.png",
+  "/ebooks/creacion-de-webs-con-ia-parte-3.png",
+  "/ebooks/creacion-de-webs-con-ia-parte-4.png",
+];
+
 export default async function ClassPage({
   searchParams,
 }: {
@@ -82,34 +101,62 @@ export default async function ClassPage({
             <strong>Pago recibido.</strong> Revisa tu correo: ahí llegará la confirmación, la invitación al grupo y los próximos detalles.
           </div>
         )}
-        <section className="class-hero site-container">
-          <div className="class-hero-copy">
-            <span className="eyebrow">CrececonIA · Clase práctica en vivo</span>
-            <h1>Construye una página desde cero <em>con inteligencia artificial.</em></h1>
-            <p className="hero-lead">
-              Vamos a partir desde cero y convertir una referencia —una web, redes sociales, screenshots o un mapa de información— en una primera versión funcional. Después la conectaremos a GitHub, la desarrollaremos en Vercel y la iremos editando hasta dejar una web completa.
-            </p>
-            <div className="class-meta" aria-label="Detalles de la clase">
-              <div><span>Fecha</span><strong>{CLASS_DATE_LABEL}</strong></div>
-              <div><span>Horario</span><strong>18:00 a 20:30 h</strong></div>
-              <div><span>Modalidad</span><strong>Online · 2 a 3 horas</strong></div>
+        <ImageStreamHero
+          images={STREAM_IMAGES}
+          cards={10}
+          speed={15}
+          axis={52}
+          path={{ perspective: 24, cardWidth: 16, cardHeight: 23, exitHeight: 52, railExit: 49, fan: 3.7, turnExit: 36 }}
+          className="class-stream-hero"
+        >
+          <div className="class-stream-grid" aria-hidden />
+          <div className="class-stream-glow" aria-hidden />
+          <section className="class-hero site-container">
+            <div className="class-hero-copy">
+              <span className="class-live-pill"><i /> CrececonIA · Clase práctica en vivo</span>
+              <h1>Construye una página desde cero <em>con inteligencia artificial.</em></h1>
+              <p className="hero-lead">
+                Vamos a partir desde cero y convertir una referencia —una web, redes sociales, screenshots o un mapa de información— en una primera versión funcional. Después la conectaremos a GitHub, la desarrollaremos en Vercel y la iremos editando hasta dejar una web completa.
+              </p>
+              <div className="class-meta" aria-label="Detalles de la clase">
+                <div><span>Fecha</span><strong>{CLASS_DATE_LABEL}</strong></div>
+                <div><span>Horario</span><strong>18:00 a 20:30 h</strong></div>
+                <div><span>Modalidad</span><strong>Online · 2 a 3 horas</strong></div>
+              </div>
+              <div className="class-hero-actions">
+                <a className="class-primary-cta" href="#reservar">Reservar mi cupo <span>↘</span></a>
+                <p className="class-note">Máximo 3 horas para que puedas planificar tu domingo.</p>
+              </div>
             </div>
-            <a className="button button-dark class-cta" href="#reservar">Reservar mi cupo <span>↓</span></a>
-            <p className="class-note">Máximo 3 horas para que puedas planificar tu domingo.</p>
-          </div>
-          <div className="class-cover-wrap">
-            <img src="/clases/clase-construye-pagina-portada.png" alt={`Portada: ${CLASS_TITLE}`} className="class-cover" />
+            <div className="class-hero-foot" aria-hidden="true"><span>DESDE LA REFERENCIA</span><span>HASTA UNA WEB PUBLICADA</span></div>
+          </section>
+        </ImageStreamHero>
+
+        <section className="class-signal" aria-label="Resumen de la experiencia">
+          <div className="site-container class-signal-inner">
+            <span><b>01</b> En vivo y paso a paso</span>
+            <span><b>02</b> Claude Code o Codex</span>
+            <span><b>03</b> GitHub + Vercel</span>
+            <span><b>04</b> Cuatro libros incluidos</span>
           </div>
         </section>
 
         <section className="class-content site-container">
-          <div><span className="eyebrow">Qué vamos a construir</span><h2>Una página real, con un método que puedas volver a usar.</h2></div>
-          <div className="class-topic-list">{TOPICS.map((topic, index) => <div className="class-topic" key={topic}><span>0{index + 1}</span><p>{topic}</p></div>)}</div>
+          <div className="class-content-heading"><span className="eyebrow">Qué vamos a construir</span><h2>Una página real, con un método que puedas volver a usar.</h2><p className="class-section-note">Referencia → agente → código → publicación.</p></div>
+          <div className="class-topic-list">{TOPICS.map((topic, index) => <div className="class-topic" key={topic}><span>0{index + 1}</span><p>{topic}</p><i>↗</i></div>)}</div>
+          <figure className="class-process-visual">
+            <img src="/ebooks/previews/creacion-webs/proyecto-appflow.webp" alt="Página del libro mostrando el proceso de construcción de una web" />
+            <figcaption><span>PROCESO REAL / NO SOLO TEORÍA</span><span>01—05</span></figcaption>
+          </figure>
         </section>
 
         <section className="class-includes site-container">
-          <div className="class-includes-card"><span className="eyebrow">Además te llevas</span><h2>Más que una demostración.</h2>{INCLUDED.map((item) => <p key={item}>✓ {item}</p>)}</div>
-          <div className="class-books-card"><span className="eyebrow">Pack incluido</span><h3>Cuatro libros para seguir construyendo.</h3>{BOOKS.map((book, index) => <div key={book}><span>0{index + 1}</span>{book}</div>)}</div>
+          <div className="class-includes-card"><span className="eyebrow">Además te llevas</span><h2>Más que una demostración.</h2><div className="class-included-list">{INCLUDED.map((item, index) => <p key={item}><span>0{index + 1}</span>{item}</p>)}</div></div>
+          <div className="class-books-card">
+            <div className="class-book-covers" aria-hidden="true">{BOOK_COVERS.map((cover, index) => <img key={cover} src={cover} alt="" style={{ "--book-index": index } as CSSProperties} />)}</div>
+            <span className="eyebrow">Pack incluido</span><h3>Cuatro libros para seguir construyendo.</h3>
+            <div className="class-book-list">{BOOKS.map((book, index) => <div key={book}><span>0{index + 1}</span>{book}</div>)}</div>
+          </div>
         </section>
 
         <ClassCheckout />
