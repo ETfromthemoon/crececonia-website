@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { CLASS_PRODUCT_KEY } from "@/lib/class-product";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 
 type Offer = {
   id: string;
@@ -25,6 +26,7 @@ export default function ClassCheckout() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
+  const [viewTracked, setViewTracked] = useState(false);
 
   useEffect(() => {
     const checkout = document.getElementById("reservar");
@@ -72,6 +74,17 @@ export default function ClassCheckout() {
     [offers]
   );
 
+  useEffect(() => {
+    if (!currentOffer || viewTracked) return;
+    trackMetaEvent("ViewContent", {
+      content_ids: [CLASS_PRODUCT_KEY],
+      content_type: "product",
+      currency: "CLP",
+      value: currentOffer.amount,
+    });
+    setViewTracked(true);
+  }, [currentOffer, viewTracked]);
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedOffer || !email) return;
@@ -94,6 +107,12 @@ export default function ClassCheckout() {
       await loadOffers().catch(() => undefined);
       return;
     }
+    trackMetaEvent("InitiateCheckout", {
+      content_ids: [CLASS_PRODUCT_KEY],
+      content_type: "product",
+      currency: "CLP",
+      value: selectedOffer.amount,
+    });
     window.location.href = data.redirectUrl;
   }
 

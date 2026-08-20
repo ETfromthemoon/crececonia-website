@@ -3,6 +3,7 @@ import { Inter, Fraunces, JetBrains_Mono, Source_Serif_4, Space_Grotesk } from "
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import PostHogProvider from "@/components/PostHogProvider";
+import MetaPixel from "@/components/MetaPixel";
 import { EvaluacionProvider } from "@/components/EvaluacionProvider";
 import EvaluacionModal from "@/components/EvaluacionModal";
 import ChatWidget from "@/components/ChatWidget";
@@ -31,5 +32,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="es-CL" data-theme="light" className={`${inter.variable} ${fraunces.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${sourceSerif4.variable} antialiased`}><head><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationJsonLd) }} /></head><body className="flex flex-col min-h-screen"><PostHogProvider><EvaluacionProvider><SmoothScroll />{children}<EvaluacionModal /><ChatWidget /><EbookPopup /></EvaluacionProvider></PostHogProvider></body></html>;
+  return <html lang="es-CL" data-theme="light" className={`${inter.variable} ${fraunces.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${sourceSerif4.variable} antialiased`}><head><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationJsonLd) }} /></head><body className="flex flex-col min-h-screen"><MetaPixel /><PostHogProvider><EvaluacionProvider><SmoothScroll />{children}<EvaluacionModal /><ChatWidget /><EbookPopup /></EvaluacionProvider></PostHogProvider></body></html>;
 }

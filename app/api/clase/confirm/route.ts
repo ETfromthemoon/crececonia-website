@@ -4,6 +4,7 @@ import { deliverClassOrders, deliverLateClassAccessIfNeeded } from "@/lib/class-
 import { CLASS_PRODUCT_KEY } from "@/lib/class-product";
 import { captureServerEvent } from "@/lib/posthog-server";
 import { sendPurchaseNotification } from "@/lib/purchase-notification-email";
+import { captureMetaClassPurchase } from "@/lib/meta-conversions-api";
 
 interface FlowPayment {
   status: number;
@@ -91,6 +92,18 @@ export async function POST(request: Request) {
     } catch (error) {
       // La analítica no debe hacer que Flow reintente una entrega ya realizada.
       console.error(`[class/confirm] falló el evento de PostHog para ${commerceOrder}`, error);
+    }
+
+    try {
+      await captureMetaClassPurchase({
+        email: payment.payer,
+        amount: paidAmount,
+        orderId: commerceOrder,
+        request,
+      });
+    } catch (error) {
+      // Meta nunca debe hacer que Flow reintente una compra ya entregada.
+      console.error(`[class/confirm] falló el evento de Meta para ${commerceOrder}`, error);
     }
 
     return new Response("OK", { status: 200 });
