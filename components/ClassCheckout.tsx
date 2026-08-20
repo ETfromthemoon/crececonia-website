@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { trackEvent } from "@/lib/analytics";
+import { CLASS_PRODUCT_KEY } from "@/lib/class-product";
 
 type Offer = {
   id: string;
@@ -23,6 +25,25 @@ export default function ClassCheckout() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const checkout = document.getElementById("reservar");
+    if (!checkout) return;
+
+    let tracked = false;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || tracked) return;
+        tracked = true;
+        trackEvent("class_reservation_viewed", { product: CLASS_PRODUCT_KEY });
+        observer.disconnect();
+      },
+      { threshold: 0.45 }
+    );
+
+    observer.observe(checkout);
+    return () => observer.disconnect();
+  }, []);
 
   async function loadOffers() {
     const response = await fetch("/api/clase/availability", { cache: "no-store" });
@@ -56,6 +77,11 @@ export default function ClassCheckout() {
     if (!selectedOffer || !email) return;
     setStatus("loading");
     setError("");
+    trackEvent("class_checkout_started", {
+      product: CLASS_PRODUCT_KEY,
+      offer_key: selectedOffer.offerKey,
+      amount: selectedOffer.amount,
+    });
     const response = await fetch("/api/clase/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

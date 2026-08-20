@@ -1,6 +1,8 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { flowSign, getFlowBase } from "@/lib/flow";
 import { deliverClassOrders, deliverLateClassAccessIfNeeded } from "@/lib/class-delivery";
+import { CLASS_PRODUCT_KEY } from "@/lib/class-product";
+import { captureServerEvent } from "@/lib/posthog-server";
 import { sendPurchaseNotification } from "@/lib/purchase-notification-email";
 
 interface FlowPayment {
@@ -77,6 +79,18 @@ export async function POST(request: Request) {
       });
     } catch (error) {
       console.error(`[class/confirm] no se pudo notificar la compra ${commerceOrder}:`, error);
+    }
+
+    try {
+      await captureServerEvent("class_purchase_confirmed", payment.payer.toLowerCase(), {
+        product: CLASS_PRODUCT_KEY,
+        amount: paidAmount,
+        order_id: commerceOrder,
+        flow_order: payment.flowOrder,
+      });
+    } catch (error) {
+      // La analítica no debe hacer que Flow reintente una entrega ya realizada.
+      console.error(`[class/confirm] falló el evento de PostHog para ${commerceOrder}`, error);
     }
 
     return new Response("OK", { status: 200 });
