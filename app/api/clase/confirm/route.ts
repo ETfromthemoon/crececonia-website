@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { flowSign, getFlowBase } from "@/lib/flow";
-import { sendClassAccessEmail } from "@/lib/class-delivery-email";
+import { deliverClassOrders } from "@/lib/class-delivery";
 
 interface FlowPayment {
   status: number;
@@ -58,14 +58,11 @@ export async function POST(request: Request) {
     });
     if (finalizeError || finalized !== true) return retry(`no se pudo confirmar ${commerceOrder}`, finalizeError?.message);
 
-    if (!order.email_sent_at) {
-      try {
-        await sendClassAccessEmail({ email: order.email, offerLabel: order.offer_label, amount: paidAmount, orderId: commerceOrder });
-      } catch (error) {
-        return retry(`no se pudo enviar la confirmación de ${commerceOrder}`, error);
-      }
-      const { data: emailMarked, error: emailUpdateError } = await db.rpc("mark_class_order_email_sent", { p_order_id: order.order_id });
-      if (emailUpdateError || emailMarked !== true) return retry(`no se pudo cerrar la entrega de ${commerceOrder}`, emailUpdateError?.message);
+    try {
+      await deliverClassOrders("welcome", commerceOrder);
+      await deliverClassOrders("ebooks", commerceOrder);
+    } catch (error) {
+      return retry(`no se pudo enviar la entrega de ${commerceOrder}`, error);
     }
 
     return new Response("OK", { status: 200 });
