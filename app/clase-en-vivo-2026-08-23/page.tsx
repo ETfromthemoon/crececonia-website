@@ -114,6 +114,7 @@ export default async function ClassPage({
           axis={52}
           path={{ perspective: 24, cardWidth: 16, cardHeight: 23, exitHeight: 52, railExit: 49, fan: 3.7, turnExit: 36 }}
           mobileAxis={53}
+          mobileUnit="vw"
           mobilePath={{ perspective: 14, cardWidth: 28, cardHeight: 38, birthHeight: 4.2, exitHeight: 56, railBirth: -3, railExit: 31, fan: 2.2, turnBirth: 18, turnExit: 62 }}
           className="class-stream-hero"
         >
