@@ -746,6 +746,8 @@ body:has(.class-page) .corporate-nav:not([data-scrolled="true"]) .menu-toggle sp
   .class-stream-hero,.class-hero { min-height:830px; }
   .class-stream-hero::before { background:radial-gradient(ellipse 50% 48% at 50% 46%,rgba(8,9,9,.98) 0%,rgba(8,9,9,.9) 52%,rgba(8,9,9,.38) 78%,transparent 100%),linear-gradient(180deg,rgba(8,9,9,.72),transparent 23%,transparent 74%,#080909 96%); }
   .class-stream-hero .image-stream-stage { transform:translateY(2%) scale(1.04); opacity:1; filter:saturate(1.1) contrast(1.15); }
+  .class-stream-hero .image-stream-card { will-change:transform; animation-duration:20s!important; }
+  .class-stream-hero .image-stream-card:nth-child(n+5):nth-child(-n+10),.class-stream-hero .image-stream-card:nth-child(n+15) { display:none; }
   .class-stream-hero .image-stream-card img { filter:brightness(.95) saturate(1.05); }
   .class-hero { padding-top:115px; padding-bottom:62px; }
   .class-hero h1 { margin-top:22px; font-size:clamp(3.15rem,15.5vw,5rem); }

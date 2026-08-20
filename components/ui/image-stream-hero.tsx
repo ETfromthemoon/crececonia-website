@@ -33,7 +33,7 @@ const PATH: Required<CorridorPath> = {
   stops: 24,
 };
 
-function keyframes(dir: 1 | -1, name: string, p: Required<CorridorPath>) {
+function keyframes(dir: 1 | -1, name: string, p: Required<CorridorPath>, unit: "cqw" | "vw" = "cqw") {
   const steps: string[] = [];
 
   for (let s = 0; s <= p.stops; s += 1) {
@@ -47,7 +47,7 @@ function keyframes(dir: 1 | -1, name: string, p: Required<CorridorPath>) {
     const turn = p.turnBirth + (p.turnExit - p.turnBirth) * u;
 
     steps.push(
-      `${(u * 100).toFixed(2)}%{transform:translate3d(${(dir * rail).toFixed(2)}cqw,0,${z.toFixed(2)}cqw) rotateY(${(-dir * turn).toFixed(2)}deg)}`,
+      `${(u * 100).toFixed(2)}%{transform:translate3d(${(dir * rail).toFixed(2)}${unit},0,${z.toFixed(2)}${unit}) rotateY(${(-dir * turn).toFixed(2)}deg)}`,
     );
   }
 
@@ -67,6 +67,8 @@ export type ImageStreamHeroProps = {
   path?: CorridorPath;
   mobileAxis?: number;
   mobilePath?: CorridorPath;
+  /** Viewport units keep the mobile 3D path stable on browsers without cqw transforms. */
+  mobileUnit?: "cqw" | "vw";
   children?: React.ReactNode;
   className?: string;
 };
@@ -79,6 +81,7 @@ export function ImageStreamHero({
   path,
   mobileAxis = axis,
   mobilePath,
+  mobileUnit = "cqw",
   children,
   className,
   ...props
@@ -96,10 +99,10 @@ export function ImageStreamHero({
   const css = React.useMemo(
     () =>
       `${keyframes(1, right, p)}${keyframes(-1, left, p)}` +
-      `${keyframes(1, mobileRight, mp)}${keyframes(-1, mobileLeft, mp)}` +
-      `@media(max-width:680px){.${root}{--ish-perspective:${mp.perspective}cqw!important;--ish-axis:${mobileAxis}%!important;--ish-card-width:${mp.cardWidth}cqw!important;--ish-card-height:${mp.cardHeight}cqw!important;--ish-card-radius:${mp.cardRadius}cqw!important}.ish-right-${id}{animation-name:${mobileRight}!important}.ish-left-${id}{animation-name:${mobileLeft}!important}}` +
+      `${keyframes(1, mobileRight, mp, mobileUnit)}${keyframes(-1, mobileLeft, mp, mobileUnit)}` +
+      `@media(max-width:680px){.${root}{--ish-perspective:${mp.perspective}${mobileUnit}!important;--ish-axis:${mobileAxis}%!important;--ish-card-width:${mp.cardWidth}${mobileUnit}!important;--ish-card-height:${mp.cardHeight}${mobileUnit}!important;--ish-card-radius:${mp.cardRadius}${mobileUnit}!important}.ish-right-${id}{animation-name:${mobileRight}!important}.ish-left-${id}{animation-name:${mobileLeft}!important}}` +
       `@media(prefers-reduced-motion:reduce){.${card}{animation-play-state:paused}}`,
-    [right, left, mobileRight, mobileLeft, card, root, id, p, mp, mobileAxis],
+    [right, left, mobileRight, mobileLeft, card, root, id, p, mp, mobileAxis, mobileUnit],
   );
 
   const rootStyle = {
