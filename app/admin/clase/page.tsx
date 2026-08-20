@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
-type Order = { id: string; commerce_order: string; email: string; amount_minor: number; status: string; paid_at: string | null; created_at: string; offer_id: string };
+type Order = { id: string; commerce_order: string; email: string; amount_minor: number; status: string; paid_at: string | null; created_at: string; offer_id: string; flow_order?: number | null; has_flow_token?: boolean };
 type Offer = { id: string; label: string; total_cupos: number; sold_cupos: number };
 type DeliveryEvent = { class_order_id: string; delivery_kind: string; status: string; sent_at: string | null; last_error: string | null };
 
@@ -28,6 +28,7 @@ export default async function AdminClassPage({ searchParams }: { searchParams: P
   const events = dashboard.deliveries ?? [];
   const paidOrders = orders.filter((order) => order.status === "paid");
   const totalCLP = paidOrders.reduce((total, order) => total + order.amount_minor, 0);
+  const flowConfirmed = paidOrders.filter((order) => order.flow_order && order.has_flow_token).length;
   const offerById = new Map(offers.map((offer) => [offer.id, offer]));
   const eventByOrder = new Map<string, DeliveryEvent[]>();
   for (const event of events) eventByOrder.set(event.class_order_id, [...(eventByOrder.get(event.class_order_id) ?? []), event]);
@@ -42,6 +43,7 @@ export default async function AdminClassPage({ searchParams }: { searchParams: P
     { label: "Aula alumnos", value: settings.classroomEnabled ? "Publicada" : "Cerrada", ok: settings.classroomEnabled },
     { label: "Google Meet", value: settings.sessionUrl ? "Configurado" : "Pendiente", ok: Boolean(settings.sessionUrl) },
     { label: "WhatsApp", value: settings.whatsappGroupUrl ? "Configurado" : "Pendiente", ok: Boolean(settings.whatsappGroupUrl) },
+    { label: "Flow", value: `${flowConfirmed}/${paidOrders.length} confirmados`, ok: flowConfirmed === paidOrders.length },
     { label: "Grabación", value: settings.recordingUrl ? "Disponible" : "Aún no", ok: Boolean(settings.recordingUrl) },
   ];
 
