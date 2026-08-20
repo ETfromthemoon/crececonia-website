@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { CLASS_PRESENTATION } from "@/lib/class-course-content";
+import styles from "./ClassPresentation.module.css";
 
 const slides = CLASS_PRESENTATION.flatMap((block) => block.slides.map((slide) => ({ ...slide, block })));
 
@@ -23,7 +24,7 @@ export default function ClassPresentation({ aulaHref }: { aulaHref: string }) {
   }, [index]);
   const allBlocks = useMemo(() => CLASS_PRESENTATION.map((block) => ({ block, first: slides.findIndex((item) => item.block.id === block.id) })), []);
 
-  return <main className="class-deck" onClick={() => go(index + 1)}>
+  return <main className={`${styles.deck} class-deck`} onClick={() => go(index + 1)}>
     <div className="class-deck-progress"><i style={{ width: `${progress}%` }} /></div>
     <header className="class-deck-head" onClick={(event) => event.stopPropagation()}><a href={aulaHref}>← Volver al aula</a><span>{slide.block.time} · {slide.block.duration}</span><button onClick={() => setNotes((current) => !current)} type="button">{notes ? "Ocultar" : "Mostrar"} notas <kbd>N</kbd></button></header>
     <section className="class-deck-slide" aria-live="polite"><div className="class-deck-meta"><span>{slide.kicker}</span><b>{String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}</b></div><h1>{slide.title}</h1><ul>{slide.points.map((point) => <li key={point}>{point}</li>)}</ul><div className="class-deck-action"><span>Ahora</span><strong>{slide.action}</strong></div></section>

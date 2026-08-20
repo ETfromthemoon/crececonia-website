@@ -1,0 +1,10 @@
+.deck :global(.class-deck-slide h1) {
+  color: #fffdf6;
+  font-weight: 600;
+  line-height: 0.88;
+  letter-spacing: -0.07em;
+}
+
+.deck :global(.class-deck-slide li) {
+  color: rgba(255, 253, 246, 0.86);
+}

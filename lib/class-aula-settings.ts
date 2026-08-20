@@ -51,15 +51,10 @@ export function normalizeClassAulaSettings(row: SettingsRow | null | undefined):
  */
 export async function getClassAulaSettings(): Promise<ClassAulaSettings> {
   try {
-    const { data, error } = await getSupabaseAdmin()
-      .schema("commerce")
-      .from("class_aula_settings")
-      .select("session_url, whatsapp_group_url, recording_url, support_email, classroom_enabled, updated_at")
-      .eq("product_key", CLASS_PRODUCT_KEY)
-      .maybeSingle();
+    const { data, error } = await getSupabaseAdmin().rpc("get_class_aula_settings");
 
     if (error) return environmentFallback();
-    return normalizeClassAulaSettings(data as SettingsRow | null);
+    return normalizeClassAulaSettings((data?.[0] ?? null) as SettingsRow | null);
   } catch {
     return environmentFallback();
   }

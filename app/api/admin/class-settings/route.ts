@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { CLASS_PRODUCT_KEY } from "@/lib/class-product";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getClassAulaSettings } from "@/lib/class-aula-settings";
 
@@ -45,26 +44,16 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "El estado del aula no es válido." }, { status: 400 });
     }
 
-    const { data, error } = await getSupabaseAdmin()
-      .schema("commerce")
-      .from("class_aula_settings")
-      .upsert(
-        {
-          product_key: CLASS_PRODUCT_KEY,
-          session_url: sessionUrl,
-          whatsapp_group_url: whatsappGroupUrl,
-          recording_url: recordingUrl,
-          support_email: supportEmail,
-          classroom_enabled: classroomEnabled,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "product_key" }
-      )
-      .select("session_url, whatsapp_group_url, recording_url, support_email, classroom_enabled, updated_at")
-      .single();
+    const { data, error } = await getSupabaseAdmin().rpc("upsert_class_aula_settings", {
+      p_session_url: sessionUrl,
+      p_whatsapp_group_url: whatsappGroupUrl,
+      p_recording_url: recordingUrl,
+      p_support_email: supportEmail,
+      p_classroom_enabled: classroomEnabled,
+    });
 
     if (error) throw new Error(error.message);
-    return NextResponse.json({ settings: data });
+    return NextResponse.json({ settings: data?.[0] ?? null });
   } catch (error) {
     const message = error instanceof Error ? error.message : "No se pudo guardar la configuración.";
     return NextResponse.json({ error: message }, { status: 400 });

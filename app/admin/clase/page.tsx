@@ -17,17 +17,15 @@ export default async function AdminClassPage({ searchParams }: { searchParams: P
   const { key } = await searchParams;
   if (!process.env.ADMIN_SECRET || key !== process.env.ADMIN_SECRET) notFound();
 
-  const db = getSupabaseAdmin().schema("commerce");
-  const [settings, ordersResult, offersResult, deliveryResult] = await Promise.all([
+  const [settings, dashboardResult] = await Promise.all([
     getClassAulaSettings(),
-    db.from("class_orders").select("id, commerce_order, email, amount_minor, status, paid_at, created_at, offer_id").order("created_at", { ascending: false }),
-    db.from("product_offers").select("id, label, total_cupos, sold_cupos").order("sort_order"),
-    db.from("class_delivery_events").select("class_order_id, delivery_kind, status, sent_at, last_error").order("created_at", { ascending: false }),
+    getSupabaseAdmin().rpc("class_admin_dashboard"),
   ]);
 
-  const orders = (ordersResult.data ?? []) as Order[];
-  const offers = (offersResult.data ?? []) as Offer[];
-  const events = (deliveryResult.data ?? []) as DeliveryEvent[];
+  const dashboard = (dashboardResult.data ?? {}) as { orders?: Order[]; offers?: Offer[]; deliveries?: DeliveryEvent[] };
+  const orders = dashboard.orders ?? [];
+  const offers = dashboard.offers ?? [];
+  const events = dashboard.deliveries ?? [];
   const paidOrders = orders.filter((order) => order.status === "paid");
   const totalCLP = paidOrders.reduce((total, order) => total + order.amount_minor, 0);
   const offerById = new Map(offers.map((offer) => [offer.id, offer]));
