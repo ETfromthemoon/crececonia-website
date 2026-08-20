@@ -1,8 +1,9 @@
 import { getSupabaseAdmin } from "./supabase";
 import { sendClassAccessEmail, sendClassOrganizerReminder, sendClassSessionEmail } from "./class-delivery-email";
 import { sendEbookDeliveryEmail } from "./ebook-delivery-email";
+import { CLASS_END, CLASS_START } from "./class-product";
 
-export type ClassDeliveryKind = "welcome" | "ebooks" | "session-1h" | "session-10m";
+export type ClassDeliveryKind = "welcome" | "ebooks" | "session-1h" | "session-10m" | "session-late";
 
 type ClaimedDelivery = {
   event_id: string;
@@ -40,7 +41,8 @@ export async function deliverClassOrders(kind: ClassDeliveryKind, commerceOrder?
         if (grantsError) throw new Error(grantsError.message);
         await sendEbookDeliveryEmail({ email: delivery.email, grants: grants ?? [] });
       } else {
-        await sendClassSessionEmail({ email: delivery.email, timing: kind === "session-1h" ? "1h" : "10m" });
+        const timing = kind === "session-1h" ? "1h" : kind === "session-10m" ? "10m" : "late";
+        await sendClassSessionEmail({ email: delivery.email, timing });
       }
       const { error: completeError } = await db.rpc("complete_class_delivery", { p_event_id: delivery.event_id });
       if (completeError) throw new Error(completeError.message);
@@ -52,6 +54,14 @@ export async function deliverClassOrders(kind: ClassDeliveryKind, commerceOrder?
     }
   }
   return { sentCount };
+}
+
+export async function deliverLateClassAccessIfNeeded(commerceOrder: string) {
+  const now = Date.now();
+  const oneHourBefore = Date.parse(CLASS_START) - 60 * 60 * 1000;
+  const classEnd = Date.parse(CLASS_END);
+  if (!process.env.CLASS_SESSION_URL?.trim() || now < oneHourBefore || now >= classEnd) return { sentCount: 0 };
+  return deliverClassOrders("session-late", commerceOrder);
 }
 
 export async function getClassDeliverySummary(): Promise<DeliverySummary> {

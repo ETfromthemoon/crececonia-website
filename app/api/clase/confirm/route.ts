@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { flowSign, getFlowBase } from "@/lib/flow";
-import { deliverClassOrders } from "@/lib/class-delivery";
+import { deliverClassOrders, deliverLateClassAccessIfNeeded } from "@/lib/class-delivery";
 
 interface FlowPayment {
   status: number;
@@ -61,6 +61,7 @@ export async function POST(request: Request) {
     try {
       await deliverClassOrders("welcome", commerceOrder);
       await deliverClassOrders("ebooks", commerceOrder);
+      await deliverLateClassAccessIfNeeded(commerceOrder);
     } catch (error) {
       return retry(`no se pudo enviar la entrega de ${commerceOrder}`, error);
     }

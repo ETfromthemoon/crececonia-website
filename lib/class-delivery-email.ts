@@ -58,17 +58,19 @@ export async function sendClassAccessEmail({
   });
 }
 
-export async function sendClassSessionEmail({ email, timing }: { email: string; timing: "1h" | "10m" }) {
+export async function sendClassSessionEmail({ email, timing }: { email: string; timing: "1h" | "10m" | "late" }) {
   const sessionUrl = process.env.CLASS_SESSION_URL?.trim();
   if (!sessionUrl) throw new Error("CLASS_SESSION_URL no está configurada.");
   const intro = timing === "1h"
     ? "Falta una hora. Guarda este correo: aquí está tu acceso personal a la sala."
-    : "Comenzamos en 10 minutos. Usa este enlace para entrar a la clase.";
+    : timing === "10m"
+      ? "Comenzamos en 10 minutos. Usa este enlace para entrar a la clase."
+      : "Tu pago se confirmó cerca del inicio de la clase. Aquí está tu acceso para entrar ahora.";
   await getResend().emails.send({
     from: "CrececonIA <sergio@crececonia.cl>",
     to: email,
-    subject: timing === "1h" ? "Tu enlace de Zoom · comenzamos en una hora" : "Comenzamos en 10 minutos · entra aquí",
-    html: shell(timing === "1h" ? "Tu sala está lista" : "Comenzamos en 10 minutos", `<p style="color:#A8A29E;font-size:15px;line-height:1.7;margin:0 0 28px;">${intro}</p>${classDetailsHtml()}${sessionBlock()}<p style="color:#A8A29E;font-size:14px;line-height:1.7;margin:0 0 28px;">Llega 5 minutos antes, ten a mano tu computador y revisa que puedas usar audio. Los cuatro ebooks y la guía se mantienen disponibles para ti.</p>`, "Si necesitas ayuda, responde este correo."),
+    subject: timing === "1h" ? "Tu enlace de Zoom · comenzamos en una hora" : timing === "10m" ? "Comenzamos en 10 minutos · entra aquí" : "Tu acceso de Zoom · clase en vivo",
+    html: shell(timing === "1h" ? "Tu sala está lista" : timing === "10m" ? "Comenzamos en 10 minutos" : "Tu acceso está listo", `<p style="color:#A8A29E;font-size:15px;line-height:1.7;margin:0 0 28px;">${intro}</p>${classDetailsHtml()}${sessionBlock()}<p style="color:#A8A29E;font-size:14px;line-height:1.7;margin:0 0 28px;">Llega 5 minutos antes, ten a mano tu computador y revisa que puedas usar audio. Los cuatro ebooks y la guía se mantienen disponibles para ti.</p>`, "Si necesitas ayuda, responde este correo."),
   });
 }
 
