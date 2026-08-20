@@ -85,6 +85,12 @@ const BOOK_COVERS = [
   "/ebooks/creacion-de-webs-con-ia-parte-4.png",
 ];
 
+const PREPARATION = [
+  ["01", "Agente instalado", "Claude Code o Codex Desktop instalado y con tu sesión iniciada."],
+  ["02", "Cuentas creadas", "Una cuenta de GitHub y una cuenta de Vercel para publicar sin detenernos en el registro."],
+  ["03", "Una idea o referencia", "Una web, screenshots o un proyecto que quieras construir a la par con nosotros."],
+] as const;
+
 export default async function ClassPage({
   searchParams,
 }: {
@@ -107,6 +113,8 @@ export default async function ClassPage({
           speed={15}
           axis={52}
           path={{ perspective: 24, cardWidth: 16, cardHeight: 23, exitHeight: 52, railExit: 49, fan: 3.7, turnExit: 36 }}
+          mobileAxis={53}
+          mobilePath={{ perspective: 14, cardWidth: 28, cardHeight: 38, birthHeight: 4.2, exitHeight: 56, railBirth: -3, railExit: 31, fan: 2.2, turnBirth: 18, turnExit: 62 }}
           className="class-stream-hero"
         >
           <div className="class-stream-grid" aria-hidden />
@@ -153,6 +161,20 @@ export default async function ClassPage({
             <ClassBookFan covers={BOOK_COVERS} />
             <span className="eyebrow">Pack incluido</span><h3>Cuatro libros para seguir construyendo.</h3>
             <div className="class-book-list">{BOOKS.map((book, index) => <div key={book}><span>0{index + 1}</span>{book}</div>)}</div>
+          </div>
+        </section>
+
+        <section className="class-preparation">
+          <div className="site-container class-preparation-layout">
+            <div className="class-preparation-heading">
+              <span className="eyebrow">Antes de la clase</span>
+              <h2>Deja tu entorno listo para construir.</h2>
+              <p>Son recomendaciones, no barreras de entrada. Tenerlas resueltas nos permitirá dedicar más tiempo a crear y menos a configurar cuentas.</p>
+            </div>
+            <div className="class-preparation-list">
+              {PREPARATION.map(([number, title, detail]) => <div key={number}><span>{number}</span><strong>{title}</strong><p>{detail}</p><i aria-hidden="true">✓</i></div>)}
+              <aside><span>MODALIDAD PRÁCTICA</span><p>Si quieres, puedes ir construyendo a la par con nosotros y hacer preguntas durante todo el proceso.</p></aside>
+            </div>
           </div>
         </section>
 

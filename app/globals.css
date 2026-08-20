@@ -661,6 +661,20 @@ body:has(.class-page) .corporate-nav:not([data-scrolled="true"]) .menu-toggle sp
 .class-book-list>div { display:grid; grid-template-columns:38px 1fr; gap:12px; padding:14px 0; border-top:1px solid rgba(245,240,231,.16); color:rgba(245,240,231,.76); font-size:.73rem; line-height:1.4; }
 .class-book-list>div span { color:var(--class-lime); font:500 .56rem/1.5 var(--font-mono); }
 
+.class-preparation { padding:clamp(90px,11vw,150px) 0; background:var(--class-cream); color:#111313; }
+.class-preparation-layout { display:grid; grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr); gap:clamp(55px,9vw,130px); align-items:start; }
+.class-preparation-heading { position:sticky; top:120px; }
+.class-preparation-heading h2 { max-width:520px; margin:8px 0 25px; color:#111313; font-size:clamp(3rem,5.7vw,5.8rem); line-height:.88; letter-spacing:-.07em; }
+.class-preparation-heading>p { max-width:450px; color:#68665f; font-size:.88rem; line-height:1.65; }
+.class-preparation-list { border-top:1px solid #111313; }
+.class-preparation-list>div { display:grid; grid-template-columns:38px minmax(145px,.7fr) minmax(0,1fr) 28px; gap:16px; align-items:start; padding:25px 0; border-bottom:1px solid rgba(0,0,0,.22); }
+.class-preparation-list>div>span,.class-preparation-list aside span { color:#7e971b; font:600 .57rem/1.6 var(--font-mono); letter-spacing:.08em; }
+.class-preparation-list strong { font-size:.87rem; }
+.class-preparation-list>div p { margin:0; color:#5d5c57; font-size:.8rem; line-height:1.55; }
+.class-preparation-list>div i { display:grid; place-items:center; width:25px; height:25px; border-radius:50%; background:var(--class-lime); font:.62rem/1 var(--font-mono); font-style:normal; }
+.class-preparation-list aside { margin-top:34px; padding:28px; border-left:4px solid var(--class-lime); background:#111313; color:var(--class-cream); }
+.class-preparation-list aside p { margin:10px 0 0; color:rgba(245,240,231,.72); font-size:1rem; line-height:1.55; }
+
 .class-checkout { position:relative; width:100%; max-width:none; padding:clamp(90px,10vw,145px) 0; border:0; background:#070808; color:var(--class-cream); overflow:hidden; }
 .class-checkout::after { content:"RESERVA"; position:absolute; right:-.06em; bottom:-.23em; color:rgba(255,255,255,.025); font:600 clamp(9rem,23vw,26rem)/.8 var(--font-display); letter-spacing:-.09em; pointer-events:none; }
 .class-checkout-layout { position:relative; z-index:1; width:min(1120px,calc(100% - 48px)); margin-inline:auto; display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); gap:clamp(48px,8vw,120px); align-items:center; }
@@ -690,14 +704,16 @@ body:has(.class-page) .corporate-nav:not([data-scrolled="true"]) .menu-toggle sp
   .class-process-visual { grid-column:6 / -1; }
   .class-includes { grid-template-columns:1fr; }
   .class-includes-card,.class-books-card { min-height:680px; }
+  .class-preparation-layout { grid-template-columns:1fr; }
+  .class-preparation-heading { position:static; }
   .class-checkout-layout { grid-template-columns:1fr; gap:48px; }
   .class-checkout-heading { max-width:700px; }
 }
 @media (max-width:680px) {
   body:has(.class-page) .corporate-nav:not([data-scrolled="true"]) .brand-mark { color:#f5f0e5; }
   .class-stream-hero,.class-hero { min-height:830px; }
-  .class-stream-hero::before { background:radial-gradient(ellipse 56% 50% at 50% 47%,rgba(8,9,9,.98) 0%,rgba(8,9,9,.9) 52%,rgba(8,9,9,.42) 78%,transparent 100%),linear-gradient(180deg,rgba(8,9,9,.72),transparent 23%,transparent 74%,#080909 96%); }
-  .class-stream-hero .image-stream-stage { transform:translateY(3%) scale(1.22); opacity:1; filter:saturate(1.08) contrast(1.12); }
+  .class-stream-hero::before { background:radial-gradient(ellipse 50% 48% at 50% 46%,rgba(8,9,9,.98) 0%,rgba(8,9,9,.9) 52%,rgba(8,9,9,.38) 78%,transparent 100%),linear-gradient(180deg,rgba(8,9,9,.72),transparent 23%,transparent 74%,#080909 96%); }
+  .class-stream-hero .image-stream-stage { transform:translateY(2%) scale(1.04); opacity:1; filter:saturate(1.1) contrast(1.15); }
   .class-stream-hero .image-stream-card img { filter:brightness(.95) saturate(1.05); }
   .class-hero { padding-top:115px; padding-bottom:62px; }
   .class-hero h1 { margin-top:22px; font-size:clamp(3.15rem,15.5vw,5rem); }
@@ -724,6 +740,12 @@ body:has(.class-page) .corporate-nav:not([data-scrolled="true"]) .menu-toggle sp
   .class-process-visual figcaption { flex-direction:column; }
   .class-includes-card,.class-books-card { min-height:auto; padding:70px 24px; }
   .class-includes-card h2 { margin-bottom:70px; }
+  .class-preparation { padding:85px 0; }
+  .class-preparation-layout { gap:50px; }
+  .class-preparation-list>div { grid-template-columns:32px 1fr 26px; gap:12px; }
+  .class-preparation-list>div p { grid-column:2 / 3; }
+  .class-preparation-list>div i { grid-column:3; grid-row:1 / span 2; }
+  .class-preparation-list aside { padding:24px 20px; }
   .class-books-card { min-height:820px; padding-top:430px; }
   .class-book-covers { top:60px; width:90%; height:330px; }
   .class-book-covers img { width:145px; }

@@ -21,6 +21,13 @@ function classDetailsHtml() {
   return `<div style="border:1px solid #2B2B2C;border-radius:18px;padding:22px;margin:0 0 28px;"><p style="font-size:18px;line-height:1.45;margin:0 0 8px;">${escapeHtml(CLASS_TITLE)}</p><p style="color:#D9B36A;margin:0;">${escapeHtml(CLASS_SESSION_LABEL)}</p><p style="color:#A8A29E;margin:8px 0 0;">Duración: 2 a 3 horas · modalidad online</p></div>`;
 }
 
+function preparationBlock(compact = false) {
+  const intro = compact
+    ? "Antes de entrar, revisa este checklist para aprovechar la sesión práctica:"
+    : "Para construir a la par y avanzar más rápido, te recomendamos dejar preparado lo siguiente:";
+  return `<div style="border:1px solid #2B2B2C;border-radius:18px;padding:22px;margin:0 0 28px;"><p style="color:#D9B36A;font-size:11px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 14px;">Preparación recomendada</p><p style="color:#A8A29E;font-size:14px;line-height:1.65;margin:0 0 14px;">${intro}</p><ul style="color:#F5F5F4;font-size:14px;line-height:1.65;margin:0;padding-left:20px;"><li style="margin-bottom:8px;">Claude Code o Codex Desktop instalado y con la sesión iniciada.</li><li style="margin-bottom:8px;">Una cuenta creada en GitHub y otra en Vercel.</li><li>Una idea, referencia web o screenshots si quieres desarrollar tu propio proyecto.</li></ul><p style="color:#A8A29E;font-size:13px;line-height:1.65;margin:16px 0 0;">Puedes construir junto a nosotros y hacer preguntas durante todo el proceso.</p></div>`;
+}
+
 function groupBlock() {
   const groupUrl = process.env.CLASS_WHATSAPP_GROUP_URL?.trim();
   return groupUrl
@@ -54,7 +61,7 @@ export async function sendClassAccessEmail({
     from: "CrececonIA <sergio@crececonia.cl>",
     to: email,
     subject: "Tu cupo está confirmado · Clase de páginas con IA",
-    html: shell("¡Tu lugar está confirmado!", `<p style="color:#A8A29E;font-size:15px;line-height:1.7;margin:0 0 28px;">Compraste el tramo <strong style="color:#F5F5F4;">${escapeHtml(offerLabel)}</strong> por <strong style="color:#F5F5F4;">$${amount.toLocaleString("es-CL")} CLP</strong>.</p>${classDetailsHtml()}${groupBlock()}<p style="color:#A8A29E;font-size:14px;line-height:1.7;margin:0 0 28px;">El enlace de Zoom llegará solamente por correo <strong style="color:#F5F5F4;">60 minutos antes</strong> y se reenviará <strong style="color:#F5F5F4;">10 minutos antes</strong> de comenzar.</p><p style="color:#A8A29E;font-size:14px;line-height:1.7;margin:0 0 28px;">Incluye skills, guía completa y la colección de cuatro libros <strong style="color:#F5F5F4;">Creación de Webs con IA · Partes 1 a 4</strong>.</p>`, `Orden: ${escapeHtml(orderId)}<br/>Si necesitas ayuda, responde este correo.`),
+    html: shell("¡Tu lugar está confirmado!", `<p style="color:#A8A29E;font-size:15px;line-height:1.7;margin:0 0 28px;">Compraste el tramo <strong style="color:#F5F5F4;">${escapeHtml(offerLabel)}</strong> por <strong style="color:#F5F5F4;">$${amount.toLocaleString("es-CL")} CLP</strong>.</p>${classDetailsHtml()}${groupBlock()}${preparationBlock()}<p style="color:#A8A29E;font-size:14px;line-height:1.7;margin:0 0 28px;">El enlace de Zoom llegará solamente por correo <strong style="color:#F5F5F4;">60 minutos antes</strong> y se reenviará <strong style="color:#F5F5F4;">10 minutos antes</strong> de comenzar.</p><p style="color:#A8A29E;font-size:14px;line-height:1.7;margin:0 0 28px;">Incluye skills, guía completa y la colección de cuatro libros <strong style="color:#F5F5F4;">Creación de Webs con IA · Partes 1 a 4</strong>.</p>`, `Orden: ${escapeHtml(orderId)}<br/>Si necesitas ayuda, responde este correo.`),
   });
 }
 
@@ -70,7 +77,7 @@ export async function sendClassSessionEmail({ email, timing }: { email: string; 
     from: "CrececonIA <sergio@crececonia.cl>",
     to: email,
     subject: timing === "1h" ? "Tu enlace de Zoom · comenzamos en una hora" : timing === "10m" ? "Comenzamos en 10 minutos · entra aquí" : "Tu acceso de Zoom · clase en vivo",
-    html: shell(timing === "1h" ? "Tu sala está lista" : timing === "10m" ? "Comenzamos en 10 minutos" : "Tu acceso está listo", `<p style="color:#A8A29E;font-size:15px;line-height:1.7;margin:0 0 28px;">${intro}</p>${classDetailsHtml()}${sessionBlock()}<p style="color:#A8A29E;font-size:14px;line-height:1.7;margin:0 0 28px;">Llega 5 minutos antes, ten a mano tu computador y revisa que puedas usar audio. Los cuatro ebooks y la guía se mantienen disponibles para ti.</p>`, "Si necesitas ayuda, responde este correo."),
+    html: shell(timing === "1h" ? "Tu sala está lista" : timing === "10m" ? "Comenzamos en 10 minutos" : "Tu acceso está listo", `<p style="color:#A8A29E;font-size:15px;line-height:1.7;margin:0 0 28px;">${intro}</p>${classDetailsHtml()}${sessionBlock()}${preparationBlock(true)}<p style="color:#A8A29E;font-size:14px;line-height:1.7;margin:0 0 28px;">Llega 5 minutos antes, ten a mano tu computador y revisa que puedas usar audio. Los cuatro ebooks y la guía se mantienen disponibles para ti.</p>`, "Si necesitas ayuda, responde este correo."),
   });
 }
 

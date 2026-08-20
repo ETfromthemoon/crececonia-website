@@ -65,6 +65,8 @@ export type ImageStreamHeroProps = {
   speed?: number;
   axis?: number;
   path?: CorridorPath;
+  mobileAxis?: number;
+  mobilePath?: CorridorPath;
   children?: React.ReactNode;
   className?: string;
 };
@@ -75,6 +77,8 @@ export function ImageStreamHero({
   speed = 18,
   axis = 55,
   path,
+  mobileAxis = axis,
+  mobilePath,
   children,
   className,
   ...props
@@ -82,21 +86,37 @@ export function ImageStreamHero({
   const id = React.useId().replace(/[^a-zA-Z0-9]/g, "");
   const right = `ish-r-${id}`;
   const left = `ish-l-${id}`;
+  const mobileRight = `ish-mr-${id}`;
+  const mobileLeft = `ish-ml-${id}`;
   const card = `ish-c-${id}`;
+  const root = `ish-root-${id}`;
   const p = React.useMemo(() => ({ ...PATH, ...path }), [path]);
+  const mp = React.useMemo(() => ({ ...p, ...mobilePath }), [p, mobilePath]);
 
   const css = React.useMemo(
     () =>
       `${keyframes(1, right, p)}${keyframes(-1, left, p)}` +
+      `${keyframes(1, mobileRight, mp)}${keyframes(-1, mobileLeft, mp)}` +
+      `@media(max-width:680px){.${root}{--ish-perspective:${mp.perspective}cqw!important;--ish-axis:${mobileAxis}%!important;--ish-card-width:${mp.cardWidth}cqw!important;--ish-card-height:${mp.cardHeight}cqw!important;--ish-card-radius:${mp.cardRadius}cqw!important}.ish-right-${id}{animation-name:${mobileRight}!important}.ish-left-${id}{animation-name:${mobileLeft}!important}}` +
       `@media(prefers-reduced-motion:reduce){.${card}{animation-play-state:paused}}`,
-    [right, left, card, p],
+    [right, left, mobileRight, mobileLeft, card, root, id, p, mp, mobileAxis],
   );
+
+  const rootStyle = {
+    containerType: "inline-size",
+    "--ish-perspective": `${p.perspective}cqw`,
+    "--ish-axis": `${axis}%`,
+    "--ish-card-width": `${p.cardWidth}cqw`,
+    "--ish-card-height": `${p.cardHeight}cqw`,
+    "--ish-card-radius": `${p.cardRadius}cqw`,
+    ...props.style,
+  } as React.CSSProperties;
 
   return (
     <div
-      className={cn("relative overflow-hidden", className)}
+      className={cn(root, "relative overflow-hidden", className)}
       {...props}
-      style={{ containerType: "inline-size", ...props.style }}
+      style={rootStyle}
     >
       <style>{css}</style>
 
@@ -104,8 +124,8 @@ export function ImageStreamHero({
         aria-hidden
         className="image-stream-stage pointer-events-none absolute inset-0"
         style={{
-          perspective: `${p.perspective}cqw`,
-          perspectiveOrigin: `50% ${axis}%`,
+          perspective: "var(--ish-perspective)",
+          perspectiveOrigin: "50% var(--ish-axis)",
         }}
       >
         <div className="absolute inset-0" style={{ transformStyle: "preserve-3d" }}>
@@ -116,15 +136,15 @@ export function ImageStreamHero({
               return (
                 <div
                   key={`${name}-${i}`}
-                  className={cn(card, "image-stream-card absolute overflow-hidden")}
+                  className={cn(card, name === right ? `ish-right-${id}` : `ish-left-${id}`, "image-stream-card absolute overflow-hidden")}
                   style={{
                     left: "50%",
-                    top: `${axis}%`,
-                    width: `${p.cardWidth}cqw`,
-                    height: `${p.cardHeight}cqw`,
-                    marginLeft: `${-p.cardWidth / 2}cqw`,
-                    marginTop: `${-p.cardHeight / 2}cqw`,
-                    borderRadius: `${p.cardRadius}cqw`,
+                    top: "var(--ish-axis)",
+                    width: "var(--ish-card-width)",
+                    height: "var(--ish-card-height)",
+                    marginLeft: "calc(var(--ish-card-width) / -2)",
+                    marginTop: "calc(var(--ish-card-height) / -2)",
+                    borderRadius: "var(--ish-card-radius)",
                     animation: `${name} ${speed}s linear infinite`,
                     animationDelay: `${-(i * speed) / cards}s`,
                     backfaceVisibility: "hidden",
