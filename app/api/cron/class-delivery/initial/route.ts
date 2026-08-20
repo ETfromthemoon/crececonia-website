@@ -11,6 +11,7 @@ function authorized(request: Request) {
 export async function GET(request: Request) {
   if (!authorized(request)) return new Response("Unauthorized", { status: 401 });
   const welcome = await deliverClassOrders("welcome");
+  const hub = await deliverClassOrders("hub");
   const ebooks = await deliverClassOrders("ebooks");
-  return NextResponse.json({ ok: true, welcomeSent: welcome.sentCount, ebooksSent: ebooks.sentCount });
+  return NextResponse.json({ ok: true, welcomeSent: welcome.sentCount, hubSent: hub.sentCount, ebooksSent: ebooks.sentCount });
 }

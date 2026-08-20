@@ -1,9 +1,9 @@
 import { getSupabaseAdmin } from "./supabase";
-import { sendClassAccessEmail, sendClassFollowUpEmail, sendClassOrganizerReminder, sendClassSessionEmail } from "./class-delivery-email";
+import { sendClassAccessEmail, sendClassFollowUpEmail, sendClassHubAccessEmail, sendClassOrganizerReminder, sendClassSessionEmail } from "./class-delivery-email";
 import { sendEbookDeliveryEmail } from "./ebook-delivery-email";
 import { CLASS_END, CLASS_START } from "./class-product";
 
-export type ClassDeliveryKind = "welcome" | "ebooks" | "session-1h" | "session-10m" | "session-late" | "follow-up";
+export type ClassDeliveryKind = "welcome" | "hub" | "ebooks" | "session-1h" | "session-10m" | "session-late" | "follow-up";
 
 type ClaimedDelivery = {
   event_id: string;
@@ -34,6 +34,8 @@ export async function deliverClassOrders(kind: ClassDeliveryKind, commerceOrder?
           amount: delivery.amount_minor,
           orderId: delivery.commerce_order,
         });
+      } else if (kind === "hub") {
+        await sendClassHubAccessEmail({ email: delivery.email, orderId: delivery.commerce_order });
       } else if (kind === "ebooks") {
         const { data: grants, error: grantsError } = await db.rpc("grant_class_ebook_delivery", {
           p_commerce_order: delivery.commerce_order,
