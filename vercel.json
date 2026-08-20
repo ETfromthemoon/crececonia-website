@@ -2,6 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "regions": ["gru1"],
+  "crons": [
+    { "path": "/api/cron/class-reminder/24h", "schedule": "0 22 22 8 *" },
+    { "path": "/api/cron/class-reminder/2h", "schedule": "0 20 23 8 *" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
