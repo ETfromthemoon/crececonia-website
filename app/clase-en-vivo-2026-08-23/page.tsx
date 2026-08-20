@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
 import ClassCheckout from "@/components/ClassCheckout";
+import { ClassBookFan, ClassProcessVisual } from "@/components/ClassProductMotion";
 import Footer from "@/components/Footer";
 import { ImageStreamHero } from "@/components/ui/image-stream-hero";
 import JsonLd from "@/components/JsonLd";
@@ -144,16 +144,13 @@ export default async function ClassPage({
         <section className="class-content site-container">
           <div className="class-content-heading"><span className="eyebrow">Qué vamos a construir</span><h2>Una página real, con un método que puedas volver a usar.</h2><p className="class-section-note">Referencia → agente → código → publicación.</p></div>
           <div className="class-topic-list">{TOPICS.map((topic, index) => <div className="class-topic" key={topic}><span>0{index + 1}</span><p>{topic}</p><i>↗</i></div>)}</div>
-          <figure className="class-process-visual">
-            <img src="/ebooks/previews/creacion-webs/proyecto-appflow.webp" alt="Página del libro mostrando el proceso de construcción de una web" />
-            <figcaption><span>PROCESO REAL / NO SOLO TEORÍA</span><span>01—05</span></figcaption>
-          </figure>
+          <ClassProcessVisual />
         </section>
 
         <section className="class-includes site-container">
           <div className="class-includes-card"><span className="eyebrow">Además te llevas</span><h2>Más que una demostración.</h2><div className="class-included-list">{INCLUDED.map((item, index) => <p key={item}><span>0{index + 1}</span>{item}</p>)}</div></div>
           <div className="class-books-card">
-            <div className="class-book-covers" aria-hidden="true">{BOOK_COVERS.map((cover, index) => <img key={cover} src={cover} alt="" style={{ "--book-index": index } as CSSProperties} />)}</div>
+            <ClassBookFan covers={BOOK_COVERS} />
             <span className="eyebrow">Pack incluido</span><h3>Cuatro libros para seguir construyendo.</h3>
             <div className="class-book-list">{BOOKS.map((book, index) => <div key={book}><span>0{index + 1}</span>{book}</div>)}</div>
           </div>
