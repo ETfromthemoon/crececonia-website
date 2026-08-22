@@ -74,6 +74,8 @@ export default function ClassCheckout() {
     [offers]
   );
 
+  const isCurrentEarlyTier = currentOffer?.amount === 25000;
+
   useEffect(() => {
     if (!currentOffer || viewTracked) return;
     trackMetaEvent("ViewContent", {
@@ -122,7 +124,13 @@ export default function ClassCheckout() {
       <div className="class-checkout-layout">
         <div className="class-checkout-heading">
           <span className="eyebrow">Tu acceso empieza aquí</span>
-          <h2>Reserva el precio activo. <em>Después construimos.</em></h2>
+          <h2>
+            {isCurrentEarlyTier ? (
+              <>Quedan pocos cupos a $25.000. <em>Después sube.</em></>
+            ) : (
+              <>Reserva el precio activo. <em>Después construimos.</em></>
+            )}
+          </h2>
           <p>Deja tu correo, completa el pago y llega a la clase con tu lugar, guía, skills y pack de libros asegurados.</p>
           <div className="class-checkout-proof" aria-label="Lo que incluye tu reserva">
             <span>Clase en vivo</span><span>Skills + guía</span><span>4 ebooks</span>
