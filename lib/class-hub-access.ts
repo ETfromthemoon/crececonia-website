@@ -34,3 +34,13 @@ export function verifyClassHubToken(token: string | undefined) {
     return null;
   }
 }
+
+export function verifyClassPresentationAccess(token: string | undefined) {
+  const presenterToken = process.env.CLASS_PRESENTATION_ACCESS_TOKEN?.trim();
+  if (token && presenterToken) {
+    const received = Buffer.from(token);
+    const expected = Buffer.from(presenterToken);
+    if (received.length === expected.length && timingSafeEqual(received, expected)) return "presenter";
+  }
+  return verifyClassHubToken(token);
+}
