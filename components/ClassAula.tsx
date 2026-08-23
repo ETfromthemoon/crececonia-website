@@ -83,7 +83,7 @@ export default function ClassAula({ token, sessionUrl, groupUrl, recordingUrl, s
         <aside className="aula-route"><span>Ruta de clase</span><ol><li><b>Antes</b> abre herramientas, brief y referencias.</li><li><b>Durante</b> construye V1, súbela y publícala.</li><li><b>Después</b> prueba, recoge feedback e itera 7 días.</li></ol><a href={download("checklist-preclase")}>Descargar checklist <b>↓</b></a></aside>
       </div>
       <div className="aula-runway"><div><span>Ruta base</span><strong>Carpeta → brief → primera pantalla → URL.</strong><p>Si te atrasas, termina sólo esto durante la sesión.</p></div><div><span>Ruta avanzada</span><strong>Componentes, referencia visual, QA y segunda iteración.</strong><p>Úsala sólo cuando ya tengas la V1 publicada.</p></div></div>
-      <div className="aula-timeline"><span>Agenda en vivo</span><ol><li><b>18:00</b> Apertura y setup</li><li><b>18:15</b> Agente y contexto</li><li><b>18:35</b> Brief y referencias</li><li><b>18:55</b> Construcción guiada</li><li><b>19:30</b> Pausa + checkpoint</li><li><b>19:38</b> GitHub y Vercel</li><li><b>20:03</b> Iteración + QA</li><li><b>20:21</b> Cierre y reto</li></ol></div>
+      <div className="aula-timeline"><span>Agenda en vivo</span><ol><li><b>18:00</b> Alcance y resultado</li><li><b>18:10</b> Prompts y contexto</li><li><b>18:25</b> Herramienta y carpeta</li><li><b>18:40</b> Referencias, arte y stack</li><li><b>19:00</b> Construcción guiada</li><li><b>19:30</b> Revisión de V1</li><li><b>19:40</b> GitHub y Vercel</li><li><b>20:00</b> Iteraciones y módulos</li><li><b>20:15</b> QA y optimización</li><li><b>20:25</b> Cierre y reto</li></ol></div>
     </section>}
 
     {activeView === "guias" && <section className="aula-section aula-shell">
@@ -93,7 +93,7 @@ export default function ClassAula({ token, sessionUrl, groupUrl, recordingUrl, s
 
     {activeView === "recursos" && <section className="aula-section aula-shell">
       <div className="aula-section-heading"><span>03 · Descargables</span><h2>Plantillas para copiar, completar y reutilizar.</h2><p>Los archivos se descargan con tu acceso personal. Úsalos como base, no como burocracia.</p></div>
-      <div className="aula-resource-grid">{Object.entries(CLASS_MATERIALS).map(([id, material], index) => <a href={download(id)} key={id} className="aula-resource"><span>{String(index + 1).padStart(2, "0")}</span><h3>{material.title}</h3><p>{material.description}</p><b>Descargar .md <i>↓</i></b></a>)}</div>
+      <div className="aula-resource-grid"><a href="/clases/guia-metodologia-web-con-ia.pdf" className="aula-resource"><span>01</span><h3>Guía completa de la metodología</h3><p>Manual de 18 páginas con prompts, GitHub, Vercel, QA, SEO, GEO, formularios y e-commerce.</p><b>Descargar PDF <i>↓</i></b></a>{Object.entries(CLASS_MATERIALS).map(([id, material], index) => <a href={download(id)} key={id} className="aula-resource"><span>{String(index + 2).padStart(2, "0")}</span><h3>{material.title}</h3><p>{material.description}</p><b>Descargar .md <i>↓</i></b></a>)}</div>
       <div className="aula-note"><strong>Pack incluido de ebooks</strong><p>Los cuatro ebooks “Creación de Webs con IA” se entregan por correo mediante enlaces personales. Guarda ese correo para acceder o recuperar tus descargas.</p></div>
     </section>}
 
