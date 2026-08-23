@@ -1417,6 +1417,11 @@ h1, h2, h3 { color:var(--ink-deep); }
 .class-deck-slide.is-workshop .class-deck-meta span,.class-deck-slide.is-workshop .class-deck-action span { color:#f4f0e7; }
 .class-deck-slide.is-workshop .class-deck-action { border-top-color:#f4f0e7; }
 .class-deck-slide.is-checkpoint h1 { color:#c6ee35; }
+.class-deck-slide.is-concept::before { content:"CONCEPTOS"; position:absolute; z-index:-1; right:0; top:6%; color:rgba(198,238,53,.07); font:700 clamp(4.5rem,12vw,11rem)/1 var(--font-mono); letter-spacing:-.08em; }
+.class-deck-slide.is-concept h1 { max-width:900px; font-size:clamp(2.8rem,5.8vw,6rem); }
+.class-deck-slide.is-concept li { border-top-color:rgba(198,238,53,.3); }
+.class-deck-slide.is-concept li::first-line { color:#f4f0e7; }
+.class-deck-slide.is-concept .class-deck-action { border-top-color:#c6ee35; }
 .class-deck-code { width:min(860px,100%); margin:0 0 8px; padding:clamp(18px,2.5vw,30px); overflow:hidden; border:1px solid rgba(198,238,53,.48); background:rgba(3,5,5,.74); box-shadow:inset 4px 0 0 #c6ee35; white-space:pre-wrap; }
 .class-deck-code code { color:#f4f0e7; font:500 clamp(.78rem,1.25vw,1.08rem)/1.62 var(--font-mono); }
 .class-deck-slide.is-prompt h1 { max-width:880px; margin-bottom:22px; font-size:clamp(2.6rem,5.6vw,5.8rem); }
