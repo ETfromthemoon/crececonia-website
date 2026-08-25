@@ -77,7 +77,7 @@ function buildReply(message: string): Pick<Message, "content" | "nextStep"> {
   if (/(cu[aá]nto|precio|costo|vale|valor|presupuesto)/.test(text)) {
     return {
       content:
-        "Depende de la vía: mentoría cuesta 397.000 CLP netos más IVA por ciclo mensual; el diagnóstico BPI, 200.000 CLP netos más IVA. Una implementación se cotiza por alcance y la operación según sistemas, criticidad y SLA. Los ebooks muestran su precio final en la biblioteca.",
+        "Las referencias vigentes son: mentoría desde 400.000 CLP mensuales; diagnóstico BPI, 200.000 CLP netos más IVA; implementación desde 500.000 CLP y mantención desde 100.000 CLP mensuales. La propuesta concreta define alcance, impuestos aplicables y pagos; ningún SLA se presume. Los e-books muestran su precio final en la biblioteca.",
       nextStep: "selector",
     };
   }
