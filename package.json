@@ -14,9 +14,11 @@
     "ebook:recuperar": "tsx --env-file-if-exists=.env.local scripts/recuperar-entregas.ts",
     "ebook:subir-pdfs": "tsx --env-file-if-exists=.env.local scripts/subir-ebooks-storage.ts",
     "ebook:verificar": "tsx --env-file-if-exists=.env.local scripts/subir-ebooks-storage.ts --solo-verificar"
+    ,"workshop:subir-skills": "tsx --env-file-if-exists=.env.local scripts/subir-workshop-skills.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
+    "fflate": "^0.8.3",
     "framer-motion": "^12.38.0",
     "lenis": "^1.3.21",
     "marked": "^18.0.4",
