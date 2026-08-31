@@ -23,7 +23,7 @@ export async function sendPurchaseNotification({
   orderId,
   items,
 }: {
-  kind: "Clase en vivo" | "Ebook";
+  kind: "Clase en vivo" | "Workshop en vivo" | "Ebook";
   buyerEmail: string;
   amount: number;
   orderId: string;
