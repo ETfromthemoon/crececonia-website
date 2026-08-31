@@ -47,7 +47,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
       <section className="workshop-hero">
         <div className="workshop-hero-copy">
           <p className="workshop-kicker"><i /> En vivo · {WORKSHOP_DATE_LABEL} · 17:00 h</p>
-          <h1>IA aplicada.<br/><em>Hazla sistema.</em></h1>
+          <h1>Claude aplicado.<br/><em>Hazlo sistema.</em></h1>
           <p className="workshop-lead">{WORKSHOP_OUTCOME}</p>
           <p className="workshop-decision-copy">Sal de la clase con una forma concreta de trabajar con IA, recursos para repetirla y una sala privada para tenerlo todo a mano.</p>
           <ul className="workshop-quick-value">
@@ -78,6 +78,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
             <span>ES PARA TI SI</span>
             <ul>
               <li>Usas herramientas de IA, pero todavía de forma aislada o improvisada.</li>
+              <li>Estás recién comenzando con IA o tienes curiosidad por aprender Claude rápidamente.</li>
               <li>Quieres transformar tareas repetitivas en un método que puedas reutilizar.</li>
               <li>Prefieres aprender haciendo y quedarte con materiales concretos.</li>
               <li>Eres profesional, emprendedor o lideras procesos en un equipo.</li>
@@ -129,10 +130,6 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
               <p>No. La sesión está pensada para aplicar IA al trabajo real. Lo más útil es llegar con una tarea o proceso que quieras mejorar.</p>
             </details>
             <details>
-              <summary>¿Cómo funciona el precio?<b>+</b></summary>
-              <p>El valor sube automáticamente cada cinco compras confirmadas. La página siempre muestra el precio vigente y el próximo valor.</p>
-            </details>
-            <details>
               <summary>¿El pago es seguro?<b>+</b></summary>
               <p>Sí. El pago se procesa mediante Flow y CrececonIA no almacena los datos de tu tarjeta.</p>
             </details>
@@ -142,7 +139,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
 
       <section className="workshop-final">
         <p>Pocos cupos · acceso personal</p>
-        <h2>Una tarde para construir.<br/>Un sistema para seguir.</h2>
+        <h2>Menos que una salida.<br/><em>Una habilidad que puede ahorrarte horas y abrir nuevas fuentes de ingreso.</em></h2>
         <a href="#comprar">Reservar al precio vigente <span>↑</span></a>
       </section>
       <footer className="workshop-footer"><span>CrececonIA · Santiago, Chile</span><a href="mailto:sergio@crececonia.cl">¿Tienes una pregunta?</a></footer>

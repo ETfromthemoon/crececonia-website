@@ -29,7 +29,7 @@ select
   workspace_id,
   'workshop:workshop-en-vivo-2026-09-06',
   'service',
-  'Workshop en vivo de inteligencia artificial aplicada',
+  'Workshop en vivo de Claude aplicado',
   'active',
   'manual'
 from commerce.products

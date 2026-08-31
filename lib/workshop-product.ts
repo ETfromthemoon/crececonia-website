@@ -2,10 +2,8 @@ export const WORKSHOP_PRODUCT_KEY = "workshop:workshop-en-vivo-2026-09-06";
 export const WORKSHOP_PATH = "/workshop-en-vivo-2026-09-06";
 export const WORKSHOP_ROOM_PATH = `${WORKSHOP_PATH}/sala`;
 
-// El tema definitivo no venía especificado en el brief. Está centralizado acá
-// para que cambiarlo actualice landing, checkout, emails, sala y dashboard.
-export const WORKSHOP_TITLE = "Workshop en vivo de inteligencia artificial aplicada";
-export const WORKSHOP_OUTCOME = "Una sesión práctica para convertir herramientas de IA en un sistema de trabajo que puedas volver a usar.";
+export const WORKSHOP_TITLE = "Workshop en vivo de Claude aplicado";
+export const WORKSHOP_OUTCOME = "Aprende Claude de forma práctica y conviértelo en una herramienta de trabajo que puedas volver a usar.";
 export const WORKSHOP_DATE_LABEL = "Domingo 6 de septiembre";
 export const WORKSHOP_START = "2026-09-06T17:00:00-03:00";
 export const WORKSHOP_END = "2026-09-06T20:00:00-03:00";
@@ -14,18 +12,16 @@ export const WORKSHOP_PRICE = 20_000;
 export const WORKSHOP_TIER_SIZE = 5;
 export const WORKSHOP_PRICE_STEP = 5_000;
 
-// Interpretación provisional del dictado: "libro de agentes" y "Claude avanzado".
-// Si el primer título era otro, basta cambiar este arreglo antes de aplicar el SQL.
 export const WORKSHOP_EBOOK_RESOURCES = [
-  "ebook:agentes-de-ia",
+  "ebook:de-cero-a-claude-en-una-semana",
   "ebook:claude-nivel-experto",
 ] as const;
 
 export const WORKSHOP_INCLUDED = [
   "Workshop en vivo y práctico",
   "Grabación para revisar a tu ritmo",
-  "Agentes de IA para tu Negocio",
-  "Claude a Nivel Experto",
+  "Ebook De cero a Claude en una semana — nivel principiante",
+  "Ebook Claude a Nivel Experto — nivel avanzado",
   "Pack descargable con 5 skills",
   "1 mes de acceso gratuito a la comunidad SKOOL",
 ] as const;

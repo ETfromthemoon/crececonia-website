@@ -6,16 +6,13 @@
 - Precio escalonado sin techo: cinco cupos por tramo, comienza en `$20.000 CLP` y sube `$5.000 CLP` cada vez.
 - La página comunica "pocos cupos" y nunca publica la capacidad.
 - La prueba social muestra ventas pagadas del día sólo cuando son mayores que cero.
-- Incluye sesión en vivo, grabación, dos ebooks, cinco skills y un mes de SKOOL.
+- Incluye sesión en vivo, grabación, los ebooks De cero a Claude en una semana y Claude a Nivel Experto, cinco skills y un mes de SKOOL.
 - No se replica la presentación del relator ni el currículo extenso de la clase anterior.
 
 ## Supuestos que deben confirmarse antes de publicar
 
-1. Título/tema: por ahora es "Workshop en vivo de inteligencia artificial aplicada".
-2. Resultado: el copy es deliberadamente general porque el brief no indicó el aprendizaje específico.
-3. Fin: se configuró a las 20:00 (tres horas) para automatizaciones y metadatos.
-4. Ebooks: se interpretó "libro de ebooks" como `Agentes de IA para tu Negocio`; el segundo es `Claude a Nivel Experto`.
-5. Faltan los nombres y contenidos definitivos de las cinco skills.
+1. Fin: se configuró a las 20:00 (tres horas) para automatizaciones y metadatos.
+2. Faltan los nombres y contenidos definitivos de las cinco skills.
 
 Todos los datos editoriales están centralizados en `lib/workshop-product.ts`.
 
