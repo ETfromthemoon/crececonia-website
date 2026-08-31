@@ -28,6 +28,7 @@ export async function GET() {
   const remaining = Math.max(offer.total_cupos - offer.sold_cupos - offer.reserved_cupos, 0);
   return NextResponse.json({
     available: remaining > 0,
+    mode: offer.offer_key === "recording" ? "recording" : "live",
     offerKey: offer.offer_key,
     amount: offer.amount_minor,
     nextAmount: offer.next_amount_minor,

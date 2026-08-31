@@ -12,6 +12,10 @@ export const WORKSHOP_PRICE = 20_000;
 export const WORKSHOP_TIER_SIZE = 5;
 export const WORKSHOP_PRICE_STEP = 5_000;
 
+export function isWorkshopRecordingOnSale(now = Date.now()) {
+  return now >= Date.parse(WORKSHOP_END);
+}
+
 export const WORKSHOP_EBOOK_RESOURCES = [
   "ebook:de-cero-a-claude-en-una-semana",
   "ebook:claude-nivel-experto",
@@ -20,6 +24,14 @@ export const WORKSHOP_EBOOK_RESOURCES = [
 export const WORKSHOP_INCLUDED = [
   "Workshop en vivo y práctico",
   "Grabación para revisar a tu ritmo",
+  "Ebook De cero a Claude en una semana — nivel principiante",
+  "Ebook Claude a Nivel Experto — nivel avanzado",
+  "Pack descargable con 5 skills",
+  "1 mes de acceso gratuito a la comunidad SKOOL",
+] as const;
+
+export const WORKSHOP_RECORDING_INCLUDED = [
+  "Clase grabada para ver a tu ritmo",
   "Ebook De cero a Claude en una semana — nivel principiante",
   "Ebook Claude a Nivel Experto — nivel avanzado",
   "Pack descargable con 5 skills",

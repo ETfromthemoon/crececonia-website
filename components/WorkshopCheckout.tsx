@@ -7,6 +7,7 @@ import { WORKSHOP_PRICE, WORKSHOP_PRODUCT_KEY } from "@/lib/workshop-product";
 
 type Availability = {
   available: boolean;
+  mode: "live" | "recording";
   offerKey: string;
   amount: number;
   nextAmount: number;
@@ -66,11 +67,12 @@ export default function WorkshopCheckout() {
   }
 
   const amount = availability?.amount ?? WORKSHOP_PRICE;
+  const isRecording = availability?.mode === "recording";
 
   return (
     <section id="comprar" className="workshop-checkout" aria-labelledby="workshop-checkout-title">
       <div className="workshop-checkout-topline">
-        <span>Precio vigente</span>
+        <span>{isRecording ? "Acceso completo" : "Precio vigente"}</span>
         <strong>{formatCLP(amount)} CLP</strong>
       </div>
       {Boolean(availability?.salesToday) && (
@@ -79,10 +81,10 @@ export default function WorkshopCheckout() {
         </p>
       )}
       <h2 id="workshop-checkout-title">
-        Pocos cupos a {formatCLP(amount)}.
+        {isRecording ? `Accede ahora por ${formatCLP(amount)}.` : `Pocos cupos a ${formatCLP(amount)}.`}
       </h2>
       <p className="workshop-checkout-copy">
-        Después sube a <strong>{formatCLP(availability?.nextAmount ?? amount + 5_000)}</strong>. Reserva ahora y conserva el precio que aparece al iniciar el pago.
+        {isRecording ? <>Pago único. Recibe la clase grabada, los dos ebooks y tu sala privada directamente en el correo.</> : <>Después sube a <strong>{formatCLP(availability?.nextAmount ?? amount + 5_000)}</strong>. Reserva ahora y conserva el precio que aparece al iniciar el pago.</>}
       </p>
       <ul className="workshop-checkout-assurance" aria-label="Proceso de compra">
         <li>Sin crear cuenta</li>
@@ -92,7 +94,7 @@ export default function WorkshopCheckout() {
         <label htmlFor="workshop-email">Correo de acceso</label>
         <input id="workshop-email" type="email" required autoComplete="email" placeholder="tu@correo.com" value={email} onChange={(event) => setEmail(event.target.value)} />
         <button type="submit" disabled={!availability?.available || status === "loading"}>
-          {status === "loading" ? "Preparando pago…" : !availability ? "Verificando precio…" : `Pagar ${formatCLP(amount)}`} <span>↗</span>
+          {status === "loading" ? "Preparando pago…" : !availability ? "Verificando precio…" : isRecording ? `Comprar acceso por ${formatCLP(amount)}` : `Pagar ${formatCLP(amount)}`} <span>↗</span>
         </button>
       </form>
       <p className="workshop-checkout-fine">Pago seguro con Flow · confirmación inmediata · acceso personal</p>
@@ -104,8 +106,8 @@ export default function WorkshopCheckout() {
         </div>
       )}
       <a className="workshop-sticky-buy" href="#comprar">
-        <span><small>Precio vigente</small>{formatCLP(amount)}</span>
-        <strong>Reservar entrada →</strong>
+        <span><small>{isRecording ? "Acceso completo" : "Precio vigente"}</small>{formatCLP(amount)}</span>
+        <strong>{isRecording ? "Comprar ahora →" : "Reservar entrada →"}</strong>
       </a>
     </section>
   );

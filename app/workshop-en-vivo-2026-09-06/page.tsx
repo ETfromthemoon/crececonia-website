@@ -6,11 +6,13 @@ import {
   WORKSHOP_DATE_LABEL,
   WORKSHOP_END,
   WORKSHOP_INCLUDED,
+  WORKSHOP_RECORDING_INCLUDED,
   WORKSHOP_OUTCOME,
   WORKSHOP_PATH,
   WORKSHOP_PRICE,
   WORKSHOP_START,
   WORKSHOP_TITLE,
+  isWorkshopRecordingOnSale,
 } from "@/lib/workshop-product";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +40,8 @@ const eventJsonLd = {
 
 export default async function WorkshopPage({ searchParams }: { searchParams: Promise<{ success?: string }> }) {
   const { success } = await searchParams;
+  const isRecording = isWorkshopRecordingOnSale();
+  const included = isRecording ? WORKSHOP_RECORDING_INCLUDED : WORKSHOP_INCLUDED;
   return (
     <main className="workshop-page">
       <JsonLd data={eventJsonLd} />
@@ -46,12 +50,12 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
 
       <section className="workshop-hero">
         <div className="workshop-hero-copy">
-          <p className="workshop-kicker"><i /> En vivo · {WORKSHOP_DATE_LABEL} · 17:00 h</p>
+          <p className="workshop-kicker"><i /> {isRecording ? "Clase grabada · acceso inmediato" : `En vivo · ${WORKSHOP_DATE_LABEL} · 17:00 h`}</p>
           <h1>Claude aplicado.<br/><em>Hazlo sistema.</em></h1>
           <p className="workshop-lead">{WORKSHOP_OUTCOME}</p>
-          <p className="workshop-decision-copy">Sal de la clase con una forma concreta de trabajar con IA, recursos para repetirla y una sala privada para tenerlo todo a mano.</p>
+          <p className="workshop-decision-copy">{isRecording ? "Aprende a tu ritmo con la grabación, recursos descargables y una sala privada para tenerlo todo a mano." : "Sal de la clase con una forma concreta de trabajar con IA, recursos para repetirla y una sala privada para tenerlo todo a mano."}</p>
           <ul className="workshop-quick-value">
-            <li>Clase en vivo</li><li>Grabación</li><li>2 ebooks</li><li>5 skills</li><li>1 mes en SKOOL</li>
+            {isRecording ? <li>Clase grabada</li> : <><li>Clase en vivo</li><li>Grabación</li></>}<li>2 ebooks</li><li>5 skills</li><li>1 mes en SKOOL</li>
           </ul>
           <a className="workshop-mobile-cta" href="#comprar">Ver precio vigente <span>↓</span></a>
         </div>
@@ -61,10 +65,10 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
       <section className="workshop-value">
         <div className="workshop-section-index">01 / TU ENTRADA</div>
         <div>
-          <h2>Todo queda contigo después del directo.</h2>
-          <p>No dependes de tomar apuntes perfectos ni de estar disponible para volver a ejecutar lo aprendido.</p>
+          <h2>{isRecording ? "Todo el workshop, disponible cuando lo necesites." : "Todo queda contigo después del directo."}</h2>
+          <p>{isRecording ? "Entra a la sala privada, mira la clase a tu ritmo y vuelve a los recursos cada vez que quieras aplicar lo aprendido." : "No dependes de tomar apuntes perfectos ni de estar disponible para volver a ejecutar lo aprendido."}</p>
         </div>
-        <ol>{WORKSHOP_INCLUDED.map((item, index) => <li key={item}><span>{String(index + 1).padStart(2, "0")}</span><strong>{item}</strong></li>)}</ol>
+        <ol>{included.map((item, index) => <li key={item}><span>{String(index + 1).padStart(2, "0")}</span><strong>{item}</strong></li>)}</ol>
       </section>
 
       <section className="workshop-process">
@@ -100,7 +104,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
         <div className="workshop-section-index">03 / CÓMO FUNCIONA</div>
         <div className="workshop-process-grid">
           <article><span>ANTES</span><h3>Reserva en menos de un minuto.</h3><p>Escribe tu correo, paga con Flow y recibe tu acceso personal.</p></article>
-          <article><span>EN VIVO</span><h3>Construye con nosotros.</h3><p>Una sesión práctica, directa y enfocada en decisiones que puedes aplicar.</p></article>
+          <article><span>{isRecording ? "APRENDE" : "EN VIVO"}</span><h3>{isRecording ? "Avanza a tu ritmo." : "Construye con nosotros."}</h3><p>{isRecording ? "Reproduce la clase, pausa y aplica cada decisión en tu propio contexto." : "Una sesión práctica, directa y enfocada en decisiones que puedes aplicar."}</p></article>
           <article><span>DESPUÉS</span><h3>Repite a tu ritmo.</h3><p>Grabación, ebooks, skills y comunidad reunidos en una mini sala privada.</p></article>
         </div>
       </section>
@@ -114,8 +118,8 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
           </div>
           <div className="workshop-faq-list">
             <details>
-              <summary>¿Qué pasa si no puedo asistir en vivo?<b>+</b></summary>
-              <p>La clase quedará grabada en tu sala privada para que puedas verla después y volver a consultarla.</p>
+              <summary>{isRecording ? "¿Por cuánto tiempo puedo ver la clase?" : "¿Qué pasa si no puedo asistir en vivo?"}<b>+</b></summary>
+              <p>{isRecording ? "Tu acceso personal queda disponible en la sala privada para que puedas volver a la grabación y los materiales cuando lo necesites." : "La clase quedará grabada en tu sala privada para que puedas verla después y volver a consultarla."}</p>
             </details>
             <details>
               <summary>¿Cuándo recibo los ebooks y el acceso?<b>+</b></summary>
@@ -138,9 +142,9 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
       </section>
 
       <section className="workshop-final">
-        <p>Pocos cupos · acceso personal</p>
+        <p>{isRecording ? "Acceso inmediato · pago único" : "Pocos cupos · acceso personal"}</p>
         <h2>Menos que una salida.<br/><em>Una habilidad que puede ahorrarte horas y abrir nuevas fuentes de ingreso.</em></h2>
-        <a href="#comprar">Reservar al precio vigente <span>↑</span></a>
+        <a href="#comprar">{isRecording ? "Comprar acceso completo" : "Reservar al precio vigente"} <span>↑</span></a>
       </section>
       <footer className="workshop-footer"><span>CrececonIA · Santiago, Chile</span><a href="mailto:sergio@crececonia.cl">¿Tienes una pregunta?</a></footer>
     </main>
