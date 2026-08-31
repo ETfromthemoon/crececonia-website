@@ -47,8 +47,9 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
       <section className="workshop-hero">
         <div className="workshop-hero-copy">
           <p className="workshop-kicker"><i /> En vivo · {WORKSHOP_DATE_LABEL} · 17:00 h</p>
-          <h1>IA aplicada.<br/><em>Sin relleno.</em></h1>
+          <h1>IA aplicada.<br/><em>Hazla sistema.</em></h1>
           <p className="workshop-lead">{WORKSHOP_OUTCOME}</p>
+          <p className="workshop-decision-copy">Sal de la clase con una forma concreta de trabajar con IA, recursos para repetirla y una sala privada para tenerlo todo a mano.</p>
           <ul className="workshop-quick-value">
             <li>Clase en vivo</li><li>Grabación</li><li>2 ebooks</li><li>5 skills</li><li>1 mes en SKOOL</li>
           </ul>
@@ -67,7 +68,35 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
       </section>
 
       <section className="workshop-process">
-        <div className="workshop-section-index">02 / CÓMO FUNCIONA</div>
+        <div className="workshop-section-index">02 / ¿ES PARA TI?</div>
+        <div className="workshop-fit-intro">
+          <h2>Compra con claridad, no por impulso.</h2>
+          <p>Este workshop funciona mejor cuando vienes con ganas de aplicar, no sólo de mirar.</p>
+        </div>
+        <div className="workshop-fit-grid">
+          <article className="is-for">
+            <span>ES PARA TI SI</span>
+            <ul>
+              <li>Usas herramientas de IA, pero todavía de forma aislada o improvisada.</li>
+              <li>Quieres transformar tareas repetitivas en un método que puedas reutilizar.</li>
+              <li>Prefieres aprender haciendo y quedarte con materiales concretos.</li>
+              <li>Eres profesional, emprendedor o lideras procesos en un equipo.</li>
+            </ul>
+          </article>
+          <article className="is-not-for">
+            <span>NO ES PARA TI SI</span>
+            <ul>
+              <li>Buscas una charla pasiva, sólo teórica o llena de tendencias.</li>
+              <li>Esperas que alguien implemente todo por ti después de la clase.</li>
+              <li>No quieres probar herramientas ni ajustar tu forma de trabajar.</li>
+            </ul>
+          </article>
+        </div>
+        <a className="workshop-inline-cta" href="#comprar">Sí, quiero aplicarlo <span>→</span></a>
+      </section>
+
+      <section className="workshop-process">
+        <div className="workshop-section-index">03 / CÓMO FUNCIONA</div>
         <div className="workshop-process-grid">
           <article><span>ANTES</span><h3>Reserva en menos de un minuto.</h3><p>Escribe tu correo, paga con Flow y recibe tu acceso personal.</p></article>
           <article><span>EN VIVO</span><h3>Construye con nosotros.</h3><p>Una sesión práctica, directa y enfocada en decisiones que puedes aplicar.</p></article>
@@ -75,10 +104,46 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
         </div>
       </section>
 
+      <section className="workshop-faq">
+        <div className="workshop-section-index">04 / PREGUNTAS FRECUENTES</div>
+        <div className="workshop-faq-content">
+          <div>
+            <h2>Lo importante, antes de pagar.</h2>
+            <p>Sin letra pequeña ni pasos innecesarios.</p>
+          </div>
+          <div className="workshop-faq-list">
+            <details>
+              <summary>¿Qué pasa si no puedo asistir en vivo?<b>+</b></summary>
+              <p>La clase quedará grabada en tu sala privada para que puedas verla después y volver a consultarla.</p>
+            </details>
+            <details>
+              <summary>¿Cuándo recibo los ebooks y el acceso?<b>+</b></summary>
+              <p>Al confirmarse el pago recibirás por correo tu acceso personal. Ahí reuniremos los ebooks y la información del workshop.</p>
+            </details>
+            <details>
+              <summary>¿Cuándo se entrega el pack de cinco skills?<b>+</b></summary>
+              <p>El archivo ZIP se habilitará al finalizar el workshop, dentro de la misma sala privada.</p>
+            </details>
+            <details>
+              <summary>¿Necesito conocimientos técnicos avanzados?<b>+</b></summary>
+              <p>No. La sesión está pensada para aplicar IA al trabajo real. Lo más útil es llegar con una tarea o proceso que quieras mejorar.</p>
+            </details>
+            <details>
+              <summary>¿Cómo funciona el precio?<b>+</b></summary>
+              <p>El valor sube automáticamente cada cinco compras confirmadas. La página siempre muestra el precio vigente y el próximo valor.</p>
+            </details>
+            <details>
+              <summary>¿El pago es seguro?<b>+</b></summary>
+              <p>Sí. El pago se procesa mediante Flow y CrececonIA no almacena los datos de tu tarjeta.</p>
+            </details>
+          </div>
+        </div>
+      </section>
+
       <section className="workshop-final">
         <p>Pocos cupos · acceso personal</p>
-        <h2>Una tarde para avanzar.<br/>Materiales para seguir.</h2>
-        <a href="#comprar">Quiero reservar mi entrada <span>↑</span></a>
+        <h2>Una tarde para construir.<br/>Un sistema para seguir.</h2>
+        <a href="#comprar">Reservar al precio vigente <span>↑</span></a>
       </section>
       <footer className="workshop-footer"><span>CrececonIA · Santiago, Chile</span><a href="mailto:sergio@crececonia.cl">¿Tienes una pregunta?</a></footer>
     </main>

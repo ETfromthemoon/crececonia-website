@@ -24,12 +24,13 @@ export default function WorkshopCheckout() {
   async function refresh() {
     const response = await fetch("/api/workshop/availability", { cache: "no-store" });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error ?? "No pudimos cargar la disponibilidad.");
+    if (!response.ok) throw new Error(data.error ?? "No pudimos verificar el precio.");
     setAvailability(data);
+    setError("");
   }
 
   useEffect(() => {
-    refresh().catch((reason) => setError(reason instanceof Error ? reason.message : "No pudimos cargar la disponibilidad."));
+    refresh().catch((reason) => setError(reason instanceof Error ? reason.message : "No pudimos verificar el precio."));
     const interval = window.setInterval(() => refresh().catch(() => undefined), 30_000);
     trackEvent("workshop_checkout_viewed", { product: WORKSHOP_PRODUCT_KEY, amount: WORKSHOP_PRICE });
     trackMetaEvent("ViewContent", { content_ids: [WORKSHOP_PRODUCT_KEY], content_type: "product", currency: "CLP", value: WORKSHOP_PRICE });
@@ -81,18 +82,31 @@ export default function WorkshopCheckout() {
         Pocos cupos a {formatCLP(amount)}.
       </h2>
       <p className="workshop-checkout-copy">
-        Después sube a <strong>{formatCLP(availability?.nextAmount ?? amount + 5_000)}</strong>. Tu correo será tu acceso a la sala, grabación y materiales.
+        Después sube a <strong>{formatCLP(availability?.nextAmount ?? amount + 5_000)}</strong>. Reserva ahora y conserva el precio que aparece al iniciar el pago.
       </p>
+      <ul className="workshop-checkout-assurance" aria-label="Proceso de compra">
+        <li>Sin crear cuenta</li>
+        <li>Acceso automático por correo</li>
+      </ul>
       <form onSubmit={submit}>
         <label htmlFor="workshop-email">Correo de acceso</label>
         <input id="workshop-email" type="email" required autoComplete="email" placeholder="tu@correo.com" value={email} onChange={(event) => setEmail(event.target.value)} />
         <button type="submit" disabled={!availability?.available || status === "loading"}>
-          {status === "loading" ? "Preparando pago…" : `Pagar ${formatCLP(amount)}`} <span>↗</span>
+          {status === "loading" ? "Preparando pago…" : !availability ? "Verificando precio…" : `Pagar ${formatCLP(amount)}`} <span>↗</span>
         </button>
       </form>
-      <p className="workshop-checkout-fine">Pago seguro procesado por Flow. Recibirás la confirmación inmediatamente.</p>
+      <p className="workshop-checkout-fine">Pago seguro con Flow · confirmación inmediata · acceso personal</p>
       {availability && !availability.available && <p className="workshop-checkout-error">Las entradas ya no están disponibles.</p>}
-      {error && <p className="workshop-checkout-error" role="alert">{error}</p>}
+      {error && (
+        <div className="workshop-checkout-retry" role="alert">
+          <p>{error}</p>
+          <button type="button" onClick={() => refresh().catch((reason) => setError(reason instanceof Error ? reason.message : "No pudimos verificar el precio."))}>Reintentar</button>
+        </div>
+      )}
+      <a className="workshop-sticky-buy" href="#comprar">
+        <span><small>Precio vigente</small>{formatCLP(amount)}</span>
+        <strong>Reservar entrada →</strong>
+      </a>
     </section>
   );
 }

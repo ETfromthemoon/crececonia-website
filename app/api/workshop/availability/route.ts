@@ -9,7 +9,13 @@ export async function GET() {
   await db.rpc("release_expired_class_reservations");
   const { data, error } = await db.rpc("workshop_product_availability", { p_product_key: WORKSHOP_PRODUCT_KEY });
   const offer = (data?.[0] ?? null) as WorkshopAvailabilityRow | null;
-  if (error || !offer) return NextResponse.json({ error: "Entradas no disponibles." }, { status: 503 });
+  if (error || !offer) {
+    console.error("[workshop/availability]", {
+      code: error?.code ?? "offer_missing",
+      message: error?.message ?? "No availability row returned",
+    });
+    return NextResponse.json({ error: "No pudimos verificar el precio. Reintenta en unos segundos." }, { status: 503 });
+  }
   const remaining = Math.max(offer.total_cupos - offer.sold_cupos - offer.reserved_cupos, 0);
   return NextResponse.json({
     available: remaining > 0,
