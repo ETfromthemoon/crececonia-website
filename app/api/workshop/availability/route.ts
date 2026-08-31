@@ -4,6 +4,14 @@ import { WORKSHOP_PRODUCT_KEY, type WorkshopAvailabilityRow } from "@/lib/worksh
 
 export const dynamic = "force-dynamic";
 
+function getSupabaseHost() {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").host;
+  } catch {
+    return "invalid";
+  }
+}
+
 export async function GET() {
   const db = getSupabaseAdmin();
   await db.rpc("release_expired_class_reservations");
@@ -13,6 +21,7 @@ export async function GET() {
     console.error("[workshop/availability]", {
       code: error?.code ?? "offer_missing",
       message: error?.message ?? "No availability row returned",
+      supabaseHost: getSupabaseHost(),
     });
     return NextResponse.json({ error: "No pudimos verificar el precio. Reintenta en unos segundos." }, { status: 503 });
   }
