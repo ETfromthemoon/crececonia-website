@@ -1,10 +1,11 @@
 import "server-only";
 import { sendEbookDeliveryEmail } from "./ebook-delivery-email";
+import { sendPurchaseNotification } from "./purchase-notification-email";
 import { getSupabaseAdmin } from "./supabase";
 import { sendWorkshopFollowUpEmail, sendWorkshopSessionEmail, sendWorkshopWelcomeEmail } from "./workshop-delivery-email";
-import { WORKSHOP_EBOOK_RESOURCES, WORKSHOP_END, WORKSHOP_PRODUCT_KEY, WORKSHOP_START } from "./workshop-product";
+import { WORKSHOP_EBOOK_RESOURCES, WORKSHOP_END, WORKSHOP_PRODUCT_KEY, WORKSHOP_START, WORKSHOP_TITLE } from "./workshop-product";
 
-export type WorkshopDeliveryKind = "welcome" | "ebooks" | "session-1h" | "session-10m" | "session-late" | "follow-up";
+export type WorkshopDeliveryKind = "admin-notification" | "welcome" | "ebooks" | "session-1h" | "session-10m" | "session-late" | "follow-up";
 type Claimed = { event_id: string; commerce_order: string; email: string; amount_minor: number };
 
 export async function deliverWorkshopOrders(kind: WorkshopDeliveryKind, commerceOrder?: string) {
@@ -15,7 +16,8 @@ export async function deliverWorkshopOrders(kind: WorkshopDeliveryKind, commerce
   for (const delivery of (data ?? []) as Claimed[]) {
     try {
       let providerMessageId: string;
-      if (kind === "welcome") providerMessageId = await sendWorkshopWelcomeEmail({ email: delivery.email, amount: delivery.amount_minor, orderId: delivery.commerce_order });
+      if (kind === "admin-notification") providerMessageId = await sendPurchaseNotification({ kind: "Workshop en vivo", buyerEmail: delivery.email, amount: delivery.amount_minor, orderId: delivery.commerce_order, items: [WORKSHOP_TITLE] });
+      else if (kind === "welcome") providerMessageId = await sendWorkshopWelcomeEmail({ email: delivery.email, amount: delivery.amount_minor, orderId: delivery.commerce_order });
       else if (kind === "ebooks") {
         const { data: grants, error: grantsError } = await db.rpc("grant_workshop_ebooks", { p_commerce_order: delivery.commerce_order, p_resources: [...WORKSHOP_EBOOK_RESOURCES] });
         if (grantsError) throw new Error(grantsError.message);

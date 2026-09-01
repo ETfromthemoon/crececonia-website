@@ -1,9 +1,8 @@
 import { deliverLateWorkshopAccessIfNeeded, deliverWorkshopOrders } from "@/lib/workshop-delivery";
 import { flowSign, getFlowBase } from "@/lib/flow";
 import { captureServerEvent } from "@/lib/posthog-server";
-import { sendPurchaseNotification } from "@/lib/purchase-notification-email";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { WORKSHOP_PRODUCT_KEY, WORKSHOP_TITLE } from "@/lib/workshop-product";
+import { WORKSHOP_PRODUCT_KEY } from "@/lib/workshop-product";
 
 type FlowPayment = { status: number; payer: string; amount: string | number; flowOrder: number; commerceOrder: string };
 
@@ -32,9 +31,8 @@ export async function POST(request: Request) {
     if (order.amount_minor !== paidAmount || order.email.toLowerCase() !== payment.payer.toLowerCase()) return retry("El pago no coincide con la orden");
     const { data: finalized, error } = await db.rpc("finalize_class_order", { p_commerce_order: commerceOrder, p_flow_token: token, p_flow_order: payment.flowOrder, p_paid_amount: paidAmount });
     if (error || finalized !== true) return retry("No se pudo confirmar la orden", error?.message);
-    try { await deliverWorkshopOrders("welcome", commerceOrder); await deliverWorkshopOrders("ebooks", commerceOrder); await deliverLateWorkshopAccessIfNeeded(commerceOrder); }
+    try { await deliverWorkshopOrders("welcome", commerceOrder); await deliverWorkshopOrders("ebooks", commerceOrder); await deliverWorkshopOrders("admin-notification", commerceOrder); await deliverLateWorkshopAccessIfNeeded(commerceOrder); }
     catch (reason) { return retry("No se pudo completar la entrega", reason); }
-    sendPurchaseNotification({ kind: "Workshop en vivo", buyerEmail: order.email, amount: paidAmount, orderId: commerceOrder, items: [WORKSHOP_TITLE] }).catch((reason) => console.error("[workshop/confirm] notificación", reason));
     captureServerEvent("workshop_purchase_confirmed", payment.payer.toLowerCase(), { product: WORKSHOP_PRODUCT_KEY, amount: paidAmount, order_id: commerceOrder, flow_order: payment.flowOrder }).catch((reason) => console.error("[workshop/confirm] analytics", reason));
     return new Response("OK");
   } catch (reason) { return retry("Error inesperado", reason); }
