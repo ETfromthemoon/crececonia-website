@@ -11,7 +11,6 @@
     ,{ "path": "/api/cron/workshop-reminder/1h", "schedule": "0 19 6 9 *" }
     ,{ "path": "/api/cron/workshop-reminder/10m", "schedule": "50 19 6 9 *" }
     ,{ "path": "/api/cron/workshop-follow-up", "schedule": "0 7 7 9 *" }
-    ,{ "path": "/api/cron/workshop-checkout-recovery", "schedule": "*/5 * * * *" }
   ],
   "headers": [
     {

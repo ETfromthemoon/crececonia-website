@@ -1,0 +1,30 @@
+name: Workshop checkout recovery
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workshop-checkout-recovery
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Send pending recovery emails
+        env:
+          RECOVERY_SECRET: ${{ secrets.WORKSHOP_RECOVERY_CRON_SECRET }}
+        run: |
+          test -n "$RECOVERY_SECRET"
+          curl --fail --silent --show-error \
+            --retry 2 \
+            --retry-all-errors \
+            --max-time 60 \
+            -H "Authorization: Bearer $RECOVERY_SECRET" \
+            https://www.crececonia.cl/api/cron/workshop-checkout-recovery
