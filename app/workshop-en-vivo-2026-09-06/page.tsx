@@ -62,6 +62,12 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
         <WorkshopCheckout />
       </section>
 
+      <section className="workshop-final">
+        <p>{isRecording ? "Acceso inmediato · pago único" : "Pocos cupos · acceso personal"}</p>
+        <h2>Menos que una salida.<br/><em>Una habilidad que puede ahorrarte horas y abrir nuevas fuentes de ingreso.</em></h2>
+        <a href="#comprar">{isRecording ? "Comprar acceso completo" : "Reservar al precio vigente"} <span>↑</span></a>
+      </section>
+
       <section className="workshop-value">
         <div className="workshop-section-index">01 / TU ENTRADA</div>
         <div>
@@ -141,11 +147,6 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
         </div>
       </section>
 
-      <section className="workshop-final">
-        <p>{isRecording ? "Acceso inmediato · pago único" : "Pocos cupos · acceso personal"}</p>
-        <h2>Menos que una salida.<br/><em>Una habilidad que puede ahorrarte horas y abrir nuevas fuentes de ingreso.</em></h2>
-        <a href="#comprar">{isRecording ? "Comprar acceso completo" : "Reservar al precio vigente"} <span>↑</span></a>
-      </section>
       <footer className="workshop-footer"><span>CrececonIA · Santiago, Chile</span><a href="mailto:sergio@crececonia.cl">¿Tienes una pregunta?</a></footer>
     </main>
   );
