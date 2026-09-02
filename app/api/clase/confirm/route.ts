@@ -1,10 +1,10 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { flowSign, getFlowBase } from "@/lib/flow";
 import { deliverClassOrders, deliverLateClassAccessIfNeeded } from "@/lib/class-delivery";
-import { CLASS_PRODUCT_KEY } from "@/lib/class-product";
+import { CLASS_PATH, CLASS_PRODUCT_KEY } from "@/lib/class-product";
 import { captureServerEvent } from "@/lib/posthog-server";
 import { sendPurchaseNotification } from "@/lib/purchase-notification-email";
-import { captureMetaClassPurchase } from "@/lib/meta-conversions-api";
+import { captureMetaPurchase } from "@/lib/meta-conversions-api";
 
 interface FlowPayment {
   status: number;
@@ -95,10 +95,12 @@ export async function POST(request: Request) {
     }
 
     try {
-      await captureMetaClassPurchase({
+      await captureMetaPurchase({
         email: payment.payer,
         amount: paidAmount,
         orderId: commerceOrder,
+        productId: CLASS_PRODUCT_KEY,
+        eventSourcePath: CLASS_PATH,
         request,
       });
     } catch (error) {

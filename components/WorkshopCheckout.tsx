@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { trackMetaEvent } from "@/lib/meta-pixel";
 import { WORKSHOP_PRICE, WORKSHOP_PRODUCT_KEY } from "@/lib/workshop-product";
@@ -16,9 +16,12 @@ type Availability = {
 
 const formatCLP = (amount: number) => `$${amount.toLocaleString("es-CL")}`;
 
-export default function WorkshopCheckout() {
+export default function WorkshopCheckout({ showTestDiscount = false }: { showTestDiscount?: boolean }) {
+  const checkoutRef = useRef<HTMLElement>(null);
+  const checkoutViewTracked = useRef(false);
   const [availability, setAvailability] = useState<Availability | null>(null);
   const [email, setEmail] = useState("");
+  const [discountCode, setDiscountCode] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
 
@@ -33,7 +36,6 @@ export default function WorkshopCheckout() {
   useEffect(() => {
     refresh().catch((reason) => setError(reason instanceof Error ? reason.message : "No pudimos verificar el precio."));
     const interval = window.setInterval(() => refresh().catch(() => undefined), 30_000);
-    trackEvent("workshop_checkout_viewed", { product: WORKSHOP_PRODUCT_KEY, amount: WORKSHOP_PRICE });
     trackMetaEvent("ViewContent", { content_ids: [WORKSHOP_PRODUCT_KEY], content_type: "product", currency: "CLP", value: WORKSHOP_PRICE });
     const sessionId = getSessionId();
     const query = new URLSearchParams(window.location.search);
@@ -41,19 +43,31 @@ export default function WorkshopCheckout() {
     return () => window.clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const checkout = checkoutRef.current;
+    if (!checkout) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || checkoutViewTracked.current) return;
+      checkoutViewTracked.current = true;
+      trackEvent("workshop_checkout_viewed", { product: WORKSHOP_PRODUCT_KEY, amount: availability?.amount ?? WORKSHOP_PRICE });
+      observer.disconnect();
+    }, { threshold: 0.25 });
+    observer.observe(checkout);
+    return () => observer.disconnect();
+  }, [availability?.amount]);
+
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!availability?.available || !email) return;
     setStatus("loading");
     setError("");
-    trackEvent("workshop_checkout_started", { product: WORKSHOP_PRODUCT_KEY, amount: availability.amount });
     const query = new URLSearchParams(window.location.search);
     const sessionId = getSessionId();
     fetch("/api/workshop/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "checkout_started", sessionId }), keepalive: true }).catch(() => undefined);
     const response = await fetch("/api/workshop/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, offerKey: availability.offerKey, sessionId, source: query.get("utm_source"), medium: query.get("utm_medium"), campaign: query.get("utm_campaign"), referrer: document.referrer || null }),
+      body: JSON.stringify({ email, offerKey: availability.offerKey, discountCode: discountCode || undefined, sessionId, source: query.get("utm_source"), medium: query.get("utm_medium"), campaign: query.get("utm_campaign"), referrer: document.referrer || null }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.error) {
@@ -62,7 +76,9 @@ export default function WorkshopCheckout() {
       await refresh().catch(() => undefined);
       return;
     }
-    trackMetaEvent("InitiateCheckout", { content_ids: [WORKSHOP_PRODUCT_KEY], content_type: "product", currency: "CLP", value: availability.amount });
+    const finalAmount = typeof data.amount === "number" ? data.amount : availability.amount;
+    trackEvent("workshop_checkout_started", { product: WORKSHOP_PRODUCT_KEY, amount: finalAmount, has_discount_code: Boolean(discountCode) });
+    trackMetaEvent("InitiateCheckout", { content_ids: [WORKSHOP_PRODUCT_KEY], content_type: "product", currency: "CLP", value: finalAmount });
     window.location.assign(data.redirectUrl);
   }
 
@@ -70,7 +86,7 @@ export default function WorkshopCheckout() {
   const isRecording = availability?.mode === "recording";
 
   return (
-    <section id="comprar" className="workshop-checkout" aria-labelledby="workshop-checkout-title">
+    <section ref={checkoutRef} id="comprar" className="workshop-checkout" aria-labelledby="workshop-checkout-title">
       <div className="workshop-checkout-topline">
         <span>{isRecording ? "Acceso completo" : "Precio vigente"}</span>
         <strong>{formatCLP(amount)} CLP</strong>
@@ -93,6 +109,10 @@ export default function WorkshopCheckout() {
       <form onSubmit={submit}>
         <label htmlFor="workshop-email">Correo de acceso</label>
         <input id="workshop-email" type="email" required autoComplete="email" placeholder="tu@correo.com" value={email} onChange={(event) => setEmail(event.target.value)} />
+        {showTestDiscount && <div className="workshop-test-discount">
+          <label htmlFor="workshop-discount">Código de prueba Meta <small>(modo QA)</small></label>
+          <input id="workshop-discount" type="text" autoComplete="off" placeholder="METAQA-XXXX" value={discountCode} onChange={(event) => setDiscountCode(event.target.value.toUpperCase())} />
+        </div>}
         <button type="submit" disabled={!availability?.available || status === "loading"}>
           {status === "loading" ? "Preparando pago…" : !availability ? "Verificando precio…" : isRecording ? `Comprar acceso por ${formatCLP(amount)}` : `Pagar ${formatCLP(amount)}`} <span>↗</span>
         </button>
@@ -105,10 +125,6 @@ export default function WorkshopCheckout() {
           <button type="button" onClick={() => refresh().catch((reason) => setError(reason instanceof Error ? reason.message : "No pudimos verificar el precio."))}>Reintentar</button>
         </div>
       )}
-      <a className="workshop-sticky-buy" href="#comprar">
-        <span><small>{isRecording ? "Acceso completo" : "Precio vigente"}</small>{formatCLP(amount)}</span>
-        <strong>{isRecording ? "Comprar ahora →" : "Reservar entrada →"}</strong>
-      </a>
     </section>
   );
 }

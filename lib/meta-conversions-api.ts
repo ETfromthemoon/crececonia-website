@@ -1,13 +1,14 @@
 import "server-only";
 
 import { createHash } from "crypto";
-import { CLASS_PATH, CLASS_PRODUCT_KEY } from "@/lib/class-product";
 import { SITE_URL } from "@/lib/seo";
 
 type PurchaseInput = {
   email: string;
   amount: number;
   orderId: string;
+  productId: string;
+  eventSourcePath: string;
   request: Request;
 };
 
@@ -24,7 +25,7 @@ function clientIp(request: Request) {
  * Envía una compra que Flow ya verificó. Es opcional y no bloquea la entrega
  * al alumno si Meta está caído o todavía no se han configurado sus variables.
  */
-export async function captureMetaClassPurchase({ email, amount, orderId, request }: PurchaseInput) {
+export async function captureMetaPurchase({ email, amount, orderId, productId, eventSourcePath, request }: PurchaseInput) {
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
   const accessToken = process.env.META_CAPI_ACCESS_TOKEN?.trim();
   const apiVersion = process.env.META_CAPI_API_VERSION?.trim();
@@ -42,7 +43,7 @@ export async function captureMetaClassPurchase({ email, amount, orderId, request
         event_time: Math.floor(Date.now() / 1000),
         event_id: `class-purchase-${orderId}`,
         action_source: "website",
-        event_source_url: `${SITE_URL}${CLASS_PATH}`,
+        event_source_url: `${SITE_URL}${eventSourcePath}`,
         user_data: {
           em: [hash(email)],
           ...(ip ? { client_ip_address: ip } : {}),
@@ -52,7 +53,7 @@ export async function captureMetaClassPurchase({ email, amount, orderId, request
           currency: "CLP",
           value: amount,
           content_type: "product",
-          content_ids: [CLASS_PRODUCT_KEY],
+          content_ids: [productId],
           order_id: orderId,
         },
       }],

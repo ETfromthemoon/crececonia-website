@@ -2,8 +2,8 @@ export const WORKSHOP_PRODUCT_KEY = "workshop:workshop-en-vivo-2026-09-06";
 export const WORKSHOP_PATH = "/workshop-en-vivo-2026-09-06";
 export const WORKSHOP_ROOM_PATH = `${WORKSHOP_PATH}/sala`;
 
-export const WORKSHOP_TITLE = "Workshop en vivo de Claude aplicado";
-export const WORKSHOP_OUTCOME = "Aprende Claude de forma práctica y conviértelo en una herramienta de trabajo que puedas volver a usar.";
+export const WORKSHOP_TITLE = "Claude e inteligencia artificial para principiantes, desde cero";
+export const WORKSHOP_OUTCOME = "Aprende desde cero a usar Claude, pedir mejores resultados y convertir la inteligencia artificial en una herramienta práctica para tu trabajo o negocio. No necesitas experiencia previa.";
 export const WORKSHOP_DATE_LABEL = "Domingo 6 de septiembre";
 export const WORKSHOP_START = "2026-09-06T17:00:00-03:00";
 export const WORKSHOP_END = "2026-09-06T20:00:00-03:00";
