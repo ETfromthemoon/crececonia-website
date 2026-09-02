@@ -38,8 +38,8 @@ const eventJsonLd = {
   offers: { "@type": "Offer", price: String(WORKSHOP_PRICE), priceCurrency: "CLP", availability: "https://schema.org/LimitedAvailability", url: absoluteUrl(`${WORKSHOP_PATH}#comprar`) },
 };
 
-export default async function WorkshopPage({ searchParams }: { searchParams: Promise<{ success?: string }> }) {
-  const { success } = await searchParams;
+export default async function WorkshopPage({ searchParams }: { searchParams: Promise<{ success?: string; meta_test?: string }> }) {
+  const { success, meta_test: metaTest } = await searchParams;
   const isRecording = isWorkshopRecordingOnSale();
   const included = isRecording ? WORKSHOP_RECORDING_INCLUDED : WORKSHOP_INCLUDED;
   return (
@@ -48,7 +48,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
       <header className="workshop-brand"><a href="/">Crececon<span>IA</span></a><span>Workshop / 06.09.2026</span></header>
       {success === "1" && <div className="workshop-success" role="status"><strong>Estamos verificando tu pago.</strong> La confirmación y el acceso personal llegarán a tu correo en unos instantes.</div>}
 
-      <section className="workshop-hero">
+      <section className="workshop-hero workshop-hero-intro">
         <div className="workshop-hero-copy">
           <p className="workshop-kicker"><i /> {isRecording ? "Clase grabada · acceso inmediato" : `En vivo · ${WORKSHOP_DATE_LABEL} · 17:00 h`}</p>
           <h1>Claude e IA.<br/><em>Desde cero.</em></h1>
@@ -57,18 +57,11 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
           <ul className="workshop-quick-value">
             {isRecording ? <li>Clase grabada</li> : <><li>Clase en vivo</li><li>Grabación</li></>}<li>2 ebooks</li><li>5 skills</li><li>1 mes en SKOOL</li>
           </ul>
-          <a className="workshop-mobile-cta" href="#comprar">Ver precio vigente <span>↓</span></a>
+          <a className="workshop-mobile-cta" href="#incluye">Ver qué incluye <span>↓</span></a>
         </div>
-        <WorkshopCheckout />
       </section>
 
-      <section className="workshop-final">
-        <p>{isRecording ? "Acceso inmediato · pago único" : "Pocos cupos · acceso personal"}</p>
-        <h2>Menos que una salida.<br/><em>Una habilidad que puede ahorrarte horas y abrir nuevas fuentes de ingreso.</em></h2>
-        <a href="#comprar">{isRecording ? "Comprar acceso completo" : "Reservar al precio vigente"} <span>↑</span></a>
-      </section>
-
-      <section className="workshop-value">
+      <section id="incluye" className="workshop-value">
         <div className="workshop-section-index">01 / TU ENTRADA</div>
         <div>
           <h2>{isRecording ? "Todo el workshop, disponible cuando lo necesites." : "Todo queda contigo después del directo."}</h2>
@@ -145,6 +138,21 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
             </details>
           </div>
         </div>
+      </section>
+
+      <section className="workshop-final">
+        <p>{isRecording ? "Acceso inmediato · pago único" : "Pocos cupos · acceso personal"}</p>
+        <h2>Menos que una salida.<br/><em>Una habilidad que puede ahorrarte horas y abrir nuevas fuentes de ingreso.</em></h2>
+        <a href="#comprar">{isRecording ? "Comprar acceso completo" : "Ver precio y reservar"} <span>↓</span></a>
+      </section>
+
+      <section className="workshop-purchase" aria-label="Reserva tu acceso">
+        <div className="workshop-section-index">05 / RESERVA</div>
+        <div className="workshop-purchase-intro">
+          <h2>Ya sabes lo que recibirás. Ahora reserva en menos de un minuto.</h2>
+          <p>Solo necesitamos tu correo para enviarte la confirmación, el acceso y todos los recursos.</p>
+        </div>
+        <WorkshopCheckout showTestDiscount={metaTest === "1"} />
       </section>
 
       <footer className="workshop-footer"><span>CrececonIA · Santiago, Chile</span><a href="mailto:sergio@crececonia.cl">¿Tienes una pregunta?</a></footer>
