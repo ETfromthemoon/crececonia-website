@@ -45,71 +45,77 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
   return (
     <main className="workshop-page">
       <JsonLd data={eventJsonLd} />
-      <header className="workshop-brand"><a href="/">Crececon<span>IA</span></a><span>Workshop / 06.09.2026</span></header>
+      <header className="workshop-brand">
+        <a href="/">Crececon<span>IA</span></a>
+        <div className="workshop-brand-actions"><span>Dom. 06.09 · 17:00 h</span><a href="#comprar">Reservar cupo</a></div>
+      </header>
       {success === "1" && <div className="workshop-success" role="status"><strong>Estamos verificando tu pago.</strong> La confirmación y el acceso personal llegarán a tu correo en unos instantes.</div>}
 
-      <section className="workshop-hero workshop-hero-intro">
+      <section className="workshop-hero">
         <div className="workshop-hero-copy">
           <p className="workshop-kicker"><i /> {isRecording ? "Clase grabada · acceso inmediato" : `En vivo · ${WORKSHOP_DATE_LABEL} · 17:00 h`}</p>
           <h1>Claude e IA.<br/><em>Desde cero.</em></h1>
-          <p className="workshop-lead">{isRecording ? "Clase grabada para principiantes: aprende a usar Claude desde cero y conviértelo en una herramienta práctica para tu trabajo o negocio. No necesitas experiencia previa." : "Workshop en vivo para principiantes: aprende a usar Claude desde cero y conviértelo en una herramienta práctica para tu trabajo o negocio. No necesitas experiencia previa."}</p>
-          <p className="workshop-decision-copy">{isRecording ? "Aprende a pedir mejores resultados, ordenar tu forma de trabajar con IA y repetir el método a tu ritmo." : "En una sesión práctica aprenderás a pedir mejores resultados, ordenar tu forma de trabajar con IA y repetir el método después de la clase."}</p>
+          <p className="workshop-lead">{isRecording ? "Aprende a usar Claude Chat, Claude Cowork y Claude Code mientras ves cómo se construyen una página web y un CRM desde cero." : "En una tarde aprenderás a usar Claude Chat, Claude Cowork y Claude Code mientras construimos una página web y un CRM en vivo."}</p>
+          <p className="workshop-decision-copy">Una clase para principiantes, práctica y sin requisitos técnicos. Saldrás entendiendo qué herramienta usar, cómo pedirle mejores resultados y cómo pasar de una idea a algo funcionando.</p>
           <ul className="workshop-quick-value">
-            {isRecording ? <li>Clase grabada</li> : <><li>Clase en vivo</li><li>Grabación</li></>}<li>2 ebooks</li><li>5 skills</li><li>1 mes en SKOOL</li>
+            <li>Claude Chat</li><li>Claude Cowork</li><li>Claude Code</li><li>Web + CRM</li>{!isRecording && <li>Máx. 3 horas</li>}
           </ul>
-          <a className="workshop-mobile-cta" href="#incluye">Ver qué incluye <span>↓</span></a>
+          <a className="workshop-mobile-cta" href="#comprar">Ver precio y reservar <span>↓</span></a>
+        </div>
+        <WorkshopCheckout showTestDiscount={metaTest === "1"} />
+      </section>
+
+      <section id="programa" className="workshop-outcomes">
+        <div className="workshop-section-index">01 / LO QUE HARÁS</div>
+        <div className="workshop-outcomes-intro">
+          <h2>No vienes solo a mirar. Vienes a ver cómo se construye.</h2>
+          <p>Recorreremos las tres formas de trabajar con Claude y las conectaremos en un flujo real, explicado paso a paso.</p>
+        </div>
+        <div className="workshop-tools-grid">
+          <article><span>01</span><h3>Claude Chat</h3><p>Para pensar, investigar, redactar y convertir una necesidad difusa en instrucciones claras.</p></article>
+          <article><span>02</span><h3>Claude Cowork</h3><p>Para trabajar con archivos, organizar información y avanzar tareas completas con contexto.</p></article>
+          <article><span>03</span><h3>Claude Code</h3><p>Para construir y automatizar con lenguaje natural, incluso si no vienes del mundo técnico.</p></article>
+        </div>
+        <div className="workshop-build-grid">
+          <article><span>CONSTRUCCIÓN EN VIVO 01</span><h3>Una página web funcional</h3><p>De la idea y el contenido a una página publicada, tomando decisiones reales frente a ti.</p></article>
+          <article><span>CONSTRUCCIÓN EN VIVO 02</span><h3>Un CRM para ordenar clientes</h3><p>Crearemos una herramienta práctica para registrar, organizar y dar seguimiento a oportunidades.</p></article>
         </div>
       </section>
 
       <section id="incluye" className="workshop-value">
-        <div className="workshop-section-index">01 / TU ENTRADA</div>
+        <div className="workshop-section-index">02 / TODO LO QUE RECIBES</div>
         <div>
-          <h2>{isRecording ? "Todo el workshop, disponible cuando lo necesites." : "Todo queda contigo después del directo."}</h2>
-          <p>{isRecording ? "Entra a la sala privada, mira la clase a tu ritmo y vuelve a los recursos cada vez que quieras aplicar lo aprendido." : "No dependes de tomar apuntes perfectos ni de estar disponible para volver a ejecutar lo aprendido."}</p>
+          <h2>{isRecording ? "La clase y los recursos quedan contigo." : "El directo termina. El aprendizaje se queda contigo."}</h2>
+          <p>{isRecording ? "Accede a la sala privada, mira la clase a tu ritmo y vuelve a los materiales cuando quieras aplicar lo aprendido." : "Recibirás una sala privada con la grabación y materiales para repetir el método después del workshop."}</p>
         </div>
         <ol>{included.map((item, index) => <li key={item}><span>{String(index + 1).padStart(2, "0")}</span><strong>{item}</strong></li>)}</ol>
       </section>
 
-      <section className="workshop-process">
-        <div className="workshop-section-index">02 / ¿ES PARA TI?</div>
+      <section className="workshop-process workshop-fit">
+        <div className="workshop-section-index">03 / ¿ES PARA TI?</div>
         <div className="workshop-fit-intro">
-          <h2>Compra con claridad, no por impulso.</h2>
-          <p>Este workshop funciona mejor cuando vienes con ganas de aplicar, no sólo de mirar.</p>
+          <h2>Diseñado para empezar sin sentirte atrás.</h2>
+          <p>No necesitas saber programar ni haber usado Claude antes. Solo trae una tarea, idea o proceso que te gustaría mejorar.</p>
         </div>
-        <div className="workshop-fit-grid">
-          <article className="is-for">
-            <span>ES PARA TI SI</span>
-            <ul>
-              <li>Usas herramientas de IA, pero todavía de forma aislada o improvisada.</li>
-              <li>Estás recién comenzando con IA o tienes curiosidad por aprender Claude rápidamente.</li>
-              <li>Quieres transformar tareas repetitivas en un método que puedas reutilizar.</li>
-              <li>Prefieres aprender haciendo y quedarte con materiales concretos.</li>
-              <li>Eres profesional, emprendedor o lideras procesos en un equipo.</li>
-            </ul>
-          </article>
-          <article className="is-not-for">
-            <span>NO ES PARA TI SI</span>
-            <ul>
-              <li>Buscas una charla pasiva, sólo teórica o llena de tendencias.</li>
-              <li>Esperas que alguien implemente todo por ti después de la clase.</li>
-              <li>No quieres probar herramientas ni ajustar tu forma de trabajar.</li>
-            </ul>
-          </article>
-        </div>
-        <a className="workshop-inline-cta" href="#comprar">Sí, quiero aplicarlo <span>→</span></a>
+        <ul className="workshop-fit-list">
+          <li><strong>Estás comenzando</strong><span>y quieres una explicación clara, sin jerga ni saltos.</span></li>
+          <li><strong>Ya pruebas herramientas de IA</strong><span>pero todavía trabajas de forma aislada o improvisada.</span></li>
+          <li><strong>Eres profesional o emprendedor</strong><span>y quieres ahorrar tiempo o crear nuevas soluciones con IA.</span></li>
+        </ul>
+        <a className="workshop-inline-cta" href="#comprar">Quiero reservar mi cupo <span>↑</span></a>
       </section>
 
       <section className="workshop-process">
-        <div className="workshop-section-index">03 / CÓMO FUNCIONA</div>
+        <div className="workshop-section-index">04 / CÓMO FUNCIONA</div>
         <div className="workshop-process-grid">
-          <article><span>ANTES</span><h3>Reserva en menos de un minuto.</h3><p>Escribe tu correo, paga con Flow y recibe tu acceso personal.</p></article>
-          <article><span>{isRecording ? "APRENDE" : "EN VIVO"}</span><h3>{isRecording ? "Avanza a tu ritmo." : "Construye con nosotros."}</h3><p>{isRecording ? "Reproduce la clase, pausa y aplica cada decisión en tu propio contexto." : "Una sesión práctica, directa y enfocada en decisiones que puedes aplicar."}</p></article>
-          <article><span>DESPUÉS</span><h3>Repite a tu ritmo.</h3><p>Grabación, ebooks, skills y comunidad reunidos en una mini sala privada.</p></article>
+          <article><span>01 · RESERVA</span><h3>Inscríbete en un minuto.</h3><p>Ingresa tu correo, paga de forma segura con Flow y recibe tu acceso personal.</p></article>
+          <article><span>02 · {isRecording ? "APRENDE" : "CONECTA"}</span><h3>{isRecording ? "Avanza a tu ritmo." : "Entra este domingo."}</h3><p>{isRecording ? "Reproduce, pausa y aplica cada decisión en tu propio contexto." : "Conéctate a las 17:00 h. La sesión dura un máximo de tres horas."}</p></article>
+          <article><span>03 · APLICA</span><h3>Vuelve cuando quieras.</h3><p>La grabación, los ebooks, las skills y la comunidad quedan reunidos en tu sala privada.</p></article>
         </div>
       </section>
 
       <section className="workshop-faq">
-        <div className="workshop-section-index">04 / PREGUNTAS FRECUENTES</div>
+        <div className="workshop-section-index">05 / PREGUNTAS FRECUENTES</div>
         <div className="workshop-faq-content">
           <div>
             <h2>Lo importante, antes de pagar.</h2>
@@ -117,20 +123,20 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
           </div>
           <div className="workshop-faq-list">
             <details>
+              <summary>¿Qué versiones de Claude veremos?<b>+</b></summary>
+              <p>Trabajaremos con Claude Chat, Claude Cowork y Claude Code. Verás para qué sirve cada uno y cómo combinarlos mientras construimos una página web y un CRM en vivo.</p>
+            </details>
+            <details>
               <summary>{isRecording ? "¿Por cuánto tiempo puedo ver la clase?" : "¿Qué pasa si no puedo asistir en vivo?"}<b>+</b></summary>
               <p>{isRecording ? "Tu acceso personal queda disponible en la sala privada para que puedas volver a la grabación y los materiales cuando lo necesites." : "La clase quedará grabada en tu sala privada para que puedas verla después y volver a consultarla."}</p>
             </details>
             <details>
-              <summary>¿Cuándo recibo los ebooks y el acceso?<b>+</b></summary>
-              <p>Al confirmarse el pago recibirás por correo tu acceso personal. Ahí reuniremos los ebooks y la información del workshop.</p>
+              <summary>¿Cuándo recibo el acceso y los materiales?<b>+</b></summary>
+              <p>Al confirmarse el pago recibirás por correo tu acceso personal y los ebooks. El pack de cinco skills se habilitará al finalizar el workshop dentro de la misma sala.</p>
             </details>
             <details>
-              <summary>¿Cuándo se entrega el pack de cinco skills?<b>+</b></summary>
-              <p>El archivo ZIP se habilitará al finalizar el workshop, dentro de la misma sala privada.</p>
-            </details>
-            <details>
-              <summary>¿Necesito conocimientos técnicos avanzados?<b>+</b></summary>
-              <p>No. La sesión está pensada para aplicar IA al trabajo real. Lo más útil es llegar con una tarea o proceso que quieras mejorar.</p>
+              <summary>¿Necesito saber programar?<b>+</b></summary>
+              <p>No. Partiremos desde cero y explicaremos cada decisión en lenguaje simple. Lo más útil es llegar con una tarea, idea o proceso que quieras mejorar.</p>
             </details>
             <details>
               <summary>¿El pago es seguro?<b>+</b></summary>
@@ -141,18 +147,9 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
       </section>
 
       <section className="workshop-final">
-        <p>{isRecording ? "Acceso inmediato · pago único" : "Pocos cupos · acceso personal"}</p>
-        <h2>Menos que una salida.<br/><em>Una habilidad que puede ahorrarte horas y abrir nuevas fuentes de ingreso.</em></h2>
-        <a href="#comprar">{isRecording ? "Comprar acceso completo" : "Ver precio y reservar"} <span>↓</span></a>
-      </section>
-
-      <section className="workshop-purchase" aria-label="Reserva tu acceso">
-        <div className="workshop-section-index">05 / RESERVA</div>
-        <div className="workshop-purchase-intro">
-          <h2>Ya sabes lo que recibirás. Ahora reserva en menos de un minuto.</h2>
-          <p>Solo necesitamos tu correo para enviarte la confirmación, el acceso y todos los recursos.</p>
-        </div>
-        <WorkshopCheckout showTestDiscount={metaTest === "1"} />
+        <p>{isRecording ? "Acceso inmediato · pago único" : `${WORKSHOP_DATE_LABEL} · 17:00 h`}</p>
+        <h2>{isRecording ? "Mira el proceso completo y conviértelo en tu forma de trabajar." : <>Este domingo puedes dejar de probar IA al azar y empezar a <em>construir con ella.</em></>}</h2>
+        <a href="#comprar">{isRecording ? "Comprar acceso completo" : "Reservar mi cupo"} <span>↑</span></a>
       </section>
 
       <footer className="workshop-footer"><span>CrececonIA · Santiago, Chile</span><a href="mailto:sergio@crececonia.cl">¿Tienes una pregunta?</a></footer>

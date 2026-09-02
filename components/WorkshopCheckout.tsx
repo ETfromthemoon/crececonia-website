@@ -88,21 +88,24 @@ export default function WorkshopCheckout({ showTestDiscount = false }: { showTes
   return (
     <section ref={checkoutRef} id="comprar" className="workshop-checkout" aria-labelledby="workshop-checkout-title">
       <div className="workshop-checkout-topline">
-        <span>{isRecording ? "Acceso completo" : "Precio vigente"}</span>
-        <strong>{formatCLP(amount)} CLP</strong>
+        <span>{isRecording ? "Clase + materiales" : "Entrada completa"}</span>
+        <strong>{isRecording ? "Acceso inmediato" : "Cupos limitados"}</strong>
       </div>
       {Boolean(availability?.salesToday) && (
         <p className="workshop-live-proof" role="status">
           <i /> {availability?.salesToday} {availability?.salesToday === 1 ? "persona reservó" : "personas reservaron"} hoy
         </p>
       )}
-      <h2 id="workshop-checkout-title">
-        {isRecording ? `Accede ahora por ${formatCLP(amount)}.` : `Pocos cupos a ${formatCLP(amount)}.`}
-      </h2>
+      <div className="workshop-checkout-price" aria-label={`Precio vigente: ${formatCLP(amount)} pesos chilenos`}>
+        <span>Precio vigente</span>
+        <div><strong>{formatCLP(amount)}</strong><small>CLP</small></div>
+      </div>
+      <h2 id="workshop-checkout-title">{isRecording ? "Accede a todo ahora." : "Reserva al precio actual."}</h2>
       <p className="workshop-checkout-copy">
         {isRecording ? <>Pago único. Recibe la clase grabada, los dos ebooks y tu sala privada directamente en el correo.</> : <>Después sube a <strong>{formatCLP(availability?.nextAmount ?? amount + 5_000)}</strong>. Reserva ahora y conserva el precio que aparece al iniciar el pago.</>}
       </p>
       <ul className="workshop-checkout-assurance" aria-label="Proceso de compra">
+        <li>Pago único</li>
         <li>Sin crear cuenta</li>
         <li>Acceso automático por correo</li>
       </ul>
@@ -114,7 +117,7 @@ export default function WorkshopCheckout({ showTestDiscount = false }: { showTes
           <input id="workshop-discount" type="text" autoComplete="off" placeholder="METAQA-XXXX" value={discountCode} onChange={(event) => setDiscountCode(event.target.value.toUpperCase())} />
         </div>}
         <button type="submit" disabled={!availability?.available || status === "loading"}>
-          {status === "loading" ? "Preparando pago…" : !availability ? "Verificando precio…" : isRecording ? `Comprar acceso por ${formatCLP(amount)}` : `Pagar ${formatCLP(amount)}`} <span>↗</span>
+          {status === "loading" ? "Preparando pago…" : !availability ? "Verificando precio…" : isRecording ? `Comprar acceso · ${formatCLP(amount)}` : `Reservar mi cupo · ${formatCLP(amount)}`} <span>↗</span>
         </button>
       </form>
       <p className="workshop-checkout-fine">Pago seguro con Flow · confirmación inmediata · acceso personal</p>
