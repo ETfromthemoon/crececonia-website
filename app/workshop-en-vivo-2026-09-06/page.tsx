@@ -51,9 +51,9 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
       <section className="workshop-hero">
         <div className="workshop-hero-copy">
           <p className="workshop-kicker"><i /> {isRecording ? "Clase grabada · acceso inmediato" : `En vivo · ${WORKSHOP_DATE_LABEL} · 17:00 h`}</p>
-          <h1>Claude aplicado.<br/><em>Hazlo sistema.</em></h1>
-          <p className="workshop-lead">{WORKSHOP_OUTCOME}</p>
-          <p className="workshop-decision-copy">{isRecording ? "Aprende a tu ritmo con la grabación, recursos descargables y una sala privada para tenerlo todo a mano." : "Sal de la clase con una forma concreta de trabajar con IA, recursos para repetirla y una sala privada para tenerlo todo a mano."}</p>
+          <h1>Claude e IA.<br/><em>Desde cero.</em></h1>
+          <p className="workshop-lead">{isRecording ? "Clase grabada para principiantes: aprende a usar Claude desde cero y conviértelo en una herramienta práctica para tu trabajo o negocio. No necesitas experiencia previa." : "Workshop en vivo para principiantes: aprende a usar Claude desde cero y conviértelo en una herramienta práctica para tu trabajo o negocio. No necesitas experiencia previa."}</p>
+          <p className="workshop-decision-copy">{isRecording ? "Aprende a pedir mejores resultados, ordenar tu forma de trabajar con IA y repetir el método a tu ritmo." : "En una sesión práctica aprenderás a pedir mejores resultados, ordenar tu forma de trabajar con IA y repetir el método después de la clase."}</p>
           <ul className="workshop-quick-value">
             {isRecording ? <li>Clase grabada</li> : <><li>Clase en vivo</li><li>Grabación</li></>}<li>2 ebooks</li><li>5 skills</li><li>1 mes en SKOOL</li>
           </ul>
