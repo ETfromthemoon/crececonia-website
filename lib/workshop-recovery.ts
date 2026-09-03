@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { getSupabaseAdmin } from "./supabase";
-import { sendWorkshopRecoveryEmail } from "./workshop-recovery-email";
+import { sendWorkshopRecoveryEmail, WorkshopRecoveryRecipientError } from "./workshop-recovery-email";
 import { WORKSHOP_PRODUCT_KEY } from "./workshop-product";
 
 const SITE_URL = process.env.SITE_URL ?? "https://www.crececonia.cl";
@@ -15,6 +15,7 @@ export async function deliverWorkshopCheckoutRecoveries() {
   if (error) throw new Error(`No se pudieron preparar las recuperaciones: ${error.message}`);
   let sentCount = 0;
   let failedCount = 0;
+  let suppressedCount = 0;
 
   for (const recovery of (data ?? []) as ClaimedRecovery[]) {
     const token = randomBytes(32).toString("base64url");
@@ -34,11 +35,17 @@ export async function deliverWorkshopCheckoutRecoveries() {
       if (completeError) throw new Error(completeError.message);
       sentCount += 1;
     } catch (reason) {
-      failedCount += 1;
       const message = reason instanceof Error ? reason.message : "Error desconocido";
-      await db.rpc("fail_workshop_checkout_recovery", { p_recovery_id: recovery.recovery_id, p_error: message.slice(0, 500) });
+      const permanent = reason instanceof WorkshopRecoveryRecipientError;
+      if (permanent) suppressedCount += 1;
+      else failedCount += 1;
+      console.error(`[workshop/recovery] ${permanent ? "destinatario rechazado" : "falló el envío"} ${recovery.recovery_id}: ${message}`);
+      await db.rpc(permanent ? "suppress_workshop_checkout_recovery" : "fail_workshop_checkout_recovery", {
+        p_recovery_id: recovery.recovery_id,
+        p_error: message.slice(0, 500),
+      });
     }
   }
 
-  return { sentCount, failedCount };
+  return { sentCount, failedCount, suppressedCount };
 }
