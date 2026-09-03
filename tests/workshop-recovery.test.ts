@@ -6,10 +6,14 @@ const { mockSendRecovery, mockRpc } = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/workshop-recovery-email", () => ({ sendWorkshopRecoveryEmail: mockSendRecovery }));
+vi.mock("@/lib/workshop-recovery-email", () => ({
+  sendWorkshopRecoveryEmail: mockSendRecovery,
+  WorkshopRecoveryRecipientError: class WorkshopRecoveryRecipientError extends Error {},
+}));
 vi.mock("@/lib/supabase", () => ({ getSupabaseAdmin: () => ({ rpc: mockRpc }) }));
 
 import { deliverWorkshopCheckoutRecoveries } from "@/lib/workshop-recovery";
+import { WorkshopRecoveryRecipientError } from "@/lib/workshop-recovery-email";
 
 describe("deliverWorkshopCheckoutRecoveries", () => {
   beforeEach(() => {
@@ -27,7 +31,7 @@ describe("deliverWorkshopCheckoutRecoveries", () => {
   });
 
   it("envía una sola recuperación con el 10% y registra el mensaje", async () => {
-    await expect(deliverWorkshopCheckoutRecoveries()).resolves.toEqual({ sentCount: 1, failedCount: 0 });
+    await expect(deliverWorkshopCheckoutRecoveries()).resolves.toEqual({ sentCount: 1, failedCount: 0, suppressedCount: 0 });
     expect(mockSendRecovery).toHaveBeenCalledWith(expect.objectContaining({
       email: "persona@test.com",
       originalAmount: 20_000,
@@ -43,10 +47,19 @@ describe("deliverWorkshopCheckoutRecoveries", () => {
 
   it("marca el intento fallido para reintentarlo en el próximo ciclo", async () => {
     mockSendRecovery.mockRejectedValueOnce(new Error("Resend timeout"));
-    await expect(deliverWorkshopCheckoutRecoveries()).resolves.toEqual({ sentCount: 0, failedCount: 1 });
+    await expect(deliverWorkshopCheckoutRecoveries()).resolves.toEqual({ sentCount: 0, failedCount: 1, suppressedCount: 0 });
     expect(mockRpc).toHaveBeenCalledWith("fail_workshop_checkout_recovery", {
       p_recovery_id: "recovery-1",
       p_error: "Resend timeout",
+    });
+  });
+
+  it("suprime un destinatario rechazado para no reintentarlo indefinidamente", async () => {
+    mockSendRecovery.mockRejectedValueOnce(new WorkshopRecoveryRecipientError("Invalid `to` field."));
+    await expect(deliverWorkshopCheckoutRecoveries()).resolves.toEqual({ sentCount: 0, failedCount: 0, suppressedCount: 1 });
+    expect(mockRpc).toHaveBeenCalledWith("suppress_workshop_checkout_recovery", {
+      p_recovery_id: "recovery-1",
+      p_error: "Invalid `to` field.",
     });
   });
 });

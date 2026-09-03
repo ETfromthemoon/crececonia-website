@@ -100,7 +100,7 @@ as $$
 begin
  insert into commerce.ebook_purchases(email,amount,flow_token,flow_order,tier,resource)
  select c.email,0,c.flow_token,c.flow_order,'workshop-included',r.resource from commerce.class_orders c cross join unnest(p_resources) as r(resource)
- where c.commerce_order=p_commerce_order and c.status='paid' and c.flow_token is not null on conflict(flow_token,resource) do nothing;
+ where c.commerce_order=p_commerce_order and c.status='paid' and c.flow_token is not null on conflict do nothing;
  return query select r.resource,c.flow_token from commerce.class_orders c cross join unnest(p_resources) as r(resource) where c.commerce_order=p_commerce_order and c.status='paid' and c.flow_token is not null;
 end $$;
 

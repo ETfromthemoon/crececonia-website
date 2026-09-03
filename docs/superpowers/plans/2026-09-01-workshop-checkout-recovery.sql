@@ -10,7 +10,7 @@ create table if not exists commerce.workshop_checkout_recoveries (
   original_amount integer not null check (original_amount > 0),
   discounted_amount integer not null check (discounted_amount > 0),
   token_hash text unique,
-  status text not null default 'processing' check (status in ('processing','sent','failed','redeeming','redeemed')),
+  status text not null default 'processing' check (status in ('processing','sent','failed','suppressed','redeeming','redeemed')),
   attempts integer not null default 1,
   provider_message_id text unique,
   provider_status text,
@@ -127,6 +127,18 @@ as $$
   returning true
 $$;
 
+create or replace function public.suppress_workshop_checkout_recovery(p_recovery_id uuid, p_error text)
+returns boolean
+language sql
+security definer
+set search_path=''
+as $$
+  update commerce.workshop_checkout_recoveries
+  set status='suppressed', last_error=left(p_error,500), updated_at=now()
+  where id=p_recovery_id and status='processing'
+  returning true
+$$;
+
 create or replace function public.begin_workshop_recovery_redemption(p_token_hash text, p_product_key text)
 returns table(recovery_id uuid, email text, discounted_amount integer, payment_url text)
 language plpgsql
@@ -238,6 +250,7 @@ $$;
 revoke all on function public.claim_workshop_checkout_recoveries(text),
   public.complete_workshop_checkout_recovery(uuid,text,text),
   public.fail_workshop_checkout_recovery(uuid,text),
+  public.suppress_workshop_checkout_recovery(uuid,text),
   public.begin_workshop_recovery_redemption(text,text),
   public.complete_workshop_recovery_redemption(uuid,text,text),
   public.fail_workshop_recovery_redemption(uuid,text)
@@ -246,6 +259,7 @@ from public, anon, authenticated;
 grant execute on function public.claim_workshop_checkout_recoveries(text),
   public.complete_workshop_checkout_recovery(uuid,text,text),
   public.fail_workshop_checkout_recovery(uuid,text),
+  public.suppress_workshop_checkout_recovery(uuid,text),
   public.begin_workshop_recovery_redemption(text,text),
   public.complete_workshop_recovery_redemption(uuid,text,text),
   public.fail_workshop_recovery_redemption(uuid,text),
