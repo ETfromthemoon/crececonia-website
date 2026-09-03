@@ -30,6 +30,7 @@ import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { determineTier } from "../lib/ebook-pricing";
 import { DEFAULT_EBOOK_RESOURCE, getCatalogEntry } from "../lib/ebook-catalog";
+import { sendPurchaseNotification } from "../lib/purchase-notification-email";
 
 const PRIMERA_VENTA = "2026-06-18";
 
@@ -210,6 +211,20 @@ async function main() {
         console.log(`     email enviado a ${p.payer}`);
       } catch (err) {
         console.log(`     NO se pudo enviar el email: ${err instanceof Error ? err.message : err}`);
+      }
+      try {
+        await sendPurchaseNotification({
+          kind: "Ebook",
+          buyerEmail: p.payer,
+          amount: monto,
+          orderId: p.commerceOrder,
+          items: [DEFAULT_EBOOK_RESOURCE],
+        });
+        console.log(`     notificación interna enviada para ${p.payer}`);
+      } catch (err) {
+        console.log(
+          `     NO se pudo enviar la notificación interna a ${p.payer}: ${err instanceof Error ? err.message : err}`
+        );
       }
     }
   }

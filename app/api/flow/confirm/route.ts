@@ -102,6 +102,7 @@ export async function POST(request: Request) {
     }
 
     const discountCode: string | null = pending.discount_code ?? null;
+    let existingPurchasesFound = false;
     const inserted: PendingResource[] = [];
 
     for (const item of resources) {
@@ -112,7 +113,10 @@ export async function POST(request: Request) {
         .eq("resource", item.resource)
         .maybeSingle();
       if (existingError) return retry(`no se pudo revisar ${item.resource}`, existingError.message);
-      if (existing) continue;
+      if (existing) {
+        existingPurchasesFound = true;
+        continue;
+      }
 
       const { error: insertError } = await db.from("ebook_purchases").insert({
         email: buyerEmail,
@@ -146,9 +150,10 @@ export async function POST(request: Request) {
       return retry(`no se pudo enviar la entrega de ${commerceOrder}`, err);
     }
 
-    // La alerta al dueño es observabilidad: no debe reintentar ni duplicar la
-    // entrega del comprador si el buzón de notificaciones falla.
-    if (inserted.length > 0) {
+    // La alerta al dueño debe salir en toda compra confirmada. Si el
+    // delivery del comprador se reintenta con un commerceOrder ya registrado,
+    // igual forzamos la notificación para no perder avisos.
+    if (inserted.length > 0 || existingPurchasesFound) {
       try {
         await sendPurchaseNotification({
           kind: "Ebook",
