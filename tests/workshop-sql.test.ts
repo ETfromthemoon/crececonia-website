@@ -11,6 +11,9 @@ describe("migraciones SQL del workshop", () => {
 
     expect(bootstrap).not.toMatch(/on conflict\s*\(\s*flow_token\s*,\s*resource\s*\)/i);
     expect(repair).not.toMatch(/on conflict\s*\(\s*flow_token\s*,\s*resource\s*\)/i);
+    expect(bootstrap).toContain("#variable_conflict use_column");
+    expect(repair).toContain("#variable_conflict use_column");
+    expect(repair).toContain("requested.resource_value");
     expect(repair).toMatch(/create or replace function public\.grant_workshop_ebooks/i);
   });
 
@@ -19,5 +22,13 @@ describe("migraciones SQL del workshop", () => {
 
     expect(repair).toContain("'suppressed'");
     expect(repair).toMatch(/suppress_workshop_checkout_recovery/i);
+  });
+
+  it("permite registrar el aviso interno de cada compra del workshop", () => {
+    const repair = sql("2026-09-03-workshop-delivery-repair.sql");
+
+    expect(repair).toContain("'admin-notification'");
+    expect(repair).toMatch(/create or replace function public\.claim_workshop_delivery/i);
+    expect(repair).toMatch(/grant execute on function public\.claim_workshop_delivery/i);
   });
 });

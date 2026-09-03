@@ -9,6 +9,12 @@ alter table commerce.class_delivery_events add column if not exists opened_at ti
 alter table commerce.class_delivery_events add column if not exists clicked_at timestamptz;
 create unique index if not exists class_delivery_provider_message_id_idx on commerce.class_delivery_events(provider_message_id) where provider_message_id is not null;
 
+alter table commerce.class_delivery_events
+  drop constraint if exists class_delivery_events_delivery_kind_check;
+alter table commerce.class_delivery_events
+  add constraint class_delivery_events_delivery_kind_check
+  check (delivery_kind in ('admin-notification','welcome','hub','ebooks','session-1h','session-10m','session-late','follow-up'));
+
 create table if not exists commerce.workshop_events(id bigint generated always as identity primary key,product_key text not null,event_name text not null check(event_name in('page_view','checkout_started')),session_id text not null,source text,medium text,campaign text,referrer text,created_at timestamptz not null default now());
 create unique index if not exists workshop_events_session_event_idx on commerce.workshop_events(product_key,session_id,event_name);
 create table if not exists commerce.workshop_attribution(commerce_order text primary key,session_id text,source text,medium text,campaign text,referrer text,created_at timestamptz not null default now());
@@ -79,7 +85,7 @@ returns table(event_id uuid,commerce_order text,email text,amount_minor integer)
 language plpgsql security definer set search_path=''
 as $$
 begin
- if p_delivery_kind not in ('welcome','ebooks','session-1h','session-10m','session-late','follow-up') then raise exception 'invalid delivery kind'; end if;
+ if p_delivery_kind not in ('admin-notification','welcome','ebooks','session-1h','session-10m','session-late','follow-up') then raise exception 'invalid delivery kind'; end if;
  return query with candidates as(
   select c.id,c.commerce_order,c.email,c.amount_minor from commerce.class_orders c join commerce.products p on p.id=c.product_id where p.product_key=p_product_key and c.status='paid' and (p_commerce_order is null or c.commerce_order=p_commerce_order)
  ),claimed as(
@@ -97,11 +103,12 @@ as $$ update commerce.class_delivery_events set status='sent',provider_message_i
 create or replace function public.grant_workshop_ebooks(p_commerce_order text,p_resources text[])
 returns table(resource text,token text) language plpgsql security definer set search_path=''
 as $$
+#variable_conflict use_column
 begin
  insert into commerce.ebook_purchases(email,amount,flow_token,flow_order,tier,resource)
- select c.email,0,c.flow_token,c.flow_order,'workshop-included',r.resource from commerce.class_orders c cross join unnest(p_resources) as r(resource)
+ select c.email,0,c.flow_token,c.flow_order,'workshop-included',requested.resource_value from commerce.class_orders c cross join unnest(p_resources) as requested(resource_value)
  where c.commerce_order=p_commerce_order and c.status='paid' and c.flow_token is not null on conflict do nothing;
- return query select r.resource,c.flow_token from commerce.class_orders c cross join unnest(p_resources) as r(resource) where c.commerce_order=p_commerce_order and c.status='paid' and c.flow_token is not null;
+ return query select requested.resource_value,c.flow_token from commerce.class_orders c cross join unnest(p_resources) as requested(resource_value) where c.commerce_order=p_commerce_order and c.status='paid' and c.flow_token is not null;
 end $$;
 
 create or replace function public.get_workshop_room_access(p_product_key text,p_commerce_order text)
