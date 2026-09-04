@@ -21,7 +21,7 @@ export function createPageMetadata({
   description,
   path,
   type = "website",
-  image = "/og-image.png",
+  image = "/opengraph-image",
 }: PageMetadataOptions): Metadata {
   const url = absoluteUrl(path);
 
@@ -83,6 +83,36 @@ export const organizationJsonLd = {
       provider: { "@id": ORGANIZATION_ID },
       areaServed: ["CL", "AR", "CO", "ES", "MX", "PE"],
       serviceType: "Mentoría e implementación de inteligencia artificial",
+      hasOfferCatalog: {
+        "@type": "OfferCatalog",
+        name: "Rutas para aplicar inteligencia artificial",
+        itemListElement: [
+          {
+            "@type": "Offer",
+            itemOffered: {
+              "@type": "Service",
+              name: "Aprendizaje autónomo de inteligencia artificial",
+              url: absoluteUrl("/aprender"),
+            },
+          },
+          {
+            "@type": "Offer",
+            itemOffered: {
+              "@type": "Service",
+              name: "Mentoría de inteligencia artificial",
+              url: absoluteUrl("/mentoria"),
+            },
+          },
+          {
+            "@type": "Offer",
+            itemOffered: {
+              "@type": "Service",
+              name: "Implementación de inteligencia artificial",
+              url: absoluteUrl("/implementacion"),
+            },
+          },
+        ],
+      },
     },
   ],
 };
