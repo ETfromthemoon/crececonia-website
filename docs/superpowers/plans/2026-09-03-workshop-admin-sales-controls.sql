@@ -13,7 +13,9 @@ begin
   if not found then raise exception 'No hay un tramo activo.'; end if;
   if v_current.offer_key='recording' then raise exception 'La grabación tiene precio fijo.'; end if;
 
-  update commerce.product_offers set status='inactive' where id=v_current.id;
+  -- product_offers solo admite active/retired. El valor "inactive" hacía que
+  -- el botón fallara por la restricción product_offers_status_check.
+  update commerce.product_offers set status='retired' where id=v_current.id;
   select coalesce(max(sort_order),0)+1 into v_next_order from commerce.product_offers where product_id=v_product_id and offer_key<>'recording';
   insert into commerce.product_offers(product_id,offer_key,label,amount_minor,total_cupos,sold_cupos,reserved_cupos,sort_order,status)
   values(v_product_id,'tier-'||v_next_order,'Tramo '||v_next_order,v_current.amount_minor+5000,5,0,0,v_next_order,'active')
