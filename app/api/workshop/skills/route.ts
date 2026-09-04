@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { downloadPrivateObject } from "@/lib/private-storage";
 import { verifyWorkshopAccessToken } from "@/lib/workshop-access";
 import { WORKSHOP_PRODUCT_KEY } from "@/lib/workshop-product";
 import { getWorkshopSettings } from "@/lib/workshop-settings";
@@ -16,7 +17,10 @@ export async function GET(request: Request) {
   ]);
   if (error || !access?.[0]?.flow_token) return new Response("No autorizado.", { status: 401 });
   if (!settings.skillsStoragePath) return new Response("El pack todavía no está disponible.", { status: 404 });
-  const { data: file, error: storageError } = await db.storage.from("workshop-assets").download(settings.skillsStoragePath);
+  const { data: file, error: storageError } = await downloadPrivateObject(
+    "workshop-assets",
+    settings.skillsStoragePath
+  );
   if (storageError || !file) return new Response("No pudimos descargar el pack.", { status: 503 });
   const buffer = Buffer.from(await file.arrayBuffer());
   return new Response(buffer, { headers: { "Content-Type": "application/zip", "Content-Disposition": "attachment; filename=crececonia-pack-5-skills.zip", "Content-Length": String(buffer.length), "Cache-Control": "private, no-store" } });

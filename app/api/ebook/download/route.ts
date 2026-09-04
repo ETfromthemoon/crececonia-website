@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { getCatalogEntry, DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
 import { EBOOK_STORAGE_BUCKET, storageObjectName } from "@/lib/ebook-storage";
 import { getPurchasedBooksByToken } from "@/lib/ebook-purchased-resources";
+import { downloadPrivateObject } from "@/lib/private-storage";
 
 const VALID_FORMATS = ["movil", "a4"] as const;
 type Format = (typeof VALID_FORMATS)[number];
@@ -66,9 +67,10 @@ export async function GET(request: Request) {
   // .gitignore (el repo es público y el libro es un producto pago), así que la
   // integración de Git de Vercel deployaba sin los archivos y todo comprador
   // recibía 503 "se está preparando".
-  const { data: archivo, error: storageError } = await db.storage
-    .from(EBOOK_STORAGE_BUCKET)
-    .download(storageObjectName(resource, format));
+  const { data: archivo, error: storageError } = await downloadPrivateObject(
+    EBOOK_STORAGE_BUCKET,
+    storageObjectName(resource, format)
+  );
 
   if (storageError || !archivo) {
     console.error(
