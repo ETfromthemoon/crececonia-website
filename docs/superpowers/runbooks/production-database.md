@@ -15,10 +15,16 @@ cliente.
 
 ## Acceso operativo
 
-La cuenta `sergio.bkg@gmail.com` no tenía acceso a este proyecto al
-2026-09-04. Antes de ejecutar migraciones, la cuenta propietaria debe invitarla
-desde Supabase en Project Settings > Team, o debe iniciarse sesión con la cuenta
-propietaria.
+La cuenta `sergio.bkg@gmail.com` no veía el proyecto desde el dashboard al
+inicio del 2026-09-04. Más tarde ese mismo día, el conector autenticado de
+Supabase sí listó `axiarbujhaurlljmpcel` y ejecutó una consulta de catálogo como
+rol `postgres`. El ticket de recuperación sigue siendo `SU-463990`; verificar
+ambas rutas antes de asumir que el acceso quedó recuperado de forma permanente.
+
+La auditoría y el procedimiento de migración están en:
+
+- `docs/superpowers/audits/2026-09-04-production-database-recovery.md`
+- `docs/superpowers/runbooks/neon-migration.md`
 
 ## Verificación antes de una migración
 
