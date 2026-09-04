@@ -9,7 +9,6 @@ type Filter = { column: string; value: unknown };
 export interface DatabaseAdminClient {
   from(table: string): DatabaseQuery;
   rpc(name: string, args?: Record<string, unknown>): Promise<DatabaseResult>;
-  storage: SupabaseClient["storage"];
 }
 
 function identifier(value: string): string {
@@ -223,11 +222,9 @@ export class DatabaseQuery implements PromiseLike<DatabaseResult> {
 
 class NeonDatabaseAdmin implements DatabaseAdminClient {
   private readonly sql;
-  readonly storage: SupabaseClient["storage"];
 
-  constructor(connectionString: string, storageClient: SupabaseClient) {
+  constructor(connectionString: string) {
     this.sql = neon(connectionString);
-    this.storage = storageClient.storage;
   }
 
   private run = async (text: string, values: unknown[]): Promise<any[]> => {
@@ -274,17 +271,17 @@ function getStorageClient(): SupabaseClient {
  * Capa de compatibilidad durante la migración.
  *
  * - Sin DATABASE_URL: conserva exactamente el cliente Supabase vigente.
- * - Con DATABASE_URL: tablas y RPC usan PostgreSQL/Neon; Storage permanece en
- *   Supabase hasta que los objetos se migren a una capa S3 compatible.
+ * - Con DATABASE_URL: tablas y RPC usan PostgreSQL/Neon sin inicializar ni
+ *   requerir un cliente Supabase. El almacenamiento privado se resuelve en
+ *   lib/private-storage.ts mediante Neon Object Storage.
  *
  * El nombre se mantiene para no romper imports ni mocks existentes.
  */
 export function getSupabaseAdmin(): SupabaseClient {
   if (!admin) {
-    const storageClient = getStorageClient();
     admin = process.env.DATABASE_URL
-      ? (new NeonDatabaseAdmin(process.env.DATABASE_URL, storageClient) as unknown as SupabaseClient)
-      : storageClient;
+      ? (new NeonDatabaseAdmin(process.env.DATABASE_URL) as unknown as SupabaseClient)
+      : getStorageClient();
   }
   return admin;
 }

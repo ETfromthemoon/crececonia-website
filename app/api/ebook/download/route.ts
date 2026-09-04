@@ -62,7 +62,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // El PDF se baja de Supabase Storage, no del disco del servidor. Leerlo del
+  // El PDF se baja de Neon Object Storage, no del disco del servidor. Leerlo del
   // disco solo funcionaba cuando el deploy se hacía por CLI: /private está en
   // .gitignore (el repo es público y el libro es un producto pago), así que la
   // integración de Git de Vercel deployaba sin los archivos y todo comprador

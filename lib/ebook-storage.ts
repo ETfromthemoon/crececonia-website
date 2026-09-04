@@ -1,8 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { DEFAULT_EBOOK_RESOURCE, getActiveCatalogEntries } from "./ebook-catalog";
+import { listPrivateObjects } from "./private-storage";
 
 /**
- * Bucket PRIVADO de Supabase Storage donde viven los PDFs de los ebooks.
+ * Namespace histórico de los ebooks dentro del bucket privado de Neon Object
+ * Storage. Se conserva como prefijo para no cambiar nombres ni enlaces.
  *
  * Antes los PDFs se leían del disco del servidor (`/private/*.pdf`). Eso
  * funcionaba solo cuando el deploy se hacía por CLI (`vercel --prod`), porque
@@ -11,7 +13,7 @@ import { DEFAULT_EBOOK_RESOURCE, getActiveCatalogEntries } from "./ebook-catalog
  * gitignoreados nunca llegaban. Cada merge dejaba la producción sin PDFs y
  * los compradores recibían 503 "se está preparando".
  *
- * Sirviéndolos desde Storage, la entrega es independiente del método de deploy.
+ * Sirviéndolos desde Neon Object Storage, la entrega es independiente del método de deploy.
  * El bucket es privado: el único acceso es /api/ebook/download, que primero
  * valida que la compra exista.
  */
@@ -43,11 +45,16 @@ export const EBOOK_FORMATS: readonly EbookFormat[] = ["movil", "a4"];
  *
  * Devuelve los objetos faltantes; un arreglo vacío significa entrega sana.
  */
-export async function findMissingEbookFiles(db: SupabaseClient): Promise<string[]> {
-  const { data, error } = await db.storage.from(EBOOK_STORAGE_BUCKET).list("", { limit: 1000 });
-  if (error) throw new Error(`No se pudo listar el bucket ${EBOOK_STORAGE_BUCKET}: ${error.message}`);
-
-  const presentes = new Set((data ?? []).map((f) => f.name));
+export async function findMissingEbookFiles(db?: SupabaseClient): Promise<string[]> {
+  let names: string[];
+  if (db) {
+    const { data, error } = await db.storage.from(EBOOK_STORAGE_BUCKET).list("", { limit: 1000 });
+    if (error) throw new Error(`No se pudo listar el bucket ${EBOOK_STORAGE_BUCKET}: ${error.message}`);
+    names = (data ?? []).map((file) => file.name);
+  } else {
+    names = await listPrivateObjects(EBOOK_STORAGE_BUCKET);
+  }
+  const presentes = new Set(names);
   const faltan: string[] = [];
 
   for (const entry of getActiveCatalogEntries()) {

@@ -2,11 +2,12 @@
 
 ## Estado actual
 
-- Supabase continúa siendo el único backend productivo.
-- Neon `crececonia-migration` existe aislado en São Paulo, PostgreSQL 17.
-- No se cambió ninguna variable de Vercel.
-- No se aplicó SQL en Supabase ni se eliminaron objetos.
-- Bloqueo: falta una `SOURCE_DATABASE_URL` directa de solo lectura para ejecutar el dump sin exponer datos en la conversación.
+- Neon PostgreSQL `crececonia-migration` existe en São Paulo, PostgreSQL 17.
+- Neon Object Storage `crececonia-storage` existe en Ohio con el bucket privado `ebooks`.
+- La copia inicial fue reconciliada: 69/69 tablas idénticas.
+- Los 14 PDF (51.894.146 bytes) fueron copiados y verificados por tamaño y SHA-256.
+- La Preview validó consultas/RPC y descargas reales móvil/A4 desde Neon.
+- Supabase se conserva intacto únicamente como rollback durante la observación posterior al corte.
 
 ## Reglas
 
@@ -81,7 +82,7 @@ npm run storage:import -- --apply
 
 La estructura destino es `<bucket-origen>/<ruta>`, por ejemplo `ebooks/de-cero-a-claude-en-una-semana-movil.pdf`.
 
-## 6. Evitar interrupción de ventas
+## 6. Evitar pérdida durante el corte
 
 Un dump inicial no basta porque Flow puede confirmar ventas después de la instantánea. Para un corte sin pérdida hay dos opciones:
 
@@ -95,10 +96,9 @@ No activar `DATABASE_URL` en producción después de un dump inicial sin una de 
 Configurar únicamente en Preview:
 
 - `DATABASE_URL`: conexión Neon.
-- `SUPABASE_STORAGE_URL` y `SUPABASE_STORAGE_SERVICE_ROLE_KEY`: valores actuales, para mantener PDFs en Supabase durante la primera fase.
-- O bien todas las variables `STORAGE_S3_*` después de copiar y verificar objetos.
+- Todas las variables `STORAGE_S3_*` del proyecto Neon Storage.
 
-Mientras `DATABASE_URL` no exista, la aplicación usa Supabase. Con `DATABASE_URL`, tablas/RPC usan Neon y Storage conserva su proveedor por separado.
+Con `DATABASE_URL`, tablas/RPC usan Neon. Con `STORAGE_S3_*`, los objetos privados usan Neon Object Storage y no se inicializa Supabase.
 
 Ejecutar:
 
@@ -111,15 +111,15 @@ npm run ebook:verificar
 
 Además, probar en la Preview protegida: precios/cupos, código de descuento, creación de orden Flow sandbox, confirmación idempotente, recuperación por email, descargas de ambos formatos, aula y workshop.
 
-## 8. Corte final — requiere confirmación
+## 8. Corte final — confirmado el 2026-09-04
 
 1. Confirmar reconciliación sin diferencias y lag cero.
 2. Confirmar descarga byte a byte de todos los objetos.
 3. Confirmar que ningún webhook pendiente escribe solo en Supabase.
-4. Pedir confirmación explícita al usuario.
+4. Registrar la confirmación explícita del usuario.
 5. Recién entonces agregar/cambiar `DATABASE_URL` en Production y desplegar.
 
-No borrar Supabase ni cambiar sus claves después del corte. Mantenerlo disponible durante el período de observación.
+No borrar Supabase inmediatamente después del corte. Mantenerlo disponible durante el período de observación y retirar sus variables de Vercel para confirmar que la aplicación ya no depende de él.
 
 ## Rollback
 
@@ -128,4 +128,3 @@ npm run db:rollback
 ```
 
 El comando comprueba que Supabase responde y muestra el procedimiento; no modifica Vercel automáticamente. Antes de quitar `DATABASE_URL`, reconciliar hacia Supabase cualquier escritura que exista solo en Neon. Luego redeployar el último commit estable. No eliminar el proyecto Neon.
-
