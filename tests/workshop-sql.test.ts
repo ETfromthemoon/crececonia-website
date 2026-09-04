@@ -31,4 +31,13 @@ describe("migraciones SQL del workshop", () => {
     expect(repair).toMatch(/create or replace function public\.claim_workshop_delivery/i);
     expect(repair).toMatch(/grant execute on function public\.claim_workshop_delivery/i);
   });
+
+  it("limita los recordatorios de checkout a uno diario por persona y los detiene antes del workshop", () => {
+    const reminders = sql("2026-09-03-workshop-recovery-daily-reminders.sql");
+
+    expect(reminders).toMatch(/now\(\)\s*>=\s*timestamptz\s*'2026-09-06 17:00:00-03'/i);
+    expect(reminders).toMatch(/select distinct on \(lower\(c\.email\)\)/i);
+    expect(reminders).toMatch(/order by lower\(c\.email\), \(r\.id is not null\) desc, c\.created_at desc/i);
+    expect(reminders).toMatch(/recovery_status = 'sent' and sent_at <= now\(\) - interval '24 hours'/i);
+  });
 });
