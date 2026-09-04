@@ -25,12 +25,12 @@ function sourceClient(): SupabaseClient {
 }
 
 function targetClient(): { client: S3Client; bucket: string; prefix: string } {
-  const endpoint = process.env.STORAGE_S3_ENDPOINT?.trim();
-  const region = process.env.STORAGE_S3_REGION?.trim();
-  const accessKeyId = process.env.STORAGE_S3_ACCESS_KEY_ID?.trim();
-  const secretAccessKey = process.env.STORAGE_S3_SECRET_ACCESS_KEY?.trim();
-  const bucket = process.env.STORAGE_S3_BUCKET?.trim();
-  const prefix = process.env.STORAGE_S3_PREFIX?.trim().replace(/^\/+|\/+$/g, "") ?? "";
+  const endpoint = process.env.MIGRATION_STORAGE_S3_ENDPOINT?.trim();
+  const region = process.env.MIGRATION_STORAGE_S3_REGION?.trim();
+  const accessKeyId = process.env.MIGRATION_STORAGE_S3_ACCESS_KEY_ID?.trim();
+  const secretAccessKey = process.env.MIGRATION_STORAGE_S3_SECRET_ACCESS_KEY?.trim();
+  const bucket = process.env.MIGRATION_STORAGE_S3_BUCKET?.trim();
+  const prefix = process.env.MIGRATION_STORAGE_S3_PREFIX?.trim().replace(/^\/+|\/+$/g, "") ?? "";
   if (!endpoint || !region || !accessKeyId || !secretAccessKey || !bucket) {
     throw new Error("Neon Object Storage no está configurado.");
   }
