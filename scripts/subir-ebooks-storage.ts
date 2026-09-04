@@ -1,5 +1,5 @@
 /**
- * Sube los PDFs de los ebooks a Supabase Storage (bucket privado).
+ * Sube los PDFs de los ebooks a Neon Object Storage (bucket privado).
  *
  * Por qué existe: los PDFs viven en /private, que está en .gitignore porque
  * este repo es PÚBLICO y son un producto pago. Había un .vercelignore que
@@ -27,7 +27,6 @@
  */
 import fs from "fs";
 import path from "path";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   EBOOK_STORAGE_BUCKET,
   EBOOK_FORMATS as FORMATOS,
@@ -35,34 +34,13 @@ import {
   storageObjectName,
 } from "../lib/ebook-storage";
 import { EBOOK_CATALOG, getActiveCatalogEntries } from "../lib/ebook-catalog";
+import { uploadPrivateObject } from "../lib/private-storage";
 
 async function main() {
   const soloVerificar = process.argv.includes("--solo-verificar");
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
-    console.error("Faltan NEXT_PUBLIC_SUPABASE_URL y/o SUPABASE_SERVICE_ROLE_KEY.");
-    process.exit(1);
-  }
-  const db = createClient(url, key, { auth: { persistSession: false } });
-
   if (soloVerificar) {
-    await reportarVerificacion(db);
+    await reportarVerificacion();
     return;
-  }
-
-  // El bucket debe ser privado: los PDFs se sirven solo a través de
-  // /api/ebook/download, que valida que exista la compra.
-  const { data: buckets } = await db.storage.listBuckets();
-  if (!buckets?.some((b) => b.name === EBOOK_STORAGE_BUCKET)) {
-    const { error } = await db.storage.createBucket(EBOOK_STORAGE_BUCKET, { public: false });
-    if (error) {
-      console.error(`No se pudo crear el bucket ${EBOOK_STORAGE_BUCKET}:`, error.message);
-      process.exit(1);
-    }
-    console.log(`Bucket "${EBOOK_STORAGE_BUCKET}" creado (privado).`);
-  } else {
-    console.log(`Bucket "${EBOOK_STORAGE_BUCKET}" ya existe.`);
   }
 
   let subidos = 0;
@@ -85,12 +63,12 @@ async function main() {
       }
 
       const destino = storageObjectName(entry.resource, format);
-      const { error } = await db.storage
-        .from(EBOOK_STORAGE_BUCKET)
-        .upload(destino, fs.readFileSync(rutaLocal), {
-          contentType: "application/pdf",
-          upsert: true,
-        });
+      const { error } = await uploadPrivateObject(
+        EBOOK_STORAGE_BUCKET,
+        destino,
+        fs.readFileSync(rutaLocal),
+        "application/pdf"
+      );
 
       if (error) {
         console.error(`  FALLÓ ${destino}: ${error.message}`);
@@ -108,11 +86,11 @@ async function main() {
   // en este disco, la venta funciona igual. Lo que importa no es cuánto se
   // subió, sino que todo libro activo quede descargable — eso es lo que se
   // verifica ahora.
-  await reportarVerificacion(db);
+  await reportarVerificacion();
 }
 
-async function reportarVerificacion(db: SupabaseClient): Promise<void> {
-  const faltan = await findMissingEbookFiles(db);
+async function reportarVerificacion(): Promise<void> {
+  const faltan = await findMissingEbookFiles();
   const activos = getActiveCatalogEntries();
 
   if (faltan.length > 0) {
