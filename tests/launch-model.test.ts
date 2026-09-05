@@ -6,10 +6,10 @@ describe("centro de lanzamientos", () => {
     expect(slugifyLaunch("Taller: Agentes + Ventas 2027")).toBe("taller-agentes-ventas-2027");
   });
 
-  it("crea un checklist completo coordinado por CERNEO", () => {
+  it("crea un checklist completo conectado con Zernio", () => {
     const tasks = buildLaunchTasks({ name: "Taller agentes", slug: "taller-agentes", dmKeyword: "AGENTES", adCampaignName: null });
-    expect(tasks.map((task) => task.category)).toEqual(["cerneo", "publications", "dm", "ads", "automation", "delivery", "analytics"]);
-    expect(tasks.every((task) => task.required && task.owner === "CERNEO")).toBe(true);
+    expect(tasks.map((task) => task.category)).toEqual(["zernio", "publications", "dm", "ads", "automation", "delivery", "analytics"]);
+    expect(tasks.every((task) => task.required && task.owner === "Zernio")).toBe(true);
     expect(tasks.find((task) => task.category === "dm")?.instructions).toContain("AGENTES");
   });
 
@@ -17,6 +17,12 @@ describe("centro de lanzamientos", () => {
     const result = canPublishLaunch({ cta_url: "https://crececonia.cl", products: [], tasks: [{ required: true, status: "not_applicable" }] });
     expect(result.ok).toBe(false);
     expect(result.reasons[0]).toContain("1 tareas");
+  });
+
+  it("impide publicar si Zernio no está sincronizado", () => {
+    const result = canPublishLaunch({ cta_url: "https://crececonia.cl", products: [], zernio_status: "error", tasks: [] });
+    expect(result.ok).toBe(false);
+    expect(result.reasons[0]).toContain("Zernio");
   });
 
   it("valida fechas, URLs y parámetros del formulario", () => {

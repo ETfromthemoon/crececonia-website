@@ -26,7 +26,7 @@ export default function LaunchCreateForm({ adminKey, products }: { adminKey: str
       priceStepMinor: Number(formData.get("priceStepMinor")), tierCapacity: Number(formData.get("tierCapacity")),
       ctaLabel: formData.get("ctaLabel"), ctaUrl: formData.get("ctaUrl") || null,
       dmKeyword: formData.get("dmKeyword") || null, adCampaignName: formData.get("adCampaignName") || null,
-      cerneoProjectUrl: formData.get("cerneoProjectUrl") || null, automationNotes: formData.get("automationNotes") || null,
+      zernioProfileId: null, automationNotes: formData.get("automationNotes") || null,
       productResources: selected,
     };
     const response = await fetch("/api/admin/launches", { method: "POST", headers: { "content-type": "application/json", "x-admin-key": adminKey }, body: JSON.stringify(body) });
@@ -36,7 +36,7 @@ export default function LaunchCreateForm({ adminKey, products }: { adminKey: str
   }
 
   return <form className="launch-create" action={submit}>
-    <div className="launch-section-head"><span>Nuevo lanzamiento</span><h2>Parte con lo esencial.</h2><p>El sistema crea los tramos y la coordinación CERNEO automáticamente.</p></div>
+    <div className="launch-section-head"><span>Nuevo lanzamiento</span><h2>Parte con lo esencial.</h2><p>El sistema crea los tramos y el flujo operativo de Zernio automáticamente.</p></div>
     <div className="launch-form-grid">
       <label><span>Nombre *</span><input required minLength={3} value={name} onChange={(event) => { setName(event.target.value); if (!slug) setSlug(slugifyLaunch(event.target.value)); }} placeholder="Ej. Taller de agentes para ventas" /></label>
       <label><span>Identificador web *</span><input required value={slug} onChange={(event) => setSlug(slugifyLaunch(event.target.value))} placeholder="taller-agentes-ventas" /></label>
@@ -55,7 +55,7 @@ export default function LaunchCreateForm({ adminKey, products }: { adminKey: str
     <details className="launch-advanced"><summary>Coordinación y datos avanzados</summary><div className="launch-form-grid">
       <label><span>Palabra clave DM</span><input name="dmKeyword" placeholder="AGENTES" /></label>
       <label><span>Nombre campaña anuncios</span><input name="adCampaignName" placeholder="Lanzamiento · Agentes" /></label>
-      <label className="wide"><span>Proyecto CERNEO</span><input name="cerneoProjectUrl" type="url" placeholder="Pega el enlace cuando exista" /></label>
+      <p className="wide launch-help">La conexión con el perfil de CrececonIA en Zernio se realiza desde la ficha del lanzamiento. Crear aquí no publica ni activa automatizaciones.</p>
       <label className="wide"><span>Notas de automatización</span><textarea name="automationNotes" rows={3} placeholder="Recordatorios, segmentación, responsables..." /></label>
     </div></details>
     {error && <p className="launch-error">{error}</p>}

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "activeClientId": "crececonia",
+  "project": {
+    "id": "crececonia-website",
+    "name": "CrececonIA",
+    "repository": "https://github.com/ETfromthemoon/crececonia-website.git"
+  },
+  "clients": {
+    "crececonia": {
+      "name": "CrececonIA",
+      "defaultEnvironment": "production",
+      "environments": {
+        "development": {
+          "providers": {
+            "github": { "repository": "ETfromthemoon/crececonia-website" },
+            "zernio": {
+              "profileId": "6a7b5878c9c520fad95c427e",
+              "profile": "Default",
+              "account": "@crececoniacl"
+            }
+          },
+          "secretRefs": { "ZERNIO_API_KEY": "zernio-mcp://active-session" }
+        },
+        "production": {
+          "providers": {
+            "github": { "repository": "ETfromthemoon/crececonia-website" },
+            "vercel": {
+              "teamId": "team_zmxEoTGCJr7GJ7ADTKXQ54o6",
+              "projectId": "prj_u2y2fWKzciPe9lQSoy7KikoKQMR1",
+              "project": "crececon-ia"
+            },
+            "zernio": {
+              "profileId": "6a7b5878c9c520fad95c427e",
+              "profile": "Default",
+              "account": "@crececoniacl"
+            }
+          },
+          "secretRefs": { "ZERNIO_API_KEY": "vercel://crececon-ia/production/ZERNIO_API_KEY" }
+        }
+      }
+    }
+  }
+}

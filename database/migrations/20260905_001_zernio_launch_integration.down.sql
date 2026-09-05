@@ -1,0 +1,13 @@
+begin;
+drop table if exists public.launch_dm_automations;
+drop table if exists public.launch_publications;
+alter table public.launch_tasks drop constraint if exists launch_tasks_category_check;
+alter table public.launch_tasks add constraint launch_tasks_category_check check (category in ('cerneo','publications','dm','ads','automation','delivery','analytics'));
+alter table public.launch_tasks alter column owner set default 'CERNEO';
+alter table public.launches drop column if exists zernio_sync_error;
+alter table public.launches drop column if exists zernio_last_synced_at;
+alter table public.launches drop column if exists zernio_accounts;
+alter table public.launches drop column if exists zernio_profile_id;
+alter table public.launches drop column if exists zernio_status;
+alter table public.launches drop column if exists zernio_required;
+commit;

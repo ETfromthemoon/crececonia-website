@@ -7,7 +7,7 @@ export type LaunchStatus = (typeof LAUNCH_STATUSES)[number];
 export type LaunchTaskStatus = (typeof LAUNCH_TASK_STATUSES)[number];
 
 export type LaunchTaskTemplate = {
-  category: "cerneo" | "publications" | "dm" | "ads" | "automation" | "delivery" | "analytics";
+  category: "zernio" | "publications" | "dm" | "ads" | "automation" | "delivery" | "analytics";
   taskKey: string;
   title: string;
   instructions: string;
@@ -33,7 +33,7 @@ export type CreateLaunchInput = {
   dmKeyword: string | null;
   adCampaignName: string | null;
   automationNotes: string | null;
-  cerneoProjectUrl: string | null;
+  zernioProfileId: string | null;
 };
 
 export function slugifyLaunch(value: string): string {
@@ -70,7 +70,6 @@ export function parseCreateLaunchInput(value: unknown): CreateLaunchInput {
     catch { throw new Error(`${label} debe ser una URL http o https válida.`); }
   };
   assertWebUrl(optionalText("ctaUrl", 500), "El destino del botón");
-  assertWebUrl(optionalText("cerneoProjectUrl", 500), "El enlace de CERNEO");
   return {
     name, slug, launchType,
     headline: text("headline", 220) || name,
@@ -85,7 +84,7 @@ export function parseCreateLaunchInput(value: unknown): CreateLaunchInput {
     dmKeyword: optionalText("dmKeyword", 80),
     adCampaignName: optionalText("adCampaignName", 160),
     automationNotes: optionalText("automationNotes", 2000),
-    cerneoProjectUrl: optionalText("cerneoProjectUrl", 500),
+    zernioProfileId: optionalText("zernioProfileId", 100),
   };
 }
 
@@ -93,19 +92,20 @@ export function buildLaunchTasks(input: Pick<CreateLaunchInput, "name" | "slug" 
   const keyword = input.dmKeyword || `[definir palabra clave para ${input.slug}]`;
   const campaign = input.adCampaignName || `[definir campaña para ${input.slug}]`;
   return [
-    { category: "cerneo", taskKey: "cerneo-project", title: "Coordinar el proyecto en CERNEO", instructions: `Crear o vincular “${input.name}” en CERNEO. Registrar objetivo, audiencia, oferta, fechas, responsables, productos, hitos y enlaces. CERNEO debe ser la fuente de coordinación de publicaciones, DM, anuncios y automatizaciones.`, required: true, owner: "CERNEO", sortOrder: 10 },
-    { category: "publications", taskKey: "publication-plan", title: "Programar publicaciones", instructions: "Definir en CERNEO calendario, canales, piezas, responsables, estados de aprobación, enlaces y UTM para cada publicación orgánica.", required: true, owner: "CERNEO", sortOrder: 20 },
-    { category: "dm", taskKey: "dm-flow", title: "Configurar captación por DM", instructions: `Documentar y activar en CERNEO el flujo de DM: palabra clave “${keyword}”, respuesta inicial, calificación, entrega del enlace, seguimiento y derivación humana.`, required: true, owner: "CERNEO", sortOrder: 30 },
-    { category: "ads", taskKey: "ads-flow", title: "Configurar anuncios", instructions: `Crear o vincular la campaña “${campaign}” en CERNEO. Registrar audiencias, creatividades, presupuesto, aprobaciones, URL/UTM y eventos de conversión.`, required: true, owner: "CERNEO", sortOrder: 40 },
-    { category: "automation", taskKey: "automation-flow", title: "Probar automatizaciones", instructions: "Probar de punta a punta registro/checkout, confirmación, correo o acceso, recordatorios, recuperación y alertas. Guardar evidencia y responsable en CERNEO.", required: true, owner: "CERNEO", sortOrder: 50 },
-    { category: "delivery", taskKey: "delivery-assets", title: "Confirmar entrega y productos", instructions: "Verificar que todos los ebooks/recursos seleccionados estén disponibles, sus enlaces funcionen y la promesa de entrega coincida con la página.", required: true, owner: "CERNEO", sortOrder: 60 },
-    { category: "analytics", taskKey: "analytics", title: "Validar medición", instructions: "Validar pageview, CTA, inicio, compra/registro y entrega. Confirmar PostHog, Meta Pixel/CAPI y UTMs donde corresponda.", required: true, owner: "CERNEO", sortOrder: 70 },
+    { category: "zernio", taskKey: "zernio-connection", title: "Conectar el lanzamiento con Zernio", instructions: `Sincronizar “${input.name}” con el perfil de CrececonIA en Zernio y comprobar la salud de todas las cuentas sociales seleccionadas.`, required: true, owner: "Zernio", sortOrder: 10 },
+    { category: "publications", taskKey: "publication-plan", title: "Crear publicaciones en Zernio", instructions: "Preparar los borradores en Zernio con canal, cuenta, fecha, pieza, CTA y UTM. Publicar sólo después de aprobar cada contenido.", required: true, owner: "Zernio", sortOrder: 20 },
+    { category: "dm", taskKey: "dm-flow", title: "Activar captación por DM en Zernio", instructions: `Crear una automatización comentario/DM en Zernio para la palabra clave “${keyword}”, con respuesta, enlace rastreable y seguimiento.`, required: true, owner: "Zernio", sortOrder: 30 },
+    { category: "ads", taskKey: "ads-flow", title: "Preparar anuncios en Zernio", instructions: `Crear o vincular la campaña “${campaign}” en Zernio. Los anuncios deben quedar pausados hasta aprobar presupuesto, audiencia, creatividad y medición.`, required: true, owner: "Zernio", sortOrder: 40 },
+    { category: "automation", taskKey: "automation-flow", title: "Probar automatizaciones", instructions: "Probar de punta a punta registro/checkout, confirmación, correo o acceso, recordatorios, recuperación y alertas; registrar evidencia junto al lanzamiento.", required: true, owner: "Zernio", sortOrder: 50 },
+    { category: "delivery", taskKey: "delivery-assets", title: "Confirmar entrega y productos", instructions: "Verificar que todos los ebooks/recursos seleccionados estén disponibles, sus enlaces funcionen y la promesa de entrega coincida con la página.", required: true, owner: "Zernio", sortOrder: 60 },
+    { category: "analytics", taskKey: "analytics", title: "Validar medición", instructions: "Validar métricas de publicaciones y DM en Zernio, además de pageview, CTA, compra/registro, PostHog, Meta Pixel/CAPI y UTMs.", required: true, owner: "Zernio", sortOrder: 70 },
   ];
 }
 
-export function canPublishLaunch(launch: { cta_url: string | null; products: unknown[]; tasks: Array<{ required: boolean; status: LaunchTaskStatus }> }): { ok: boolean; reasons: string[] } {
+export function canPublishLaunch(launch: { cta_url: string | null; products: unknown[]; zernio_status?: string; tasks: Array<{ required: boolean; status: LaunchTaskStatus }> }): { ok: boolean; reasons: string[] } {
   const reasons: string[] = [];
   if (!launch.cta_url && launch.products.length === 0) reasons.push("Falta un destino para el botón principal.");
+  if (launch.zernio_status && !["connected", "ready"].includes(launch.zernio_status)) reasons.push("Falta sincronizar correctamente el perfil de Zernio.");
   const pending = launch.tasks.filter((task) => task.required && task.status !== "ready").length;
   if (pending) reasons.push(`Quedan ${pending} tareas obligatorias sin aprobar.`);
   return { ok: reasons.length === 0, reasons };
