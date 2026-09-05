@@ -1,24 +1,30 @@
 # Base de datos de producción
 
-## Proyecto vigente
+## Backend vigente
 
 - Sitio: `www.crececonia.cl`
-- Proveedor: Supabase
-- Project ref: `axiarbujhaurlljmpcel`
-- Host: `axiarbujhaurlljmpcel.supabase.co`
-- Configuración de runtime: variables `NEXT_PUBLIC_SUPABASE_URL` y
-  `SUPABASE_SERVICE_ROLE_KEY` del entorno **Production** en Vercel.
+- Base: Neon `crececonia-migration`, PostgreSQL 17, São Paulo.
+- Archivos privados: Neon Object Storage `crececonia-storage`, Ohio, bucket `ebooks`.
+- Configuración de runtime: `DATABASE_URL` y `STORAGE_S3_*` en Vercel Production.
 
-La URL del proyecto es un identificador público. La service role key es un
-secreto y nunca debe copiarse a documentación, código, logs ni variables
-cliente.
+Las credenciales de PostgreSQL y Object Storage son secretos de servidor y
+nunca deben copiarse a documentación, código, logs ni variables cliente.
 
-## Acceso operativo
+## Origen legado y rollback
 
-La cuenta `sergio.bkg@gmail.com` no tenía acceso a este proyecto al
-2026-09-04. Antes de ejecutar migraciones, la cuenta propietaria debe invitarla
-desde Supabase en Project Settings > Team, o debe iniciarse sesión con la cuenta
-propietaria.
+La cuenta `sergio.bkg@gmail.com` no veía el proyecto desde el dashboard al
+inicio del 2026-09-04. Más tarde ese mismo día, el conector autenticado de
+Supabase sí listó `axiarbujhaurlljmpcel` y ejecutó una consulta de catálogo como
+rol `postgres`. El ticket de recuperación sigue siendo `SU-463990`; verificar
+ambas rutas antes de asumir que el acceso quedó recuperado de forma permanente.
+
+Supabase project ref `axiarbujhaurlljmpcel` se conserva temporalmente intacto
+como rollback, pero la aplicación no debe requerir sus variables después del corte.
+
+La auditoría y el procedimiento de migración están en:
+
+- `docs/superpowers/audits/2026-09-04-production-database-recovery.md`
+- `docs/superpowers/runbooks/neon-migration.md`
 
 ## Verificación antes de una migración
 

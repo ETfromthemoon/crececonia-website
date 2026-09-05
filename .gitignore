@@ -47,6 +47,9 @@ next-env.d.ts
 # private assets (PDFs, etc.) — never commit
 /private
 
+# Database migration exports contain production data and must never be committed.
+/.migration-private
+
 # tooling artifacts (npx skills, graphify) — never commit
 .agents/
 graphify-out/

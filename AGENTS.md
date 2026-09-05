@@ -46,6 +46,9 @@ a visual deliverable.
   .../descargar           → recuperar link de descarga por email
 /admin/ebook?key=…        → app/admin/ebook/page.tsx (dashboard ventas, gated por ADMIN_SECRET)
 /admin/descuentos?key=…   → app/admin/descuentos/page.tsx (generar códigos de descuento, gated por ADMIN_SECRET)
+/admin/lanzamientos?key=… → centro general para crear y coordinar lanzamientos
+/admin/lanzamientos/[identifier]?key=… → operación, checklist Zernio y publicación
+/lanzamientos/[slug]       → plantilla pública dinámica para lanzamientos publicados
 ```
 
 ### Component map (landing page)
@@ -77,10 +80,12 @@ Loaded via `next/font/google` in `app/layout.tsx`:
 ### Backend
 
 - **External API**: `https://autodrive.cl/api/public/...` (not in this repo). Handles: skill views, skill downloads, call scheduling, email sending.
-- **Supabase** (env vars: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — there is no anon key in this project, every access is server-side with the service role key). Tables used by the ebook system: `ebook_purchases`, `ebook_cupos`, `discount_codes`, `ebook_pending_orders`, `ebook_waitlist` (no migration files in this repo — schema is managed directly in the Supabase dashboard; SQL lives in `docs/superpowers/plans/*.sql` and PR descriptions). Both `ebook_purchases` and `ebook_cupos` carry a `resource` column (multi-book bundle engine, see `lib/ebook-catalog.ts`) — every book, including future ones, shares this schema. `ebook_waitlist` (email, resource, source, created_at) captures "notify me" signups from coming-soon book pages — see the runbook below for how to notify them when a book launches.
+- **Neon PostgreSQL** (`DATABASE_URL`, server-only) is the production database. `lib/supabase.ts` is only a compatibility adapter for legacy call sites; despite its name, it queries Neon. The ebook tables are `ebook_purchases`, `ebook_cupos`, `discount_codes`, `ebook_pending_orders`, and `ebook_waitlist`. The reusable launch system uses `launches`, `launch_products`, `launch_price_tiers`, `launch_tasks`, and `launch_activity`; its immutable reversible migrations live in `database/migrations/`.
+- **Neon Object Storage / S3** (`STORAGE_S3_*`, server-only) stores paid PDFs and private resources. Supabase variables in `.env.local.example` exist only for migration/legacy recovery and are not read by the production app.
 - **Resend** for transactional email (`RESEND_API_KEY`).
 - **Flow** (Chilean payment gateway, `FLOW_API_KEY`/`FLOW_SECRET_KEY`/`FLOW_SANDBOX`) powers ebook checkout — `lib/flow.ts` + `app/api/flow/create` (creates the order) + `app/api/flow/confirm` (webhook, inserts into `ebook_purchases`, redeems discount codes, sends the download email).
 - **Discount codes** (`lib/discount-codes.ts`): generated from `/admin/descuentos`, single-use by default, validated at `/api/ebook/discount/validate` before checkout and redeemed only after Flow confirms payment (never at checkout-creation, to avoid burning codes on abandoned carts). The applied code travels inside Flow's `commerceOrder` string (suffix after `_disc_`) rather than a separate pending-orders table.
+- **Zernio** (`ZERNIO_API_KEY`, `ZERNIO_PROFILE_ID`, server-only) connects the launch center to the CrececonIA profile. Posts created by the panel must always be drafts. Comment/DM automations require an explicit admin action. Never activate ads or spending automatically.
 
 ### Admin auth pattern
 
@@ -88,7 +93,11 @@ Every `/admin/*` page follows the same gate: compare a `?key=` query param again
 
 ### Env setup
 
-Copy `.env.local.example` → `.env.local`. Vars needed: Supabase (3), Resend (1), Admin secret (1), Flow (3: `FLOW_API_KEY`, `FLOW_SECRET_KEY`, `FLOW_SANDBOX`).
+Copy `.env.local.example` → `.env.local`. Core vars: Neon `DATABASE_URL`, Neon Object Storage `STORAGE_S3_*`, Resend, `ADMIN_SECRET`, and Flow (`FLOW_API_KEY`, `FLOW_SECRET_KEY`, `FLOW_SANDBOX`).
+
+### Centro de lanzamientos
+
+El mapa completo vive en `docs/project-architecture.md` y el manual operativo en `docs/launch-control-center.md`. Todo lanzamiento nuevo se crea desde `/admin/lanzamientos`; debe sincronizarse con Zernio y aprobar su checklist de publicaciones, DM, anuncios, automatizaciones, entrega y medición antes de pasar a `ready` o `published`. El workshop 2026-09-06 es independiente y no se modifica como parte de este sistema.
 
 ## Runbook: activar un ebook nuevo (agente)
 
@@ -109,7 +118,7 @@ seguir estos pasos en orden. No hace falta preguntar el enfoque — es mecánico
      nuevo a esa hora. Cualquier página o endpoint que dependa de esto DEBE forzar
      `export const dynamic = "force-dynamic"` — si Next lo pre-renderiza en build time, la hora de
      activación queda congelada para siempre en el HTML generado.
-3. **Supabase — cupos**: insertar las filas de `ebook_cupos` para ese `resource` (una fila por tier que
+3. **Neon — cupos**: insertar las filas de `ebook_cupos` para ese `resource` (una fila por tier que
    se quiera ofrecer — no hace falta `super-early` si el libro arranca directo en `early`, ver el libro 3
    del lanzamiento de 2026-08-07 como ejemplo). `total` = cupos acordados, `used = 0`. El `resource` debe
    ser exactamente el string del catálogo (ej. `ebook:agentes-de-ia`).
@@ -119,7 +128,7 @@ seguir estos pasos en orden. No hace falta preguntar el enfoque — es mecánico
    `alter table ebook_cupos drop constraint ebook_cupos_pkey; alter table ebook_cupos add primary key (resource, tier);`
    — no borra filas existentes, solo corrige la clave.
 4. **El PDF del libro**: dejar los archivos en `private/{slug}-{format}.pdf` (`movil` y `a4`, donde `slug`
-   es el resource sin el prefijo `ebook:`) y **subirlos a Supabase Storage con `npm run ebook:subir-pdfs`**.
+   es el resource sin el prefijo `ebook:`) y **subirlos a Neon Object Storage con `npm run ebook:subir-pdfs`**.
    `/api/ebook/download` los sirve desde el bucket privado `ebooks`, NO desde el disco del servidor.
    El propio comando verifica al final que todo libro activo quede descargable y falla si falta algo.
 
@@ -197,7 +206,7 @@ la detectaron los tests** porque los mocks replicaban la suposición equivocada 
    capturado de producción (`tests/fixtures/flow-getstatus.ts`) y existe `npm run flow:contract` para
    detectar si Flow cambia su contrato.
 2. El PDF se leía del disco (`/private`), que no llega a los deploys por git. El mock de `fs` devolvía
-   siempre `true`. Ahora se sirve desde Supabase Storage y el test verifica que se baje del bucket.
+   siempre `true`. Ahora se sirve desde Neon Object Storage y el test verifica que se baje del bucket.
 
 ## Reporte de analytics de PostHog
 
