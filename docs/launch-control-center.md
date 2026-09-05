@@ -10,7 +10,7 @@ Completa nombre, tipo y promesa. Opcionalmente define fecha, precio inicial, aum
 
 Al crear, el sistema genera tres tramos de precio y un checklist obligatorio para:
 
-1. proyecto CERNEO;
+1. conexión con Zernio;
 2. publicaciones;
 3. captación y seguimiento por DM;
 4. anuncios;
@@ -18,16 +18,23 @@ Al crear, el sistema genera tres tramos de precio y un checklist obligatorio par
 6. entrega de productos;
 7. analítica.
 
-## Regla CERNEO
+## Regla Zernio
 
-Todo lanzamiento debe coordinarse en CERNEO. Copia el “Brief para CERNEO” generado en la ficha, crea o vincula allí el proyecto y conserva en CERNEO el calendario, responsables, aprobaciones, flujos de DM, campañas, automatizaciones y evidencia de pruebas.
+Todo lanzamiento debe sincronizar el perfil de CrececonIA en Zernio. El panel puede crear publicaciones como borradores y configurar el flujo de comentarios/DM. La activación de DM exige una acción explícita y los anuncios permanecen pausados hasta que exista cuenta publicitaria y aprobación.
 
-El panel no marca automáticamente tareas externas como listas. La persona responsable debe probarlas y aprobarlas. Las tareas obligatorias no pueden resolverse con “No aplica” para habilitar la publicación.
+El panel marca la conexión, un borrador y el flujo de DM al completar correctamente esas operaciones. La persona responsable debe probar y aprobar las demás tareas. Las tareas obligatorias no pueden resolverse con “No aplica” para habilitar la publicación.
+
+## Acciones de Zernio
+
+- **Sincronizar Zernio:** lee perfil y cuentas; no publica.
+- **Crear borrador:** guarda el contenido en Zernio para revisión y programación posterior.
+- **Crear y activar flujo de DM:** crea una automatización activa para Instagram o Facebook; úsala sólo con textos aprobados.
+- **Anuncios:** el panel informa disponibilidad, pero nunca activa campañas ni gasto por sí solo.
 
 ## Estados
 
 - **Borrador:** información inicial.
-- **Planificación:** trabajo en CERNEO y preparación de activos.
+- **Planificación:** trabajo en Zernio y preparación de activos.
 - **Listo:** todos los requisitos están aprobados.
 - **Publicado:** la página pública queda disponible.
 - **Completado:** terminó la operación.

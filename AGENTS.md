@@ -47,7 +47,7 @@ a visual deliverable.
 /admin/ebook?key=…        → app/admin/ebook/page.tsx (dashboard ventas, gated por ADMIN_SECRET)
 /admin/descuentos?key=…   → app/admin/descuentos/page.tsx (generar códigos de descuento, gated por ADMIN_SECRET)
 /admin/lanzamientos?key=… → centro general para crear y coordinar lanzamientos
-/admin/lanzamientos/[identifier]?key=… → operación, checklist CERNEO y publicación
+/admin/lanzamientos/[identifier]?key=… → operación, checklist Zernio y publicación
 /lanzamientos/[slug]       → plantilla pública dinámica para lanzamientos publicados
 ```
 
@@ -85,6 +85,7 @@ Loaded via `next/font/google` in `app/layout.tsx`:
 - **Resend** for transactional email (`RESEND_API_KEY`).
 - **Flow** (Chilean payment gateway, `FLOW_API_KEY`/`FLOW_SECRET_KEY`/`FLOW_SANDBOX`) powers ebook checkout — `lib/flow.ts` + `app/api/flow/create` (creates the order) + `app/api/flow/confirm` (webhook, inserts into `ebook_purchases`, redeems discount codes, sends the download email).
 - **Discount codes** (`lib/discount-codes.ts`): generated from `/admin/descuentos`, single-use by default, validated at `/api/ebook/discount/validate` before checkout and redeemed only after Flow confirms payment (never at checkout-creation, to avoid burning codes on abandoned carts). The applied code travels inside Flow's `commerceOrder` string (suffix after `_disc_`) rather than a separate pending-orders table.
+- **Zernio** (`ZERNIO_API_KEY`, `ZERNIO_PROFILE_ID`, server-only) connects the launch center to the CrececonIA profile. Posts created by the panel must always be drafts. Comment/DM automations require an explicit admin action. Never activate ads or spending automatically.
 
 ### Admin auth pattern
 
@@ -96,7 +97,7 @@ Copy `.env.local.example` → `.env.local`. Core vars: Neon `DATABASE_URL`, Neon
 
 ### Centro de lanzamientos
 
-El mapa completo vive en `docs/project-architecture.md` y el manual operativo en `docs/launch-control-center.md`. Todo lanzamiento nuevo se crea desde `/admin/lanzamientos`; debe coordinarse en CERNEO y aprobar su checklist de publicaciones, DM, anuncios, automatizaciones, entrega y medición antes de pasar a `ready` o `published`. El workshop 2026-09-06 es independiente y no se modifica como parte de este sistema.
+El mapa completo vive en `docs/project-architecture.md` y el manual operativo en `docs/launch-control-center.md`. Todo lanzamiento nuevo se crea desde `/admin/lanzamientos`; debe sincronizarse con Zernio y aprobar su checklist de publicaciones, DM, anuncios, automatizaciones, entrega y medición antes de pasar a `ready` o `published`. El workshop 2026-09-06 es independiente y no se modifica como parte de este sistema.
 
 ## Runbook: activar un ebook nuevo (agente)
 
