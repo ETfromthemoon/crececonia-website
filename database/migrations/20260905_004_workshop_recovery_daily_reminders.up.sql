@@ -1,5 +1,7 @@
+begin;
+
 -- Recordatorios diarios de checkout abandonado hasta el inicio del workshop.
--- Forward-only: conserva el historial y reutiliza una sola recuperación por persona.
+-- Conserva el historial y reutiliza una sola recuperación por persona.
 
 create or replace function public.claim_workshop_checkout_recoveries(p_product_key text)
 returns table(recovery_id uuid, email text, original_amount integer, discounted_amount integer)
@@ -43,12 +45,18 @@ begin
     -- evita crear otra fila cuando la persona reintentó el checkout.
     order by lower(c.email), (r.id is not null) desc, c.created_at desc
   ), candidates as (
-    select *
+    select latest_per_email.*
     from latest_per_email
-    where recovery_id is null
-       or recovery_status = 'failed'
-       or (recovery_status = 'sent' and sent_at <= now() - interval '24 hours')
-       or (recovery_status = 'processing' and recovery_updated_at < now() - interval '15 minutes')
+    where latest_per_email.recovery_id is null
+       or latest_per_email.recovery_status = 'failed'
+       or (
+         latest_per_email.recovery_status = 'sent'
+         and latest_per_email.sent_at <= now() - interval '24 hours'
+       )
+       or (
+         latest_per_email.recovery_status = 'processing'
+         and latest_per_email.recovery_updated_at < now() - interval '15 minutes'
+       )
   ), claimed as (
     insert into commerce.workshop_checkout_recoveries as recovery (
       class_order_id,
@@ -84,3 +92,5 @@ begin
   from claimed;
 end
 $$;
+
+commit;

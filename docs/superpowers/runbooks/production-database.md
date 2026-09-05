@@ -28,17 +28,20 @@ La auditoría y el procedimiento de migración están en:
 
 ## Verificación antes de una migración
 
-1. Confirmar que el navegador está en el project ref `axiarbujhaurlljmpcel`.
+1. Confirmar que Neon está en el proyecto `crececonia-migration` y que la rama
+   elegida es la correcta para el entorno.
 2. Confirmar que existen el esquema `commerce` y las tablas
    `class_orders`, `product_offers` y `ebook_purchases`.
 3. Ejecutar primero cualquier consulta de diagnóstico de solo lectura.
-4. Aplicar la migración versionada correspondiente desde
-   `docs/superpowers/plans/`.
-5. Verificar los RPC nuevos antes de desplegar el código que los consume.
+4. Crear una rama temporal de Neon desde producción y aplicar allí el archivo
+   `*.up.sql` correspondiente de `database/migrations/`.
+5. Verificar los RPC y el comportamiento de la aplicación contra esa rama.
+6. Sólo con aprobación explícita, aplicar el mismo `*.up.sql` en producción.
+7. Mantener disponible el `*.down.sql` de la misma versión para un rollback
+   inmediato y verificar de nuevo los RPC después de cualquier reversión.
 
 ## Entornos
 
-No asumir que Preview y Production usan la misma base. El entorno Preview
-apuntaba anteriormente al proyecto `onhpmxxjnjpjoggabysy` (`ebook`), que estaba
-pausado. Para evitar diagnósticos engañosos, revisar siempre el entorno indicado
-en Vercel y mantener esta separación documentada.
+No asumir que Preview y Production usan la misma base. Para evitar diagnósticos
+engañosos, revisar siempre `DATABASE_URL` y `STORAGE_S3_*` en el entorno indicado
+de Vercel y mantener documentada cualquier separación entre Preview y Production.
