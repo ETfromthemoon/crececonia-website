@@ -19,13 +19,13 @@ const jetbrainsMono = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin
 const sourceSerif4 = Source_Serif_4({ variable: "--font-serif-monad", subsets: ["latin"], weight: ["400"], style: ["normal", "italic"], display: "swap" });
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "CrececonIA — Aprende, recibe dirección e implementa IA.",
-  description: "Una escalera de valor para aplicar IA: ebooks y guías, mentoría personalizada e implementación de agentes y sistemas.",
+  title: "Consultoría de IA para empresas | CrececonIA",
+  description: "Consultoría de IA en Chile para aprender, recibir mentoría o implementar agentes y automatizaciones. Compara rutas, requisitos e inversión.",
   applicationName: "CrececonIA",
   authors: [{ name: "CrececonIA" }],
   category: "Inteligencia artificial aplicada",
-  openGraph: { title: "CrececonIA — Aprende, recibe dirección e implementa IA.", description: "Ebooks, mentoría e implementación de IA para personas y empresas que quieren avanzar con criterio.", url: SITE_URL, siteName: "CrececonIA", locale: "es_CL", type: "website", images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "CrececonIA — Aprende, recibe dirección e implementa IA" }] },
-  twitter: { card: "summary_large_image", title: "CrececonIA — Aprende, recibe dirección e implementa IA.", description: "Ebooks, mentoría e implementación de IA para personas y empresas.", images: ["/og-image.png"] },
+  openGraph: { title: "Consultoría de IA para empresas | CrececonIA", description: "Recursos, mentoría e implementación para aplicar IA a procesos reales de trabajo y negocio.", url: SITE_URL, siteName: "CrececonIA", locale: "es_CL", type: "website", images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "CrececonIA — IA aplicada a tu negocio" }] },
+  twitter: { card: "summary_large_image", title: "Consultoría de IA para empresas | CrececonIA", description: "Recursos, mentoría e implementación para aplicar IA a procesos reales de trabajo y negocio.", images: ["/opengraph-image"] },
   alternates: { canonical: SITE_URL },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
   icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }] },
