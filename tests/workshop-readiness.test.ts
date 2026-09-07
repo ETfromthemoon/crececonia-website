@@ -34,7 +34,7 @@ describe("workshop evergreen fulfillment readiness", () => {
   it("habilita ventas sólo cuando todos los entregables están listos", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, status: 200, url: "https://video.test/recording" }));
 
-    await expect(getWorkshopFulfillmentReadiness()).resolves.toMatchObject({ ready: true, missing: [] });
+    await expect(getWorkshopFulfillmentReadiness()).resolves.toMatchObject({ ready: true, missing: [], pending: [] });
   });
 
   it("bloquea una grabación privada que redirige al login de Google", async () => {
@@ -49,7 +49,19 @@ describe("workshop evergreen fulfillment readiness", () => {
 
     await expect(getWorkshopFulfillmentReadiness()).resolves.toMatchObject({
       ready: false,
-      missing: ["room", "recording", "slides", "skills", "skool"],
+      missing: ["room", "recording", "slides", "skills"],
+      pending: ["skool"],
+    });
+  });
+
+  it("mantiene la venta abierta cuando SKOOL está pendiente del lanzamiento", async () => {
+    mockSettings.mockResolvedValue({ recordingUrl: "https://video.test/recording", skoolUrl: "", roomEnabled: true });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, status: 200, url: "https://video.test/recording" }));
+
+    await expect(getWorkshopFulfillmentReadiness()).resolves.toMatchObject({
+      ready: true,
+      missing: [],
+      pending: ["skool"],
     });
   });
 

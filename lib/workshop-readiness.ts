@@ -14,6 +14,7 @@ export type WorkshopFulfillmentReadiness = {
   recordingReachable: boolean;
   missingEbookFiles: string[];
   missing: WorkshopReadinessKey[];
+  pending: WorkshopReadinessKey[];
 };
 
 const AUTH_HOSTS = new Set(["accounts.google.com"]);
@@ -60,6 +61,6 @@ export async function getWorkshopFulfillmentReadiness(): Promise<WorkshopFulfill
   if (!assets.handout) missing.push("handout");
   if (!assets.skills) missing.push("skills");
   if (missingEbookFiles.length) missing.push("ebooks");
-  if (!settings.skoolUrl) missing.push("skool");
-  return { ready: missing.length === 0, settings, assets, recordingReachable, missingEbookFiles, missing };
+  const pending: WorkshopReadinessKey[] = settings.skoolUrl ? [] : ["skool"];
+  return { ready: missing.length === 0, settings, assets, recordingReachable, missingEbookFiles, missing, pending };
 }

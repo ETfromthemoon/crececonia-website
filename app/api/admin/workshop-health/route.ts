@@ -7,7 +7,7 @@ import { getWorkshopEmailHealth } from "@/lib/workshop-email-health";
 export const dynamic = "force-dynamic";
 const authorized = (request: Request) => Boolean(process.env.ADMIN_SECRET) && request.headers.get("x-admin-key") === process.env.ADMIN_SECRET;
 
-type Check = { key: string; label: string; ok: boolean; detail: string };
+type Check = { key: string; label: string; ok: boolean; detail: string; blocking?: boolean };
 
 export async function GET(request: Request) {
   if (!authorized(request)) return NextResponse.json({ error: "No autorizado." }, { status: 401 });
@@ -26,12 +26,12 @@ export async function GET(request: Request) {
     { key: "handout", label: "Hoja de trabajo", ok: assets.handout, detail: assets.handout ? "Archivo privado verificado" : "Falta subir el archivo" },
     { key: "skills", label: "Pack de skills", ok: assets.skills, detail: assets.skills ? "ZIP privado verificado" : "Falta subir el ZIP" },
     { key: "ebooks", label: "Dos ebooks incluidos", ok: fulfillment.missingEbookFiles.length === 0, detail: fulfillment.missingEbookFiles.length ? `Faltan: ${fulfillment.missingEbookFiles.join(", ")}` : "PDF móvil y A4 verificados para ambos libros" },
-    { key: "skool", label: "Comunidad SKOOL", ok: Boolean(settings.skoolUrl), detail: settings.skoolUrl ? "Enlace configurado" : "Falta agregar la invitación" },
+    { key: "skool", label: "Comunidad SKOOL", ok: Boolean(settings.skoolUrl), blocking: false, detail: settings.skoolUrl ? "Enlace publicado; ya aparece en todas las salas" : "Pendiente para el lanzamiento; no bloquea las ventas" },
     { key: "room", label: "Sala privada", ok: settings.roomEnabled, detail: settings.roomEnabled ? "Publicada" : "Desactivada" },
     { key: "access-secret", label: "Firma de accesos", ok: Boolean(process.env.WORKSHOP_ACCESS_SECRET || process.env.FLOW_SECRET_KEY), detail: "Secreto disponible sólo en servidor" },
     { key: "resend", label: "Dominio de correo", ok: emailHealth.domainReady, detail: emailHealth.domainReady ? "crececonia.cl verificado en Resend" : "No se pudo confirmar el dominio" },
     { key: "webhook", label: "Seguimiento de correos", ok: emailHealth.webhookReady, detail: emailHealth.webhookReady ? "Webhook habilitado, firmado y con todos los eventos" : !emailHealth.webhookFound ? "No existe un webhook para producción" : emailHealth.missingWebhookEvents.length ? `Faltan eventos: ${emailHealth.missingWebhookEvents.join(", ")}` : "Webhook deshabilitado o sin secreto" },
     { key: "recovery", label: "Recuperación de acceso", ok: !recoveryProbe.error, detail: recoveryProbe.error?.message ?? "RPC disponible y auditado" },
   ];
-  return NextResponse.json({ ok: checks.every((check) => check.ok), generatedAt: new Date().toISOString(), checks }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json({ ok: checks.every((check) => check.ok || check.blocking === false), generatedAt: new Date().toISOString(), checks }, { headers: { "Cache-Control": "no-store" } });
 }

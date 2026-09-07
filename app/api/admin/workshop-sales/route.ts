@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     }
     if (body?.action === "resend-resources") {
       if (!(await getWorkshopFulfillmentReadiness()).ready) {
-        return NextResponse.json({ error: "Configura y verifica grabación, recursos, SKOOL y sala antes de reenviar." }, { status: 409 });
+        return NextResponse.json({ error: "Configura y verifica grabación, recursos y sala antes de reenviar." }, { status: 409 });
       }
       const db = getSupabaseAdmin();
       const { error } = await db.rpc("requeue_workshop_follow_up", { p_product_key: WORKSHOP_PRODUCT_KEY });

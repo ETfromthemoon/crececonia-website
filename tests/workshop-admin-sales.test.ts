@@ -64,8 +64,8 @@ describe("POST /api/admin/workshop-sales", () => {
     expect(mockRpc).not.toHaveBeenCalled();
   });
 
-  it("no agrega alumnos ni reenvía promesas incompletas", async () => {
-    mockReadiness.mockResolvedValue({ ready: false, missing: ["skool"] });
+  it("no agrega alumnos ni reenvía cuando falta un entregable obligatorio", async () => {
+    mockReadiness.mockResolvedValue({ ready: false, missing: ["recording"] });
 
     const manual = await POST(request({ action: "manual", email: "alumno@test.com" }));
     const resend = await POST(request({ action: "resend-resources" }));

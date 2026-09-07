@@ -28,7 +28,7 @@ export function sendWorkshopWelcomeEmail({ email, amount, orderId }: { email: st
   const title = recording ? "Tu clase grabada y sala privada · Workshop CrececonIA" : "Tu entrada y sala privada · Workshop CrececonIA";
   const heading = recording ? "Tu acceso está confirmado." : "Tu entrada está confirmada.";
   const accessCopy = recording ? "el enlace de abajo es tu acceso personal a la grabación y los recursos" : "el enlace de abajo es tu acceso personal antes y después del workshop";
-  const roomCopy = recording ? "En la sala encontrarás la grabación, los slides, la hoja de trabajo, el pack de cinco skills y la invitación a SKOOL. Tus dos ebooks llegarán en un segundo correo." : "En la sala aparecerán el enlace en vivo, la grabación, los slides, la hoja de trabajo, el pack de cinco skills y la invitación a SKOOL cuando cada recurso esté disponible. Tus dos ebooks llegarán en un segundo correo.";
+  const roomCopy = recording ? "En la sala encontrarás la grabación, los slides, la hoja de trabajo y el pack de cinco skills. La invitación a SKOOL aparecerá ahí cuando se lance la comunidad y se avisará por correo a todas las personas. Tus dos ebooks llegarán en un segundo correo." : "En la sala aparecerán el enlace en vivo, la grabación, los slides, la hoja de trabajo y el pack de cinco skills cuando cada recurso esté disponible. La invitación a SKOOL se publicará y avisará por correo al lanzar la comunidad. Tus dos ebooks llegarán en un segundo correo.";
   return send(email, title, shell(heading, `<p style="color:#b4b5b0;line-height:1.7">Recibimos tu pago de <strong style="color:#fff">$${amount.toLocaleString("es-CL")} CLP</strong>. Guarda este correo: ${accessCopy}.</p><div style="border:1px solid #303231;padding:20px;margin:26px 0"><strong>${escapeHtml(WORKSHOP_TITLE)}</strong><p style="color:#c6ee35;margin:8px 0 0">${recording ? "Clase grabada · acceso inmediato" : escapeHtml(WORKSHOP_SESSION_LABEL)}</p></div>${roomButton(orderId)}<p style="color:#b4b5b0;line-height:1.7">${roomCopy}</p>`, `Orden: ${escapeHtml(orderId)} · Si necesitas ayuda, responde este correo.`));
 }
 
@@ -38,5 +38,5 @@ export function sendWorkshopSessionEmail({ email, orderId, timing }: { email: st
 }
 
 export function sendWorkshopFollowUpEmail({ email, orderId }: { email: string; orderId: string }) {
-  return send(email, "Grabación y recursos · Workshop CrececonIA", shell("Tu workshop continúa aquí.", `<p style="color:#b4b5b0;line-height:1.7">Vuelve a tu sala para revisar la grabación, abrir los slides, descargar la hoja de trabajo y las cinco skills, entrar a la comunidad SKOOL y recuperar tus ebooks.</p>${roomButton(orderId)}`, "Guarda este correo junto con tus ebooks."));
+  return send(email, "Grabación y recursos · Workshop CrececonIA", shell("Tu workshop continúa aquí.", `<p style="color:#b4b5b0;line-height:1.7">Vuelve a tu sala para revisar la grabación, abrir los slides, descargar la hoja de trabajo y las cinco skills, y recuperar tus ebooks. La invitación a SKOOL aparecerá en la misma sala cuando se lance la comunidad.</p>${roomButton(orderId)}`, "Guarda este correo junto con tus ebooks."));
 }
