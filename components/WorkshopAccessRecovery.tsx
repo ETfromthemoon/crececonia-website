@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import styles from "./WorkshopAccessRecovery.module.css";
 
 export default function WorkshopAccessRecovery() {
   const [email, setEmail] = useState("");
@@ -20,19 +21,19 @@ export default function WorkshopAccessRecovery() {
     setMessage(data.message ?? data.error ?? "No pudimos procesar la solicitud.");
   }
 
-  return <main className="workshop-access">
-    <section>
-      <a className="workshop-access-brand" href="/">Crececon<span>IA</span></a>
+  return <main className={styles.page}>
+    <section className={styles.card}>
+      <a className={styles.brand} href="/">Crececon<span>IA</span></a>
       <p className="workshop-kicker"><i /> Acceso de alumnos</p>
-      <h1>Recupera tu sala privada.</h1>
-      <p>Usa el mismo correo con el que compraste. Te enviaremos un enlace nuevo a la grabación, los slides, la hoja de trabajo, las skills y tus demás recursos.</p>
-      <form onSubmit={submit}>
-        <label htmlFor="workshop-access-email">Correo de compra</label>
-        <input id="workshop-access-email" type="email" required autoComplete="email" placeholder="tu@correo.com" value={email} onChange={(event) => setEmail(event.target.value)} />
-        <button type="submit" disabled={status === "loading"}>{status === "loading" ? "Enviando…" : "Enviar nuevo enlace"}</button>
+      <h1 className={styles.heading}>Recupera tu sala privada.</h1>
+      <p className={styles.description}>Usa el mismo correo con el que compraste. Te enviaremos un enlace nuevo a la grabación, los slides, la hoja de trabajo, las skills y tus demás recursos.</p>
+      <form className={styles.form} onSubmit={submit}>
+        <label className={styles.label} htmlFor="workshop-access-email">Correo de compra</label>
+        <input className={styles.input} id="workshop-access-email" type="email" required autoComplete="email" placeholder="tu@correo.com" value={email} onChange={(event) => setEmail(event.target.value)} />
+        <button className={styles.button} type="submit" disabled={status === "loading"}>{status === "loading" ? "Enviando…" : "Enviar nuevo enlace"}</button>
       </form>
-      {message && <p className={status === "error" ? "is-error" : "is-success"} role="status">{message}</p>}
-      <small>Por seguridad, el enlace es personal. Si no llega, revisa spam o escribe a <a href="mailto:sergio@crececonia.cl">sergio@crececonia.cl</a>.</small>
+      {message && <p className={status === "error" ? styles.error : styles.success} role="status">{message}</p>}
+      <small className={styles.finePrint}>Por seguridad, el enlace es personal. Si no llega, revisa spam o escribe a <a href="mailto:sergio@crececonia.cl">sergio@crececonia.cl</a>.</small>
     </section>
   </main>;
 }

@@ -1,0 +1,97 @@
+.page {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 32px 18px;
+  background: #101111;
+  color: #f2eee4;
+}
+
+.card {
+  box-sizing: border-box;
+  width: min(620px, 100%);
+  padding: clamp(28px, 6vw, 56px);
+  border: 1px solid #303331;
+  background: #171918;
+  box-shadow: 12px 12px 0 #c6ee35;
+}
+
+.brand {
+  display: inline-block;
+  margin-bottom: 54px;
+  font: 650 22px/1 var(--font-display);
+}
+
+.brand span,
+.finePrint a,
+.success {
+  color: #c6ee35;
+}
+
+.heading {
+  margin: 20px 0;
+  font: 500 clamp(45px, 8vw, 76px)/0.92 var(--font-display);
+  letter-spacing: -0.06em;
+}
+
+.description {
+  color: #a9aca6;
+  line-height: 1.65;
+}
+
+.form {
+  margin: 32px 0 20px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 8px;
+  color: #9da099;
+  font: 600 10px/1 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 54px;
+  padding: 0 14px;
+  border: 1px solid #3a3d3b;
+  background: #0f1010;
+  color: #fff;
+  font-size: 16px;
+}
+
+.button {
+  width: 100%;
+  min-height: 56px;
+  margin-top: 10px;
+  border: 0;
+  background: #c6ee35;
+  color: #101111;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.error {
+  color: #ff9e8e;
+}
+
+.finePrint {
+  display: block;
+  margin-top: 28px;
+  color: #7f827c;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .card {
+    box-shadow: 8px 8px 0 #c6ee35;
+  }
+}
