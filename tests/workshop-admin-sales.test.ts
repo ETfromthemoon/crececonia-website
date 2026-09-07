@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockRpc, mockDeliver, mockLate } = vi.hoisted(() => ({
+const { mockRpc, mockDeliver, mockLate, mockReadiness } = vi.hoisted(() => ({
   mockRpc: vi.fn(),
   mockDeliver: vi.fn(),
   mockLate: vi.fn(),
+  mockReadiness: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase", () => ({ getSupabaseAdmin: () => ({ rpc: mockRpc }) }));
 vi.mock("@/lib/workshop-delivery", () => ({ deliverWorkshopOrders: mockDeliver, deliverLateWorkshopAccessIfNeeded: mockLate }));
-vi.mock("@/lib/workshop-asset-storage", () => ({ getWorkshopAssetStatus: vi.fn().mockResolvedValue({ skills: true, slides: true, handout: true }) }));
-vi.mock("@/lib/workshop-settings", () => ({ getWorkshopSettings: vi.fn().mockResolvedValue({ recordingUrl: "https://video.test/grabacion" }) }));
+vi.mock("@/lib/workshop-readiness", () => ({ getWorkshopFulfillmentReadiness: mockReadiness }));
 
 import { POST } from "@/app/api/admin/workshop-sales/route";
 
@@ -26,6 +26,7 @@ describe("POST /api/admin/workshop-sales", () => {
     mockRpc.mockResolvedValue({ data: true, error: null });
     mockDeliver.mockResolvedValue({ sentCount: 1 });
     mockLate.mockResolvedValue({ sentCount: 0 });
+    mockReadiness.mockResolvedValue({ ready: true, missing: [] });
   });
 
   it("rechaza una clave administrativa incorrecta", async () => {
@@ -61,5 +62,16 @@ describe("POST /api/admin/workshop-sales", () => {
     const response = await POST(request({ action: "manual", email: "correo-invalido" }));
     expect(response.status).toBe(400);
     expect(mockRpc).not.toHaveBeenCalled();
+  });
+
+  it("no agrega alumnos ni reenvía promesas incompletas", async () => {
+    mockReadiness.mockResolvedValue({ ready: false, missing: ["skool"] });
+
+    const manual = await POST(request({ action: "manual", email: "alumno@test.com" }));
+    const resend = await POST(request({ action: "resend-resources" }));
+
+    expect(manual.status).toBe(409);
+    expect(resend.status).toBe(409);
+    expect(mockDeliver).not.toHaveBeenCalled();
   });
 });

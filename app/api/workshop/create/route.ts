@@ -3,6 +3,7 @@ import { flowSign, getFlowBase } from "@/lib/flow";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { validateDiscountCode } from "@/lib/discount-codes";
 import { WORKSHOP_PATH, WORKSHOP_PRODUCT_KEY, WORKSHOP_TITLE, type WorkshopAvailabilityRow } from "@/lib/workshop-product";
+import { getWorkshopFulfillmentReadiness } from "@/lib/workshop-readiness";
 
 const SITE_URL = process.env.SITE_URL ?? "https://www.crececonia.cl";
 const validEmail = (value: unknown): value is string => typeof value === "string" && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -21,6 +22,9 @@ export async function POST(request: Request) {
   const { data, error } = await db.rpc("workshop_product_availability", { p_product_key: WORKSHOP_PRODUCT_KEY });
   const offer = ((data ?? []) as WorkshopAvailabilityRow[]).find((item) => item.offer_key === offerKey);
   if (error || !offer || offer.sold_cupos + offer.reserved_cupos >= offer.total_cupos) return NextResponse.json({ error: "Las entradas ya no están disponibles." }, { status: 409 });
+  if (offer.offer_key === "recording" && !(await getWorkshopFulfillmentReadiness()).ready) {
+    return NextResponse.json({ error: "La venta está temporalmente pausada mientras verificamos todos los materiales." }, { status: 503 });
+  }
 
   const discount = rawDiscountCode ? await validateDiscountCode(rawDiscountCode, offer.amount_minor) : null;
   if (discount && !discount.valid) return NextResponse.json({ error: discount.reason }, { status: 400 });

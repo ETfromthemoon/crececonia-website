@@ -12,7 +12,8 @@
 ## Supuestos que deben confirmarse antes de publicar
 
 1. Fin: se configuró a las 20:00 (tres horas) para automatizaciones y metadatos.
-2. Faltan los nombres y contenidos definitivos de las cinco skills.
+
+Las cinco skills definitivas ya están empaquetadas: iniciar proyecto, armar contexto, investigar con evidencia, construir y verificar, y programar trabajo.
 
 Todos los datos editoriales están centralizados en `lib/workshop-product.ts`.
 
@@ -26,6 +27,7 @@ Todos los datos editoriales están centralizados en `lib/workshop-product.ts`.
 6. Después del primer deploy, crear en Resend un webhook para `https://www.crececonia.cl/api/webhooks/resend` con eventos `email.sent`, `email.delivered`, `email.delivery_delayed`, `email.bounced`, `email.failed`, `email.suppressed`, `email.opened` y `email.clicked`. Copiar su signing secret a `RESEND_WEBHOOK_SECRET`.
 7. Abrir `/admin/workshop-2026-09-06?key=ADMIN_SECRET`. Pegar el enlace de la grabación en **Grabación del taller** y verificar que el archivo acepte lectores externos con el enlace. Configurar también SKOOL y correo de soporte.
 8. En el bloque **Verificación operativa**, pulsar **Verificar ahora**. No enviar correos ni tráfico hasta que todos los controles estén verdes.
+   La venta evergreen tiene además una barrera técnica: `/api/workshop/availability`, `/api/workshop/create`, los enlaces de recuperación de checkout y las altas manuales permanecen cerrados si falta sala, grabación públicamente accesible, slides, hoja, ZIP o SKOOL. Una grabación de Drive que redirija al login de Google se considera privada y bloquea ventas.
 9. Para alumnos que perdieron el correo, compartir `/workshop-en-vivo-2026-09-06/acceso`; allí recuperan un enlace personal sin revelar si otro correo está registrado.
 10. Cuando grabación y archivos estén verdes, usar **Enviar recursos a todos**. La entrega queda registrada y los eventos de Resend actualizan el dashboard.
 11. Realizar una compra real de monto bajo sólo si Flow permite un entorno sandbox separado; verificar pago, correo de acceso, correo de ebooks, sala, grabación, slides, hoja, ZIP y dos PDFs. No probar el webhook final con una orden inventada.

@@ -1,21 +1,12 @@
 import { NextResponse } from "next/server";
-import { getWorkshopAssetStatus } from "@/lib/workshop-asset-storage";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { WORKSHOP_PRODUCT_KEY } from "@/lib/workshop-product";
-import { getWorkshopSettings } from "@/lib/workshop-settings";
+import { getWorkshopFulfillmentReadiness } from "@/lib/workshop-readiness";
 
 export const dynamic = "force-dynamic";
 const authorized = (request: Request) => Boolean(process.env.ADMIN_SECRET) && request.headers.get("x-admin-key") === process.env.ADMIN_SECRET;
 
 type Check = { key: string; label: string; ok: boolean; detail: string };
-
-async function reachable(url: string) {
-  if (!url) return false;
-  try {
-    const response = await fetch(url, { method: "HEAD", redirect: "follow", signal: AbortSignal.timeout(8_000), cache: "no-store" });
-    return response.ok || (response.status >= 300 && response.status < 400);
-  } catch { return false; }
-}
 
 async function resendDomainReady() {
   if (!process.env.RESEND_API_KEY) return false;
@@ -30,13 +21,13 @@ async function resendDomainReady() {
 export async function GET(request: Request) {
   if (!authorized(request)) return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   const db = getSupabaseAdmin();
-  const [availability, settings, assets, emailDomain] = await Promise.all([
+  const [availability, fulfillment, recoveryProbe, emailDomain] = await Promise.all([
     db.rpc("workshop_product_availability", { p_product_key: WORKSHOP_PRODUCT_KEY }),
-    getWorkshopSettings(),
-    getWorkshopAssetStatus(),
+    getWorkshopFulfillmentReadiness(),
+    db.rpc("claim_workshop_access_recovery", { p_product_key: WORKSHOP_PRODUCT_KEY, p_email: "workshop-health-probe@invalid.example" }),
     resendDomainReady(),
   ]);
-  const recordingReachable = await reachable(settings.recordingUrl);
+  const { settings, assets, recordingReachable } = fulfillment;
   const checks: Check[] = [
     { key: "sales", label: "Venta evergreen", ok: !availability.error && Boolean(availability.data?.[0]), detail: availability.error?.message ?? "Oferta grabada disponible" },
     { key: "recording", label: "Grabación", ok: recordingReachable, detail: settings.recordingUrl ? (recordingReachable ? "Enlace responde correctamente" : "El enlace no es accesible sin permisos adicionales") : "Falta agregar el enlace" },
@@ -48,6 +39,7 @@ export async function GET(request: Request) {
     { key: "access-secret", label: "Firma de accesos", ok: Boolean(process.env.WORKSHOP_ACCESS_SECRET || process.env.FLOW_SECRET_KEY), detail: "Secreto disponible sólo en servidor" },
     { key: "resend", label: "Dominio de correo", ok: emailDomain, detail: emailDomain ? "crececonia.cl verificado en Resend" : "No se pudo confirmar el dominio" },
     { key: "webhook", label: "Seguimiento de correos", ok: Boolean(process.env.RESEND_WEBHOOK_SECRET), detail: "Webhook firmado de Resend" },
+    { key: "recovery", label: "Recuperación de acceso", ok: !recoveryProbe.error, detail: recoveryProbe.error?.message ?? "RPC disponible y auditado" },
   ];
   return NextResponse.json({ ok: checks.every((check) => check.ok), generatedAt: new Date().toISOString(), checks }, { headers: { "Cache-Control": "no-store" } });
 }

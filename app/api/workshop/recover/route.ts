@@ -4,10 +4,12 @@ import { flowSign, getFlowBase } from "@/lib/flow";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { hashWorkshopRecoveryToken } from "@/lib/workshop-recovery";
 import { WORKSHOP_PATH, WORKSHOP_PRODUCT_KEY, WORKSHOP_TITLE, type WorkshopAvailabilityRow } from "@/lib/workshop-product";
+import { getWorkshopFulfillmentReadiness } from "@/lib/workshop-readiness";
 
 export const dynamic = "force-dynamic";
 const SITE_URL = process.env.SITE_URL ?? "https://www.crececonia.cl";
 const expiredUrl = `${SITE_URL}${WORKSHOP_PATH}?recovery=expired#comprar`;
+const unavailableUrl = `${SITE_URL}${WORKSHOP_PATH}?recovery=unavailable#comprar`;
 const randomId = () => randomBytes(5).toString("hex");
 
 type RecoveryRow = { recovery_id: string; email: string; discounted_amount: number; payment_url: string | null };
@@ -19,6 +21,7 @@ async function release(commerceOrder: string) {
 export async function GET(request: Request) {
   const token = new URL(request.url).searchParams.get("token") ?? "";
   if (!/^[A-Za-z0-9_-]{40,80}$/.test(token)) return NextResponse.redirect(expiredUrl);
+  if (!(await getWorkshopFulfillmentReadiness()).ready) return NextResponse.redirect(unavailableUrl);
   const db = getSupabaseAdmin();
   const { data: recoveryRows, error: recoveryError } = await db.rpc("begin_workshop_recovery_redemption", {
     p_token_hash: hashWorkshopRecoveryToken(token),
