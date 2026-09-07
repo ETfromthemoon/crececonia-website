@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockAssets, mockSettings } = vi.hoisted(() => ({ mockAssets: vi.fn(), mockSettings: vi.fn() }));
+const { mockAssets, mockSettings, mockList } = vi.hoisted(() => ({ mockAssets: vi.fn(), mockSettings: vi.fn(), mockList: vi.fn() }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/workshop-asset-storage", () => ({ getWorkshopAssetStatus: mockAssets }));
 vi.mock("@/lib/workshop-settings", () => ({ getWorkshopSettings: mockSettings }));
+vi.mock("@/lib/private-storage", () => ({ listPrivateObjects: mockList }));
 
 import { getWorkshopFulfillmentReadiness, isWorkshopRecordingPubliclyReachable } from "@/lib/workshop-readiness";
 
@@ -11,6 +12,12 @@ describe("workshop evergreen fulfillment readiness", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     mockAssets.mockResolvedValue({ slides: true, handout: true, skills: true });
+    mockList.mockResolvedValue([
+      "libro-movil.pdf",
+      "libro-a4.pdf",
+      "claude-nivel-experto-movil.pdf",
+      "claude-nivel-experto-a4.pdf",
+    ]);
     mockSettings.mockResolvedValue({
       sessionUrl: "",
       recordingUrl: "https://video.test/recording",
@@ -43,6 +50,17 @@ describe("workshop evergreen fulfillment readiness", () => {
     await expect(getWorkshopFulfillmentReadiness()).resolves.toMatchObject({
       ready: false,
       missing: ["room", "recording", "slides", "skills", "skool"],
+    });
+  });
+
+  it("bloquea la venta si falta cualquier formato de un ebook incluido", async () => {
+    mockList.mockResolvedValue(["libro-movil.pdf", "libro-a4.pdf", "claude-nivel-experto-movil.pdf"]);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, status: 200, url: "https://video.test/recording" }));
+
+    await expect(getWorkshopFulfillmentReadiness()).resolves.toMatchObject({
+      ready: false,
+      missing: ["ebooks"],
+      missingEbookFiles: ["claude-nivel-experto-a4.pdf"],
     });
   });
 });

@@ -25,6 +25,7 @@ export async function GET(request: Request) {
     { key: "slides", label: "Slides", ok: assets.slides, detail: assets.slides ? "Archivo privado verificado" : "Falta subir el archivo" },
     { key: "handout", label: "Hoja de trabajo", ok: assets.handout, detail: assets.handout ? "Archivo privado verificado" : "Falta subir el archivo" },
     { key: "skills", label: "Pack de skills", ok: assets.skills, detail: assets.skills ? "ZIP privado verificado" : "Falta subir el ZIP" },
+    { key: "ebooks", label: "Dos ebooks incluidos", ok: fulfillment.missingEbookFiles.length === 0, detail: fulfillment.missingEbookFiles.length ? `Faltan: ${fulfillment.missingEbookFiles.join(", ")}` : "PDF móvil y A4 verificados para ambos libros" },
     { key: "skool", label: "Comunidad SKOOL", ok: Boolean(settings.skoolUrl), detail: settings.skoolUrl ? "Enlace configurado" : "Falta agregar la invitación" },
     { key: "room", label: "Sala privada", ok: settings.roomEnabled, detail: settings.roomEnabled ? "Publicada" : "Desactivada" },
     { key: "access-secret", label: "Firma de accesos", ok: Boolean(process.env.WORKSHOP_ACCESS_SECRET || process.env.FLOW_SECRET_KEY), detail: "Secreto disponible sólo en servidor" },

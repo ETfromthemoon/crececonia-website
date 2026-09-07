@@ -1,14 +1,18 @@
 import "server-only";
 import { getWorkshopAssetStatus, type WorkshopAssetStatus } from "./workshop-asset-storage";
 import { getWorkshopSettings, type WorkshopSettings } from "./workshop-settings";
+import { EBOOK_FORMATS, EBOOK_STORAGE_BUCKET, storageObjectName } from "./ebook-storage";
+import { listPrivateObjects } from "./private-storage";
+import { WORKSHOP_EBOOK_RESOURCES } from "./workshop-product";
 
-export type WorkshopReadinessKey = "room" | "recording" | "slides" | "handout" | "skills" | "skool";
+export type WorkshopReadinessKey = "room" | "recording" | "slides" | "handout" | "skills" | "ebooks" | "skool";
 
 export type WorkshopFulfillmentReadiness = {
   ready: boolean;
   settings: WorkshopSettings;
   assets: WorkshopAssetStatus;
   recordingReachable: boolean;
+  missingEbookFiles: string[];
   missing: WorkshopReadinessKey[];
 };
 
@@ -39,14 +43,23 @@ export async function isWorkshopRecordingPubliclyReachable(url: string) {
 }
 
 export async function getWorkshopFulfillmentReadiness(): Promise<WorkshopFulfillmentReadiness> {
-  const [settings, assets] = await Promise.all([getWorkshopSettings(), getWorkshopAssetStatus()]);
+  const [settings, assets, ebookFiles] = await Promise.all([
+    getWorkshopSettings(),
+    getWorkshopAssetStatus(),
+    listPrivateObjects(EBOOK_STORAGE_BUCKET).catch(() => [] as string[]),
+  ]);
   const recordingReachable = await isWorkshopRecordingPubliclyReachable(settings.recordingUrl);
+  const availableEbooks = new Set(ebookFiles);
+  const missingEbookFiles = WORKSHOP_EBOOK_RESOURCES.flatMap((resource) =>
+    EBOOK_FORMATS.map((format) => storageObjectName(resource, format)).filter((name) => !availableEbooks.has(name))
+  );
   const missing: WorkshopReadinessKey[] = [];
   if (!settings.roomEnabled) missing.push("room");
   if (!recordingReachable) missing.push("recording");
   if (!assets.slides) missing.push("slides");
   if (!assets.handout) missing.push("handout");
   if (!assets.skills) missing.push("skills");
+  if (missingEbookFiles.length) missing.push("ebooks");
   if (!settings.skoolUrl) missing.push("skool");
-  return { ready: missing.length === 0, settings, assets, recordingReachable, missing };
+  return { ready: missing.length === 0, settings, assets, recordingReachable, missingEbookFiles, missing };
 }
