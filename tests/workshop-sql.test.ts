@@ -47,4 +47,14 @@ describe("migraciones SQL del workshop", () => {
     expect(rollback).toMatch(/c\.created_at >= now\(\) - interval '24 hours'/i);
     expect(rollback).not.toMatch(/recovery_status = 'sent'/i);
   });
+
+  it("corrige la colisión de product_id y agrega recuperación auditable de acceso", () => {
+    const migration = migrationSql("20260907_001_workshop_evergreen_delivery.up.sql");
+    expect(migration).toContain("on conflict on constraint product_offers_product_id_offer_key_key");
+    expect(migration).not.toMatch(/on conflict\s*\(product_id,offer_key\)/i);
+    expect(migration).toMatch(/create table if not exists commerce\.workshop_access_recoveries/i);
+    expect(migration).toMatch(/claim_workshop_access_recovery/i);
+    expect(migration).toMatch(/requeue_workshop_follow_up/i);
+    expect(migration).toContain("status='retired'");
+  });
 });

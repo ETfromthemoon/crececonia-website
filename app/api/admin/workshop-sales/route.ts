@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { deliverLateWorkshopAccessIfNeeded, deliverWorkshopOrders } from "@/lib/workshop-delivery";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { WORKSHOP_PRODUCT_KEY } from "@/lib/workshop-product";
+import { getWorkshopAssetStatus } from "@/lib/workshop-asset-storage";
+import { getWorkshopSettings } from "@/lib/workshop-settings";
 
 export const dynamic = "force-dynamic";
 const authorized = (request: Request) => Boolean(process.env.ADMIN_SECRET) && request.headers.get("x-admin-key") === process.env.ADMIN_SECRET;
@@ -27,6 +29,17 @@ export async function POST(request: Request) {
       await deliverWorkshopOrders("admin-notification", commerceOrder);
       await deliverLateWorkshopAccessIfNeeded(commerceOrder);
       return NextResponse.json({ message: `${email} fue agregado y recibió sus accesos.` });
+    }
+    if (body?.action === "resend-resources") {
+      const [settings, assets] = await Promise.all([getWorkshopSettings(), getWorkshopAssetStatus()]);
+      if (!settings.recordingUrl || !assets.skills || !assets.slides || !assets.handout) {
+        return NextResponse.json({ error: "Configura la grabación y sube los tres recursos antes de reenviar." }, { status: 409 });
+      }
+      const db = getSupabaseAdmin();
+      const { error } = await db.rpc("requeue_workshop_follow_up", { p_product_key: WORKSHOP_PRODUCT_KEY });
+      if (error) throw new Error(error.message);
+      const result = await deliverWorkshopOrders("follow-up");
+      return NextResponse.json({ message: `Recursos enviados a ${result.sentCount} compradores.` });
     }
     return NextResponse.json({ error: "Operación inválida." }, { status: 400 });
   } catch (reason) {

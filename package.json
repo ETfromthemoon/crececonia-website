@@ -15,6 +15,7 @@
     "ebook:subir-pdfs": "tsx --env-file-if-exists=.env.local scripts/subir-ebooks-storage.ts",
     "ebook:verificar": "tsx --env-file-if-exists=.env.local scripts/subir-ebooks-storage.ts --solo-verificar",
     "workshop:subir-skills": "tsx --env-file-if-exists=.env.local scripts/subir-workshop-skills.ts",
+    "workshop:subir-recursos": "tsx --env-file-if-exists=.env.local scripts/subir-workshop-skills.ts",
     "db:inventory": "tsx --env-file-if-exists=.env.local scripts/database-migration/inventory.ts",
     "db:export": "tsx --env-file-if-exists=.env.local scripts/database-migration/export.ts",
     "db:import": "tsx --env-file-if-exists=.env.local scripts/database-migration/import.ts",

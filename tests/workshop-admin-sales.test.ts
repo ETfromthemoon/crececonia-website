@@ -8,6 +8,8 @@ const { mockRpc, mockDeliver, mockLate } = vi.hoisted(() => ({
 
 vi.mock("@/lib/supabase", () => ({ getSupabaseAdmin: () => ({ rpc: mockRpc }) }));
 vi.mock("@/lib/workshop-delivery", () => ({ deliverWorkshopOrders: mockDeliver, deliverLateWorkshopAccessIfNeeded: mockLate }));
+vi.mock("@/lib/workshop-asset-storage", () => ({ getWorkshopAssetStatus: vi.fn().mockResolvedValue({ skills: true, slides: true, handout: true }) }));
+vi.mock("@/lib/workshop-settings", () => ({ getWorkshopSettings: vi.fn().mockResolvedValue({ recordingUrl: "https://video.test/grabacion" }) }));
 
 import { POST } from "@/app/api/admin/workshop-sales/route";
 
@@ -46,6 +48,13 @@ describe("POST /api/admin/workshop-sales", () => {
     expect(mockDeliver.mock.calls.map((call) => call[0])).toEqual(["welcome", "ebooks", "admin-notification"]);
     expect(mockDeliver).toHaveBeenCalledWith("welcome", "workshop-manual-123");
     expect(mockLate).toHaveBeenCalledWith("workshop-manual-123");
+  });
+
+  it("reencola y envía los recursos a todos los compradores", async () => {
+    const response = await POST(request({ action: "resend-resources" }));
+    expect(response.status).toBe(200);
+    expect(mockRpc).toHaveBeenCalledWith("requeue_workshop_follow_up", expect.objectContaining({ p_product_key: expect.any(String) }));
+    expect(mockDeliver).toHaveBeenCalledWith("follow-up");
   });
 
   it("no registra correos inválidos", async () => {
