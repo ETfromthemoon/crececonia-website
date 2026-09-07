@@ -10,7 +10,7 @@ describe("workshop recorded-course schedule", () => {
     const workshopCrons = config.crons.filter((cron) => cron.path.includes("/workshop-"));
 
     expect(workshopCrons).toEqual([
-      { path: "/api/cron/workshop-delivery/initial", schedule: "7 * * * *" },
+      { path: "/api/cron/workshop-delivery/initial", schedule: "7 12 * * *" },
     ]);
   });
 });

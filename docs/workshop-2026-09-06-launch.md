@@ -30,7 +30,7 @@ Todos los datos editoriales están centralizados en `lib/workshop-product.ts`.
    La venta evergreen tiene además una barrera técnica: `/api/workshop/availability`, `/api/workshop/create`, los enlaces de recuperación de checkout y las altas manuales permanecen cerrados si falta sala, grabación públicamente accesible, slides, hoja, ZIP, cualquiera de los cuatro PDFs de los dos ebooks o SKOOL. Una grabación de Drive que redirija al login de Google se considera privada y bloquea ventas.
 9. Para alumnos que perdieron el correo, compartir `/workshop-en-vivo-2026-09-06/acceso`; allí recuperan un enlace personal sin revelar si otro correo está registrado.
 10. Cuando grabación y archivos estén verdes, usar **Enviar recursos a todos**. La entrega queda registrada y los eventos de Resend actualizan el dashboard.
-    Las ventas nuevas disparan la entrega inmediatamente desde el webhook de Flow; un cron horario reintenta de forma idempotente cualquier correo inicial que haya fallado. Los recordatorios fechados de la sesión en vivo ya no están programados.
+    Las ventas nuevas disparan la entrega inmediatamente desde el webhook de Flow; Flow reintenta el webhook cuando la entrega falla y un cron diario agrega un respaldo idempotente. El alumno también puede solicitar un enlace nuevo desde `/workshop-en-vivo-2026-09-06/acceso`. Los recordatorios fechados de la sesión en vivo ya no están programados.
 11. Realizar una compra real de monto bajo sólo si Flow permite un entorno sandbox separado; verificar pago, correo de acceso, correo de ebooks, sala, grabación, slides, hoja, ZIP y dos PDFs. No probar el webhook final con una orden inventada.
 12. Crear la rama, PR y revisar exclusivamente la Vercel Preview. El merge a `main` despliega producción.
 
