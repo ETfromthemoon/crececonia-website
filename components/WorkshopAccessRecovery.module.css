@@ -30,6 +30,7 @@
 
 .heading {
   margin: 20px 0;
+  color: #f2eee4;
   font: 500 clamp(45px, 8vw, 76px)/0.92 var(--font-display);
   letter-spacing: -0.06em;
 }
