@@ -55,6 +55,7 @@ describe("migraciones SQL del workshop", () => {
     expect(migration).toMatch(/create table if not exists commerce\.workshop_access_recoveries/i);
     expect(migration).toMatch(/claim_workshop_access_recovery/i);
     expect(migration).toMatch(/requeue_workshop_follow_up/i);
+    expect(migration).toMatch(/insert into commerce\.class_delivery_events as e[\s\S]*on conflict\(class_order_id,delivery_kind\) do update/i);
     expect(migration).toContain("status='retired'");
   });
 });

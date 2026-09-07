@@ -91,12 +91,19 @@ $$;
 
 create or replace function public.requeue_workshop_follow_up(p_product_key text)
 returns integer language sql security definer set search_path='' as $$
-  with changed as(
-    update commerce.class_delivery_events e set status='failed',updated_at=now(),
-      last_error='Reenvío de materiales solicitado por administración'
+  with paid_orders as(
+    select c.id
     from commerce.class_orders c join commerce.products p on p.id=c.product_id
-    where e.class_order_id=c.id and p.product_key=p_product_key
-      and c.status='paid' and e.delivery_kind='follow-up'
+    where p.product_key=p_product_key and c.status='paid'
+  ),changed as(
+    insert into commerce.class_delivery_events as e(
+      class_order_id,delivery_kind,status,attempts,last_error,updated_at
+    )
+    select id,'follow-up','failed',1,
+      'Reenvío de materiales solicitado por administración',now()
+    from paid_orders
+    on conflict(class_order_id,delivery_kind) do update
+    set status='failed',last_error='Reenvío de materiales solicitado por administración',updated_at=now()
     returning e.id
   ) select count(*)::integer from changed
 $$;
