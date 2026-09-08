@@ -47,7 +47,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
       <JsonLd data={eventJsonLd} />
       <header className="workshop-brand">
         <a href="/">Crececon<span>IA</span></a>
-        <div className="workshop-brand-actions"><span>Dom. 06.09 · 17:00 h</span><a href="#comprar">Reservar cupo</a></div>
+        <div className="workshop-brand-actions"><span>Dom. 06.09 · 17:00 h</span><a href={isRecording ? `${WORKSHOP_PATH}/acceso` : "#comprar"}>{isRecording ? "Recuperar acceso" : "Reservar cupo"}</a></div>
       </header>
       {success === "1" && <div className="workshop-success" role="status"><strong>Estamos verificando tu pago.</strong> La confirmación y el acceso personal llegarán a tu correo en unos instantes.</div>}
 
@@ -132,7 +132,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
             </details>
             <details>
               <summary>¿Cuándo recibo el acceso y los materiales?<b>+</b></summary>
-              <p>Al confirmarse el pago recibirás por correo tu acceso personal y los ebooks. El pack de cinco skills se habilitará al finalizar el workshop dentro de la misma sala.</p>
+              <p>Al confirmarse el pago recibirás por correo tu acceso personal y los ebooks. La grabación, los slides, la hoja de trabajo y el pack de cinco skills quedan reunidos en la sala privada. Si pierdes el correo, puedes <a href={`${WORKSHOP_PATH}/acceso`}>recuperar el acceso aquí</a>.</p>
             </details>
             <details>
               <summary>¿Necesito saber programar?<b>+</b></summary>
@@ -152,7 +152,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
         <a href="#comprar">{isRecording ? "Comprar acceso completo" : "Reservar mi cupo"} <span>↑</span></a>
       </section>
 
-      <footer className="workshop-footer"><span>CrececonIA · Santiago, Chile</span><a href="mailto:sergio@crececonia.cl">¿Tienes una pregunta?</a></footer>
+      <footer className="workshop-footer"><span>CrececonIA · Santiago, Chile</span><a href={`${WORKSHOP_PATH}/acceso`}>Recuperar acceso</a><a href="mailto:sergio@crececonia.cl">¿Tienes una pregunta?</a></footer>
     </main>
   );
 }

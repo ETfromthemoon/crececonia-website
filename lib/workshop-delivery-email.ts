@@ -2,6 +2,7 @@ import "server-only";
 import { Resend } from "resend";
 import { createWorkshopAccessToken } from "./workshop-access";
 import { WORKSHOP_ROOM_PATH, WORKSHOP_SESSION_LABEL, WORKSHOP_TITLE, isWorkshopRecordingOnSale } from "./workshop-product";
+import { getWorkshopSettings } from "./workshop-settings";
 
 const SITE_URL = process.env.SITE_URL ?? "https://www.crececonia.cl";
 const CONTACT_EMAIL = "sergio@crececonia.cl";
@@ -23,12 +24,16 @@ function roomButton(orderId: string) {
   return `<p style="margin:28px 0"><a href="${escapeHtml(href)}" style="${button}">Abrir mi sala privada →</a></p>`;
 }
 
-export function sendWorkshopWelcomeEmail({ email, amount, orderId }: { email: string; amount: number; orderId: string }) {
+export async function sendWorkshopWelcomeEmail({ email, amount, orderId }: { email: string; amount: number; orderId: string }) {
   const recording = isWorkshopRecordingOnSale();
+  const settings = await getWorkshopSettings();
   const title = recording ? "Tu clase grabada y sala privada · Workshop CrececonIA" : "Tu entrada y sala privada · Workshop CrececonIA";
   const heading = recording ? "Tu acceso está confirmado." : "Tu entrada está confirmada.";
   const accessCopy = recording ? "el enlace de abajo es tu acceso personal a la grabación y los recursos" : "el enlace de abajo es tu acceso personal antes y después del workshop";
-  const roomCopy = recording ? "En la sala encontrarás la grabación, el pack de cinco skills y la invitación a SKOOL. Tus dos ebooks llegarán en un segundo correo." : "En la sala aparecerán el enlace en vivo, la grabación, el pack de cinco skills y la invitación a SKOOL cuando cada recurso esté disponible. Tus dos ebooks llegarán en un segundo correo.";
+  const skoolCopy = settings.skoolUrl
+    ? "La invitación a SKOOL también está disponible en la sala."
+    : "La invitación a SKOOL aparecerá ahí cuando se lance la comunidad y se avisará por correo a todas las personas.";
+  const roomCopy = recording ? `En la sala encontrarás la grabación, los slides, la hoja de trabajo y el pack de cinco skills. ${skoolCopy} Tus dos ebooks llegarán en un segundo correo.` : `En la sala aparecerán el enlace en vivo, la grabación, los slides, la hoja de trabajo y el pack de cinco skills cuando cada recurso esté disponible. ${skoolCopy} Tus dos ebooks llegarán en un segundo correo.`;
   return send(email, title, shell(heading, `<p style="color:#b4b5b0;line-height:1.7">Recibimos tu pago de <strong style="color:#fff">$${amount.toLocaleString("es-CL")} CLP</strong>. Guarda este correo: ${accessCopy}.</p><div style="border:1px solid #303231;padding:20px;margin:26px 0"><strong>${escapeHtml(WORKSHOP_TITLE)}</strong><p style="color:#c6ee35;margin:8px 0 0">${recording ? "Clase grabada · acceso inmediato" : escapeHtml(WORKSHOP_SESSION_LABEL)}</p></div>${roomButton(orderId)}<p style="color:#b4b5b0;line-height:1.7">${roomCopy}</p>`, `Orden: ${escapeHtml(orderId)} · Si necesitas ayuda, responde este correo.`));
 }
 
@@ -37,6 +42,10 @@ export function sendWorkshopSessionEmail({ email, orderId, timing }: { email: st
   return send(email, `${label} · Workshop CrececonIA`, shell(label, `<p style="color:#b4b5b0;line-height:1.7">Entra a tu sala privada para abrir el enlace de la sesión. Te recomendamos conectarte cinco minutos antes.</p>${roomButton(orderId)}`, "Tu acceso es personal. Si necesitas ayuda, responde este correo."));
 }
 
-export function sendWorkshopFollowUpEmail({ email, orderId }: { email: string; orderId: string }) {
-  return send(email, "Grabación y recursos · Workshop CrececonIA", shell("Tu workshop continúa aquí.", `<p style="color:#b4b5b0;line-height:1.7">Vuelve a tu sala para revisar la grabación, descargar las cinco skills, entrar a la comunidad SKOOL y recuperar los materiales.</p>${roomButton(orderId)}`, "Guarda este correo junto con tus ebooks."));
+export async function sendWorkshopFollowUpEmail({ email, orderId }: { email: string; orderId: string }) {
+  const settings = await getWorkshopSettings();
+  const skoolBlock = settings.skoolUrl
+    ? `<p style="margin:20px 0"><a href="${escapeHtml(settings.skoolUrl)}" style="${button}">Entrar a la comunidad SKOOL →</a></p>`
+    : `<p style="color:#b4b5b0;line-height:1.7">La comunidad SKOOL está pendiente de lanzamiento. Cuando se publique, recibirás otro correo y el enlace aparecerá en esta misma sala.</p>`;
+  return send(email, "Grabación y recursos · Workshop CrececonIA", shell("Tu workshop continúa aquí.", `<p style="color:#b4b5b0;line-height:1.7">Vuelve a tu sala para revisar la grabación, abrir los slides, descargar la hoja de trabajo y las cinco skills, y recuperar tus ebooks.</p>${roomButton(orderId)}${skoolBlock}`, "Guarda este correo junto con tus ebooks."));
 }

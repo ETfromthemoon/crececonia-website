@@ -2,6 +2,11 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "crypto";
 
 const TOKEN_VERSION = "w1";
+const VALID_COMMERCE_ORDERS = [
+  /^workshop-\d{10,16}-[a-z0-9]{6}(?:-promo-[A-Z0-9-]{3,32})?$/,
+  /^workshop-recovery-\d{10,16}-[a-f0-9]{10}$/,
+  /^workshop-manual-\d{10,16}-[a-f0-9]{8}$/,
+];
 
 function secret() {
   return process.env.WORKSHOP_ACCESS_SECRET?.trim()
@@ -31,7 +36,7 @@ export function verifyWorkshopAccessToken(token: string | undefined) {
   if (received.length !== expected.length || !timingSafeEqual(received, expected)) return null;
   try {
     const orderId = Buffer.from(encodedOrderId, "base64url").toString("utf8");
-    return /^workshop-\d+-[a-z0-9]{6}$/.test(orderId) ? orderId : null;
+    return VALID_COMMERCE_ORDERS.some((pattern) => pattern.test(orderId)) ? orderId : null;
   } catch {
     return null;
   }

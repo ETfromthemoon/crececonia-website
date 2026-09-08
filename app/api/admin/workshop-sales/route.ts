@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { deliverLateWorkshopAccessIfNeeded, deliverWorkshopOrders } from "@/lib/workshop-delivery";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { WORKSHOP_PRODUCT_KEY } from "@/lib/workshop-product";
+import { getWorkshopFulfillmentReadiness } from "@/lib/workshop-readiness";
 
 export const dynamic = "force-dynamic";
 const authorized = (request: Request) => Boolean(process.env.ADMIN_SECRET) && request.headers.get("x-admin-key") === process.env.ADMIN_SECRET;
@@ -19,6 +20,9 @@ export async function POST(request: Request) {
     if (body?.action === "manual") {
       const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
       if (!validEmail(email)) return NextResponse.json({ error: "Escribe un correo válido." }, { status: 400 });
+      if (!(await getWorkshopFulfillmentReadiness()).ready) {
+        return NextResponse.json({ error: "Completa y verifica todos los recursos antes de agregar alumnos." }, { status: 409 });
+      }
       const { data, error } = await getSupabaseAdmin().rpc("admin_register_workshop_purchase", { p_product_key: WORKSHOP_PRODUCT_KEY, p_email: email });
       const commerceOrder = typeof data === "string" ? data : null;
       if (error || !commerceOrder) throw new Error(error?.message ?? "No se pudo registrar la compra.");
@@ -27,6 +31,16 @@ export async function POST(request: Request) {
       await deliverWorkshopOrders("admin-notification", commerceOrder);
       await deliverLateWorkshopAccessIfNeeded(commerceOrder);
       return NextResponse.json({ message: `${email} fue agregado y recibió sus accesos.` });
+    }
+    if (body?.action === "resend-resources") {
+      if (!(await getWorkshopFulfillmentReadiness()).ready) {
+        return NextResponse.json({ error: "Configura y verifica grabación, recursos y sala antes de reenviar." }, { status: 409 });
+      }
+      const db = getSupabaseAdmin();
+      const { error } = await db.rpc("requeue_workshop_follow_up", { p_product_key: WORKSHOP_PRODUCT_KEY });
+      if (error) throw new Error(error.message);
+      const result = await deliverWorkshopOrders("follow-up");
+      return NextResponse.json({ message: `Recursos enviados a ${result.sentCount} compradores.` });
     }
     return NextResponse.json({ error: "Operación inválida." }, { status: 400 });
   } catch (reason) {

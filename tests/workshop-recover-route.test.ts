@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockRpc, mockFlowSign } = vi.hoisted(() => ({
+const { mockRpc, mockFlowSign, mockReadiness } = vi.hoisted(() => ({
   mockRpc: vi.fn(),
   mockFlowSign: vi.fn(() => "signature"),
+  mockReadiness: vi.fn(),
 }));
 
 vi.mock("@/lib/flow", () => ({ flowSign: mockFlowSign, getFlowBase: () => "https://flow.test/api" }));
 vi.mock("@/lib/workshop-recovery", () => ({ hashWorkshopRecoveryToken: () => "hashed-token" }));
+vi.mock("@/lib/workshop-readiness", () => ({ getWorkshopFulfillmentReadiness: mockReadiness }));
 vi.mock("@/lib/supabase", () => ({ getSupabaseAdmin: () => ({ rpc: mockRpc }) }));
 
 const mockFetch = vi.fn();
@@ -21,6 +23,7 @@ describe("GET /api/workshop/recover", () => {
     vi.clearAllMocks();
     process.env.FLOW_API_KEY = "flow-key";
     process.env.FLOW_SECRET_KEY = "flow-secret";
+    mockReadiness.mockResolvedValue({ ready: true, missing: [] });
     mockRpc.mockImplementation((name: string) => {
       if (name === "begin_workshop_recovery_redemption") return Promise.resolve({ data: [{ recovery_id: "recovery-1", email: "persona@test.com", discounted_amount: 18_000, payment_url: null }], error: null });
       if (name === "workshop_product_availability") return Promise.resolve({ data: [{ product_id: "product-1", offer_id: "offer-1", offer_key: "general" }], error: null });
@@ -44,6 +47,17 @@ describe("GET /api/workshop/recover", () => {
     mockRpc.mockResolvedValueOnce({ data: [{ recovery_id: "recovery-1", email: "persona@test.com", discounted_amount: 18_000, payment_url: "https://pay.flow.test/existing" }], error: null });
     const response = await GET(new Request(`https://www.crececonia.cl/api/workshop/recover?token=${token}`));
     expect(response.headers.get("location")).toBe("https://pay.flow.test/existing");
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("no consume ni abre un pago recuperado mientras falte un entregable", async () => {
+    mockReadiness.mockResolvedValue({ ready: false, missing: ["recording"] });
+
+    const response = await GET(new Request(`https://www.crececonia.cl/api/workshop/recover?token=${token}`));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toContain("recovery=unavailable");
+    expect(mockRpc).not.toHaveBeenCalled();
     expect(mockFetch).not.toHaveBeenCalled();
   });
 });

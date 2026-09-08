@@ -2,9 +2,10 @@ import { readdir, readFile } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
 import { zipSync } from "fflate";
 import { listPrivateObjects, uploadPrivateObject } from "../lib/private-storage";
+import { WORKSHOP_ASSETS, WORKSHOP_ASSET_PREFIX } from "../lib/workshop-assets";
 
 const source = join(process.cwd(), "private", "workshop-skills-2026-09-06");
-const storagePath = "workshop-2026-09-06/crececonia-pack-5-skills.zip";
+const workshopSource = join(process.cwd(), "private", "workshop-2026-09-06");
 
 async function collect(directory: string, files: Record<string, Uint8Array>) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
@@ -24,11 +25,20 @@ async function main() {
   const files: Record<string, Uint8Array> = {};
   await collect(source, files);
   const zip = zipSync(files, { level: 9 });
-  const { error } = await uploadPrivateObject("workshop-assets", storagePath, zip, "application/zip");
-  if (error) throw new Error(error.message);
-  const objects = await listPrivateObjects("workshop-assets", "workshop-2026-09-06");
-  if (!objects.includes("crececonia-pack-5-skills.zip")) throw new Error("El ZIP se subió, pero no pudo verificarse.");
-  console.log(`OK · ${skills.length} skills · ${Object.keys(files).length} archivos · ${zip.byteLength} bytes · ${storagePath}`);
+  const uploads = [
+    { ...WORKSHOP_ASSETS.skills, body: zip },
+    { ...WORKSHOP_ASSETS.slides, body: new Uint8Array(await readFile(join(workshopSource, "slides-taller-claude-desktop.html"))) },
+    { ...WORKSHOP_ASSETS.handout, body: new Uint8Array(await readFile(join(workshopSource, "HANDOUT-ALUMNOS.md"))) },
+  ];
+  for (const asset of uploads) {
+    const { error } = await uploadPrivateObject("workshop-assets", asset.storagePath, asset.body, asset.contentType);
+    if (error) throw new Error(`${asset.label}: ${error.message}`);
+  }
+  const objects = await listPrivateObjects("workshop-assets", WORKSHOP_ASSET_PREFIX);
+  const expected = uploads.map((asset) => asset.storagePath.slice(WORKSHOP_ASSET_PREFIX.length + 1));
+  const missing = expected.filter((name) => !objects.includes(name));
+  if (missing.length) throw new Error(`La subida terminó, pero faltan estos objetos: ${missing.join(", ")}`);
+  console.log(`OK · ${skills.length} skills · ${Object.keys(files).length} archivos internos · 3 recursos verificados en Storage.`);
 }
 
 main().catch((error) => { console.error(error instanceof Error ? error.message : error); process.exit(1); });

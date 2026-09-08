@@ -4,6 +4,7 @@ import WorkshopRoom from "@/components/WorkshopRoom";
 import { verifyWorkshopAccessToken } from "@/lib/workshop-access";
 import { WORKSHOP_PRODUCT_KEY, WORKSHOP_TITLE } from "@/lib/workshop-product";
 import { getWorkshopSettings } from "@/lib/workshop-settings";
+import { getWorkshopAssetStatus } from "@/lib/workshop-asset-storage";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -13,11 +14,12 @@ export default async function WorkshopRoomPage({ searchParams }: { searchParams:
   const { token } = await searchParams;
   const commerceOrder = verifyWorkshopAccessToken(token);
   if (!commerceOrder || !token) notFound();
-  const [{ data, error }, settings] = await Promise.all([
+  const [{ data, error }, settings, assetStatus] = await Promise.all([
     getSupabaseAdmin().rpc("get_workshop_room_access", { p_product_key: WORKSHOP_PRODUCT_KEY, p_commerce_order: commerceOrder }),
     getWorkshopSettings(),
+    getWorkshopAssetStatus(),
   ]);
   const access = data?.[0];
   if (error || !access?.flow_token || !settings.roomEnabled) notFound();
-  return <WorkshopRoom token={token} flowToken={access.flow_token} sessionUrl={settings.sessionUrl} recordingUrl={settings.recordingUrl} skoolUrl={settings.skoolUrl} skillsReady={Boolean(settings.skillsStoragePath)} supportEmail={settings.supportEmail} />;
+  return <WorkshopRoom token={token} flowToken={access.flow_token} sessionUrl={settings.sessionUrl} recordingUrl={settings.recordingUrl} skoolUrl={settings.skoolUrl} assetStatus={assetStatus} supportEmail={settings.supportEmail} />;
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { WORKSHOP_PRODUCT_KEY, type WorkshopAvailabilityRow } from "@/lib/workshop-product";
+import { getWorkshopFulfillmentReadiness } from "@/lib/workshop-readiness";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,13 @@ export async function GET() {
       supabaseHost: getSupabaseHost(),
     });
     return NextResponse.json({ error: "No pudimos verificar el precio. Reintenta en unos segundos." }, { status: 503 });
+  }
+  if (offer.offer_key === "recording") {
+    const fulfillment = await getWorkshopFulfillmentReadiness();
+    if (!fulfillment.ready) {
+      console.error("[workshop/availability] fulfillment_not_ready", { missing: fulfillment.missing });
+      return NextResponse.json({ error: "La venta está pausada mientras terminamos de verificar todos los materiales." }, { status: 503 });
+    }
   }
   const remaining = Math.max(offer.total_cupos - offer.sold_cupos - offer.reserved_cupos, 0);
   return NextResponse.json({
