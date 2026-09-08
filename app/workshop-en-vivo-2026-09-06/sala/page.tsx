@@ -21,5 +21,5 @@ export default async function WorkshopRoomPage({ searchParams }: { searchParams:
   ]);
   const access = data?.[0];
   if (error || !access?.flow_token || !settings.roomEnabled) notFound();
-  return <WorkshopRoom token={token} flowToken={access.flow_token} sessionUrl={settings.sessionUrl} recordingUrl={settings.recordingUrl} skoolUrl={settings.skoolUrl} assetStatus={assetStatus} supportEmail={settings.supportEmail} />;
+  return <WorkshopRoom token={token} flowToken={access.flow_token} recordingUrl={settings.recordingUrl} skoolUrl={settings.skoolUrl} assetStatus={assetStatus} supportEmail={settings.supportEmail} />;
 }
