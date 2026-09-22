@@ -21,8 +21,8 @@ import { POST as subscribe } from "@/app/api/public/subscribe/route";
 import { POST as evaluate } from "@/app/api/public/evaluacion/route";
 import { POST as requestCall } from "@/app/api/public/solicitar-llamada/route";
 
-function post(path: string, body: unknown) {
-  return new Request(`https://www.crececonia.cl${path}`, {
+function post(path: string, body: unknown, origin = "https://www.crececonia.cl") {
+  return new Request(`${origin}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -61,6 +61,18 @@ describe("rutas públicas sin VPS", () => {
     expect(response.status).toBe(200);
     expect(saveEvaluation).toHaveBeenCalledOnce();
     expect(notifyAdmin).toHaveBeenCalledOnce();
+  });
+
+  it("envía el enlace de agenda del mismo entorno que recibió la evaluación", async () => {
+    const origin = "https://preview.crececonia.example";
+    const response = await evaluate(post("/api/public/evaluacion", {
+      nombre: "Sergio", email: "sergio@example.com", empresa: "CrececonIA",
+      tamano_equipo: "1-10", rol: "Director", proceso_pain: "Seguimiento manual",
+      uso_ia_actual: "regular", resultado_esperado: "Automatizar seguimiento",
+      horizonte_decision: "mes",
+    }, origin));
+    expect(response.status).toBe(200);
+    expect(notifyAdmin.mock.calls[0][1]).toContain(`${origin}/solicitar-llamada?t=token-id`);
   });
 
   it("no acepta evaluaciones incompletas", async () => {

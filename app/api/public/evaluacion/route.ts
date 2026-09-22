@@ -25,8 +25,7 @@ export async function POST(request: Request) {
   }
   try {
     const row = await saveEvaluation(value);
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.crececonia.cl";
-    const schedulingUrl = `${baseUrl}/solicitar-llamada?t=${row.scheduling_token}`;
+    const schedulingUrl = new URL(`/solicitar-llamada?t=${row.scheduling_token}`, request.url).toString();
     await notifyAdmin(
       `Nueva evaluación · ${value.empresa}`,
       [`Nombre: ${value.nombre}`, `Email: ${value.email}`, `Empresa: ${value.empresa}`,
