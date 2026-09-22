@@ -2,8 +2,6 @@
 import { useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 
-const API_BASE = "https://autodrive.cl";
-
 export default function SkillDownloadGate({
   slug,
   archivoNombre,
@@ -35,7 +33,7 @@ export default function SkillDownloadGate({
     setEnviando(true);
     trackEvent("skill_download_requested", { slug, file_type: archivoTipo });
     try {
-      const r = await fetch(`${API_BASE}/api/public/skills/${slug}/request-download`, {
+      const r = await fetch(`/api/public/skills/${slug}/request-download`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, nombre, ref_code: refCode }),
@@ -46,7 +44,7 @@ export default function SkillDownloadGate({
         return;
       }
       // Disparar descarga real
-      window.location.href = `${API_BASE}${d.download_url}`;
+      window.location.href = d.download_url;
       trackEvent("skill_download_succeeded", { slug, file_type: archivoTipo });
       // Cerrar modal después de un breve delay
       setTimeout(() => setOpen(false), 500);

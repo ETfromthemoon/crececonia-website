@@ -79,7 +79,7 @@ Loaded via `next/font/google` in `app/layout.tsx`:
 
 ### Backend
 
-- **External API**: `https://autodrive.cl/api/public/...` (not in this repo). Handles: skill views, skill downloads, call scheduling, email sending.
+- **Public content and forms**: the versioned catalog lives in `content/public-catalog.json`. Same-origin routes under `/api/public/*` handle subscriptions, evaluations, call requests and skill downloads using Neon, Resend and files in `public/downloads/skills/`. The site must not depend on `autodrive.cl` or the retired VPS at runtime.
 - **Neon PostgreSQL** (`DATABASE_URL`, server-only) is the production database. `lib/supabase.ts` is only a compatibility adapter for legacy call sites; despite its name, it queries Neon. The ebook tables are `ebook_purchases`, `ebook_cupos`, `discount_codes`, `ebook_pending_orders`, and `ebook_waitlist`. The reusable launch system uses `launches`, `launch_products`, `launch_price_tiers`, `launch_tasks`, and `launch_activity`; its immutable reversible migrations live in `database/migrations/`.
 - **Neon Object Storage / S3** (`STORAGE_S3_*`, server-only) stores paid PDFs and private resources. Supabase variables in `.env.local.example` exist only for migration/legacy recovery and are not read by the production app.
 - **Resend** for transactional email (`RESEND_API_KEY`).
@@ -248,5 +248,5 @@ copy/precio sigue siendo una decisión manual del usuario — nunca se genera un
 - No `public/og-image.png` exists despite being referenced in metadata. OG image will 404.
 - `.vercel/` is gitignored. Project ID lives in `.vercel/project.json` (local only).
 - `skills-lock.json` and `.agents/` are from `npx skills` tooling. Do not commit them.
-- Dynamic routes (`[tema]`, `[slug]`) fetch from autodrive.cl API at runtime; no static generation.
+- Dynamic knowledge routes (`[tema]`, `[slug]`) read the versioned local catalog; changes require rebuilding the site.
 - Desktop-only navbar (no mobile hamburger visibility toggle for non-logged-in — `mobileMenuOpen` state exists but only activates on scroll detection).

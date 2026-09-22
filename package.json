@@ -22,7 +22,8 @@
     "db:reconcile": "tsx --env-file-if-exists=.env.local scripts/database-migration/reconcile.ts",
     "db:rollback": "tsx --env-file-if-exists=.env.local scripts/database-migration/rollback.ts",
     "storage:export": "tsx --env-file-if-exists=.env.local scripts/database-migration/export-storage.ts",
-    "storage:import": "tsx --env-file-if-exists=.env.local scripts/database-migration/import-storage-s3.ts"
+    "storage:import": "tsx --env-file-if-exists=.env.local scripts/database-migration/import-storage-s3.ts",
+    "vps:verify-public": "tsx scripts/vps-retirement/verify-public-routes.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1126.0",

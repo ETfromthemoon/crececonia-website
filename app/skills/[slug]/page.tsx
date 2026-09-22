@@ -9,8 +9,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { marked } from "marked";
 import { createPageMetadata } from "@/lib/seo";
-
-const API_BASE = "https://autodrive.cl";
+import { getPublicSkill, listPublicSkills } from "@/lib/public-catalog";
 
 type Skill = {
   id: number;
@@ -45,24 +44,11 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 async function fetchSkill(slug: string): Promise<Skill | null> {
-  try {
-    const r = await fetch(`${API_BASE}/api/public/skills/${slug}`, { cache: "no-store" });
-    if (!r.ok) return null;
-    return await r.json();
-  } catch {
-    return null;
-  }
+  return getPublicSkill(slug) as Skill | null;
 }
 
 async function fetchRelated(categoria: string, excludeSlug: string): Promise<Skill[]> {
-  try {
-    const r = await fetch(`${API_BASE}/api/public/skills?categoria=${categoria}`, { cache: "no-store" });
-    if (!r.ok) return [];
-    const all = (await r.json()) as Skill[];
-    return all.filter((s) => s.slug !== excludeSlug).slice(0, 3);
-  } catch {
-    return [];
-  }
+  return (listPublicSkills(categoria) as Skill[]).filter((s) => s.slug !== excludeSlug).slice(0, 3);
 }
 
 function calcularTiempoLectura(texto: string): number {
@@ -109,11 +95,13 @@ export default async function SkillPage({
     : "";
   const related = await fetchRelated(s.categoria, s.slug);
 
-  const fechaPub = new Date(s.creado_en).toLocaleDateString("es-CL", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const fechaPub = s.creado_en
+    ? new Date(s.creado_en).toLocaleDateString("es-CL", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "";
 
   return (
     <>
@@ -164,10 +152,14 @@ export default async function SkillPage({
               >
                 {CATEGORY_LABELS[s.categoria] ?? s.categoria}
               </span>
-              <span style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)" }}>
-                {fechaPub}
-              </span>
-              <span style={{ color: "var(--smoke)" }}>·</span>
+              {fechaPub && (
+                <>
+                  <span style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)" }}>
+                    {fechaPub}
+                  </span>
+                  <span style={{ color: "var(--smoke)" }}>·</span>
+                </>
+              )}
               <span style={{ color: "var(--smoke)", fontFamily: "var(--font-mono)" }}>
                 {tiempoLectura} min de lectura
               </span>

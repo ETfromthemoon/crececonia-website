@@ -51,8 +51,7 @@ export default function EmailPopup() {
     trackEvent("newsletter_signup_submitted", { placement: "content_popup" });
 
     try {
-      // Llamada directa al backend autodrive.cl
-      const res = await fetch("https://autodrive.cl/api/public/subscribe", {
+      const res = await fetch("/api/public/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, source: "skills_page", resource: resourceFromPath() }),

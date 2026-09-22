@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es" data-theme="dark" data-audience="external">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Personaliza y copia un prompt completo para crear una guía de aprendizaje interactiva sobre cualquier tema.">
+  <meta name="theme-color" content="#090909">
+  <title>Crea tu guía de aprendizaje con IA — CrececonIA</title>
+  <link rel="icon" href="/icon.svg">
+  <style>
+    :root{--bg:#080808;--panel:#111;--panel-2:#171717;--ink:#f4f0e8;--muted:#aaa49b;--line:#32302d;--gold:#d5a36f;--gold-2:#f1c79d;--ok:#82c99a;--danger:#ef9a90;--serif:"Playfair Display",Georgia,serif;--sans:"Inter","Segoe UI",sans-serif;--mono:"JetBrains Mono",Consolas,monospace}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.65 var(--sans);letter-spacing:-.01em}button,input,select,textarea{font:inherit}a{color:inherit}.shell{min-height:100vh;overflow:hidden}.topbar{height:64px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:relative;z-index:2}.brand{font:700 12px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase}.issue{font:500 11px/1 var(--mono);color:var(--muted)}.hero{padding:58px 20px 44px;border-bottom:1px solid var(--line);position:relative}.hero:after{content:"APRENDE";position:absolute;right:-28px;bottom:-19px;font:600 clamp(70px,22vw,240px)/.72 var(--sans);letter-spacing:-.08em;color:transparent;-webkit-text-stroke:1px #ffffff0d;pointer-events:none}.eyebrow{font:700 11px/1.2 var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin:0 0 18px}.hero h1{font:400 clamp(43px,12vw,94px)/.94 var(--serif);letter-spacing:-.055em;max-width:950px;margin:0}.hero h1 em{color:var(--gold-2);font-weight:400}.lede{color:var(--muted);font-size:18px;max-width:680px;margin:28px 0 0}.layout{display:grid}.form-side,.result-side{padding:40px 20px}.form-side{border-bottom:1px solid var(--line)}.section-head{display:flex;gap:16px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:26px}.section-head span{font:700 11px var(--mono);color:var(--gold)}.section-head h2{font:400 30px/1.05 var(--serif);margin:0}.field{margin-bottom:21px}.field label{display:block;font-weight:650;font-size:13px;margin-bottom:7px}.optional{color:var(--muted);font-weight:400}.field input,.field select,.field textarea{width:100%;min-height:50px;border:1px solid var(--line);border-radius:2px;background:var(--panel);color:var(--ink);padding:13px 14px;outline:0}.field textarea{min-height:92px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px #d5a36f22}.grid{display:grid;gap:0}.privacy{border-left:3px solid var(--gold);padding:2px 0 2px 15px;color:var(--muted);font-size:13px;margin:25px 0}.actions{display:flex;flex-wrap:wrap;gap:10px}.btn{min-height:48px;border:1px solid var(--line);border-radius:2px;background:transparent;color:var(--ink);padding:12px 17px;font-weight:750;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}.btn:hover{border-color:var(--gold)}.btn.primary{background:var(--gold);border-color:var(--gold);color:#130e09}.btn.primary:hover{background:var(--gold-2)}.result-side{background:var(--panel)}.prompt-frame{border:1px solid var(--line);background:var(--bg)}.prompt-meta{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:10px 13px;color:var(--muted);font:600 11px var(--mono)}#promptOutput{display:block;width:100%;min-height:560px;border:0;background:transparent;color:#ddd8ce;padding:18px;font:13px/1.62 var(--mono);resize:vertical;outline:0}.result-actions{position:sticky;bottom:0;background:linear-gradient(transparent,var(--panel) 24%);padding-top:30px;margin-top:-1px}.steps{display:grid;border-top:1px solid var(--line)}.step{padding:22px 20px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:40px 1fr;gap:12px}.step b{font:600 13px var(--mono);color:var(--gold)}.step h3{font:500 18px var(--serif);margin:0 0 4px}.step p{margin:0;color:var(--muted);font-size:14px}.toast{position:fixed;right:18px;bottom:18px;background:var(--ink);color:#111;padding:12px 16px;border-radius:2px;font-weight:700;transform:translateY(20px);opacity:0;pointer-events:none;transition:.2s;z-index:4}.toast.show{opacity:1;transform:none}.footer{padding:34px 20px;color:var(--muted);font-size:13px;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}.footer a:hover{color:var(--gold)}
+    @media(min-width:720px){.topbar,.hero,.form-side,.result-side,.step,.footer{padding-left:6vw;padding-right:6vw}.grid{grid-template-columns:1fr 1fr;gap:16px}.steps{grid-template-columns:repeat(3,1fr)}.step{border-right:1px solid var(--line)}}
+    @media(min-width:1080px){.hero{padding-top:82px;padding-bottom:70px}.layout{grid-template-columns:minmax(420px,.85fr) minmax(560px,1.15fr);align-items:start}.form-side{border-right:1px solid var(--line);border-bottom:0;padding-right:4vw}.result-side{position:sticky;top:0;min-height:100vh;padding-left:4vw}.result-actions{bottom:16px}.steps,.footer{grid-column:1/-1}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar"><div class="brand">CrececonIA</div><div class="issue">RECURSO / 01</div></header>
+  <section class="hero">
+    <p class="eyebrow">Prompt gratuito · diseñador instruccional</p>
+    <h1>Convierte cualquier tema en una <em>ruta completa</em> de aprendizaje.</h1>
+    <p class="lede">Completa el tema, copia el prompt y úsalo en ChatGPT, Claude o Codex. La IA construirá una guía HTML con módulos, práctica, evaluaciones y seguimiento real del avance.</p>
+  </section>
+
+  <main class="layout">
+    <section class="form-side" aria-labelledby="personaliza">
+      <div class="section-head"><span>01</span><h2 id="personaliza">Personaliza el encargo</h2></div>
+      <div class="field"><label for="tema">Tema de aprendizaje</label><input id="tema" required placeholder="Ej.: fotografía de producto con IA" autocomplete="off"></div>
+      <div class="grid">
+        <div class="field"><label for="publico">Persona o público <span class="optional">(opcional)</span></label><input id="publico" placeholder="Emprendedores principiantes"></div>
+        <div class="field"><label for="nivel">Nivel actual <span class="optional">(opcional)</span></label><select id="nivel"><option value="">Que la IA lo infiera</option><option>Principiante</option><option>Intermedio</option><option>Avanzado</option></select></div>
+      </div>
+      <div class="field"><label for="objetivo">Objetivo concreto <span class="optional">(opcional)</span></label><textarea id="objetivo" placeholder="¿Qué quieres ser capaz de hacer al terminar?"></textarea></div>
+      <div class="field"><label for="proyecto">Proyecto que quieres desarrollar <span class="optional">(opcional)</span></label><textarea id="proyecto" placeholder="Ej.: publicar un catálogo con 20 fotografías consistentes"></textarea></div>
+      <div class="grid">
+        <div class="field"><label for="tiempo">Tiempo semanal <span class="optional">(opcional)</span></label><input id="tiempo" placeholder="4 horas"></div>
+        <div class="field"><label for="duracion">Duración <span class="optional">(opcional)</span></label><input id="duracion" placeholder="16 semanas"></div>
+      </div>
+      <div class="field"><label for="herramientas">Herramientas disponibles <span class="optional">(opcional)</span></label><input id="herramientas" placeholder="ChatGPT, Canva, teléfono..."></div>
+      <div class="field"><label for="restricciones">Dificultades o restricciones <span class="optional">(opcional)</span></label><textarea id="restricciones" placeholder="Qué te frena, presupuesto, equipo o conocimientos previos"></textarea></div>
+      <p class="privacy">Nada de lo que escribas se envía ni se almacena. La personalización ocurre solamente en tu navegador.</p>
+      <div class="actions"><button class="btn primary" id="generateBtn">Generar mi prompt →</button><button class="btn" id="clearBtn">Limpiar</button></div>
+    </section>
+
+    <section class="result-side" aria-labelledby="resultado">
+      <div class="section-head"><span>02</span><h2 id="resultado">Tu prompt completo</h2></div>
+      <div class="prompt-frame">
+        <div class="prompt-meta"><span>LISTO PARA PEGAR</span><span id="charCount">0 CARACTERES</span></div>
+        <textarea id="promptOutput" readonly aria-label="Prompt personalizado completo"></textarea>
+      </div>
+      <div class="result-actions actions"><button class="btn primary" id="copyBtn">Copiar prompt completo</button><button class="btn" id="downloadBtn">Descargar .txt</button></div>
+    </section>
+  </main>
+
+  <section class="steps" aria-label="Cómo utilizar el prompt">
+    <article class="step"><b>01</b><div><h3>Define el tema</h3><p>Los campos opcionales hacen la ruta más específica, pero no son obligatorios.</p></div></article>
+    <article class="step"><b>02</b><div><h3>Copia y ejecuta</h3><p>Pégalo completo en tu asistente de IA con capacidad para crear archivos.</p></div></article>
+    <article class="step"><b>03</b><div><h3>Abre la guía</h3><p>Recibirás un HTML interactivo que funciona localmente y guarda el progreso.</p></div></article>
+  </section>
+  <footer class="footer"><span>Creado por Sergio · CrececonIA</span><a href="https://www.instagram.com/crececoniacl/" target="_blank" rel="noopener">@crececoniacl ↗</a></footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<textarea id="promptBase" hidden>Actúa como diseñador instruccional, investigador especializado y desarrollador frontend senior.
+
+Tu tarea es crear una guía de aprendizaje interactiva, completa y autosuficiente sobre el siguiente tema:
+
+TEMA DE APRENDIZAJE: {{TEMA}}
+
+DATOS OPCIONALES:
+- Persona o público objetivo: {{PUBLICO}}
+- Nivel actual: {{NIVEL}}
+- Objetivo concreto: {{OBJETIVO}}
+- Proyecto que quiere desarrollar: {{PROYECTO}}
+- Tiempo disponible por semana: {{TIEMPO}}
+- Duración deseada: {{DURACION}}
+- Herramientas disponibles: {{HERRAMIENTAS}}
+- Restricciones o dificultades: {{RESTRICCIONES}}
+
+Si solo se proporciona el tema, infiere responsablemente el público, nivel, secuencia y aplicaciones más útiles. No detengas el trabajo para hacer preguntas salvo que sea imposible construir una ruta coherente.
+
+OBJETIVO
+
+Genera un único archivo HTML interactivo que permita aprender el tema de manera progresiva, aplicar el conocimiento, evaluar cada módulo y registrar evidencia del avance.
+
+No entregues solamente un temario, una explicación del código, una maqueta ni un esquema. Entrega el documento HTML completamente terminado y funcional.
+
+ESTRUCTURA PEDAGÓGICA
+
+Organiza el aprendizaje en 16 módulos semanales, salvo que la duración indicada requiera otra cantidad. La secuencia debe avanzar desde fundamentos hasta aplicación autónoma.
+
+Si el tema lo permite, organiza la ruta en cuatro fases:
+1. Fundamentos y resultados rápidos.
+2. Aplicación práctica.
+3. Integración y profundización.
+4. Proyecto final, validación y autonomía.
+
+Las primeras cuatro semanas deben formar un sprint intensivo que produzca el mayor avance práctico posible durante el primer mes.
+
+Cada módulo debe incluir obligatoriamente:
+1. Número, título y fase.
+2. Objetivo observable de aprendizaje.
+3. Explicación de por qué ese módulo es importante.
+4. Al menos seis conceptos esenciales.
+5. Una explicación clara y sustancial de cada concepto.
+6. Errores frecuentes y cómo evitarlos.
+7. Procedimiento práctico de al menos seis pasos.
+8. Un ejemplo aplicado al tema.
+9. Una plantilla, método, prompt o recurso reutilizable.
+10. Tres preguntas de selección múltiple.
+11. Cuatro alternativas por pregunta.
+12. Una única respuesta correcta.
+13. Retroalimentación inmediata para respuestas correctas e incorrectas.
+14. Un ejercicio práctico semanal.
+15. Una evidencia concreta que el estudiante debe producir.
+16. Una rúbrica de cinco criterios verificables.
+17. Un campo para registrar el resultado, enlace o resumen de la evidencia.
+18. Un campo para anotar preguntas o bloqueos.
+19. Un porcentaje de avance del módulo.
+
+No minimices el contenido. Cada módulo debe entregar las nociones necesarias para que una persona sin conocimientos previos pueda comprender, aplicar y explicar lo aprendido.
+
+PROYECTO FINAL
+
+La ruta debe conducir a un proyecto final relacionado directamente con el tema. Debe construirse progresivamente y no aparecer solamente en la última semana.
+
+Define claramente el resultado final, entregables intermedios, criterios de aceptación, pruebas necesarias, riesgos, límites, forma de demostrar el aprendizaje y próximos pasos.
+
+INVESTIGACIÓN Y VERIFICACIÓN
+
+Investiga el tema antes de redactar la guía cuando dispongas de acceso a fuentes. Prioriza documentación oficial, instituciones académicas, organismos públicos, estándares reconocidos y publicaciones técnicas originales.
+
+No inventes datos, estadísticas, leyes, funciones, herramientas, testimonios ni referencias. Incluye una sección final llamada “Fuentes verificadas” con enlaces directos y explica brevemente cómo utilizaste cada fuente. Cuando una tecnología, norma o procedimiento pueda cambiar, advierte que debe revisarse su versión vigente.
+
+FUNCIONAMIENTO INTERACTIVO
+
+El HTML debe funcionar sin servidor y sin instalar dependencias. Debe incluir:
+- Pantalla inicial con propósito y mapa completo.
+- Navegación tipo presentación o slides.
+- Menú con todos los módulos.
+- Botones Anterior y Siguiente, navegación directa y atajos con flechas.
+- Indicadores de progreso global y por módulo.
+- Mini pruebas corregidas automáticamente, con explicación inmediata.
+- Rúbricas con casillas seleccionables.
+- Campos editables para evidencias y preguntas.
+- Guardado automático mediante localStorage y persistencia al recargar.
+- Botón para exportar el progreso en JSON.
+- Opción para reiniciar el progreso con confirmación.
+- Tema claro y oscuro.
+- Diseño adaptable a móvil, tablet y escritorio.
+- Compatibilidad con prefers-reduced-motion, foco visible y contraste accesible.
+- Diseño de impresión razonable.
+
+El progreso de cada módulo debe combinar el resultado mínimo aprobado de la prueba y el cumplimiento de la rúbrica. El progreso global debe derivarse de todos los módulos, no solo de páginas visitadas.
+
+DISEÑO VISUAL
+
+Crea una interfaz editorial, profesional, clara y memorable. Usa jerarquía tipográfica marcada, espaciado consistente, colores sobrios, un acento reconocible, secciones diferenciadas y animaciones breves y funcionales. Evita una apariencia genérica de plantilla.
+
+No uses librerías, frameworks, fuentes remotas, CDN ni recursos externos obligatorios. Incluye todo el CSS y JavaScript dentro del mismo HTML.
+
+SEGURIDAD Y PRIVACIDAD
+
+- No solicites contraseñas, API keys ni datos sensibles.
+- Advierte cuando un ejercicio deba realizarse con datos ficticios.
+- Escapa correctamente el contenido ingresado.
+- No uses eval ni scripts externos.
+- No transmitas el progreso sin una acción explícita.
+- Explica que localStorage guarda la información únicamente en ese navegador.
+- Los enlaces externos deben utilizar rel="noopener".
+
+VALIDACIÓN OBLIGATORIA
+
+Antes de entregar, comprueba que existan todos los módulos; que cada uno tenga contenido sustancial, tres preguntas con cuatro alternativas, respuesta y explicación, y una rúbrica de cinco criterios; que el progreso y la navegación funcionen; que el avance persista; que los temas claro y oscuro operen; que no existan textos TODO, relleno, secciones vacías ni errores JavaScript; que el HTML abra localmente; que sea usable desde teléfono; y que las fuentes tengan enlaces válidos.
+
+FORMATO DE ENTREGA
+
+Entrega el archivo HTML completo y listo para usar, con un nombre descriptivo como guia_interactiva_[tema].html. Añade una confirmación breve con la cantidad de módulos, preguntas, ejercicios, funciones interactivas y validaciones realizadas.
+
+No entregues fragmentos. No reduzcas el contenido para ahorrar espacio. No te detengas hasta completar, revisar y dejar funcional la guía interactiva.</textarea>
+
+<script>
+(() => {
+  const ids=['tema','publico','nivel','objetivo','proyecto','tiempo','duracion','herramientas','restricciones'];
+  const $=id=>document.getElementById(id);
+  const fallback='No especificado; inferir responsablemente';
+  function value(id){return $(id).value.trim()||fallback}
+  function render(focus=false){
+    const map={TEMA:$('tema').value.trim()||'[ESCRIBE AQUÍ EL TEMA]',PUBLICO:value('publico'),NIVEL:value('nivel'),OBJETIVO:value('objetivo'),PROYECTO:value('proyecto'),TIEMPO:value('tiempo'),DURACION:$('duracion').value.trim()||'16 semanas',HERRAMIENTAS:value('herramientas'),RESTRICCIONES:value('restricciones')};
+    let text=$('promptBase').value;
+    Object.entries(map).forEach(([key,val])=>{text=text.replaceAll(`{{${key}}}`,val)});
+    $('promptOutput').value=text;
+    $('charCount').textContent=`${text.length.toLocaleString('es-CL')} CARACTERES`;
+    if(focus)$('promptOutput').focus();
+  }
+  function notify(message){const t=$('toast');t.textContent=message;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+  $('generateBtn').addEventListener('click',()=>{if(!$('tema').value.trim()){$('tema').focus();notify('Escribe primero el tema de aprendizaje');return}render(true);notify('Prompt personalizado')});
+  $('copyBtn').addEventListener('click',async()=>{render();try{await navigator.clipboard.writeText($('promptOutput').value);notify('Prompt completo copiado')}catch(e){$('promptOutput').select();document.execCommand('copy');notify('Prompt completo copiado')}});
+  $('downloadBtn').addEventListener('click',()=>{render();const slug=($('tema').value||'mi-tema').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');const blob=new Blob([$('promptOutput').value],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`prompt-guia-${slug||'aprendizaje'}.txt`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);notify('Archivo descargado')});
+  $('clearBtn').addEventListener('click',()=>{ids.forEach(id=>$(id).value='');render();$('tema').focus();notify('Campos limpios')});
+  ids.forEach(id=>$(id).addEventListener('input',()=>render()));
+  const q=new URLSearchParams(location.search).get('tema');if(q)$('tema').value=q;
+  render();
+})();
+</script>
+</body>
+</html>

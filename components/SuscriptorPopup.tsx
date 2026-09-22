@@ -58,7 +58,7 @@ function SuscriptorPopupInner() {
 
     try {
       const resource = searchParams.get("resource") || resourceFromPath();
-      const res = await fetch("https://autodrive.cl/api/public/subscribe", {
+      const res = await fetch("/api/public/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, source, resource }),

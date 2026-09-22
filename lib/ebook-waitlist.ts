@@ -37,9 +37,9 @@ async function sendWaitlistConfirmation(email: string): Promise<void> {
 
 /**
  * Guarda el email en la waitlist propia (tabla ebook_waitlist en Supabase) y
- * confirma por correo vía Resend. Reemplaza el POST previo a
- * autodrive.cl/api/public/subscribe: estos leads quedan en nuestra base, no
- * en la de Autodrive, y no se usan para nada más que avisar el lanzamiento.
+ * confirma por correo vía Resend. Reemplaza el endpoint externo retirado:
+ * estos leads quedan en nuestra base y no se usan para nada más que avisar
+ * el lanzamiento.
  *
  * Un mismo email puede reintentar el submit (doble click, retry de red) o
  * suscribirse dos veces al mismo recurso — la tabla tiene un unique(email,

@@ -1,0 +1,42 @@
+import { existsSync, statSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+
+import catalog from "@/content/public-catalog.json";
+
+describe("catálogo público sin VPS", () => {
+  it("publica solo las 10 guías completas y los 5 skills sin duplicados", () => {
+    expect(catalog.guides).toHaveLength(10);
+    expect(new Set(catalog.guides.map((item) => item.slug)).size).toBe(10);
+    expect(catalog.skills).toHaveLength(5);
+    expect(new Set(catalog.skills.map((item) => item.slug)).size).toBe(5);
+  });
+
+  it("no contiene enlaces al VPS retirado", () => {
+    expect(JSON.stringify(catalog)).not.toContain("autodrive.cl");
+  });
+
+  it("solo anuncia descargas que existen y no están vacías", () => {
+    for (const skill of catalog.skills) {
+      if (!skill.archivo_nombre) continue;
+      const file = join(process.cwd(), "public", "downloads", "skills", skill.archivo_nombre);
+      expect(existsSync(file), `${skill.slug}: falta ${skill.archivo_nombre}`).toBe(true);
+      expect(statSync(file).size, `${skill.slug}: descarga vacía`).toBeGreaterThan(0);
+    }
+  });
+
+  it("mantiene títulos, descripciones y contenido utilizable", () => {
+    for (const guide of catalog.guides) {
+      expect(guide.titulo.trim()).not.toBe("");
+      expect(guide.descripcion.trim()).not.toBe("");
+      expect(guide.contenido_md.trim()).not.toBe("");
+    }
+  });
+
+  it("no publica guías incompletas ni fragmentos históricos", () => {
+    for (const guide of catalog.guides) {
+      expect(guide.contenido_completo).toBe(true);
+      expect(guide.contenido_md.length).toBeGreaterThan(300);
+    }
+  });
+});

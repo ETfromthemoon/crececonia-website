@@ -8,8 +8,7 @@ import { marked } from "marked";
 import GuiaCodeCopy from "@/components/GuiaCodeCopy";
 import { whatsappUrl } from "@/lib/contact";
 import { createPageMetadata } from "@/lib/seo";
-
-const API_BASE = "https://autodrive.cl";
+import { getPublicGuide, listPublicGuides } from "@/lib/public-catalog";
 
 type Guia = {
   id: number;
@@ -27,26 +26,11 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 async function fetchGuia(slug: string): Promise<Guia | null> {
-  try {
-    const r = await fetch(`${API_BASE}/api/public/recursos/${slug}`, { cache: "no-store" });
-    if (!r.ok) return null;
-    const data = await r.json();
-    return (data.recurso ?? null) as Guia | null;
-  } catch {
-    return null;
-  }
+  return getPublicGuide(slug) as Guia | null;
 }
 
 async function fetchRelated(categoria: string, excludeSlug: string): Promise<Guia[]> {
-  try {
-    const r = await fetch(`${API_BASE}/api/public/recursos?categoria=${encodeURIComponent(categoria)}`, { cache: "no-store" });
-    if (!r.ok) return [];
-    const data = await r.json();
-    const all = (data.recursos ?? []) as Guia[];
-    return all.filter((g) => g.slug !== excludeSlug).slice(0, 3);
-  } catch {
-    return [];
-  }
+  return (listPublicGuides(categoria) as Guia[]).filter((g) => g.slug !== excludeSlug).slice(0, 3);
 }
 
 function calcularTiempoLectura(texto: string): number {
