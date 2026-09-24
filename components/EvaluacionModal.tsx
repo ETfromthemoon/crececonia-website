@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEvaluacion } from "./EvaluacionProvider";
 import { trackEvent } from "@/lib/analytics";
 
-const API_URL = "https://autodrive.cl/api/public/evaluacion";
+const API_URL = "/api/public/evaluacion";
 
 type FormData = {
   nombre: string;
@@ -107,9 +107,8 @@ export default function EvaluacionModal() {
         setError(j.detail || "Algo salió mal. Intenta de nuevo.");
       }
     } catch {
-      // Aún así marcamos como done — el backend probablemente lo procesó
-      setDone(true);
-      trackEvent("evaluation_submit_succeeded", { source, delivery_status: "unknown" });
+      trackEvent("evaluation_submit_failed", { source, reason: "network" });
+      setError("No pudimos confirmar el envío. Revisa tu conexión e inténtalo nuevamente.");
     } finally {
       setLoading(false);
     }

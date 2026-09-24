@@ -3,8 +3,7 @@
 // normaliza a un shape común para mostrarlos juntos, agrupados por tema.
 
 import { temasDeItem, type TemaId } from "./temas";
-
-const API_BASE = "https://autodrive.cl";
+import { listPublicGuides, listPublicLinks, listPublicSkills } from "./public-catalog";
 
 export type HubTipo = "skill" | "guia" | "enlace";
 
@@ -19,16 +18,6 @@ export interface HubItem {
   externo: boolean; // true → abre en nueva pestaña (enlaces)
   meta?: string; // info extra para el card (ej: "Descargable")
   temas: TemaId[];
-}
-
-async function getJSON(path: string): Promise<unknown> {
-  try {
-    const r = await fetch(`${API_BASE}${path}`, { next: { revalidate: 300 } });
-    if (!r.ok) return null;
-    return await r.json();
-  } catch {
-    return null;
-  }
 }
 
 function normSkill(s: Record<string, unknown>): HubItem {
@@ -87,19 +76,9 @@ function normEnlace(e: Record<string, unknown>): HubItem {
 
 /** Trae todos los items publicados de las fuentes activas, en paralelo. */
 export async function getHubItems(): Promise<HubItem[]> {
-  const [skillsRaw, recursosRaw, enlacesRaw] = await Promise.all([
-    getJSON("/api/public/skills"),
-    getJSON("/api/public/recursos"),
-    getJSON("/api/public/enlaces"),
-  ]);
-
-  const skills = Array.isArray(skillsRaw) ? skillsRaw : [];
-  const recursos = Array.isArray(recursosRaw)
-    ? recursosRaw
-    : ((recursosRaw as { recursos?: unknown[] } | null)?.recursos ?? []);
-  const enlacesArr = Array.isArray(enlacesRaw)
-    ? enlacesRaw
-    : ((enlacesRaw as { enlaces?: unknown[] } | null)?.enlaces ?? []);
+  const skills = listPublicSkills();
+  const recursos = listPublicGuides();
+  const enlacesArr = listPublicLinks();
 
   const items: HubItem[] = [
     ...skills.map((s) => normSkill(s as Record<string, unknown>)),

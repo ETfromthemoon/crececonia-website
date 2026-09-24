@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { trackEvent } from "@/lib/analytics";
 
-const API_URL = "https://autodrive.cl/api/public/solicitar-llamada";
+const API_URL = "/api/public/solicitar-llamada";
 
 function SolicitarContent() {
   const params = useSearchParams();
