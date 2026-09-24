@@ -5,9 +5,9 @@ import { describe, expect, it } from "vitest";
 import catalog from "@/content/public-catalog.json";
 
 describe("catálogo público sin VPS", () => {
-  it("publica solo las 10 guías completas y los 5 skills sin duplicados", () => {
-    expect(catalog.guides).toHaveLength(10);
-    expect(new Set(catalog.guides.map((item) => item.slug)).size).toBe(10);
+  it("publica solo las 9 guías completas y los 5 skills sin duplicados", () => {
+    expect(catalog.guides).toHaveLength(9);
+    expect(new Set(catalog.guides.map((item) => item.slug)).size).toBe(9);
     expect(catalog.skills).toHaveLength(5);
     expect(new Set(catalog.skills.map((item) => item.slug)).size).toBe(5);
   });
@@ -34,6 +34,7 @@ describe("catálogo público sin VPS", () => {
   });
 
   it("no publica guías incompletas ni fragmentos históricos", () => {
+    expect(catalog.guides.some((guide) => guide.slug.startsWith("convierte-un-selfie-"))).toBe(false);
     for (const guide of catalog.guides) {
       expect(guide.contenido_completo).toBe(true);
       expect(guide.contenido_md.length).toBeGreaterThan(300);

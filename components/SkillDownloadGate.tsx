@@ -15,7 +15,6 @@ export default function SkillDownloadGate({
 }) {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
-  const [nombre, setNombre] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
 
@@ -36,7 +35,7 @@ export default function SkillDownloadGate({
       const r = await fetch(`/api/public/skills/${slug}/request-download`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, nombre, ref_code: refCode }),
+        body: JSON.stringify({ email, ref_code: refCode }),
       });
       const d = await r.json();
       if (!r.ok) {
@@ -92,16 +91,10 @@ export default function SkillDownloadGate({
               Una cosa antes
             </h3>
             <p className="text-sm mb-5 leading-relaxed" style={{ color: "var(--ash)" }}>
-              Te mando este archivo + las próximas skills que publique. Sin spam, puedes darte de baja cuando quieras.
+              Deja tu email para registrar la descarga. El archivo se descargará aquí mismo; este formulario no te suscribe a campañas.
             </p>
 
             <form onSubmit={descargar} className="space-y-3">
-              <input
-                type="text" placeholder="Tu nombre (opcional)" value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm outline-none"
-                style={{ background: "var(--carbon)", border: "1px solid rgba(30,30,31,0.9)", borderRadius: 2, color: "var(--bone)" }}
-              />
               <input
                 type="email" required placeholder="Email *" value={email}
                 onChange={(e) => setEmail(e.target.value)}
