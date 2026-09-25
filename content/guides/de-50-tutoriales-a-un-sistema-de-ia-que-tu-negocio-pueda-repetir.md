@@ -209,7 +209,7 @@ Próxima revisión: [FECHA]
 
 Mide dos cosas durante las primeras semanas: tiempo real por caso y porcentaje de salidas aceptadas sin corrección. Si antes tardabas 15 minutos y ahora tardas 12 porque debes reparar todos los textos, todavía no tienes un buen sistema. Si tarda cuatro minutos y nueve de cada diez resultados pasan la revisión, ya tienes una base razonable para automatizar el traspaso entre herramientas.
 
-Una opción accesible para comenzar es un proyecto gratuito de Claude. Si el uso se vuelve frecuente, el plan Pro individual figura actualmente a USD 20 mensuales o USD 200 anuales en la [comparación oficial de planes](https://support.claude.com/en/articles/11049762-choose-a-claude-plan). El plan pago aumenta capacidad, pero no reemplaza el diseño del proceso. Pagar más no corrige contexto contradictorio ni criterios vagos.
+Una opción accesible para comenzar es un proyecto gratuito de Claude. Si el uso se vuelve frecuente, consulta el precio vigente del plan Pro individual en la [comparación oficial de planes](https://claude.com/pricing). El plan pago aumenta capacidad, pero no reemplaza el diseño del proceso. Pagar más no corrige contexto contradictorio ni criterios vagos.
 
 ## 07 · Reglas clave
 

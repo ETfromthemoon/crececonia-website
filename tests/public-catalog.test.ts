@@ -40,4 +40,13 @@ describe("catálogo público sin VPS", () => {
       expect(guide.contenido_md.length).toBeGreaterThan(300);
     }
   });
+
+  it("no enlaza desde las guías a otras guías no publicadas", () => {
+    const published = new Set(catalog.guides.map((guide) => guide.slug));
+    for (const guide of catalog.guides) {
+      for (const match of guide.contenido_md.matchAll(/\]\(\/guias\/([^)?#]+)(?:[?#][^)]*)?\)/g)) {
+        expect(published.has(match[1]), `${guide.slug}: enlace roto a ${match[1]}`).toBe(true);
+      }
+    }
+  });
 });

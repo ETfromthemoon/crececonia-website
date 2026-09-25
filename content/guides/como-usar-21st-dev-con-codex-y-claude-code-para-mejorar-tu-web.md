@@ -223,6 +223,5 @@ La mejor primera implementación suele ser simple: un hero más claro, una secci
 ---
 
 ### Guías relacionadas
-- [Cómo mejorar tu web hecha con IA](/guias/3-herramientas-para-que-tu-web-hecha-con-ia-no-parezca-hecha-con-ia-magic-ui-imp)
 - [Documentación oficial de 21st.dev](https://docs.21st.dev/)
 - [21st MCP y CLI para agentes](https://docs.21st.dev/mcp)
