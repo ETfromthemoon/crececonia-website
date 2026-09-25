@@ -66,7 +66,6 @@ export const TEMAS: Tema[] = [
       slugs: [
         "guia-completa-para-usar-claude-code",
         "como-escribir-prompts-que-funcionan",
-        "3-herramientas-para-que-tu-web-hecha-con-ia-no-parezca-hecha-con-ia-magic-ui-imp",
       ],
     },
   },

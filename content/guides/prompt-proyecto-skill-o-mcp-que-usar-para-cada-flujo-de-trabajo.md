@@ -240,5 +240,4 @@ Si repites contexto, crea un proyecto. Si repites decisiones, crea una skill. Si
 
 ### Guías relacionadas
 
-- [Cómo crear tu primera skill de Claude a partir de un proceso real](/guias/como-crear-tu-primera-skill-de-claude-a-partir-de-un-proceso-real)
 - [Cómo enseñarle tu negocio a Claude para dejar de recibir respuestas genéricas](/guias/como-ensenarle-tu-negocio-a-claude-para-dejar-de-recibir-respuestas-genericas)
