@@ -1,6 +1,5 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import EmailPopup from "@/components/EmailPopup";
 import HubListing from "@/components/HubListing";
 import { getHubItems } from "@/lib/hub";
 import { createPageMetadata } from "@/lib/seo";
@@ -20,7 +19,6 @@ export default async function CentroSkillsPage() {
   return (
     <>
       <Navbar />
-      <EmailPopup />
       <HubListing
         eyebrow="Claude Code Skills"
         titulo="Todas las skills"

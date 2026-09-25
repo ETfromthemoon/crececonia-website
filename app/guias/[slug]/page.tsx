@@ -1,6 +1,5 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import EmailPopup from "@/components/EmailPopup";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -77,7 +76,6 @@ export default async function GuiaPage({
   return (
     <>
       <Navbar />
-      <EmailPopup />
       <main className="knowledge-detail min-h-screen pb-32" style={{ background: "var(--obsidian)", paddingTop: 112 }}>
         {/* Breadcrumb */}
         <div className="px-6 pt-10 pb-2 max-w-3xl mx-auto">

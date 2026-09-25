@@ -1,9 +1,8 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import EmailPopup from "@/components/EmailPopup";
 import SkillViewTracker from "@/components/SkillViewTracker";
 import PromptDemoBox from "@/components/PromptDemoBox";
-import SkillDownloadGate from "@/components/SkillDownloadGate";
+import SkillDownloadButton from "@/components/SkillDownloadButton";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -106,7 +105,6 @@ export default async function SkillPage({
   return (
     <>
       <Navbar />
-      <EmailPopup />
       <SkillViewTracker slug={s.slug} />
       <main className="knowledge-detail min-h-screen pb-32" style={{ background: "var(--obsidian)", paddingTop: 112 }}>
         {/* ─── Breadcrumb ─── */}
@@ -218,10 +216,10 @@ export default async function SkillPage({
               </div>
             )}
 
-            {/* CTA primario de descarga — visible sin scroll + captura email */}
+            {/* CTA primario de descarga — visible sin scroll */}
             <div className="mt-8 flex items-center gap-4 flex-wrap">
               {s.archivo_nombre ? (
-                <SkillDownloadGate
+                <SkillDownloadButton
                   slug={s.slug}
                   archivoNombre={s.archivo_nombre}
                   archivoSize={s.archivo_size}

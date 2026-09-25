@@ -1,22 +1,23 @@
 import { NextResponse } from "next/server";
 import { getPublicSkill } from "@/lib/public-catalog";
-import { clean, isValidEmail, PUBLIC_LEAD_LIMITS, saveSubscriber } from "@/lib/public-leads";
+import { captureServerEvent } from "@/lib/posthog-server";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request, context: { params: Promise<{ slug: string }> }) {
+export async function POST(_request: Request, context: { params: Promise<{ slug: string }> }) {
   const { slug } = await context.params;
   const skill = getPublicSkill(slug);
   if (!skill?.archivo_nombre) return NextResponse.json({ detail: "Descarga no disponible." }, { status: 404 });
-  const body = await request.json().catch(() => null);
-  const email = clean(body?.email, PUBLIC_LEAD_LIMITS.email).toLowerCase();
-  const source = clean(body?.ref_code, PUBLIC_LEAD_LIMITS.short) || "skill_download";
-  if (!isValidEmail(email)) return NextResponse.json({ detail: "Email inválido." }, { status: 400 });
   try {
-    await saveSubscriber(email, source, `skill:${slug}`);
-    return NextResponse.json({ ok: true, download_url: `/downloads/skills/${skill.archivo_nombre}` });
+    await captureServerEvent("skill_download_succeeded", crypto.randomUUID(), {
+      slug,
+      file_type: skill.archivo_tipo,
+      route: `/skills/${slug}`,
+      page_type: "skill",
+      analytics_schema_version: 1,
+    });
   } catch (error) {
-    console.error("[public/skills/request-download] error:", error);
-    return NextResponse.json({ detail: "No pudimos preparar la descarga." }, { status: 500 });
+    console.error("[public/skills/request-download] no se pudo contar la descarga:", error);
   }
+  return NextResponse.json({ ok: true, download_url: `/downloads/skills/${skill.archivo_nombre}` });
 }

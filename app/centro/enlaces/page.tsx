@@ -1,6 +1,5 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import EmailPopup from "@/components/EmailPopup";
 import HubListing from "@/components/HubListing";
 import { getHubItems } from "@/lib/hub";
 import { createPageMetadata } from "@/lib/seo";
@@ -20,7 +19,6 @@ export default async function CentroEnlacesPage() {
   return (
     <>
       <Navbar />
-      <EmailPopup />
       <HubListing
         eyebrow="Links curados"
         titulo="Los mejores links sobre IA"
