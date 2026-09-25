@@ -1,6 +1,5 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import EmailPopup from "@/components/EmailPopup";
 import CentroBrowser, { type TemaResumen } from "@/components/CentroBrowser";
 import { getHubItems } from "@/lib/hub";
 import { TEMAS } from "@/lib/temas";
@@ -29,7 +28,6 @@ export default async function CentroPage() {
   return (
     <>
       <Navbar />
-      <EmailPopup />
       <main
         className="knowledge-page min-h-screen"
         style={{ background: "var(--obsidian)", paddingTop: 112 }}

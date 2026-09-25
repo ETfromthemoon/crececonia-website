@@ -37,10 +37,8 @@ type Status = "idle" | "loading" | "success" | "error";
  * cold-open oscuro + tipografía editorial de EbookHero (mismo BG/ACCENT vía
  * lib/ebook-theme) para que se sienta parte de la misma familia de páginas,
  * pero sin precio ni checkout — solo captura de interés vía /api/ebook/waitlist
- * (lib/ebook-waitlist.ts), que guarda el email en nuestra propia base de
- * Supabase y confirma por Resend. A diferencia de SuscriptorPopup/EmailPopup,
- * NO pasa por autodrive.cl — estos correos solo sirven para avisar el
- * lanzamiento, no alimentan ninguna lista de Autodrive.
+ * (lib/ebook-waitlist.ts), que guarda el email en nuestra base de datos y
+ * confirma por Resend. Estos correos solo sirven para avisar el lanzamiento.
  */
 export default function EbookComingSoon({ title, description, ghostWord, ctaSource, resource }: Props) {
   const [email, setEmail] = useState("");

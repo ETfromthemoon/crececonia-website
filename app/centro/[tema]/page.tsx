@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import EmailPopup from "@/components/EmailPopup";
 import HubCard from "@/components/HubCard";
 import { getHubItems, TIPO_LABEL, type HubTipo } from "@/lib/hub";
 import { TEMAS_POR_ID, type TemaId } from "@/lib/temas";
@@ -63,7 +62,6 @@ export default async function TemaPage({
   return (
     <>
       <Navbar />
-      <EmailPopup />
       <main
         className="knowledge-page min-h-screen"
         style={{ background: "var(--obsidian)", paddingTop: 112 }}
