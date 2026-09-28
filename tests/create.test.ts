@@ -64,6 +64,29 @@ function flowBody() {
 describe("POST /api/flow/create — 1 solo libro (comportamiento existente)", () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it.each([
+    [DEFAULT_EBOOK_RESOURCE],
+    [DEFAULT_EBOOK_RESOURCE, "ebook:claude-nivel-experto"],
+  ])("persiste JSON válido con el adaptador real antes de abrir Flow (%s)", async (...resources) => {
+    const { DatabaseQuery } = await vi.importActual<typeof import("@/lib/supabase")>("@/lib/supabase");
+    let manifest: Array<{ resource: string; amount: number }> = [];
+    const run = vi.fn(async (_sql: string, values: unknown[]) => {
+      // Simulate the JSON column parser, not a successful insert regardless of input.
+      if (typeof values[1] !== "string") throw new Error("invalid input syntax for type json");
+      manifest = JSON.parse(values[1]);
+      return [];
+    });
+    mockPendingInsert.mockImplementationOnce((payload) => new DatabaseQuery(run, "ebook_pending_orders").insert(payload));
+    flowOk();
+
+    const res = await POST(postJson({ email: "checkout@example.com", resources }));
+
+    expect(res.status).toBe(200);
+    expect(manifest.map((item) => item.resource)).toEqual(resources);
+    expect(Number(flowBody().get("amount"))).toBe(manifest.reduce((sum, item) => sum + item.amount, 0));
+    expect(run.mock.invocationCallOrder[0]).toBeLessThan(mockFetch.mock.invocationCallOrder[0]);
+  });
+
   it("400 cuando no se pasa email", async () => {
     const res = await POST(postJson({ resources: [DEFAULT_EBOOK_RESOURCE] }));
     expect(res.status).toBe(400);
