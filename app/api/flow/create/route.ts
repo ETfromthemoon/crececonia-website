@@ -202,6 +202,17 @@ export async function POST(request: Request) {
   });
 
   if (!flowRes.ok) {
+    const providerError = await flowRes.json().catch(() => null);
+    let message = typeof providerError?.message === "string" ? providerError.message : "Sin detalle";
+    for (const sensitive of [apiKey, secretKey, email, s]) {
+      if (sensitive) message = message.split(sensitive).join("[redacted]");
+    }
+    console.error("[flow/create] proveedor rechazó la orden", {
+      order: commerceOrder,
+      status: flowRes.status,
+      code: typeof providerError?.code === "number" ? providerError.code : undefined,
+      message: message.slice(0, 300),
+    });
     await discardPendingOrder(db, commerceOrder);
     await captureCheckoutFailure(analyticsDistinctId, "provider_http_error", {
       item_count: resources.length,

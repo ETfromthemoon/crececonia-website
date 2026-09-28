@@ -127,6 +127,25 @@ describe("POST /api/flow/create — 1 solo libro (comportamiento existente)", ()
     expect(res.status).toBe(502);
   });
 
+  it("registra el rechazo de Flow sin exponer correo ni credenciales", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({ code: 123, message: `Invalid user@test.com ${process.env.FLOW_API_KEY}` }),
+    });
+    try {
+      const res = await POST(postJson({ email: "user@test.com" }));
+      expect(res.status).toBe(502);
+      expect(log).toHaveBeenCalledWith("[flow/create] proveedor rechazó la orden", expect.objectContaining({
+        status: 400, code: 123, message: "Invalid [redacted] [redacted]",
+      }));
+      expect(mockPendingDelete).toHaveBeenCalled();
+    } finally {
+      log.mockRestore();
+    }
+  });
+
   it("502 cuando Flow responde sin url o token", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
