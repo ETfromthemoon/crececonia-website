@@ -2,6 +2,19 @@ import { describe, expect, it, vi } from "vitest";
 import { DatabaseQuery } from "@/lib/supabase";
 
 describe("adaptador PostgreSQL compatible", () => {
+  it("guarda el manifiesto JSON de órdenes sin convertir otros arrays SQL", async () => {
+    const run = vi.fn().mockResolvedValue([]);
+    const resources = [{ resource: "ebook:uno", tier: "early", amount: 17900 }];
+    await new DatabaseQuery(run, "ebook_pending_orders").insert({ resources });
+    expect(JSON.parse(run.mock.calls[0][1][0])).toEqual(resources);
+
+    await new DatabaseQuery(run, "ebook_pending_orders").update({ resources: [] }).eq("commerce_order", "test");
+    expect(run.mock.calls[1][1]).toEqual(["[]", "test"]);
+
+    await new DatabaseQuery(run, "launches").insert({ tags: ["uno", "dos"] });
+    expect(run.mock.calls[2][1]).toEqual([["uno", "dos"]]);
+  });
+
   it("parametriza filtros, orden y límite", async () => {
     const run = vi.fn().mockResolvedValue([{ resource: "ebook:uno" }]);
     const result = await new DatabaseQuery(run, "ebook_purchases")

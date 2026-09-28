@@ -6,6 +6,15 @@ type DatabaseResult = { data: any; error: DatabaseError | null; count?: number |
 type QueryMode = "select" | "insert" | "update" | "delete";
 type Filter = { column: string; value: unknown };
 
+// Neon encodes JS arrays as PostgreSQL arrays. This column stores a JSON
+// manifest instead; leave native SQL arrays in other columns untouched.
+function writeValue(table: string, column: string, value: unknown): unknown {
+  if (table === "ebook_pending_orders" && column === "resources" && value !== null && typeof value === "object") {
+    return JSON.stringify(value);
+  }
+  return value;
+}
+
 export interface DatabaseAdminClient {
   from(table: string): DatabaseQuery;
   rpc(name: string, args?: Record<string, unknown>): Promise<DatabaseResult>;
@@ -184,7 +193,7 @@ export class DatabaseQuery implements PromiseLike<DatabaseResult> {
         }
         const tuples = rows.map((row) => {
           const placeholders = columns.map((column) => {
-            values.push(row[column]);
+            values.push(writeValue(this.table, column, row[column]));
             return `$${values.length}`;
           });
           return `(${placeholders.join(", ")})`;
@@ -201,7 +210,7 @@ export class DatabaseQuery implements PromiseLike<DatabaseResult> {
         const entries = Object.entries(payload ?? {});
         if (entries.length === 0) throw new Error("No hay columnas para actualizar.");
         const set = entries.map(([column, value]) => {
-          values.push(value);
+          values.push(writeValue(this.table, column, value));
           return `${identifier(column)} = $${values.length}`;
         });
         const where = this.where(values);
