@@ -41,7 +41,7 @@ export default function EbookHero() {
 
   return (
     <section
-      className="flex items-center section-y-spacious px-6"
+      className="ebook-hero flex items-center section-y-spacious px-6"
       style={{ minHeight: "88vh", background: BG, position: "relative", overflow: "hidden" }}
     >
       {/* Cinematic cold-open: vignette + grain, ties into EbookImmersion right after */}
@@ -69,7 +69,7 @@ export default function EbookHero() {
       />
 
       <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%", position: "relative", zIndex: 1 }}>
-        <div className="grid lg:grid-cols-[1fr_2fr] gap-10 lg:gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Left: copy + CTA */}
           <div>
             <motion.p

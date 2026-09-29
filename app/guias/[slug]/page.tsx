@@ -1,4 +1,6 @@
 import Navbar from "@/components/Navbar";
+import ResourceNav from "@/components/ResourceNav";
+import GuideOutline from "@/components/GuideOutline";
 import Footer from "@/components/Footer";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -77,6 +79,7 @@ export default async function GuiaPage({
     <>
       <Navbar />
       <main className="knowledge-detail min-h-screen pb-32" style={{ background: "var(--obsidian)", paddingTop: 112 }}>
+        <ResourceNav />
         {/* Breadcrumb */}
         <div className="px-6 pt-10 pb-2 max-w-3xl mx-auto">
           <Link
@@ -175,7 +178,8 @@ export default async function GuiaPage({
         {/* Contenido completo (abierto) */}
         <section className="px-6 pb-12">
           <div className="max-w-3xl mx-auto">
-            <article className="skill-prose" dangerouslySetInnerHTML={{ __html: html }} />
+            <GuideOutline />
+            <article className="skill-prose guide-content" dangerouslySetInnerHTML={{ __html: html }} />
             <GuiaCodeCopy />
           </div>
         </section>

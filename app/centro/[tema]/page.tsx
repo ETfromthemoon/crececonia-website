@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
+import ResourceNav from "@/components/ResourceNav";
 import Footer from "@/components/Footer";
 import HubCard from "@/components/HubCard";
 import { getHubItems, TIPO_LABEL, type HubTipo } from "@/lib/hub";
@@ -67,6 +68,7 @@ export default async function TemaPage({
         style={{ background: "var(--obsidian)", paddingTop: 112 }}
       >
         {/* Header del tema */}
+        <ResourceNav />
         <section className="relative py-24 px-6 overflow-hidden">
           <div
             className="absolute inset-0 pointer-events-none"

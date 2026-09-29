@@ -478,6 +478,7 @@ export default function ChatWidget() {
       </AnimatePresence>
 
       {/* ── Botón flotante ─────────────────────────────────────────────── */}
+      <div className="site-help-dock">
       <motion.button
         onClick={handleOpen}
         whileHover={{ scale: 1.02 }}
@@ -497,6 +498,7 @@ export default function ChatWidget() {
           transition: "background 0.2s, box-shadow 0.2s, transform 0.2s",
         }}
         aria-label={open ? "Cerrar chat" : "Abrir chat de ayuda"}
+        aria-expanded={open}
       >
         <AnimatePresence mode="wait">
           {open ? (
@@ -525,7 +527,9 @@ export default function ChatWidget() {
             </motion.svg>
           )}
         </AnimatePresence>
+        <span className="site-help-label">{open ? "Cerrar ayuda" : "¿Necesitas orientación?"}</span>
       </motion.button>
+      </div>
     </>
   );
 }

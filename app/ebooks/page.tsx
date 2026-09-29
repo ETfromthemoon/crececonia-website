@@ -1,4 +1,7 @@
 import EbookCard from "@/components/EbookCard";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import ResourceNav from "@/components/ResourceNav";
 import { EBOOK_CATALOG, isCatalogEntryLive } from "@/lib/ebook-catalog";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 import { EBOOK_BUNDLES, computeBundleTotal } from "@/lib/ebook-bundles";
@@ -55,16 +58,18 @@ export default async function EbooksPage() {
   }));
 
   return (
+    <><Navbar />
     <main className="ebook-store">
+      <ResourceNav />
       <section className="ebook-store-hero">
         <div className="ebook-store-shell ebook-store-hero-grid">
           <div>
-            <span className="ebook-store-kicker">Biblioteca CrececonIA · 07 títulos</span>
-            <h1>Elige el conocimiento que necesitas <em>aplicar esta semana.</em></h1>
+            <span className="ebook-store-kicker">Biblioteca CrececonIA · {bookCards.length} títulos</span>
+            <h1>Aprende algo.<br /><em>Aplícalo esta semana.</em></h1>
           </div>
           <div className="ebook-store-hero-aside">
             <p>Rutas prácticas para aprender Claude, operar un negocio o construir sitios corporativos, eCommerce y productos SaaS con IA. Compra solo la que coincide con tu punto de partida.</p>
-            <a href="#elegir">Elegir mi ebook <span>↓</span></a>
+            <a href="#catalogo">Elegir mi ebook <span>↓</span></a>
           </div>
         </div>
         <div className="ebook-store-signal" aria-label="Beneficios de compra">
@@ -72,21 +77,21 @@ export default async function EbooksPage() {
         </div>
       </section>
 
-      <section id="elegir" className="ebook-store-decision">
-        <div className="ebook-store-shell ebook-store-decision-grid">
-          <div><span>Antes de elegir</span><h2>Esta ruta es para avanzar por tu cuenta.</h2></div>
-          <div><strong>Elige un ebook si</strong><p>quieres aprender y ejecutar con una ruta práctica, sin depender de sesiones ni soporte 1:1.</p></div>
-          <div><strong>No lo elijas si</strong><p>necesitas adaptar una solución a tu caso o que alguien la implemente. Revisa mentoría o implementación antes de comprar por impulso.</p></div>
-        </div>
-      </section>
-
       <section id="catalogo" className="ebook-store-catalog">
         <div className="ebook-store-shell">
           <div className="ebook-store-heading">
-            <div><span>01 / Biblioteca</span><h2>Empieza por el resultado que necesitas.</h2></div>
+            <div><span>01 / Biblioteca</span><h2>Encuentra tu próximo paso.</h2></div>
             <p>Cada libro funciona solo. Lee para quién es y para quién no antes de elegir; si buscas una progresión completa, revisa las rutas más abajo.</p>
           </div>
           <div className="ebook-store-grid">{bookCards.map(({ key, ...card }, index) => <EbookCard key={key} index={index} {...card} />)}</div>
+        </div>
+      </section>
+
+      <section id="elegir" className="ebook-store-decision">
+        <div className="ebook-store-shell ebook-store-decision-grid">
+          <div><span>Antes de elegir</span><h2>Aprende a tu ritmo.</h2></div>
+          <div><strong>Elige un ebook si</strong><p>quieres aprender y ejecutar con una ruta práctica, sin sesiones ni soporte 1:1.</p></div>
+          <div><strong>¿Necesitas apoyo?</strong><p>Si buscas adaptar una solución a tu caso o delegarla, revisa <a href="/mentoria">mentoría</a> o <a href="/implementacion">implementación</a>.</p></div>
         </div>
       </section>
 
@@ -109,5 +114,6 @@ export default async function EbooksPage() {
         </div>
       </section>
     </main>
+    <Footer /></>
   );
 }
