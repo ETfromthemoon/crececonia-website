@@ -12,7 +12,7 @@ export default function EditorialHero() {
     </div>
     <div className={styles.stage} aria-label="Una biblioteca para pasar de aprender a aplicar">
       <div className={styles.stageTop}><span>Herramientas con criterio</span><span>01 — 03</span></div>
-      <a className={styles.book} href="/ebook/de-cero-a-claude-en-una-semana"><Image src="/ebooks/de-cero-a-claude-en-una-semana.jpg" alt="De cero a Claude en una semana — explorar el ebook" fill sizes="(max-width: 640px) 52vw, 260px" priority /></a>
+      <a className={styles.book} href="/ebook/de-cero-a-claude-en-una-semana"><Image src="/ebook-cover.png" alt="De cero a Claude en una semana — explorar el ebook" fill sizes="(max-width: 640px) 52vw, 300px" priority /></a>
       <a className={styles.paper} href="/guias/guia-completa-para-usar-claude-code"><span className={styles.label}>02 / Guía práctica</span><strong>Tu primera<br />sesión con<br /><em>Claude Code.</em></strong><span className={styles.paperLines} aria-hidden="true" /><span>Leer la guía ↗</span></a>
       <a className={styles.skillSlip} href="/skills/captaclientes"><span className={styles.fileIcon} aria-hidden="true">↗</span><span><small>03 / SKILL</small><strong>Captaclientes</strong></span><span aria-hidden="true">→</span></a>
       <div className={styles.stageBottom}><span>Lee. Prueba. Construye.</span><span>Hecho para aplicar.</span></div>

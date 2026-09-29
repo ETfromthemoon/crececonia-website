@@ -13,7 +13,7 @@
 .stageTop { top:24px; text-transform:uppercase; letter-spacing:.06em; }
 .stageBottom { bottom:20px; }
 .book { position:absolute; left:8%; top:76px; width:48%; height:320px; transform:rotate(-9deg); box-shadow:8px 18px 28px #29351c35; z-index:2; transition:transform 200ms ease; }
-.book img { object-fit:cover; }
+.book img { object-fit:contain; background:#e8d9c5; }
 .book:hover { transform:rotate(-4deg) translateY(-5px); }
 .paper { position:absolute; right:5%; top:108px; width:45%; background:#fffdf5; padding:24px; transform:rotate(8deg); min-height:265px; box-shadow:3px 10px 25px #29351c15; display:flex; flex-direction:column; justify-content:space-between; gap:16px; }
 .paper strong { font-family:var(--font-editorial); font-size:25px; line-height:1.16; font-weight:400; }
