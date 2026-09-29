@@ -7,12 +7,12 @@
 .actions { display:flex; flex-wrap:wrap; align-items:center; gap:24px; margin-top:30px; }
 .heroNote { display:flex; gap:12px; align-items:center; font-size:13px; color:var(--muted); margin-top:30px; }
 .heroNote > span { font-size:28px; color:#526327; }
-.stage { position:relative; min-height:500px; background:#e3e8d7; border-radius:4px; isolation:isolate; }
+.stage { position:relative; min-height:500px; background:#e3e8d7; border-radius:4px; isolation:isolate; overflow:clip; }
 .stage::before { content:''; position:absolute; inset:48px 20px; border:1px solid #c6ceba; border-radius:50%; transform:rotate(-20deg); z-index:-1; }
 .stageTop, .stageBottom { position:absolute; left:24px; right:24px; display:flex; justify-content:space-between; gap:12px; font:10px var(--font-mono); color:#46523b; }
 .stageTop { top:24px; text-transform:uppercase; letter-spacing:.06em; }
 .stageBottom { bottom:20px; }
-.book { position:absolute; left:8%; top:76px; width:48%; height:320px; transform:rotate(-9deg); box-shadow:8px 18px 28px #29351c35; z-index:2; transition:transform 200ms ease; }
+.book { position:absolute; left:4%; top:76px; width:42%; height:300px; transform:rotate(-9deg); box-shadow:8px 18px 28px #29351c35; z-index:2; transition:transform 200ms ease; }
 .book img { object-fit:contain; background:#e8d9c5; }
 .book:hover { transform:rotate(-4deg) translateY(-5px); }
 .paper { position:absolute; right:5%; top:108px; width:45%; background:#fffdf5; padding:24px; transform:rotate(8deg); min-height:265px; box-shadow:3px 10px 25px #29351c15; display:flex; flex-direction:column; justify-content:space-between; gap:16px; }
@@ -82,10 +82,10 @@
   .heroCopy h1 { font-size:clamp(3.5rem,14vw,5rem); }
   .heroCopy > p { font-size:16px; }
   .heroNote { margin-top:18px; }
-  .stage { min-height:400px; }
-  .book { width:46%; height:250px; top:65px; }
+  .stage { min-height:440px; }
+  .book { width:42%; height:250px; top:65px; }
   .paper { width:47%; top:88px; min-height:215px; }
-  .paper strong { font-size:23px; }
+  .paper strong { font-size:20px; }
   .skillSlip { bottom:48px; padding:14px; }
   .stageTop, .stageBottom { left:16px; right:16px; font-size:9px; }
   .library { padding-block:48px; }
