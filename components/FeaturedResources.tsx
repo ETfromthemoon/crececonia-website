@@ -1,14 +1,15 @@
-const resources = [
-  { href: "/ebooks", type: "Ebooks", title: "Una ruta para aprender", text: "Libros prácticos para profundizar y aplicar a tu ritmo.", action: "Explorar ebooks" },
-  { href: "/centro/guias", type: "Guías", title: "Resuelve una tarea concreta", text: "Lecturas paso a paso, abiertas y listas para consultar.", action: "Leer las guías" },
-  { href: "/centro/skills", type: "Skills", title: "Lleva el método a tu entorno", text: "Instrucciones reutilizables y archivos de descarga directa.", action: "Explorar skills" },
-];
+import Image from "next/image";
+import styles from "./HomeEditorial.module.css";
 
 export default function FeaturedResources() {
-  return <section className="featured-resources site-container" aria-labelledby="resources-title">
-    <div className="resource-section-heading"><div><span className="eyebrow">Biblioteca CrececonIA</span><h2 id="resources-title">Empieza con algo concreto.</h2></div><a className="text-link" href="/centro">Ver todos los recursos →</a></div>
-    <div className="featured-resource-grid">{resources.map(resource => <a className="featured-resource" key={resource.href} href={resource.href}>
-      <span className="resource-type">{resource.type}</span><h3>{resource.title}</h3><p>{resource.text}</p><span className="resource-card-action">{resource.action} <span aria-hidden="true">↗</span></span>
-    </a>)}</div>
+  return <section id="biblioteca" className={`${styles.library} site-container`} aria-labelledby="resources-title">
+    <div className={styles.sectionHeading}><div><span className={styles.label}>La biblioteca / Para trabajar mejor</span><h2 id="resources-title">Conocimiento que<br /><em>sale del papel.</em></h2></div><a className="text-link" href="/centro">Todos los recursos ↗</a></div>
+    <div className={styles.libraryGrid}>
+      <article className={styles.featuredBook}><div className={styles.featuredCopy}><span className={styles.label}>Empieza por aquí / Ebook</span><h3>De cero a Claude<br />en una semana.</h3><p>Una ruta práctica para entender la herramienta y empezar a construir con ella.</p><a href="/ebook/de-cero-a-claude-en-una-semana" className="button button-dark">Ver el ebook y sus muestras ↗</a></div><div className={styles.pagePreview}><Image src="/ebooks/previews/de-cero-claude/claude-code.webp" alt="Página real del ebook: empezar con Claude Code" fill sizes="(max-width: 640px) 65vw, 300px" /></div><span className={styles.previewCaption}>Una página real. Un primer paso concreto.</span></article>
+      <div className={styles.sideResources}>
+        <a href="/centro/guias" className={styles.guideTile}><span className={styles.label}>Guías / Lectura abierta</span><span className={styles.largeSymbol} aria-hidden="true">Aa<span>↗</span></span><h3>Una tarea.<br />Paso a paso.</h3><p>Consulta el método, prueba y vuelve cuando lo necesites.</p><span className={styles.tileAction}>Explorar guías →</span></a>
+        <a href="/centro/skills" className={styles.skillTile}><div><span className={styles.label}>Skills / Listas para aplicar</span><h3>Tu próxima capacidad.</h3><span className={styles.tileAction}>Explorar skills →</span></div><span className={styles.codeSymbol} aria-hidden="true">[↗]</span></a>
+      </div>
+    </div>
   </section>;
 }
