@@ -1,0 +1,124 @@
+/* Shared public UI. Scoped to public templates; payment and admin styles stay intact. */
+:root {
+  --resource-paper: #f5f2eb;
+  --resource-surface: #fffdf8;
+  --resource-ink: #161719;
+  --resource-muted: #50524a;
+  --resource-accent: #526327;
+  --resource-line: #d9d8ce;
+}
+.corporate-nav { background: var(--resource-paper); border-bottom: 1px solid var(--resource-line); }
+.desktop-nav a { font-size: 12px; letter-spacing: .055em; min-height: 44px; display: flex; align-items: center; }
+.desktop-nav a[aria-current="page"] { color: var(--resource-accent); text-decoration: underline; text-underline-offset: 7px; }
+.corporate-nav a:focus-visible, .corporate-nav button:focus-visible,
+.resource-nav a:focus-visible, .resource-card:focus-visible,
+.featured-resource:focus-visible, .knowledge-detail :is(a, button, summary):focus-visible,
+.ebook-detail-page :is(a, button, input, summary):focus-visible,
+.ebook-store a:focus-visible, .site-help-dock button:focus-visible {
+  outline: 3px solid #718641; outline-offset: 4px;
+}
+.corporate-page .eyebrow { color: var(--resource-accent); }
+.corporate-hero { min-height: auto; padding-top: 124px; padding-bottom: 56px; }
+.corporate-hero-grid { padding-top: 32px; gap: 56px; align-items: center; }
+.corporate-hero h1 { font-size: clamp(2.8rem, 5.2vw, 4.7rem); line-height: 1.02; letter-spacing: -.055em; }
+.corporate-hero h1 em { color: var(--resource-accent); }
+.hero-lead { font-size: 1.12rem; margin: 24px 0; }
+.hero-aside { padding: 28px; background: #e9edda; border-radius: 16px; }
+.hero-aside p { font-size: 1rem; }
+.featured-resources { padding-block: 64px; }
+.resource-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+.resource-section-heading h2 { font-size: clamp(1.8rem, 3.5vw, 3rem); line-height: 1.1; letter-spacing: -.04em; }
+.featured-resource-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.featured-resource { display: flex; flex-direction: column; padding: 28px; background: var(--resource-surface); border: 1px solid var(--resource-line); border-radius: 12px; }
+.resource-type { font: 12px var(--font-mono); color: var(--resource-accent); text-transform: uppercase; letter-spacing: .1em; }
+.featured-resource h3 { font-size: 1.5rem; line-height: 1.2; margin: 20px 0 12px; }
+.featured-resource p { color: var(--resource-muted); line-height: 1.6; margin-bottom: 24px; }
+.resource-card { display: flex; flex-direction: column; height: 100%; border-color: var(--resource-line) !important; border-radius: 12px !important; }
+.resource-card h3 { font-weight: 500; font-size: 1.25rem !important; }
+.resource-card > p:not(.resource-card-action) { font-size: 1rem; }
+.resource-card-action { margin-top: auto; padding-top: 24px; font-size: 14px !important; color: var(--resource-accent) !important; }
+.resource-nav { display: flex; gap: 6px; flex-wrap: wrap; width: min(100% - 40px, 1180px); margin: 0 auto; padding: 16px 0; border-bottom: 1px solid var(--resource-line); }
+.resource-nav a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 18px; border-radius: 100px; font-size: 14px; color: var(--resource-muted); }
+.resource-nav a:hover { background: #e8e8dc; }
+.resource-nav a[aria-current="page"] { background: var(--resource-ink); color: #fffdf8; }
+.knowledge-page, .knowledge-detail { --champagne: var(--resource-accent); --gold-soft: #e9edda; padding-top: 76px !important; }
+.knowledge-page > section:first-of-type { padding-top: 40px; padding-bottom: 40px; }
+.knowledge-detail > header { padding-top: 24px; padding-bottom: 32px; }
+.knowledge-detail > div { padding-top: 24px; }
+.knowledge-detail .skill-prose { font-size: 17px; line-height: 1.8; overflow-wrap: anywhere; }
+.knowledge-detail .skill-prose pre { overflow-x: auto; max-width: 100%; }
+.knowledge-detail .skill-prose :is(h2,h3) { scroll-margin-top: 100px; }
+.guide-outline { border: 1px solid var(--resource-line); border-radius: 12px; background: var(--resource-surface); margin-bottom: 36px; padding: 4px 20px; }
+.guide-outline summary, .resource-technical summary { cursor: pointer; padding-block: 16px; min-height: 44px; }
+.guide-outline summary span { color: var(--resource-muted); font-size: 13px; margin-left: 12px; }
+.guide-outline ol { list-style: none; padding-bottom: 16px; }
+.guide-outline a { display: block; padding: 9px 0; color: var(--resource-accent); text-decoration: underline; text-underline-offset: 3px; }
+.guide-outline li[data-level="3"] { padding-left: 18px; }
+.resource-technical { margin-top: 24px; border-top: 1px solid var(--resource-line); color: var(--resource-muted); font-size: 14px; }
+.resource-technical p { margin-top: 0; }
+.ebook-store, .ebook-detail-page { padding-top: 76px; }
+.ebook-store-hero { min-height: auto; padding-top: 36px; }
+.ebook-store-hero-grid { gap: 48px; }
+.ebook-store-hero h1 { font-size: clamp(2.5rem, 4.5vw, 4rem); line-height: 1.03; margin-top: 16px; }
+.ebook-store-hero-aside p { font-size: 1rem; }
+.ebook-store-signal { margin-top: 36px; }
+.ebook-store-catalog { padding: 40px 0 64px; }
+.ebook-store-heading { margin-bottom: 28px; gap: 32px; }
+.ebook-store-heading h2 { font-size: clamp(1.7rem, 3vw, 2.6rem); }
+.ebook-store-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ebook-product-card { display: flex; flex-direction: column; }
+.ebook-product-copy { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.ebook-product-action { margin-top: auto; padding-top: 20px; min-height: 48px; }
+.ebook-product-meta { font-size: 12px; flex-wrap: wrap; gap: 8px; }
+.ebook-store-decision a { text-decoration: underline; text-underline-offset: 3px; }
+.ebook-library-nav { position: relative; z-index: 10; }
+.ebook-library-nav-inner { align-items: start; padding-block: 12px; }
+.ebook-library-index { font-size: 13px; min-height: 44px; display: flex; align-items: center; }
+.ebook-switcher { margin-left: auto; width: min(100%, 460px); }
+.ebook-switcher summary { display: flex; justify-content: space-between; align-items: center; gap: 16px; cursor: pointer; min-height: 44px; font-size: 14px; padding: 8px 12px; border: 1px solid var(--resource-line); border-radius: 8px; }
+.ebook-switcher .ebook-library-links { flex-direction: column; white-space: normal; padding-top: 8px; }
+.ebook-switcher .ebook-library-links a { font-size: 14px; min-height: 44px; padding: 10px 12px; white-space: normal; }
+.ebook-detail-page > section { scroll-margin-top: 92px; }
+.ebook-detail-page .ebook-hero { min-height: auto !important; padding-top: 48px; padding-bottom: 48px; }
+.ebook-hero h1 { font-size: clamp(2.6rem, 5vw, 4.8rem) !important; }
+.ebook-detail-page .section-y { padding-block: 56px; }
+.ebook-extra-options { margin-bottom: 20px; border-bottom: 1px solid var(--resource-line); padding-bottom: 16px; }
+.ebook-extra-options > summary { cursor: pointer; min-height: 44px; font-size: 15px; color: var(--resource-ink); }
+.ebook-extra-options > div { margin-top: 16px; }
+.price-status { min-height: 52px; display: flex; align-items: center; color: var(--resource-muted); font-size: 16px; }
+.ebook-more-context { width: min(100% - 40px, 1100px); margin: 24px auto; border-block: 1px solid var(--resource-line); }
+.ebook-more-context > summary { cursor: pointer; padding: 24px 0; font-size: 17px; }
+.site-help-label { display: none; }
+@media (max-width: 960px) {
+  .desktop-nav { gap: 16px; }
+  .corporate-hero-grid { grid-template-columns: 1fr; gap: 28px; }
+  .hero-aside { display: none; }
+  .ebook-store-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ebook-store-hero-grid { grid-template-columns: 1fr; gap: 24px; }
+  .featured-resource-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .corporate-hero { padding-top: 104px; padding-bottom: 40px; }
+  .corporate-hero-grid { padding-top: 16px; }
+  .corporate-hero h1 { font-size: clamp(2.5rem, 10vw, 3.2rem); }
+  .hero-lead { font-size: 16px; line-height: 1.65; }
+  .resource-section-heading { align-items: start; flex-direction: column; }
+  .featured-resources { padding-block: 40px; }
+  .featured-resource { padding: 24px; }
+  .resource-nav { width: calc(100% - 32px); gap: 2px; }
+  .resource-nav a { padding: 8px 12px; }
+  .knowledge-page > section:first-of-type { padding-block: 28px; }
+  .ebook-store-grid { grid-template-columns: 1fr; }
+  .ebook-store-hero { padding-top: 28px; }
+  .ebook-store-signal { margin-top: 24px; }
+  .ebook-library-nav-inner { flex-direction: column; gap: 4px; }
+  .ebook-switcher { width: 100%; }
+  .ebook-detail-page .ebook-hero { padding-block: 32px; }
+  .site-help-dock { display: flex; justify-content: center; padding: 16px 20px max(16px, env(safe-area-inset-bottom)); background: var(--resource-paper); border-top: 1px solid var(--resource-line); }
+  .site-help-dock .site-chat-fab { position: static !important; width: auto !important; height: auto !important; min-height: 48px; padding: 12px 20px; gap: 12px; box-shadow: none !important; color: #161719; }
+  .site-help-label { display: inline; font-size: 15px; }
+  .site-chat-panel { bottom: max(12px, env(safe-area-inset-bottom)) !important; max-height: calc(100dvh - 24px); overflow-y: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ebook-hero * { filter: none !important; }
+}

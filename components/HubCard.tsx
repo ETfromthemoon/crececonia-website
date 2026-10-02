@@ -77,7 +77,7 @@ export default function HubCard({ item }: { item: HubItem }) {
       )}
 
       <p
-        className="mt-5 text-xs"
+        className="resource-card-action text-xs"
         style={{
           color: "var(--champagne)",
           fontFamily: "var(--font-mono)",
@@ -103,7 +103,7 @@ export default function HubCard({ item }: { item: HubItem }) {
         href={item.href}
         target="_blank"
         rel="noopener noreferrer"
-        className="group block card-hover-dark"
+        className="resource-card group card-hover-dark"
         style={cardStyle}
       >
         {inner}
@@ -111,7 +111,7 @@ export default function HubCard({ item }: { item: HubItem }) {
     );
   }
   return (
-    <Link href={item.href} className="group block card-hover-dark" style={cardStyle}>
+    <Link href={item.href} className="resource-card group card-hover-dark" style={cardStyle}>
       {inner}
     </Link>
   );

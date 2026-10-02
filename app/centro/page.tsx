@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import ResourceNav from "@/components/ResourceNav";
 import Footer from "@/components/Footer";
 import CentroBrowser, { type TemaResumen } from "@/components/CentroBrowser";
 import { getHubItems } from "@/lib/hub";
@@ -33,6 +34,7 @@ export default async function CentroPage() {
         style={{ background: "var(--obsidian)", paddingTop: 112 }}
       >
         {/* Header */}
+        <ResourceNav />
         <section className="relative py-24 px-6 overflow-hidden">
           <div
             className="absolute inset-0 pointer-events-none"

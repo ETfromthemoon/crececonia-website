@@ -99,6 +99,8 @@ export default function EbookPricing({
   const otherActiveEbooks = crossSellEntries;
   const pricingVariant = useFeatureFlagVariantKey("ebook-pricing-variant") ?? "control";
   const [priceInfo, setPriceInfo] = useState<PriceInfo | null>(null);
+  const [priceError, setPriceError] = useState(false);
+  const [priceRetry, setPriceRetry] = useState(0);
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -169,17 +171,26 @@ export default function EbookPricing({
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const previewQs = previewKey ? `&preview=${encodeURIComponent(previewKey)}` : "";
     const load = () =>
       fetch(`/api/ebook/cupos?resource=${resource}${previewQs}`)
-        .then((r) => r.json())
-        .then(setPriceInfo)
-        .catch(() => {});
+        .then((r) => {
+          if (!r.ok) throw new Error("No se pudo cargar el precio");
+          return r.json();
+        })
+        .then((data) => {
+          if (!Number.isFinite(data.price) || data.price <= 0) throw new Error("Precio no disponible");
+          if (!cancelled) { setPriceInfo(data); setPriceError(false); }
+        })
+        .catch(() => { if (!cancelled) setPriceError(true); });
 
+    setPriceInfo(null);
+    setPriceError(false);
     load();
     const id = setInterval(load, 30000);
-    return () => clearInterval(id);
-  }, [resource, previewKey]);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [resource, previewKey, priceRetry]);
 
   useEffect(() => {
     trackEbookEvent("ebook_page_view", { resource, pricing_variant: pricingVariant });
@@ -271,7 +282,7 @@ export default function EbookPricing({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !priceInfo || priceError) return;
     setStatus("loading");
     setErrorMsg("");
 
@@ -358,7 +369,9 @@ export default function EbookPricing({
               </div>
             )}
 
-            <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+            {!priceInfo || priceError ? <div className="price-status" role="status">
+              {priceError ? <span>No pudimos actualizar el precio. <button type="button" onClick={() => setPriceRetry(value => value + 1)} style={{ textDecoration: "underline" }}>Reintentar</button></span> : "Consultando precio vigente…"}
+            </div> : <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
               <span
                 style={{
                   color: "#000",
@@ -390,7 +403,7 @@ export default function EbookPricing({
                   ${appliedDiscount ? formattedBasePrice : formattedOriginal}
                 </span>
               )}
-            </div>
+            </div>}
 
             {appliedDiscount && (
               <p
@@ -412,6 +425,8 @@ export default function EbookPricing({
 
           {/* Form */}
           <form onSubmit={handleSubmit} style={{ padding: "28px 36px", display: "flex", flexDirection: "column" }}>
+            {(bundleOffers.length > 0 || otherActiveEbooks.length > 0) && <details className="ebook-extra-options" open={selectedExtras.length > 0 || Boolean(initialSelectedExtras?.length)}>
+              <summary>{isCombo ? `${selectedResources.length} ebooks seleccionados · editar` : "Opcional: combinar con otros ebooks"}</summary>
             {bundleOffers.length > 0 && (
               <div style={{ marginBottom: 18 }}>
                 <p
@@ -495,6 +510,7 @@ export default function EbookPricing({
                 )}
               </div>
             )}
+            </details>}
 
             {!appliedDiscount && !isCombo && isDiscountOpen && (
               <div id="ebook-discount-panel" style={{ marginBottom: 18, order: 3 }}>
@@ -638,6 +654,7 @@ export default function EbookPricing({
 
             {errorMsg && (
               <p
+                role="alert"
                 style={{
                   order: 4,
                   color: "#c0392b",
@@ -653,7 +670,7 @@ export default function EbookPricing({
 
             <button
               type="submit"
-              disabled={status === "loading"}
+              disabled={status === "loading" || !priceInfo || priceError}
               className="btn-monad-fill"
               style={{
                 order: 5,
@@ -663,7 +680,7 @@ export default function EbookPricing({
             >
               {status === "loading"
                 ? "Redirigiendo a pago..."
-                : `Comprar ahora · $${formattedPrice} CLP`}
+                : !priceInfo || priceError ? "Esperando precio vigente" : `Comprar ahora · $${formattedPrice} CLP`}
             </button>
           </form>
 

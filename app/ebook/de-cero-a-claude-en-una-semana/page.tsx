@@ -179,11 +179,8 @@ export default async function EbookPage({
   return (
     <EbookPageFrame currentResource={DEFAULT_EBOOK_RESOURCE}>
       <EbookHero />
-      <EbookImmersion />
       <EbookProductTheater content={EBOOK_PRODUCT_THEATER_CONTENT[DEFAULT_EBOOK_RESOURCE]} />
-      <EbookProblem />
-      <EbookBenefits />
-      <EbookWhoIsFor />
+      <EbookTOC />
       <EbookFit
         title={<>Este ebook te da una ruta para aprender por tu cuenta. <em style={{ fontStyle: "italic" }}>No reemplaza acompañamiento ni implementación.</em></>}
         forYou={[
@@ -198,8 +195,6 @@ export default async function EbookPage({
         ]}
         alternative={{ href: "/mentoria", label: "Revisar mentoría si necesitas acompañamiento" }}
       />
-      <EbookTOC />
-      <EbookAuthor />
       <EbookPricing
         resource={DEFAULT_EBOOK_RESOURCE}
         crossSellEntries={crossSellEntries}
@@ -207,6 +202,14 @@ export default async function EbookPage({
         bundleOffers={bundleOffers}
         {...urlSelection}
       />
+      <details className="ebook-more-context">
+        <summary>Más sobre el método, los beneficios y el autor</summary>
+        <EbookImmersion />
+        <EbookProblem />
+        <EbookBenefits />
+        <EbookWhoIsFor />
+        <EbookAuthor />
+      </details>
       <EbookFAQ />
     </EbookPageFrame>
   );

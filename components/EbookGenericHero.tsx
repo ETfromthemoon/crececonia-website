@@ -65,7 +65,7 @@ export default function EbookGenericHero({
 
   return (
     <section
-      className="flex items-center section-y-spacious px-6"
+      className="ebook-hero flex items-center section-y-spacious px-6"
       style={{ minHeight: "80vh", background: BG, position: "relative", overflow: "hidden" }}
     >
       <div

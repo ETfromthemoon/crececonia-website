@@ -1,4 +1,7 @@
 import Navbar from "@/components/Navbar";
+import FeaturedResources from "@/components/FeaturedResources";
+import EditorialHero from "@/components/EditorialHero";
+import SkillShowcase from "@/components/SkillShowcase";
 import Footer from "@/components/Footer";
 import JsonLd from "@/components/JsonLd";
 import { absoluteUrl } from "@/lib/seo";
@@ -59,9 +62,11 @@ const homeJsonLd = {
 
 export default function Home() {
   return <><JsonLd data={homeJsonLd} /><Navbar /><main className="corporate-page">
-    <section className="corporate-hero site-container"><div className="corporate-hero-top"><span className="eyebrow">CrececonIA · IA aplicada</span><span className="hero-location">Santiago / remoto</span></div><div className="corporate-hero-grid"><div><h1>IA aplicada a tu negocio. <em>Sin herramientas de más.</em></h1><p className="hero-lead">Empieza con una guía, avanza con mentoría o delega la implementación. Compara qué opción calza con tu problema, tiempo y presupuesto.</p><div className="hero-actions"><a className="button button-dark" href="/ia">Comparar las 3 rutas <span>→</span></a><a className="text-link" href="#escalera">Ver cómo funciona ↓</a></div></div><div className="hero-aside"><span className="aside-mark">Problema<span>→</span>decisión<span>→</span>sistema</span><p>Partimos por entender el proceso. Después elegimos el nivel de apoyo y, recién entonces, la tecnología que vale la pena usar.</p></div></div></section>
+    <EditorialHero />
     <section className="decision-strip" aria-label="Información disponible antes de elegir"><div className="site-container decision-strip-inner"><span className="decision-strip-label">Antes de elegir verás</span>{decisionSignals.map((signal, index) => <span key={signal}><b>0{index + 1}</b>{signal}</span>)}</div></section>
     <section id="escalera" className="layers-section"><div className="site-container"><div className="section-heading"><span className="eyebrow">Tres formas de avanzar</span><h2>Tres rutas.<br /><em>Una decisión más fácil.</em></h2></div><div className="layers-list">{layers.map((layer) => <a href={layer.href} className="layer-row" key={layer.href}><span className="layer-number">{layer.number}</span><span className="layer-icon">{layer.icon}</span><span className="layer-copy"><strong>{layer.title}</strong><span>{layer.text}</span></span><span className="layer-note">{layer.note}</span><span className="layer-arrow">↗</span></a>)}</div></div></section>
+    <FeaturedResources />
+    <SkillShowcase />
     <section className="corporate-method site-container"><div className="method-statement"><span className="eyebrow">El criterio detrás de cada ruta</span><h2>No automatizamos el desorden.</h2></div><div className="method-copy"><p>El Protocolo BPI identifica primero el cuello de botella, el costo de no resolverlo y el cambio que tendría impacto. La herramienta viene después.</p><a href="/protocolo-bpi" className="text-link">Conocer el Protocolo BPI ↗</a></div></section>
     <section className="home-faq"><div className="site-container home-faq-grid"><div><span className="eyebrow">Antes de decidir</span><h2>Preguntas que vale la pena resolver.</h2></div><div className="home-faq-list">{faqs.map((faq) => <details key={faq.question}><summary>{faq.question}<span aria-hidden="true">+</span></summary><p>{faq.answer}</p></details>)}</div></div></section>
     <section className="corporate-cta"><div className="site-container cta-inner"><div><span className="eyebrow">Tu siguiente paso</span><h2>Encuentra la ruta que calza con tu problema, tiempo y presupuesto.</h2><p className="cta-support">La comparación muestra requisitos e inversión antes de que tengas que contactar a alguien.</p></div><a href="/ia" className="button button-light">Comparar rutas y requisitos <span>→</span></a></div></section>

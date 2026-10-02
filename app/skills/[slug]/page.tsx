@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import ResourceNav from "@/components/ResourceNav";
 import Footer from "@/components/Footer";
 import SkillViewTracker from "@/components/SkillViewTracker";
 import PromptDemoBox from "@/components/PromptDemoBox";
@@ -107,6 +108,7 @@ export default async function SkillPage({
       <Navbar />
       <SkillViewTracker slug={s.slug} />
       <main className="knowledge-detail min-h-screen pb-32" style={{ background: "var(--obsidian)", paddingTop: 112 }}>
+        <ResourceNav />
         {/* ─── Breadcrumb ─── */}
         <div className="px-6 pt-10 pb-2 max-w-3xl mx-auto">
           <Link
@@ -193,7 +195,7 @@ export default async function SkillPage({
                 lineHeight: 1.55,
               }}
             >
-              {s.descripcion_corta}
+              {s.descripcion_corta.split(/(?<=[.!?])\s/)[0]}
             </p>
 
             {/* Tags */}
@@ -235,7 +237,7 @@ export default async function SkillPage({
                     borderRadius: 2,
                   }}
                 >
-                  Próximamente disponible para descarga
+                  Lectura y prompts disponibles más abajo · sin archivo ZIP
                 </p>
               )}
             </div>
@@ -292,7 +294,7 @@ export default async function SkillPage({
         {/* ─── Detalle completo (colapsable, default cerrado) ─── */}
         <section className="px-6 pb-10">
           <div className="max-w-3xl mx-auto">
-            <details className="skill-collapse">
+            <details className="skill-collapse" open={!s.archivo_nombre}>
               <summary
                 className="py-3 px-4 text-sm"
                 style={{
@@ -304,7 +306,7 @@ export default async function SkillPage({
                   letterSpacing: "0.04em",
                 }}
               >
-                Leer el detalle completo
+                Instrucciones y detalle completo
               </summary>
               <article className="mt-6">
                 <div
@@ -316,6 +318,7 @@ export default async function SkillPage({
 
             {/* Atribución compacta — 1 línea sutil */}
             {(s.autor || s.fuente_modulo || s.version) && (
+              <details className="resource-technical"><summary>Versión y procedencia</summary>
               <p
                 className="mt-8 text-xs"
                 style={{
@@ -328,6 +331,7 @@ export default async function SkillPage({
                 {s.version && <> · v{s.version}</>}
                 {s.fuente_modulo && <> · Fuente: <span style={{ color: "var(--ash)" }}>{s.fuente_modulo}</span></>}
               </p>
+              </details>
             )}
           </div>
         </section>

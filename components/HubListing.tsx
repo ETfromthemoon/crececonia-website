@@ -1,6 +1,7 @@
 import Link from "next/link";
 import HubCard from "@/components/HubCard";
 import type { HubItem } from "@/lib/hub";
+import ResourceNav from "@/components/ResourceNav";
 
 /** Listado por tipo dentro del Centro (/centro/guias, /centro/skills). */
 export default function HubListing({
@@ -18,6 +19,7 @@ export default function HubListing({
 }) {
   return (
     <main className="knowledge-page min-h-screen" style={{ background: "var(--obsidian)", paddingTop: 112 }}>
+      <ResourceNav />
       {/* Header */}
       <section className="relative py-24 px-6 overflow-hidden">
         <div
