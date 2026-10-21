@@ -104,17 +104,19 @@ export async function POST(request: Request) {
     const discountCode: string | null = pending.discount_code ?? null;
     let existingPurchasesFound = false;
     const inserted: PendingResource[] = [];
+    const grants: Array<{ resource: string; token: string }> = [];
 
     for (const item of resources) {
       const { data: existing, error: existingError } = await db
         .from("ebook_purchases")
-        .select("id")
+        .select("id, flow_token")
         .eq("flow_order", payment.flowOrder)
         .eq("resource", item.resource)
         .maybeSingle();
       if (existingError) return retry(`no se pudo revisar ${item.resource}`, existingError.message);
       if (existing) {
         existingPurchasesFound = true;
+        grants.push({ resource: item.resource, token: existing.flow_token || token });
         continue;
       }
 
@@ -129,6 +131,7 @@ export async function POST(request: Request) {
       });
       if (insertError) return retry(`no se registró ${item.resource}`, insertError.message);
       inserted.push(item);
+      grants.push({ resource: item.resource, token });
     }
 
     // Cada fila nueva consume exactamente un cupo. Este paso es aislado de la
@@ -141,10 +144,22 @@ export async function POST(request: Request) {
       }
     }
 
+    // El canje corresponde al pago registrado, no al resultado del correo.
+    // Si Resend falla, el reintento encuentra la compra existente y no vuelve
+    // a entrar en este bloque; por eso debe ocurrir antes de enviar.
+    if (discountCode && resources.length === 1 && inserted.length > 0) {
+      try {
+        const redeemed = await redeemDiscountCode(discountCode);
+        if (!redeemed) console.error(`[flow/confirm] el código ${discountCode} ya no era canjeable.`);
+      } catch (err) {
+        console.error(`[flow/confirm] falló el canje de ${discountCode}:`, err);
+      }
+    }
+
     try {
       await sendEbookDeliveryEmail({
         email: buyerEmail,
-        grants: resources.map((item) => ({ resource: item.resource, token })),
+        grants,
       });
     } catch (err) {
       return retry(`no se pudo enviar la entrega de ${commerceOrder}`, err);
@@ -164,15 +179,6 @@ export async function POST(request: Request) {
         });
       } catch (err) {
         console.error(`[flow/confirm] no se pudo notificar la compra ${commerceOrder}:`, err);
-      }
-    }
-
-    if (discountCode && resources.length === 1 && inserted.length > 0) {
-      try {
-        const redeemed = await redeemDiscountCode(discountCode);
-        if (!redeemed) console.error(`[flow/confirm] el código ${discountCode} ya no era canjeable.`);
-      } catch (err) {
-        console.error(`[flow/confirm] falló el canje de ${discountCode}:`, err);
       }
     }
 

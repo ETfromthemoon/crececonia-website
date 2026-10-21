@@ -42,12 +42,15 @@ export async function getZernioConnection(): Promise<{ profile: ZernioProfile; a
   ]);
   const profiles = arrayFrom(profilesBody, "profiles").map((item) => ({ id: String(item._id ?? item.id ?? ""), name: String(item.name ?? "Perfil") })).filter((item) => item.id);
   const configuredProfile = process.env.ZERNIO_PROFILE_ID;
-  const profile = profiles.find((item) => item.id === configuredProfile) ?? profiles[0];
+  const profile = configuredProfile
+    ? profiles.find((item) => item.id === configuredProfile)
+    : profiles.length === 1 ? profiles[0] : undefined;
+  if (configuredProfile && !profile) throw new Error("El perfil configurado de Zernio no está disponible.");
   if (!profile) throw new Error("Zernio no tiene un perfil disponible.");
   const accounts = arrayFrom(accountsBody, "accounts").map((item) => ({
     id: String(item._id ?? item.id ?? ""), platform: String(item.platform ?? "").toLowerCase(), username: String(item.username ?? item.name ?? "Cuenta"),
     profileId: item.profileId || item.profile_id ? String(item.profileId ?? item.profile_id) : null,
-  })).filter((item) => item.id && item.platform && (!item.profileId || item.profileId === profile.id));
+  })).filter((item) => item.id && item.platform && item.profileId === profile.id);
   if (!accounts.length) throw new Error("El perfil de Zernio no tiene cuentas sociales conectadas.");
   return { profile, accounts };
 }

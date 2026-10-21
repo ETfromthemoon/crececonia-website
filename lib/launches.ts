@@ -112,7 +112,7 @@ export async function advanceLaunchTier(launchId: string): Promise<void> {
       select id,sort_order from public.launch_price_tiers where launch_id=$1 and status='active' for update
     ), next as (
       select t.id from public.launch_price_tiers t,current c where t.launch_id=$1 and t.status='planned' and t.sort_order>c.sort_order order by t.sort_order limit 1
-    ), retired as (update public.launch_price_tiers set status='retired',updated_at=now() where id=(select id from current))
+    ), retired as (update public.launch_price_tiers set status='retired',updated_at=now() where id=(select id from current) and exists (select 1 from next))
     update public.launch_price_tiers set status='active',updated_at=now() where id=(select id from next) returning id as next_id`, [launchId]);
   if (!rows[0]) throw new Error("No existe un tramo siguiente disponible.");
   await queryDatabase(`insert into public.launch_activity (launch_id,event_type) values ($1,'price_tier_advanced')`, [launchId]);
