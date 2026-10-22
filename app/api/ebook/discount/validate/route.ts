@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
-  const code: string = body?.code ?? "";
+  const code = typeof body?.code === "string" ? body.code.trim() : "";
   // `resource` es opcional por compatibilidad con clientes viejos que no lo
   // mandan — cae al libro 1, que es el único que existía cuando este
   // endpoint se escribió. Antes de este fix, el endpoint ignoraba por
@@ -21,6 +21,10 @@ export async function POST(request: Request) {
   // antes de pagar podía ser mayor que el precio tachado. El monto
   // efectivamente cobrado siempre fue correcto (Flow revalida contra el
   // resource real en /api/flow/create), pero el número mostrado no.
+  if ((body?.resource != null && typeof body.resource !== "string") ||
+      (body?.previewKey != null && typeof body.previewKey !== "string")) {
+    return NextResponse.json({ valid: false, reason: "Solicitud inválida." }, { status: 400 });
+  }
   const resource: string = body?.resource || DEFAULT_EBOOK_RESOURCE;
   const previewKey: string | undefined = body?.previewKey || undefined;
 

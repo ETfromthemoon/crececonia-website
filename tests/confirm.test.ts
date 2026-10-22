@@ -100,6 +100,36 @@ describe("POST /api/flow/confirm", () => {
     flowStatus();
   });
 
+  it("solicita reintento si Flow no puede verificar el pago por HTTP", async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 503 });
+    const res = await POST(webhook());
+    expect(res.status).toBe(500);
+    expect(await res.text()).toBe("RETRY");
+    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockDelete).not.toHaveBeenCalled();
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
+  it.each([null, {}, { code: 500 }, { status: "2" }, { status: 99 }])(
+    "solicita reintento ante una respuesta Flow inválida: %j", async (payment) => {
+      mockFetch.mockResolvedValueOnce({ ok: true, json: async () => payment });
+      const res = await POST(webhook());
+      expect(res.status).toBe(500);
+      expect(mockInsert).not.toHaveBeenCalled();
+      expect(mockDelete).not.toHaveBeenCalled();
+      expect(mockSendEmail).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([1, 3, 4])("reconoce el estado no pagado %i sin entregar ni mutar", async (status) => {
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ status }) });
+    const res = await POST(webhook());
+    expect(res.status).toBe(200);
+    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockDelete).not.toHaveBeenCalled();
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
   it("entrega el combo completo una vez, registra sus dos compras y emite un evento de orden", async () => {
     pendingResources = [
       { resource: BOOK_1, tier: "super-early", amount: 9_720, analytics_distinct_id: "anon-1" },

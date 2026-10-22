@@ -24,15 +24,20 @@ interface PendingResource {
   pricing_variant?: string;
 }
 
-async function getPaymentStatus(token: string): Promise<FlowPayment | null> {
+async function getPaymentStatus(token: string): Promise<FlowPayment> {
   const apiKey = process.env.FLOW_API_KEY!;
   const secretKey = process.env.FLOW_SECRET_KEY!;
   const params = { apiKey, token };
   const s = flowSign(params, secretKey);
   const url = `${getFlowBase()}/payment/getStatus?apiKey=${apiKey}&token=${token}&s=${s}`;
   const res = await fetch(url);
-  if (!res.ok) return null;
-  return res.json();
+  if (!res.ok) throw new Error(`Flow no pudo verificar el pago (HTTP ${res.status}).`);
+  const payment: unknown = await res.json();
+  if (!payment || typeof payment !== "object" || !("status" in payment) ||
+      typeof payment.status !== "number" || ![1, 2, 3, 4].includes(payment.status)) {
+    throw new Error("Flow devolvió un estado de pago inválido.");
+  }
+  return payment as FlowPayment;
 }
 
 function isPendingResource(value: unknown): value is PendingResource {
@@ -61,7 +66,7 @@ export async function POST(request: Request) {
     if (!token) return new Response("OK", { status: 200 });
 
     const payment = await getPaymentStatus(token);
-    if (!payment || payment.status !== 2) return new Response("OK", { status: 200 });
+    if (payment.status !== 2) return new Response("OK", { status: 200 });
 
     const buyerEmail = payment.payer;
     const paidAmount = Number(payment.amount);

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getPurchasedBooksByToken } from "@/lib/ebook-purchased-resources";
 
 export const metadata: Metadata = {
-  title: "Compra exitosa — Ebook · CrececonIA",
+  title: "Estado de compra — Ebook · CrececonIA",
   robots: { index: false, follow: false },
 };
 
@@ -35,7 +35,7 @@ export default async function SuccessPage({
         }}
       >
         <div style={{ maxWidth: 480, margin: "0 auto", textAlign: "center" }}>
-          {/* Check icon */}
+          {/* Estado de la entrega */}
           <div
             style={{
               width: 64,
@@ -57,8 +57,11 @@ export default async function SuccessPage({
               strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
-              <polyline points="20 6 9 17 4 12" />
+              {books.length > 0 ? <polyline points="20 6 9 17 4 12" /> : (
+                <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>
+              )}
             </svg>
           </div>
 
@@ -72,7 +75,7 @@ export default async function SuccessPage({
               marginBottom: 16,
             }}
           >
-            Compra exitosa
+            {books.length > 0 ? "Compra exitosa" : "Estado de compra"}
           </p>
 
           <h1
@@ -86,7 +89,7 @@ export default async function SuccessPage({
               marginBottom: 20,
             }}
           >
-            ¡Gracias por tu compra!
+            {books.length > 0 ? "¡Gracias por tu compra!" : token ? "Estamos verificando tu pago" : "Recupera tu enlace de compra"}
           </h1>
 
           <p
@@ -110,7 +113,7 @@ export default async function SuccessPage({
                 están listos. Descargalos ahora — los links no vencen.
               </>
             ) : (
-              <>Tu compra está confirmada. Descargá tus ebooks abajo — los links no vencen.</>
+              <>{token ? "Los enlaces aparecerán cuando podamos verificar tu compra." : "Abre el enlace recibido por email o recupera tus descargas con el correo que usaste al comprar."}</>
             )}
           </p>
 
@@ -205,8 +208,7 @@ export default async function SuccessPage({
                   lineHeight: 1.6,
                 }}
               >
-                Estamos confirmando tu pago. Revisá tu email — te enviamos el link de descarga
-                directo apenas se acredite.
+                {token ? "Si ya pagaste, revisa tu email o vuelve a abrir este enlace en unos minutos." : "Usa el enlace de recuperación que aparece abajo para solicitar tus descargas."}
               </p>
             </div>
           )}

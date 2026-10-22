@@ -24,10 +24,11 @@ function withTitles(resources: string[]): PurchasedBook[] {
  * confirmación, así que las filas de `ebook_purchases` pueden no existir
  * todavía cuando esta página renderiza.
  *   1. `ebook_purchases` por flow_token — el caso normal, ya confirmado.
- *   2. Si no hay filas: preguntarle a Flow el commerceOrder de ese token y
- *      leer `ebook_pending_orders`, que se escribe ANTES de mandar a pagar.
- * Si ninguno resuelve, devuelve [] y la página muestra un estado de espera
- * en vez de adivinar un libro.
+ *   2. Consultar a Flow y completar con el manifiesto pendiente de esa orden,
+ *      verificando pago y monto. Puede haber filas de sólo parte del combo
+ *      mientras el webhook inserta las compras una a una.
+ * Una falla de Flow nunca revoca las compras ya registradas.
+ * Si ninguno resuelve, devuelve [] sin autorizar una descarga.
  */
 export async function getPurchasedBooksByToken(token: string): Promise<PurchasedBook[]> {
   const db = getSupabaseAdmin();
@@ -37,9 +38,8 @@ export async function getPurchasedBooksByToken(token: string): Promise<Purchased
     .select("resource")
     .eq("flow_token", token);
 
-  if (purchases && purchases.length > 0) {
-    return withTitles(purchases.map((row) => row.resource));
-  }
+  const confirmed = (purchases ?? []).map((row) => row.resource);
+  const confirmedBooks = withTitles(confirmed);
 
   // Fallback: Flow redirige y confirma en paralelo. Solo se usa el manifiesto
   // pendiente si Flow confirma que el pago está acreditado; antes se podía
@@ -47,19 +47,20 @@ export async function getPurchasedBooksByToken(token: string): Promise<Purchased
   try {
     const apiKey = process.env.FLOW_API_KEY;
     const secretKey = process.env.FLOW_SECRET_KEY;
-    if (!apiKey || !secretKey) return [];
+    if (!apiKey || !secretKey) return confirmedBooks;
 
     const params = { apiKey, token };
     const s = flowSign(params, secretKey);
     const res = await fetch(
-      `${getFlowBase()}/payment/getStatus?apiKey=${apiKey}&token=${token}&s=${s}`
+      `${getFlowBase()}/payment/getStatus?apiKey=${apiKey}&token=${token}&s=${s}`,
+      { signal: AbortSignal.timeout(8_000) },
     );
-    if (!res.ok) return [];
+    if (!res.ok) return confirmedBooks;
 
     const payment = await res.json();
-    if (payment?.status !== 2) return [];
-    const commerceOrder: string | undefined = payment?.commerceOrder;
-    if (!commerceOrder) return [];
+    if (payment?.status !== 2) return confirmedBooks;
+    const commerceOrder = payment.commerceOrder;
+    if (typeof commerceOrder !== "string" || !commerceOrder) return confirmedBooks;
 
     const { data: pending } = await db
       .from("ebook_pending_orders")
@@ -67,10 +68,24 @@ export async function getPurchasedBooksByToken(token: string): Promise<Purchased
       .eq("commerce_order", commerceOrder)
       .maybeSingle();
 
-    const resources: { resource: string }[] = pending?.resources ?? [];
-    return withTitles(resources.map((r) => r.resource));
+    const resources: unknown = pending?.resources;
+    const paidAmount = Number(payment.amount);
+    if (!Number.isSafeInteger(paidAmount) || paidAmount <= 0 ||
+        !Array.isArray(resources) || resources.length === 0) return confirmedBooks;
+    const names: string[] = [];
+    let expectedAmount = 0;
+    for (const item of resources) {
+      if (!item || typeof item.resource !== "string" || !getCatalogEntry(item.resource) ||
+          names.includes(item.resource) || !Number.isSafeInteger(item.amount) || item.amount <= 0) {
+        return confirmedBooks;
+      }
+      names.push(item.resource);
+      expectedAmount += item.amount;
+    }
+    if (expectedAmount !== paidAmount) return confirmedBooks;
+    return withTitles([...confirmed, ...names]);
   } catch (err) {
-    console.error(`[ebook] no se pudo resolver los libros del token ${token}:`, err);
-    return [];
+    console.error("[ebook] no se pudo completar el manifiesto de libros:", err);
+    return confirmedBooks;
   }
 }
