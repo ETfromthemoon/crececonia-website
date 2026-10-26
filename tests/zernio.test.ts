@@ -10,6 +10,24 @@ afterEach(() => {
 });
 
 describe("integración con Zernio", () => {
+  it("no sustituye un perfil configurado ausente por el de otro cliente", async () => {
+    vi.stubEnv("ZERNIO_API_KEY", "zernio_test");
+    vi.stubEnv("ZERNIO_PROFILE_ID", "missing");
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(Response.json({ profiles: [{ _id: "other", name: "Otro cliente" }] }))
+      .mockResolvedValueOnce(Response.json({ accounts: [{ _id: "ig", platform: "instagram", profileId: "other" }] })));
+    await expect(getZernioConnection()).rejects.toThrow(/perfil configurado/i);
+  });
+
+  it("excluye cuentas sin una pertenencia verificable al perfil elegido", async () => {
+    vi.stubEnv("ZERNIO_API_KEY", "zernio_test");
+    vi.stubEnv("ZERNIO_PROFILE_ID", "profile-1");
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(Response.json({ profiles: [{ _id: "profile-1", name: "CrececonIA" }] }))
+      .mockResolvedValueOnce(Response.json({ accounts: [{ _id: "unscoped", platform: "instagram" }] })));
+    await expect(getZernioConnection()).rejects.toThrow(/cuentas sociales/i);
+  });
+
   it("sincroniza el perfil configurado y sólo sus cuentas", async () => {
     vi.stubEnv("ZERNIO_API_KEY", "zernio_test");
     vi.stubEnv("ZERNIO_PROFILE_ID", "profile-1");

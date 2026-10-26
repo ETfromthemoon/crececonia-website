@@ -46,6 +46,13 @@ async function captureCheckoutFailure(
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
+  if (typeof body?.email !== "string") {
+    return NextResponse.json({ error: "Email inválido." }, { status: 400 });
+  }
+  if ((body.discountCode != null && typeof body.discountCode !== "string") ||
+      (body.resources !== undefined && (!Array.isArray(body.resources) || body.resources.length === 0))) {
+    return NextResponse.json({ error: "Datos de compra inválidos." }, { status: 400 });
+  }
   const email: string = body?.email ?? "";
   const discountCode: string | undefined = body?.discountCode || undefined;
   const previewKey: string | undefined = body?.previewKey || undefined;

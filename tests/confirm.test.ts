@@ -19,13 +19,15 @@ vi.mock("@/lib/discount-codes", () => ({ redeemDiscountCode: mockRedeem }));
 let pendingResources: unknown = null;
 let existingResources = new Set<string>();
 let pendingMissingHasPurchase = false;
+let pendingDiscount: string | null = null;
+let existingToken: string | undefined;
 
 function pendingChain() {
   const chain: Record<string, unknown> = {};
   chain.select = vi.fn(() => chain);
   chain.eq = vi.fn(() => chain);
   chain.maybeSingle = vi.fn().mockResolvedValue({
-    data: pendingResources === null ? null : { resources: pendingResources, discount_code: null },
+    data: pendingResources === null ? null : { resources: pendingResources, discount_code: pendingDiscount },
     error: null,
   });
   chain.delete = vi.fn(() => chain);
@@ -41,7 +43,7 @@ function purchaseChain() {
     if (field === "resource") resource = String(value);
     return chain;
   });
-  chain.maybeSingle = vi.fn(() => Promise.resolve({ data: existingResources.has(resource) ? { id: "existing" } : null, error: null }));
+  chain.maybeSingle = vi.fn(() => Promise.resolve({ data: existingResources.has(resource) ? { id: "existing", flow_token: existingToken } : null, error: null }));
   chain.limit = vi.fn(() => Promise.resolve({ data: pendingMissingHasPurchase ? [{ id: "existing" }] : [], error: null }));
   chain.insert = mockInsert;
   return chain;
@@ -94,6 +96,8 @@ describe("POST /api/flow/confirm", () => {
     pendingResources = null;
     existingResources = new Set();
     pendingMissingHasPurchase = false;
+    pendingDiscount = null;
+    existingToken = undefined;
     mockInsert.mockResolvedValue({ error: null });
     mockDelete.mockResolvedValue({ error: null });
     mockSendEmail.mockResolvedValue(undefined);
@@ -170,5 +174,29 @@ describe("POST /api/flow/confirm", () => {
 
     expect(res.status).toBe(500);
     expect(mockDelete).not.toHaveBeenCalled();
+  });
+
+  it("canjea el descuento de una compra pagada aunque falle el email, sin volver a canjearlo al reintentar", async () => {
+    pendingResources = [{ resource: BOOK_1, tier: "regular", amount: 19_440 }];
+    pendingDiscount = "TEST1234";
+    mockSendEmail.mockRejectedValueOnce(new Error("Resend timeout"));
+
+    expect((await POST(webhook())).status).toBe(500);
+    expect(mockRedeem).toHaveBeenCalledExactlyOnceWith("TEST1234");
+    expect(mockDelete).not.toHaveBeenCalled();
+
+    existingResources.add(BOOK_1);
+    expect((await POST(webhook())).status).toBe(200);
+    expect(mockRedeem).toHaveBeenCalledOnce();
+    expect(mockInsert).toHaveBeenCalledOnce();
+  });
+
+  it("entrega con el token persistido si una compra fue recuperada antes del reintento de Flow", async () => {
+    pendingResources = [{ resource: BOOK_1, tier: "regular", amount: 19_440 }];
+    existingResources.add(BOOK_1);
+    existingToken = "recuperado-99";
+    expect((await POST(webhook())).status).toBe(200);
+    expect(mockSendEmail).toHaveBeenCalledWith({ email: "comprador@test.com", grants: [{ resource: BOOK_1, token: "recuperado-99" }] });
+    expect(mockInsert).not.toHaveBeenCalled();
   });
 });

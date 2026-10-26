@@ -1,0 +1,63 @@
+# Auditoría nocturna — 20 de octubre de 2026
+
+Primera ejecución; línea base, sin memoria anterior. Inspección iniciada a las 22:00 America/Santiago (2026-10-21 01:00 UTC). Base: `origin/main` 452c90e, igual al despliegue productivo `dpl_4wDHE91CfsooACjAvy3LyvX74DHF`. Next instalado: 16.3.4. Se leyeron las guías locales de metadata y Route Handlers antes de editar.
+
+## Defectos confirmados y reparaciones
+
+| ID | Severidad | Disparador, causa y efecto | Reparación y evidencia |
+| --- | --- | --- | --- |
+| A1 | P1 | El recuperador instanciaba Supabase directamente pese a la migración a Neon; ocultaba fallos HTTP/red como listas vacías, no paginaba y asumía el primer ebook para cualquier pago. Una fila de un combo hacía omitir el resto. | Adaptador vigente, paginación `hasMore`, fallo explícito de lecturas incompletas y conciliación por recurso contra el manifiesto/monto. Sin manifiesto, con código o datos ambiguos exige revisión. Pruebas `ebook-recovery*`. |
+| A2 | P2 | Pago con descuento + fallo de Resend: se insertaba la compra, se retornaba antes del canje y el reintento lo omitía por encontrar la compra existente. | Canjear después de registrar el pago y antes del email. Prueba de fallo de email + reintento: un solo canje y una sola inserción. No repara contadores históricos ni cambia el manejo previo de una falla del propio RPC. |
+| A3 | P2 | Tipos JSON inválidos se coercionaban: un array con un email superaba la regex; recursos no-array caían al libro por defecto; un código numérico podía llegar a `.trim()`. | HTTP 400 antes de precio, persistencia, analytics o Flow. Pruebas `checkout-input`. El checkout normal mantiene sus contratos. |
+| A4 | P2 | Si faltaba el perfil configurado de Zernio se elegía el primero; cuentas sin perfil también se aceptaban. Riesgo de destino incorrecto ante configuración/API ambigua. | Rechazo de perfil ausente o selección ambigua y exclusión de cuentas sin pertenencia comprobable. Pruebas `zernio`. No se observó una publicación cruzada en producción. |
+| A5 | P2 | Avanzar en el último tramo del centro retiraba el vigente aunque no hubiera siguiente y luego devolvía error. | El retiro exige que exista siguiente en la misma sentencia. Pruebas del resultado y guarda SQL; sin ejecutar cambios de datos. No se modifica el workshop ni el PR #47. |
+| A7 | P1 | Si Flow reintentaba una compra ya recuperada, el email usaba el token nuevo del callback aunque la fila conservaba el token sintético de recuperación: el enlace podía quedar inválido al cerrar el manifiesto. | El webhook entrega con el token persistido por recurso. Regresión de reintento con compra recuperada; no duplica la compra. |
+| A6 | P3 | `/solicitar-llamada` heredaba título/canonical del inicio. | Metadata propia; conserva `noindex, nofollow` y el componente existente. Comprobación en build/Preview. |
+
+Todos son nuevos para esta automatización. No hay comparación histórica de persistencia todavía. El informe de agosto se usa como antecedente, no como verificación vigente. La supuesta ausencia de `og-image.png` en AGENTS.md quedó descartada: archivo local y producción HTTP 200.
+
+## Mapa verificable y cobertura
+
+| Entrada → salida | Componentes y dependencia real | Evidencia y límite |
+| --- | --- | --- |
+| HTTP/apex → HTTPS www | DNS + TLS + Vercel → App Router | Los tres orígenes alternativos terminan en `https://www.crececonia.cl/`; validación TLS normal sin desactivar certificados. DNS A resuelto. |
+| Inicio, `/ia`, aprender, mentoría, implementación, BPI → biblioteca/CTA | `app/page.tsx`, Navbar, EditorialHero, Footer, GradientButton/EvaluacionProvider | HTTP 200; enlaces/hash encontrados resuelven. La home vigente difiere del antiguo mapa de componentes en AGENTS.md. |
+| `/centro` y categorías → `/guias/[slug]`, `/skills/[slug]` | `content/public-catalog.json` → `lib/public-catalog.ts`, `lib/hub.ts` → páginas; 9 guías, 5 skills | Todas las fichas y descargas anunciadas comprobadas. `/guias`, `/skills`, `/empieza` redirigen. Sin referencias runtime a autodrive en el código público consultado. |
+| Skill → request-download → archivo público | `SkillDownloadButton` → `/api/public/skills/[slug]/request-download` → `public/downloads/skills`, PostHog | Archivos HTTP 200/no vacíos según tests de catálogo; éxito del endpoint probado con mocks. No se simula una descarga de usuario real para aumentar métricas. |
+| Newsletter → suscriptor | Popups → `/api/public/subscribe` → `lib/public-leads.ts` → `commerce.public_subscribers` | Código/tests + lectura Neon: 2 filas. No se insertaron leads de prueba. |
+| CTA → evaluación → solicitud/token → aviso | EvaluacionModal → `/api/public/evaluacion` → Neon; el token se incluye en el aviso al administrador; `/solicitar-llamada` → `/api/public/solicitar-llamada` → Neon + Resend | Ambas tablas existen; 0 evaluaciones y 0 llamadas. El flujo no agenda Google Calendar automáticamente. Sin envíos ni validación de token de una persona real. |
+| Chat → orientación/enlace | ChatWidget → respuestas locales + enlaces comerciales + PostHog | No se encontró una API de LLM detrás del widget: no se declara integración externa de IA. |
+| Ebook → waitlist | EbookComingSoon → `/api/ebook/waitlist` → `lib/ebook-waitlist.ts` → Neon + Resend | Tablas/código/tests; 2 filas. Sin alta/envío real. |
+| Tienda/productos → precios/combo → checkout | `lib/ebook-catalog.ts`, pricing/bundles → `/api/ebook/cupos`, `/api/flow/create` → manifiesto Neon → Flow | Productos y cupos HTTP 200; tests de catálogo/precio/checkout. No se creó orden ni cobro real. 7 ebooks activos. |
+| Flow webhook → compras/cupos/canje → email → PDF | `/api/flow/confirm` → adaptador Neon, RPCs, Resend; `/api/ebook/download` → compra/token/manifest → `lib/private-storage.ts` S3 | Tests del fixture/confirmación/entrega/descarga. Acceso sin token 401. Sin secreto Flow/S3 local: contrato real y 14 PDFs privados NO verificados en esta ejecución. |
+| Recuperar email → enlaces → descarga | `/ebook/descargar` → `/api/ebook/recover` → compras Neon + Resend; antigua enumeración GET devuelve 410 | Código/tests. `ebook:recuperar` es conciliación administrativa distinta; no confundir registro con email recibido. |
+| Admin → operación → publicación pública | `/admin/*` gate ADMIN_SECRET; `/api/admin/*` x-admin-key; `lib/launches.ts` → siete tablas public.launch_*; Zernio → borradores/DM explícitos | Admin sin key 404, API sin key 401; tablas existentes, 0 lanzamientos. Checklist/modelo probado; sin crear ni publicar nada. |
+| Workshop/clase → pago/aula/material/email | `/workshop-en-vivo-2026-09-06`, `/clase-en-vivo-2026-08-23`, APIs de availability/create/confirm/material y crons | Cobertura de pruebas existente; rutas del sitemap comprobadas. Se conserva implementación; no se activa ningún job manual ni recuperación de compras. |
+| Navegación/eventos → PostHog → reporte | PostHogProvider + EcosystemTracker + `lib/analytics.ts`, `lib/posthog-server.ts` → proyecto 533562; API de reporte protegida + Actions | Conector confirmó proyecto y eventos. Consulta de conteos últimos 7 días; API de reporte sin key 401. Sin inferir mejoras de conversión. |
+| Resend → webhook → salud de email | `lib/*delivery-email.ts`, `app/api/webhooks/resend` | Código/tests consultados; sin credencial/API Resend local, no se verifican bounces, entregas ni recepción real. |
+| Commit/PR → Tests + Vercel Preview → producción tras merge | `.github/workflows/test.yml`, integración Vercel | Producción READY y SHA comprobados; resultado del nuevo PR se registra al cerrar. No se hace merge ni deploy de producción. |
+| Scheduler → jobs operativos | `vercel.json`, Actions recovery cada 5 min, reporte semanal; automatización local diaria 22:00 | Configuración leída; último recovery Actions 2026-10-21 00:10:47Z exitoso; reporte semanal 2026-10-19 exitoso. Los runs reales de recovery están espaciados por horas: la programación no demuestra puntualidad del proveedor. No se cambia scheduler. |
+
+## Evidencia de producción y servicios
+
+- Barrido guardado fuera del repo en `C:/Users/sergio/.codex/automations/auditor-a-nocturna-integral-crececonia/production-baseline.json`: 53 entradas GET, 153 comprobaciones HEAD de enlaces/assets internos y 16 externos. Sin fallos inesperados; los 7 no-200 son 404 deliberado/admin y 401 de acceso privado. HEAD comprueba disponibilidad, no integridad completa de todos los binarios. No se siguieron instrucciones de páginas externas.
+- Las 40 URLs del sitemap responden 200. TLS 1.3 válido en ambos dominios, certificados con vencimiento el 25 de diciembre de 2026. HTTP redirige con 308 y apex HTTPS con 307 a www; `/guias` y `/skills`, con 308 al centro. Evidencia adicional en `sitemap-dns-tls.json` de la automatización.
+- `robots.txt`, sitemap y ambos OG responden 200; canonicals de rutas públicas revisadas coherentes salvo A6. Sin imágenes HTML sin alt ni hashes locales rotos detectados. Algunos contenidos contienen más de un H1: observación editorial, no se declara incumplimiento WCAG por ese único dato. No se realizó una auditoría WCAG completa.
+- Navegador en producción: ninguna advertencia/error de consola capturada durante la carga observada. La revisión visual se reserva para Preview. Una carga no cubre todas las interacciones ni dispositivos.
+- Vercel: cero grupos de errores/fatal en ventana de 30 min. La consulta de 24 h fue rechazada por retención del plan Hobby; no se presenta como ausencia de incidentes en 24 h.
+- Neon `dawn-wildflower-77042370`: consultas SELECT sobre esquemas/tablas y agregados; 55 compras, 23 órdenes pendientes, 2 suscriptores, 2 waitlist, 0 evaluaciones/llamadas/lanzamientos. Cero duplicados (flow_order,resource), cupos fuera de rango o códigos de compras con used_count=0. 38 filas con monto 0 son concesiones de recursos; no se clasifican como corrupción. Tres manifiestos no-array son históricos y requieren revisar pago antes de concluir entrega faltante. Ninguna fila modificada.
+- PostHog 533562: 105 `ecosystem_page_view`, 1 `skill_download_succeeded`, 0 checkouts solicitados/fallidos/creados en la consulta relativa de 7 días, agrupada por día UTC e incluyendo el día en curso parcial. El conteo no implica personas únicas ni ventas de Flow. Sin volumen para comparación de variantes. El reporte semanal #65 (19 de octubre) es una ventana anterior diferente. Referencia de captura/consulta: https://posthog.com/tutorials/api-capture-events.
+- Zernio: Instagram y TikTok de CrececonIA saludables; 4 fallos de publicaciones históricos: 3 por límite horario y 1 timeout de resultado externo incierto. No se reintentaron. La expiración anunciada de un token por sí sola no justifica reconectar si el proveedor informa healthy.
+- `npm run ebook:verificar`, `npm run flow:contract`, `npm run ebook:recuperar`, `npm run posthog:report -- 7 --json`: intentados en modo lectura, bloqueados por credenciales ausentes. El conector PostHog/Neon permitió la cobertura agregada indicada; no se extrajeron secretos de Vercel. Sin verificación completa de pagos/Storage/Resend, no se afirma que todas las compras estén entregadas.
+- API/paginación Flow verificada contra documentación primaria: https://developers.flow.cl/api. La lectura paginada exige `hasMore` y falla ante respuestas inválidas.
+
+## Verificación y riesgos
+
+`npm test`: 50 archivos, 400 pruebas aprobadas. `npm run build`: aprobado, incluye TypeScript. Diff y archivos nuevos revisados; sin cambios ajenos, dependencias nuevas, migraciones ni modificaciones del catálogo/precios. SQL del avance tiene prueba de contrato; no se ejecutó contra datos reales. La conciliación conservadora cambia el tratamiento de pagos ambiguos: exige revisión manual en vez de inventar el producto. El modo explícito de recuperación puede escribir compras y enviar email; NO se ejecutó. No ajusta cupos/códigos ni demuestra entrega del correo; si una escritura/envío falla, hay que conciliar el estado antes de reintentar.
+
+## Pendientes para Sergio
+
+- Revisar el PR y su Preview/checks; producción conserva estos comportamientos hasta merge.
+- Habilitar un entorno autorizado con credenciales de lectura Flow y S3 para verificar contrato, PDFs privados y pagos históricos; Resend para logs de entrega. No hace falta pegar secretos al chat.
+- Revisar las cuatro publicaciones fallidas desde Zernio/Instagram antes de decidir si corresponde reintentar. El timeout puede haber publicado externamente.
+- Las fallas del propio RPC de canje y la concurrencia de confirmaciones requieren una solución transaccional con migración; quedan fuera de estas reparaciones sin migración/autorización. No se detectó una compra afectada por el caso en los agregados leídos.

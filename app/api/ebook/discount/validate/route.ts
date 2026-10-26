@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   const resource: string = body?.resource || DEFAULT_EBOOK_RESOURCE;
   const previewKey: string | undefined = body?.previewKey || undefined;
 
-  if (!code) {
+  if (typeof code !== "string" || !code.trim()) {
     return NextResponse.json({ valid: false, reason: "Ingresa un código." }, { status: 400 });
   }
 
