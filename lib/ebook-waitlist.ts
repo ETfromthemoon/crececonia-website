@@ -14,7 +14,7 @@ export interface WaitlistParams {
 }
 
 async function sendWaitlistConfirmation(email: string): Promise<void> {
-  await getResend().emails.send({
+  const { error } = await getResend().emails.send({
     from: "CrececonIA <sergio@crececonia.cl>",
     to: email,
     subject: "Listo — te avisamos apenas esté disponible",
@@ -33,6 +33,7 @@ async function sendWaitlistConfirmation(email: string): Promise<void> {
 </body>
 </html>`,
   });
+  if (error) throw new Error(error.message);
 }
 
 /**

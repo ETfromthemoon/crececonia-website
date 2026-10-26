@@ -104,4 +104,18 @@ describe("POST /api/ebook/waitlist", () => {
     expect(mockFetch).not.toHaveBeenCalled();
     vi.unstubAllGlobals();
   });
+
+  it("registra los rechazos devueltos por Resend sin deshacer la inscripción", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      setupDb(null);
+      mockResendSend.mockResolvedValueOnce({ data: null, error: { message: "rate limit" } });
+      const res = await POST(waitlistRequest({ email: "lead@test.com", resource: "ebook:agentes-de-ia" }));
+      expect(res.status).toBe(200);
+      expect(mockInsert).toHaveBeenCalledOnce();
+      expect(log).toHaveBeenCalledOnce();
+    } finally {
+      log.mockRestore();
+    }
+  });
 });

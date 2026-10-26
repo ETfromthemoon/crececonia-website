@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
+import { queryDatabase } from "@/lib/database";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getCatalogEntry, DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
 import { EBOOK_STORAGE_BUCKET, storageObjectName } from "@/lib/ebook-storage";
@@ -83,23 +84,24 @@ export async function GET(request: Request) {
     );
   }
 
-  if (data) {
-    db.from("ebook_purchases")
-      .select("download_count")
-      .eq("id", data.id)
-      .single()
-      .then(({ data: row }) => {
-        db.from("ebook_purchases")
-          .update({
-            download_count: (row?.download_count ?? 0) + 1,
-            last_download_at: new Date().toISOString(),
-          })
-          .eq("id", data.id)
-          .then(() => {});
-      });
-  }
-
   const buffer = Buffer.from(await archivo.arrayBuffer());
+
+  if (data) {
+    // Next mantiene viva esta tarea después de responder. El incremento en
+    // una sola sentencia evita perder conteos entre descargas concurrentes.
+    after(async () => {
+      try {
+        await queryDatabase(
+          `update public.ebook_purchases
+           set download_count = coalesce(download_count, 0) + 1, last_download_at = now()
+           where id = $1`,
+          [data.id],
+        );
+      } catch {
+        console.error("[ebook/download] no se pudo registrar el conteo de descarga.");
+      }
+    });
+  }
 
   return new Response(buffer, {
     headers: {

@@ -139,8 +139,9 @@ function SolicitarContent() {
 
         <div className="flex flex-col gap-6">
           <div>
-            <label className={LABEL_CLASS}>Horario preferido 1</label>
+            <label htmlFor="horario-preferido-1" className={LABEL_CLASS}>Horario preferido 1</label>
             <input
+              id="horario-preferido-1"
               className={INPUT_CLASS}
               type="text"
               value={horarios[0]}
@@ -150,8 +151,9 @@ function SolicitarContent() {
             />
           </div>
           <div>
-            <label className={LABEL_CLASS}>Horario alternativo 2</label>
+            <label htmlFor="horario-preferido-2" className={LABEL_CLASS}>Horario alternativo 2</label>
             <input
+              id="horario-preferido-2"
               className={INPUT_CLASS}
               type="text"
               value={horarios[1]}
@@ -160,8 +162,9 @@ function SolicitarContent() {
             />
           </div>
           <div>
-            <label className={LABEL_CLASS}>Horario alternativo 3 (opcional)</label>
+            <label htmlFor="horario-preferido-3" className={LABEL_CLASS}>Horario alternativo 3 (opcional)</label>
             <input
+              id="horario-preferido-3"
               className={INPUT_CLASS}
               type="text"
               value={horarios[2]}
@@ -170,8 +173,9 @@ function SolicitarContent() {
             />
           </div>
           <div>
-            <label className={LABEL_CLASS}>Algo que quieras agregar (opcional)</label>
+            <label htmlFor="mensaje-llamada" className={LABEL_CLASS}>Algo que quieras agregar (opcional)</label>
             <textarea
+              id="mensaje-llamada"
               className={INPUT_CLASS}
               rows={3}
               value={mensaje}
