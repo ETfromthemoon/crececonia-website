@@ -25,6 +25,7 @@ jobs:
 
       - name: Generar reporte
         id: report
+        shell: bash
         env:
           POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
         run: |
