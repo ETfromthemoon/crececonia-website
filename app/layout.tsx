@@ -22,6 +22,7 @@ export const metadata: Metadata = {
   title: "Consultoría de IA para empresas | CrececonIA",
   description: "Consultoría de IA en Chile para aprender, recibir mentoría o implementar agentes y automatizaciones. Compara rutas, requisitos e inversión.",
   applicationName: "CrececonIA",
+  verification: { google: "IDwexcVUskK_TnNR2h_f-seV4Lzq7mArrWM-LRcZBXE" },
   authors: [{ name: "CrececonIA" }],
   category: "Inteligencia artificial aplicada",
   openGraph: { title: "Consultoría de IA para empresas | CrececonIA", description: "Recursos, mentoría e implementación para aplicar IA a procesos reales de trabajo y negocio.", url: SITE_URL, siteName: "CrececonIA", locale: "es_CL", type: "website", images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "CrececonIA — IA aplicada a tu negocio" }] },
