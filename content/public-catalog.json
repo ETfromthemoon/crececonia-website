@@ -318,18 +318,6 @@
         "ia"
       ],
       "url": "https://github.com/ETfromthemoon/crececonia-skills"
-    },
-    {
-      "slug": "crececonia-agentewhatsapp",
-      "titulo": "Agente de WhatsApp de CrececonIA",
-      "descripcion": "Código de un agente para atender consultas por WhatsApp; requiere configurar credenciales antes de ponerlo en marcha.",
-      "categoria": "productividad",
-      "tags": [
-        "agentes",
-        "whatsapp",
-        "automatización"
-      ],
-      "url": "https://github.com/ETfromthemoon/crececonia-agentewhatsapp"
     }
   ]
 }
