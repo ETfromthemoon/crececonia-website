@@ -17,6 +17,7 @@ describe("public resource interface", () => {
     ["/guias/guia-completa-para-usar-claude-code", "Guías"],
     ["/skills/captaclientes", "Skills"],
     ["/centro", "Explorar"],
+    ["/centro/repositorios", "Repositorios"],
   ])("keeps the correct resource selected at %s", (pathname, label) => {
     route.pathname = pathname;
     const html = renderToStaticMarkup(<ResourceNav />);
@@ -32,6 +33,18 @@ describe("public resource interface", () => {
     }} />);
     expect(html).toContain('target="_blank" rel="noopener noreferrer"');
     expect(html).toContain("Abrir enlace");
+  });
+
+  it("labels a repository as a repository and opens its source safely", () => {
+    const html = renderToStaticMarkup(<HubCard item={{
+      tipo: "repositorio", slug: "proyecto", titulo: "Proyecto", descripcion: "Herramienta pública",
+      href: "https://github.com/ETfromthemoon/proyecto", externo: true,
+      categoria: "desarrollo", temas: [], tags: [], meta: "GitHub",
+    }} />);
+    expect(html).toContain('target="_blank" rel="noopener noreferrer"');
+    expect(html).toContain("Repositorio");
+    expect(html).toContain("Ver repositorio");
+    expect(html).not.toContain("↓ GitHub");
   });
 
   it("does not advertise a provisional checkout price before loading", () => {

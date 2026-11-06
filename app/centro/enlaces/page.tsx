@@ -7,7 +7,7 @@ import { createPageMetadata } from "@/lib/seo";
 export const metadata = createPageMetadata({
   title: "Links curados — Centro de Conocimiento · CrececonIA",
   description:
-    "Los mejores artículos, herramientas, videos y repositorios sobre IA para negocios, seleccionados por Crececonia.",
+    "Artículos, herramientas y videos sobre IA para negocios, seleccionados por CrececonIA.",
   path: "/centro/enlaces",
 });
 
@@ -22,7 +22,7 @@ export default async function CentroEnlacesPage() {
       <HubListing
         eyebrow="Links curados"
         titulo="Los mejores links sobre IA"
-        descripcion="Artículos, herramientas, videos y repos seleccionados a mano. Todo lo que vale la pena leer."
+        descripcion="Artículos, herramientas y videos seleccionados a mano."
         items={items}
         emptyLabel="Próximamente · Estamos cubrando los primeros links"
       />

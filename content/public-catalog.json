@@ -168,7 +168,7 @@
         "validacion"
       ],
       "archivo_nombre": "validador-de-negocios.zip",
-      "archivo_size": 13237,
+      "archivo_size": 13325,
       "archivo_tipo": "zip",
       "descargas_count": 0,
       "publicada": 1,
@@ -178,7 +178,8 @@
       "cuando_usar": "",
       "cuando_no_usar": "",
       "prompt_template": "",
-      "fuente_modulo": "archivo local recuperado"
+      "fuente_modulo": "Repositorio público de CrececonIA",
+      "repositorio_url": "https://github.com/ETfromthemoon/crececonia-skills/tree/main/skills/validador-de-negocios"
     },
     {
       "id": 2,
@@ -224,7 +225,8 @@
       "cuando_usar": "Buscador de nuevos clientes para cualquier negocio. Úsalo cuando el usuario quiera conseguir clientes, encontrar leads, hacer prospección o escribir mensajes de contacto en frío. La skill define el cliente ideal (ICP), encuentra prospectos reales con búsqueda web y queries pegables para LinkedIn/Google Maps, los cualifica y prioriza, y redacta un mensaje de outreach personalizado por cada uno (pasado por humanizer para que no suene a IA). Entrega una lista de prospectos lista para trabajar en ta",
       "cuando_no_usar": "",
       "prompt_template": "",
-      "fuente_modulo": "archivo local recuperado"
+      "fuente_modulo": "Repositorio público de CrececonIA",
+      "repositorio_url": "https://github.com/ETfromthemoon/crececonia-skills/tree/main/skills/captaclientes"
     },
     {
       "id": 4,
@@ -239,7 +241,7 @@
         "tiktok"
       ],
       "archivo_nombre": "generador-de-guiones-virales.zip",
-      "archivo_size": 4265,
+      "archivo_size": 4272,
       "archivo_tipo": "zip",
       "descargas_count": 0,
       "publicada": 1,
@@ -249,7 +251,8 @@
       "cuando_usar": "",
       "cuando_no_usar": "",
       "prompt_template": "",
-      "fuente_modulo": "archivo local recuperado"
+      "fuente_modulo": "Repositorio público de CrececonIA",
+      "repositorio_url": "https://github.com/ETfromthemoon/crececonia-skills/tree/main/skills/generador-de-guiones-virales"
     },
     {
       "id": 5,
@@ -274,8 +277,59 @@
       "cuando_usar": "",
       "cuando_no_usar": "",
       "prompt_template": "",
-      "fuente_modulo": "archivo local recuperado"
+      "fuente_modulo": "Repositorio público de CrececonIA",
+      "repositorio_url": "https://github.com/ETfromthemoon/crececonia-skills/tree/main/skills/landing-builder"
     }
   ],
-  "links": []
+  "links": [],
+  "repositories": [
+    {
+      "slug": "crececonia-website",
+      "titulo": "Sitio web de CrececonIA",
+      "descripcion": "Código del sitio donde publicamos recursos, servicios y productos digitales de CrececonIA.",
+      "categoria": "desarrollo",
+      "tags": [
+        "sitio web",
+        "next.js",
+        "diseño web"
+      ],
+      "url": "https://github.com/ETfromthemoon/crececonia-website"
+    },
+    {
+      "slug": "reel-skill-factory",
+      "titulo": "Reel Skill Factory",
+      "descripcion": "Convierte videos y enlaces de Reels en borradores de skills revisables mediante transcripción y un pull request.",
+      "categoria": "productividad",
+      "tags": [
+        "reels",
+        "skills",
+        "automatización"
+      ],
+      "url": "https://github.com/ETfromthemoon/reel-skill-factory"
+    },
+    {
+      "slug": "crececonia-skills",
+      "titulo": "Skills públicas de CrececonIA",
+      "descripcion": "Fuente versionada de las skills descargables de CrececonIA, con sus instrucciones y archivos de referencia.",
+      "categoria": "desarrollo",
+      "tags": [
+        "skills",
+        "claude code",
+        "ia"
+      ],
+      "url": "https://github.com/ETfromthemoon/crececonia-skills"
+    },
+    {
+      "slug": "crececonia-agentewhatsapp",
+      "titulo": "Agente de WhatsApp de CrececonIA",
+      "descripcion": "Código de un agente para atender consultas por WhatsApp; requiere configurar credenciales antes de ponerlo en marcha.",
+      "categoria": "productividad",
+      "tags": [
+        "agentes",
+        "whatsapp",
+        "automatización"
+      ],
+      "url": "https://github.com/ETfromthemoon/crececonia-agentewhatsapp"
+    }
+  ]
 }

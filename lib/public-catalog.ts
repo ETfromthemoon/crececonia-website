@@ -3,6 +3,7 @@ import catalog from "@/content/public-catalog.json";
 export type PublicGuide = (typeof catalog.guides)[number];
 export type PublicSkill = (typeof catalog.skills)[number];
 export type PublicLink = (typeof catalog.links)[number];
+export type PublicRepository = (typeof catalog.repositories)[number];
 
 export function listPublicGuides(category?: string): PublicGuide[] {
   return category ? catalog.guides.filter((item) => item.categoria === category) : catalog.guides;
@@ -22,4 +23,8 @@ export function getPublicSkill(slug: string): PublicSkill | null {
 
 export function listPublicLinks(): PublicLink[] {
   return catalog.links;
+}
+
+export function listPublicRepositories(): PublicRepository[] {
+  return catalog.repositories;
 }

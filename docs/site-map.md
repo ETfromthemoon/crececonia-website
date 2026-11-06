@@ -34,12 +34,14 @@ flowchart TD
     GUIAS["/centro/guias · Guías"]
     SKILLS["/centro/skills · Skills"]
     ENLACES["/centro/enlaces · Enlaces"]
+    REPOS["/centro/repositorios · Repositorios"]
     TEMA["/centro/[tema] · Categoría"]
     GUIA["/guias/[slug] · Guía"]
     SKILL["/skills/[slug] · Skill"]
     CENTRO --> GUIAS
     CENTRO --> SKILLS
     CENTRO --> ENLACES
+    CENTRO --> REPOS
     CENTRO --> TEMA
     GUIAS --> GUIA
     SKILLS --> SKILL

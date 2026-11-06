@@ -9,7 +9,7 @@ import { createPageMetadata } from "@/lib/seo";
 export const metadata = createPageMetadata({
   title: "Centro de Conocimiento — CrececonIA",
   description:
-    "Todo el conocimiento de Crececonia en un solo lugar: skills, guías y enlaces, organizados por objetivo. Encontrá lo que te sirve para crecer.",
+    "Skills, guías y repositorios de CrececonIA, organizados por objetivo. Encuentra lo que te sirve para crecer.",
   path: "/centro",
 });
 
@@ -75,7 +75,7 @@ export default async function CentroPage() {
               className="text-base max-w-xl mx-auto"
               style={{ color: "var(--ash)", fontWeight: 300 }}
             >
-              Skills, guías y enlaces organizados por objetivo. Elige qué quieres
+              Skills, guías y repositorios organizados por objetivo. Elige qué quieres
               lograr y encuentra lo que te sirve para crecer.
             </p>
           </div>
