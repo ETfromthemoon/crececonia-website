@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 import { validateDiscountCode } from "@/lib/discount-codes";
+import { isEbookFlashEligible } from "@/lib/ebook-promotion";
 import {
   DEFAULT_EBOOK_RESOURCE,
   getCatalogEntry,
@@ -35,6 +36,10 @@ export async function POST(request: Request) {
   const entry = getCatalogEntry(resource);
   if (!entry || !entry.active || (!isCatalogEntryLive(entry) && !isAdminPreviewKey(previewKey))) {
     return NextResponse.json({ valid: false, reason: "Código no válido." }, { status: 400 });
+  }
+
+  if (isEbookFlashEligible([resource])) {
+    return NextResponse.json({ valid: false, reason: "La promoción de hoy se aplica automáticamente y no se acumula con códigos." }, { status: 400 });
   }
 
   // Los códigos de descuento solo aplican a la compra de 1 solo libro (el

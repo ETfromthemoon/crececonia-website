@@ -95,4 +95,20 @@ describe("GET /api/ebook/cupos", () => {
     const body = await res.json();
     expect(body.tier).toBe("regular");
   });
+
+  it("publica el precio de campaña sin caché y lo retira exactamente a medianoche", async () => {
+    mockGetCurrentPrice.mockResolvedValue({ price: 17900, tier: "early", remaining: 1, originalPrice: 27000 });
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(new Date("2026-11-07T23:59:59-03:00"));
+      const active = await GET(reqWith());
+      expect(active.headers.get("Cache-Control")).toBe("no-store");
+      expect(await active.json()).toMatchObject({ price: 17900, salePrice: 8950, promotionEndsAt: "2026-11-08T00:00:00-03:00" });
+      vi.setSystemTime(new Date("2026-11-08T00:00:00-03:00"));
+      const ended = await GET(reqWith());
+      expect(await ended.json()).toMatchObject({ salePrice: 17900, promotionEndsAt: null });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

@@ -4,12 +4,25 @@ import ResourceNav from "@/components/ResourceNav";
 import Navbar from "@/components/Navbar";
 import HubCard from "@/components/HubCard";
 import EbookPricing from "@/components/EbookPricing";
+import EbookCard from "@/components/EbookCard";
+import EbookFlashBanner from "@/components/EbookFlashBanner";
 
 const route = vi.hoisted(() => ({ pathname: "/" }));
-vi.mock("next/navigation", () => ({ usePathname: () => route.pathname }));
+vi.mock("next/navigation", () => ({ usePathname: () => route.pathname, useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("posthog-js/react", () => ({ useFeatureFlagVariantKey: () => "control" }));
 
 describe("public resource interface", () => {
+  it.each(["book", "route"] as const)("muestra el antes tachado, el precio de hoy y el 50%% en %s", (variant) => {
+    const html = renderToStaticMarkup(<EbookCard title="Ebook" description="Descripción" href="/ebooks" coverSrc="/ebooks/de-cero-a-claude-en-una-semana.jpg" status="available" variant={variant} previousPriceLabel="$17.900 CLP" priceLabel="$8.950 CLP" />);
+    expect(html).toContain("<s>$17.900 CLP</s>");
+    expect(html).toContain("Hoy $8.950 CLP");
+    expect(html).toContain("50% de descuento · Solo por hoy");
+  });
+
+  it("retira el anuncio cuando la promoción termina", () => {
+    expect(renderToStaticMarkup(<EbookFlashBanner active={false} />)).toBe("");
+    expect(renderToStaticMarkup(<EbookFlashBanner active />)).toContain("Hasta las 23:59, hora de Santiago");
+  });
   beforeEach(() => { route.pathname = "/"; });
 
   it.each([

@@ -1,10 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEbookDisplayPrice } from "./useEbookDisplayPrice";
 import Link from "next/link";
 import EbookSoldCounter from "./EbookSoldCounter";
-import type { PriceInfo } from "@/lib/ebook-pricing";
 import { EBOOK_ACCENT as ACCENT, EBOOK_COLD_BG as BG } from "@/lib/ebook-theme";
 
 const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
@@ -47,16 +46,8 @@ export default function EbookGenericHero({
   coverSrc,
   coverAlt,
 }: Props) {
-  const [priceInfo, setPriceInfo] = useState<PriceInfo | null>(null);
-
-  useEffect(() => {
-    fetch(`/api/ebook/cupos?resource=${resource}`)
-      .then((r) => r.json())
-      .then(setPriceInfo)
-      .catch(() => {});
-  }, [resource]);
-
-  const price = priceInfo?.price ?? null;
+  const priceInfo = useEbookDisplayPrice(resource);
+  const price = priceInfo?.salePrice ?? priceInfo?.price ?? null;
   const formattedPrice = price ? price.toLocaleString("es-CL") : null;
 
   function scrollToComprar() {
@@ -158,12 +149,13 @@ export default function EbookGenericHero({
                 {formattedPrice ? `Comprar · $${formattedPrice} CLP` : "Comprar ahora"}
               </button>
 
-              {priceInfo?.tier === "super-early" && (
+              {priceInfo?.promotionEndsAt && <p style={{ color: ACCENT }}>Antes <s>${priceInfo.previousPrice?.toLocaleString("es-CL")} CLP</s><br /><strong>50% de descuento · Solo por hoy hasta las 23:59</strong></p>}
+              {!priceInfo?.promotionEndsAt && priceInfo?.tier === "super-early" && (
                 <p style={{ color: ACCENT, fontFamily: "var(--font-mono)", fontSize: "0.72rem", letterSpacing: "0.08em" }}>
                   Super Early
                 </p>
               )}
-              {priceInfo?.tier === "early" && (
+              {!priceInfo?.promotionEndsAt && priceInfo?.tier === "early" && (
                 <p style={{ color: ACCENT, fontFamily: "var(--font-mono)", fontSize: "0.72rem", letterSpacing: "0.08em" }}>
                   Early Adopters
                 </p>

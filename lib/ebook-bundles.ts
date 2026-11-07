@@ -63,13 +63,15 @@ export interface BundleTotal {
  * resto del redondeo se absorbe en el último item, no en el primero — así el
  * ajuste cae siempre en el mismo lugar y es predecible en los reportes.
  */
-export function computeBundleTotal(items: BundleItemInput[]): BundleTotal {
+export function computeBundleTotal(
+  items: BundleItemInput[],
+  discountPercent = getComboDiscountPercent(items.length, items.map((item) => item.resource)),
+): BundleTotal {
   if (items.length === 0) {
     throw new Error("computeBundleTotal requiere al menos 1 item.");
   }
 
   const subtotal = items.reduce((sum, item) => sum + item.price, 0);
-  const discountPercent = getComboDiscountPercent(items.length, items.map((item) => item.resource));
   const total = Math.round(subtotal * (1 - discountPercent / 100));
   const discountAmount = subtotal - total;
 
@@ -107,7 +109,7 @@ export interface EbookBundle {
 export const EBOOK_BUNDLES: EbookBundle[] = [
   {
     slug: "coleccion-completa",
-    title: "Colección Completa",
+    title: "Pack Claude + Negocio + Web",
     pitch:
       "De no saber nada de IA a operarla, automatizar tu negocio y construir tu web. Los 4 libros.",
     resources: [
@@ -120,7 +122,7 @@ export const EBOOK_BUNDLES: EbookBundle[] = [
   {
     slug: "coleccion-web",
     title: "Colección Web Completa",
-    pitch: "Las cuatro partes para construir sitios, tiendas y productos web con IA. 426 páginas de proyectos reales y 25% de descuento.",
+    pitch: "Las cuatro partes para construir sitios, tiendas y productos web con IA. 426 páginas de proyectos reales con descuento por colección.",
     resources: [
       "ebook:creacion-de-webs-con-ia",
       "ebook:creacion-de-webs-con-ia-parte-2",
