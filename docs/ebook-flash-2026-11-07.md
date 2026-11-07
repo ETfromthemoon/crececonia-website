@@ -16,7 +16,7 @@ Para publicar: seguir el flujo Git/PR del proyecto con autorización explícita 
 
 ## Verificación local
 
-- `npm test`: 394 pruebas aprobadas, 48 archivos.
+- `npm test`: 460 pruebas aprobadas, 55 archivos.
 - `npm run build`: aprobado, incluyendo TypeScript.
 - `git diff --check`: aprobado.
 - `npm run ebook:verificar`: no completado por ausencia de credenciales de Storage en el entorno local (el adaptador cae al fallback Supabase). No demuestra un fallo de entrega en producción.

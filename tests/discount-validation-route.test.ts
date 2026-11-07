@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { price, validate } = vi.hoisted(() => ({ price: vi.fn(), validate: vi.fn() }));
 vi.mock("@/lib/ebook-pricing", () => ({ getCurrentPrice: price }));
@@ -13,10 +13,13 @@ function request(body: unknown) {
 
 describe("validación pública de descuentos", () => {
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-06T12:00:00-03:00"));
     vi.clearAllMocks();
     price.mockResolvedValue({ price: 17_900 });
     validate.mockResolvedValue({ valid: true, finalPrice: 16_110 });
   });
+  afterEach(() => vi.useRealTimers());
 
   it.each([
     { code: 123 }, { code: ["TEST"] }, { code: {} }, { code: true },
