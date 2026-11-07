@@ -9,6 +9,7 @@ type Props = {
   coverSrcs?: string[];
   status: "available" | "coming-soon";
   priceLabel?: string;
+  previousPriceLabel?: string;
   level?: string;
   outcome?: string;
   audience?: string;
@@ -18,13 +19,14 @@ type Props = {
   index?: number;
 };
 
-export default function EbookCard({ title, description, href, coverSrc, coverSrcs = [], status, priceLabel, level, outcome, audience, pageCount, itemCount, variant = "book", index = 0 }: Props) {
+export default function EbookCard({ title, description, href, coverSrc, coverSrcs = [], status, priceLabel, previousPriceLabel, level, outcome, audience, pageCount, itemCount, variant = "book", index = 0 }: Props) {
   const isComingSoon = status === "coming-soon";
+  const promotion = previousPriceLabel ? <p style={{ margin: "12px 0", fontSize: "0.9rem" }}><span>Antes </span><s>{previousPriceLabel}</s><br /><strong>50% de descuento · Solo por hoy</strong></p> : null;
   if (variant === "route") {
     return (
       <article className="ebook-route-card" style={{ "--route-index": index } as React.CSSProperties}>
         <div className="ebook-route-covers" aria-hidden="true">{coverSrcs.map((src, coverIndex) => <div key={src} style={{ transform: `translateX(${coverIndex * 19}px) rotate(${(coverIndex - 1.5) * 3}deg)`, zIndex: coverIndex }}><Image src={src} alt="" fill sizes="140px" /></div>)}</div>
-        <div className="ebook-route-copy"><span>{String(index + 1).padStart(2, "0")} · {itemCount} libros</span><h3>{title}</h3><p>{description}</p><Link href={href}><strong>{priceLabel}</strong><span>Elegir ruta →</span></Link></div>
+        <div className="ebook-route-copy"><span>{String(index + 1).padStart(2, "0")} · {itemCount} libros</span><h3>{title}</h3><p>{description}</p>{promotion}<Link href={href}><strong>{previousPriceLabel ? "Hoy " : ""}{priceLabel}</strong><span>Elegir ruta →</span></Link></div>
       </article>
     );
   }
@@ -40,7 +42,8 @@ export default function EbookCard({ title, description, href, coverSrc, coverSrc
         <h3>{title}</h3>
         <p className="ebook-product-outcome">{outcome ?? description}</p>
         <p className="ebook-product-audience">{audience}</p>
-        <Link href={href} className="ebook-product-action"><span>{isComingSoon ? "Avísame cuando esté" : "Ver ebook"}</span><strong>{priceLabel ?? "Próximamente"}</strong></Link>
+        {promotion}
+        <Link href={href} className="ebook-product-action"><span>{isComingSoon ? "Avísame cuando esté" : "Ver ebook"}</span><strong>{previousPriceLabel ? "Hoy " : ""}{priceLabel ?? "Próximamente"}</strong></Link>
       </div>
     </article>
   );

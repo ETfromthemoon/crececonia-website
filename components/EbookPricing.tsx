@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { PriceInfo } from "@/lib/ebook-pricing";
 import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-resource-ids";
 import type { EbookCatalogEntry } from "@/lib/ebook-catalog";
-import { computeBundleTotal } from "@/lib/ebook-bundles";
+import { computeEbookTotal } from "@/lib/ebook-promotion";
+import EbookFlashBanner from "./EbookFlashBanner";
 import type { EbookBundleOffer } from "@/lib/ebook-offers";
 import { getEbookAnalyticsDistinctId, trackEbookEvent } from "@/lib/analytics";
 import { useFeatureFlagVariantKey } from "posthog-js/react";
@@ -96,9 +98,10 @@ export default function EbookPricing({
   initialPromoCode,
   previewKey,
 }: EbookPricingProps) {
+  const router = useRouter();
   const otherActiveEbooks = crossSellEntries;
   const pricingVariant = useFeatureFlagVariantKey("ebook-pricing-variant") ?? "control";
-  const [priceInfo, setPriceInfo] = useState<PriceInfo | null>(null);
+  const [priceInfo, setPriceInfo] = useState<(PriceInfo & { pricingTime?: number; promotionEndsAt?: string | null }) | null>(null);
   const [priceError, setPriceError] = useState(false);
   const [priceRetry, setPriceRetry] = useState(0);
   const [email, setEmail] = useState("");
@@ -172,16 +175,27 @@ export default function EbookPricing({
 
   useEffect(() => {
     let cancelled = false;
+    let expiryTimer: ReturnType<typeof setTimeout> | undefined;
     const previewQs = previewKey ? `&preview=${encodeURIComponent(previewKey)}` : "";
     const load = () =>
-      fetch(`/api/ebook/cupos?resource=${resource}${previewQs}`)
+      fetch(`/api/ebook/cupos?resource=${resource}${previewQs}`, { cache: "no-store" })
         .then((r) => {
           if (!r.ok) throw new Error("No se pudo cargar el precio");
           return r.json();
         })
         .then((data) => {
           if (!Number.isFinite(data.price) || data.price <= 0) throw new Error("Precio no disponible");
-          if (!cancelled) { setPriceInfo(data); setPriceError(false); }
+          if (!cancelled) {
+            setPriceInfo(data);
+            setPriceError(false);
+            clearTimeout(expiryTimer);
+            if (data.promotionEndsAt && data.pricingTime) {
+              expiryTimer = setTimeout(() => {
+                setPriceInfo(null);
+                load();
+              }, Math.max(0, Date.parse(data.promotionEndsAt) - data.pricingTime));
+            }
+          }
         })
         .catch(() => { if (!cancelled) setPriceError(true); });
 
@@ -189,7 +203,7 @@ export default function EbookPricing({
     setPriceError(false);
     load();
     const id = setInterval(load, 30000);
-    return () => { cancelled = true; clearInterval(id); };
+    return () => { cancelled = true; clearInterval(id); clearTimeout(expiryTimer); };
   }, [resource, previewKey, priceRetry]);
 
   useEffect(() => {
@@ -229,18 +243,20 @@ export default function EbookPricing({
   // recalcula todo desde cero en /api/flow/create y nunca confía en este
   // número.
   const bundlePreview = isCombo
-    ? computeBundleTotal(
+    ? computeEbookTotal(
         selectedResources.map((itemResource) => ({
           resource: itemResource,
           price:
             itemResource === resource
               ? basePrice
               : crossSellPrices[itemResource] ?? otherActiveByResource.get(itemResource)!.tierPrices.regular,
-        }))
+        })), priceInfo?.pricingTime,
       )
     : null;
 
-  const displayPrice = isCombo ? bundlePreview!.total : appliedDiscount?.finalPrice ?? basePrice;
+  const singlePreview = computeEbookTotal([{ resource, price: basePrice }], priceInfo?.pricingTime);
+  const flashActive = Boolean(priceInfo?.promotionEndsAt);
+  const displayPrice = isCombo ? bundlePreview!.total : appliedDiscount?.finalPrice ?? singlePreview.total;
   const formattedPrice = displayPrice.toLocaleString("es-CL");
   const formattedBasePrice = basePrice.toLocaleString("es-CL");
   // Antes esto era un `27000` fijo, de cuando EbookPricing solo se usaba en
@@ -306,12 +322,18 @@ export default function EbookPricing({
         previewKey,
         analyticsDistinctId: getEbookAnalyticsDistinctId(),
         pricingVariant,
+        expectedAmount: displayPrice,
       }),
     });
 
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok || data.error) {
+      if (res.status === 409) {
+        setAppliedDiscount(null);
+        setPriceRetry((value) => value + 1);
+        router.refresh();
+      }
       setErrorMsg(data.error ?? "Error al procesar el pago. Intentá nuevamente.");
       setStatus("error");
       return;
@@ -332,6 +354,7 @@ export default function EbookPricing({
           className={`${styles.glass} ${styles.glassSheen}`}
           style={{ borderRadius: 40, overflow: "hidden" }}
         >
+          <EbookFlashBanner active={flashActive} />
           {/* Price header */}
           <div
             style={{
@@ -339,7 +362,7 @@ export default function EbookPricing({
               borderBottom: "1px solid rgba(0,0,0,0.1)",
             }}
           >
-            {hasDiscount && (
+            {hasDiscount && !flashActive && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                 <span
                   style={{
@@ -391,8 +414,9 @@ export default function EbookPricing({
               >
                 CLP
               </span>
-              {(hasDiscount || appliedDiscount) && (
+              {(hasDiscount || appliedDiscount || flashActive || isCombo) && (
                 <span
+                  aria-label="Precio anterior"
                   style={{
                     color: "#4e4d4d",
                     fontSize: "0.9rem",
@@ -400,7 +424,7 @@ export default function EbookPricing({
                     fontFamily: "var(--font-mono)",
                   }}
                 >
-                  ${appliedDiscount ? formattedBasePrice : formattedOriginal}
+                  ${isCombo ? bundlePreview!.subtotal.toLocaleString("es-CL") : flashActive ? singlePreview.subtotal.toLocaleString("es-CL") : appliedDiscount ? formattedBasePrice : formattedOriginal}
                 </span>
               )}
             </div>}
@@ -512,7 +536,7 @@ export default function EbookPricing({
             )}
             </details>}
 
-            {!appliedDiscount && !isCombo && isDiscountOpen && (
+            {!flashActive && !appliedDiscount && !isCombo && isDiscountOpen && (
               <div id="ebook-discount-panel" style={{ marginBottom: 18, order: 3 }}>
                 <label
                   htmlFor="ebook-discount"
@@ -622,7 +646,7 @@ export default function EbookPricing({
               }}
             />
 
-            {!appliedDiscount && !isCombo && !isDiscountOpen && (
+            {!flashActive && !appliedDiscount && !isCombo && !isDiscountOpen && (
               <button
                 type="button"
                 onClick={() => setIsDiscountOpen(true)}

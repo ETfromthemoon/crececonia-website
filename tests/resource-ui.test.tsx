@@ -6,7 +6,7 @@ import HubCard from "@/components/HubCard";
 import EbookPricing from "@/components/EbookPricing";
 
 const route = vi.hoisted(() => ({ pathname: "/" }));
-vi.mock("next/navigation", () => ({ usePathname: () => route.pathname }));
+vi.mock("next/navigation", () => ({ usePathname: () => route.pathname, useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("posthog-js/react", () => ({ useFeatureFlagVariantKey: () => "control" }));
 
 describe("public resource interface", () => {

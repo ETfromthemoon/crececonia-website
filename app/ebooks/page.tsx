@@ -4,7 +4,9 @@ import Footer from "@/components/Footer";
 import ResourceNav from "@/components/ResourceNav";
 import { EBOOK_CATALOG, isCatalogEntryLive } from "@/lib/ebook-catalog";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
-import { EBOOK_BUNDLES, computeBundleTotal } from "@/lib/ebook-bundles";
+import { EBOOK_BUNDLES } from "@/lib/ebook-bundles";
+import { computeEbookTotal, isEbookFlashActive } from "@/lib/ebook-promotion";
+import EbookFlashBanner from "@/components/EbookFlashBanner";
 import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -16,11 +18,17 @@ export const metadata = createPageMetadata({
 });
 
 export default async function EbooksPage() {
+  const pricingTime = Date.now();
   const bookCards = await Promise.all(EBOOK_CATALOG.map(async (entry) => {
     const live = entry.active && isCatalogEntryLive(entry);
-    const priceLabel = live
-      ? `$${(await getCurrentPrice(entry.resource).catch(() => ({ price: entry.active ? entry.tierPrices.regular : 0 }))).price.toLocaleString("es-CL")} CLP`
-      : undefined;
+    let priceLabel: string | undefined;
+    let previousPriceLabel: string | undefined;
+    if (live) {
+      const priceInfo = await getCurrentPrice(entry.resource).catch(() => ({ price: entry.active ? entry.tierPrices.regular : 0 }));
+      const quote = computeEbookTotal([{ resource: entry.resource, price: priceInfo.price }], pricingTime);
+      priceLabel = `$${quote.total.toLocaleString("es-CL")} CLP`;
+      if (isEbookFlashActive(pricingTime)) previousPriceLabel = `$${quote.subtotal.toLocaleString("es-CL")} CLP`;
+    }
     return {
       key: entry.resource,
       title: entry.title,
@@ -29,6 +37,7 @@ export default async function EbooksPage() {
       coverSrc: entry.coverSrc,
       status: (live ? "available" : "coming-soon") as "available" | "coming-soon",
       priceLabel,
+      previousPriceLabel,
       level: entry.storeProfile.level,
       outcome: entry.storeProfile.outcome,
       audience: entry.storeProfile.audience,
@@ -43,7 +52,7 @@ export default async function EbooksPage() {
       const entry = EBOOK_CATALOG.find((item) => item.resource === resource);
       return getCurrentPrice(resource).catch(() => ({ price: entry?.active ? entry.tierPrices.regular : 0 }));
     }));
-    const totals = computeBundleTotal(bundle.resources.map((resource, index) => ({ resource, price: prices[index].price })));
+    const totals = computeEbookTotal(bundle.resources.map((resource, index) => ({ resource, price: prices[index].price })), pricingTime);
     const anchorHref = EBOOK_CATALOG.find((entry) => entry.resource === bundle.resources[0])!.href;
     return {
       key: bundle.slug,
@@ -53,6 +62,7 @@ export default async function EbooksPage() {
       coverSrcs: bundle.resources.map((resource) => EBOOK_CATALOG.find((entry) => entry.resource === resource)?.coverSrc).filter((src): src is string => Boolean(src)),
       status: "available" as const,
       priceLabel: `$${totals.total.toLocaleString("es-CL")} CLP · ${totals.discountPercent}% off`,
+      previousPriceLabel: isEbookFlashActive(pricingTime) ? `$${totals.subtotal.toLocaleString("es-CL")} CLP` : undefined,
       itemCount: bundle.resources.length,
     };
   }));
@@ -61,6 +71,7 @@ export default async function EbooksPage() {
     <><Navbar />
     <main className="ebook-store">
       <ResourceNav />
+      <EbookFlashBanner active={isEbookFlashActive(pricingTime)} />
       <section className="ebook-store-hero">
         <div className="ebook-store-shell ebook-store-hero-grid">
           <div>

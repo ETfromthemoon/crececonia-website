@@ -10,7 +10,7 @@ import {
   DEFAULT_EBOOK_RESOURCE,
   EBOOK_CATALOG,
 } from "@/lib/ebook-catalog";
-import { computeBundleTotal } from "@/lib/ebook-bundles";
+import { computeEbookTotal, isEbookFlashEligible, EBOOK_FLASH_ID } from "@/lib/ebook-promotion";
 import { getOfferIdForResources } from "@/lib/ebook-offers";
 import { captureServerEvent } from "@/lib/posthog-server";
 
@@ -123,8 +123,13 @@ export async function POST(request: Request) {
     );
   }
 
-  const bundle = computeBundleTotal(
-    resources.map((resource, i) => ({ resource, price: priceInfos[i].price }))
+  const pricingTime = Date.now();
+  const flashActive = isEbookFlashEligible(resources, pricingTime);
+  if (flashActive && discountCode) {
+    return NextResponse.json({ error: "La promoción de hoy se aplica automáticamente y no se acumula con códigos." }, { status: 400 });
+  }
+  const bundle = computeEbookTotal(
+    resources.map((resource, i) => ({ resource, price: priceInfos[i].price })), pricingTime,
   );
 
   let finalAmount = bundle.total;
@@ -138,6 +143,11 @@ export async function POST(request: Request) {
     }
     finalAmount = result.finalPrice;
     appliedCode = result.code;
+  }
+
+  // Evita abrir una orden con un importe distinto al aceptado en una pestaña antigua.
+  if (body?.expectedAmount !== undefined && body.expectedAmount !== finalAmount) {
+    return NextResponse.json({ error: "El precio cambió. Actualiza la página y revisa el total antes de pagar." }, { status: 409 });
   }
 
   const apiKey = process.env.FLOW_API_KEY!;
@@ -253,6 +263,7 @@ export async function POST(request: Request) {
       resources,
       offer_id: offerId,
       amount: finalAmount,
+      promotion_id: flashActive ? EBOOK_FLASH_ID : undefined,
       order_id: commerceOrder,
       pricing_variant: pricingVariant,
     });
