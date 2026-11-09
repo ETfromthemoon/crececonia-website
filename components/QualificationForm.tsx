@@ -96,8 +96,8 @@ export default function QualificationForm({ service }: { service: Service }) {
   if (state === "qualified") {
     return (
       <div className="qualify-wrap">
-        <div className="qualify-intro"><span className="eyebrow">Postulación enviada</span><h2>Tu contexto ya está listo para revisar.</h2></div>
-        <div className="qualify-success"><span className="success-mark">✓</span><h3>Se abrió WhatsApp con tu postulación.</h3><p>No hace falta volver a explicar lo básico: el mensaje incluye tu objetivo, contexto y rango de inversión. La conversación es para validar encaje y alcance, no para partir de cero.</p><button type="button" className="text-link" onClick={() => setState(null)}>Editar mis respuestas</button></div>
+        <div className="qualify-intro"><span className="eyebrow">Postulación preparada</span><h2>Tu contexto está listo para enviar.</h2></div>
+        <div className="qualify-success"><span className="success-mark">→</span><h3>Envía el mensaje desde WhatsApp.</h3><p>Revisa el mensaje con tu objetivo, contexto y rango de inversión y pulsa Enviar en WhatsApp para que podamos revisar tu postulación. Si WhatsApp no se abrió, vuelve a tus respuestas e inténtalo de nuevo.</p><button type="button" className="text-link" onClick={() => setState(null)}>Editar mis respuestas</button></div>
       </div>
     );
   }
