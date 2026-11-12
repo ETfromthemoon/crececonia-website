@@ -169,6 +169,23 @@ describe("fetchAnalyticsReport", () => {
     expect(report.byPageType).toEqual([{ pageType: "landing", pageViews: 100 }]);
     expect(report.recommendations?.length).toBeGreaterThan(0);
   });
+  it("desglosa CTA únicamente para pares permitidos y descarta valores arbitrarios", async () => {
+    const queries: string[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (_url: string, options: RequestInit) => {
+      const query = JSON.parse(options.body as string).query.query as string;
+      queries.push(query);
+      return { ok: true, json: async () => ({ results: query.includes("AS unique_orders") ? [] : [
+        ["ecosystem_cta_clicked", null, null, 0, "home_route", "home_hero", 6],
+        ["ecosystem_cta_clicked", null, null, 0, "buyer@example.test", "home_hero", 900],
+      ] }) };
+    }));
+    const { fetchAnalyticsReport } = await import("@/lib/posthog-analytics");
+    const report = await fetchAnalyticsReport(7, new Date("2026-07-30"));
+    expect(report.semanticCtaBreakdown).toEqual([{ cta: "home_route", source: "home_hero", clicks: 6 }]);
+    const ecosystemQuery = queries.find((query) => !query.includes("AS unique_orders"))!;
+    expect(ecosystemQuery).toContain("JSONExtractString(properties, 'cta')");
+    expect(ecosystemQuery).toContain("ecosystem_cta_clicked");
+  });
   it("separa órdenes únicas de reintentos y eventos históricos sin ID en todos los productos", async () => {
     const queries: string[] = [];
     vi.stubGlobal("fetch", vi.fn(async (_url: string, options: RequestInit) => {
