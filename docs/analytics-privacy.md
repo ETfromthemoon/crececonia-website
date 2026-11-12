@@ -12,7 +12,7 @@ Los lanzamientos sólo admiten captura cuando el servidor marca el contenido `pu
 
 `before_send` sanea propiedades anidadas, incluido `$set_once`; descarta eventos en superficies privadas. Se desactivan autocapture, session replay, captura de red/performance y excepciones, además de carga de extensiones externas, porque podrían transmitir DOM o datos por canales fuera del sanitizador. Se conservan eventos explícitos del funnel, pageviews públicos y feature flags de precios.
 
-El SDK instalado envía propiedades iniciales persistidas en `/flags`, fuera de `before_send`. Por eso se inicia con flags deshabilitadas, se retiran únicamente cinco caches antiguos de atribución/persona/grupo y se habilitan flags después. Se conserva el identificador anónimo; no se resetean usuarios ni borran datos del proveedor. Se deshabilita volver a guardar automáticamente referrer/campañas; los eventos propios y la URL saneada conservan los UTM permitidos. Los nombres de esas caches se verificaron en `posthog-js` 1.407.7: revisar ese contrato al actualizarlo.
+El SDK instalado envía propiedades iniciales persistidas en `/flags`, fuera de `before_send`. Por eso el callback `loaded`, que el SDK ejecuta antes de cargar configuración remota, retira únicamente cinco caches antiguos de atribución/persona/grupo antes de solicitar flags. No se fija `advanced_disable_flags` al inicializar: en 1.407.7 ese valor original prevalece sobre cambios posteriores y dejaría las flags apagadas permanentemente. El control de privacidad usa `set_config` después del inicio y observa pathname y query; al volver a una URL pública recarga flags. Se conserva el identificador anónimo; no se resetean usuarios ni borran datos del proveedor. Se deshabilita volver a guardar automáticamente referrer/campañas; los eventos propios y la URL saneada conservan los UTM permitidos. Los nombres de esas caches se verificaron en `posthog-js` 1.407.7: revisar ese contrato al actualizarlo.
 
 Fuentes: [referencia SDK PostHog](https://posthog.com/docs/libraries/js/reference), [privacidad de replay](https://posthog.com/docs/session-replay/privacy) y código instalado `posthog-persistence.js` / `posthog-featureflags.js`.
 
@@ -23,5 +23,7 @@ El coordinador autorizó suspender el SDK browser de Meta: `MetaPixel` no genera
 Un documento abierto con JavaScript de un deploy anterior conserva ese código hasta recargarse: desplegar no elimina una instancia remota ya ejecutada en una pestaña antigua. Las verificaciones deben abrir un documento nuevo del Preview correspondiente.
 
 ## Verificación
+
+La prueba `analytics-sdk-contract.test.ts` usa PostHog 1.407.7 real con transporte fetch interceptado: demuestra orden de limpieza, recepción de variante, bloqueo y recuperación de flags en transiciones de sólo query. No sustituye una prueba de DOM/navegador.
 
 Pruebas de propiedades anidadas, navegación pública/privada, preservación de UTM y rutas, contactos, orden de limpieza previo a flags, ausencia de emisión Meta incluso con un fbq preexistente y widget administrativo. El Preview debe comprobar además las requests reales de ambos proveedores con credenciales sintéticas; una configuración sin keys sólo demuestra ausencia de carga, no el envío saneado con SDK activo.

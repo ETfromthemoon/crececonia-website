@@ -60,7 +60,8 @@ describe("analytics privacy boundary", () => {
   });
   it("disables opaque capture channels and clears old flag payload caches before flag loading", () => {
     ensureAnalytics();
-    expect(config).toMatchObject({ autocapture: false, capture_dead_clicks: false, disable_session_recording: true, disable_external_dependency_loading: true, capture_exceptions: false, capture_performance: false, save_referrer: false, save_campaign_params: false, advanced_disable_flags: true });
+    expect(config).toMatchObject({ autocapture: false, capture_dead_clicks: false, disable_session_recording: true, disable_external_dependency_loading: true, capture_exceptions: false, capture_performance: false, save_referrer: false, save_campaign_params: false });
+    expect(config).not.toHaveProperty("advanced_disable_flags");
     expect(sdk.unregister).toHaveBeenCalledWith("$initial_person_info");
     expect(sdk.unregister).toHaveBeenCalledWith("$stored_person_properties");
     expect(sdk.unregister.mock.invocationCallOrder.at(-1)).toBeLessThan(sdk.reloadFeatureFlags.mock.invocationCallOrder[0]);

@@ -1,4 +1,4 @@
-import posthog from "posthog-js";
+import posthog, { type PostHogConfig } from "posthog-js";
 import { analyticsAllowed, sanitizeAnalyticsProperties, sanitizeAnalyticsUrl } from "./analytics-privacy";
 
 /** Initialize before child effects; private pages never initialize the SDK. */
@@ -6,7 +6,11 @@ export function ensureAnalytics(): void {
   if (!analyticsAllowed() || posthog.__loaded) return;
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
   if (!key) return;
-  posthog.init(key, {
+  posthog.init(key, analyticsConfig());
+}
+
+export function analyticsConfig(): Partial<PostHogConfig> {
+  return {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
     capture_pageview: "history_change",
     capture_pageleave: "if_capture_pageview",
@@ -22,8 +26,8 @@ export function ensureAnalytics(): void {
     save_referrer: false,
     save_campaign_params: false,
     disable_capture_url_hashes: true,
-    // /flags bypasses before_send and includes persisted person properties.
-    advanced_disable_flags: true,
+    // loaded precedes RemoteConfigLoader. Omit advanced_disable_flags at init;
+    // the SDK otherwise gives the original value precedence over set_config.
     person_profiles: "identified_only",
     respect_dnt: true,
     get_current_url: (url) => sanitizeAnalyticsUrl(url) ?? "",
@@ -32,10 +36,20 @@ export function ensureAnalytics(): void {
       // Remove only old browser attribution/person caches, preserving anonymous ID.
       // These keys are verified against posthog-js 1.407.7 persistence/flags source.
       for (const property of ["$initial_person_info", "$initial_referrer_info", "$initial_campaign_params", "$stored_person_properties", "$stored_group_properties"]) client.unregister(property);
+      client.set_config({ advanced_disable_flags: !analyticsAllowed() });
       if (analyticsAllowed()) {
-        client.set_config({ advanced_disable_flags: false });
         client.reloadFeatureFlags();
       }
     },
-  });
+  };
+}
+
+/** Called for pathname AND query changes, without changing the functional URL. */
+export function syncAnalyticsPrivacy(): void {
+  ensureAnalytics();
+  if (!posthog.__loaded) return;
+  const disabled = !analyticsAllowed();
+  const wasDisabled = posthog.config.advanced_disable_flags;
+  posthog.set_config({ advanced_disable_flags: disabled });
+  if (wasDisabled && !disabled) posthog.reloadFeatureFlags();
 }

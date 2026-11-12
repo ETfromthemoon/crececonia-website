@@ -1,20 +1,25 @@
 "use client";
 
-import { useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { Suspense, useEffect } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import posthog from "posthog-js";
 import { PostHogProvider as PostHogReactProvider } from "posthog-js/react";
 import PostHogEcosystemTracker from "./PostHogEcosystemTracker";
-import { ensureAnalytics } from "@/lib/analytics-client";
-import { analyticsAllowed } from "@/lib/analytics-privacy";
+import { ensureAnalytics, syncAnalyticsPrivacy } from "@/lib/analytics-client";
 
 ensureAnalytics();
 
-export default function PostHogProvider({ children }: { children: React.ReactNode }) {
+function PrivacySync() {
   const pathname = usePathname();
-  useEffect(() => {
-    ensureAnalytics();
-    if (posthog.__loaded) posthog.set_config({ advanced_disable_flags: !analyticsAllowed() });
-  }, [pathname]);
-  return <PostHogReactProvider client={posthog}><PostHogEcosystemTracker />{children}</PostHogReactProvider>;
+  const search = useSearchParams().toString();
+  useEffect(() => { syncAnalyticsPrivacy(); }, [pathname, search]);
+  return null;
+}
+
+export default function PostHogProvider({ children }: { children: React.ReactNode }) {
+  return <PostHogReactProvider client={posthog}>
+    <Suspense fallback={null}><PrivacySync /></Suspense>
+    <PostHogEcosystemTracker />
+    {children}
+  </PostHogReactProvider>;
 }
