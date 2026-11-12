@@ -29,6 +29,12 @@ function uuid(value: string): void {
   if (!UUID.test(value)) throw new Error("Identificador de entrega inválido.");
 }
 
+function timestamp(value: Date | string): string {
+  const date = value instanceof Date ? value : new Date(typeof value === "string" ? value : NaN);
+  if (!Number.isFinite(date.getTime())) throw new Error("La cola devolvió una concesión de entrega inválida.");
+  return date.toISOString();
+}
+
 function flowOrder(value: string): void {
   if (!/^[1-9][0-9]{0,18}$/.test(value) || BigInt(value) > MAX_BIGINT) {
     throw new Error("Orden de entrega inválida.");
@@ -88,21 +94,20 @@ export async function claimEbookDeliveries(limit = 10): Promise<EbookDeliveryCla
   if (!Number.isInteger(limit) || limit < 1 || limit > 50) throw new Error("Límite de entregas inválido.");
   const rows = await query<{
     job_id: string; flow_order: string; commerce_order: string; payload: EbookDeliveryPayload;
-    idempotency_key: string; lease_token: string; lease_expires_at: string; attempts: number; first_attempt_at: string;
+    idempotency_key: string; lease_token: string; lease_expires_at: Date | string; attempts: number; first_attempt_at: Date | string;
   }>("select * from commerce.claim_ebook_deliveries($1)", [limit]);
   return rows.map((row) => {
     uuid(row.job_id);
     uuid(row.lease_token);
     flowOrder(row.flow_order);
     if (row.idempotency_key !== `ebook-buyer-delivery/${row.job_id}`
-        || !Number.isInteger(row.attempts) || row.attempts < 1 || row.attempts > 5
-        || !Number.isFinite(Date.parse(row.lease_expires_at)) || !Number.isFinite(Date.parse(row.first_attempt_at))) {
+        || !Number.isInteger(row.attempts) || row.attempts < 1 || row.attempts > 5) {
       throw new Error("La cola devolvió una concesión de entrega inválida.");
     }
     return {
       jobId: row.job_id, flowOrder: row.flow_order, commerceOrder: row.commerce_order,
       payload: payload(row.payload), idempotencyKey: row.idempotency_key, leaseToken: row.lease_token,
-      leaseExpiresAt: row.lease_expires_at, attempts: row.attempts, firstAttemptAt: row.first_attempt_at,
+      leaseExpiresAt: timestamp(row.lease_expires_at), attempts: row.attempts, firstAttemptAt: timestamp(row.first_attempt_at),
     };
   });
 }

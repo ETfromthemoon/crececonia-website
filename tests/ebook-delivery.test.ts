@@ -55,6 +55,21 @@ describe("ebook delivery repository", () => {
     await expect(claimEbookDeliveries(limit)).rejects.toThrow("Límite");
     expect(queryDatabase).not.toHaveBeenCalled();
   });
+  it.each([
+    [new Date("2026-11-12T10:02:00.123Z"), new Date("2026-11-12T10:00:00.456Z")],
+    ["2026-11-12T07:02:00.123-03:00", "2026-11-12T07:00:00.456-03:00"],
+  ])("normalizes driver timestamps to ISO strings", async (leaseExpiresAt, firstAttemptAt) => {
+    vi.mocked(queryDatabase).mockResolvedValue([{ ...row, lease_expires_at: leaseExpiresAt, first_attempt_at: firstAttemptAt }]);
+    const [claim] = await claimEbookDeliveries();
+    expect(claim.leaseExpiresAt).toBe("2026-11-12T10:02:00.123Z");
+    expect(claim.firstAttemptAt).toBe("2026-11-12T10:00:00.456Z");
+  });
+  it.each(["lease_expires_at", "first_attempt_at"])("rejects invalid %s timestamps", async (field) => {
+    for (const invalid of [new Date(NaN), "invalid", null]) {
+      vi.mocked(queryDatabase).mockResolvedValue([{ ...row, [field]: invalid }]);
+      await expect(claimEbookDeliveries()).rejects.toThrow("inválida");
+    }
+  });
   it("returns no jobs without inventing a delivery", async () => {
     vi.mocked(queryDatabase).mockResolvedValue([]);
     await expect(claimEbookDeliveries()).resolves.toEqual([]);
