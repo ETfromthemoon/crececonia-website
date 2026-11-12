@@ -25,7 +25,8 @@ create table public.marketplace_books (
   published_revision_id uuid,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  published_at timestamptz
+  published_at timestamptz,
+  unique (id, seller_id)
 );
 
 create table public.marketplace_book_revisions (
@@ -92,7 +93,7 @@ create table public.marketplace_orders (
 create table public.marketplace_order_items (
   id uuid primary key default gen_random_uuid(),
   order_id uuid not null references public.marketplace_orders(id) on delete restrict,
-  book_id uuid not null references public.marketplace_books(id) on delete restrict,
+  book_id uuid not null,
   revision_id uuid not null,
   seller_id uuid not null references public.marketplace_sellers(id) on delete restrict,
   currency char(3) not null default 'CLP' check (currency = 'CLP'),
@@ -108,6 +109,7 @@ create table public.marketplace_order_items (
   gateway_fee_estimate_minor bigint check (gateway_fee_estimate_minor is null or gateway_fee_estimate_minor >= 0),
   created_at timestamptz not null default now(),
   foreign key (revision_id, book_id) references public.marketplace_book_revisions(id, book_id) on delete restrict,
+  foreign key (book_id, seller_id) references public.marketplace_books(id, seller_id) on delete restrict,
   unique (order_id, book_id)
 );
 
