@@ -9,6 +9,7 @@ create table commerce.ebook_payment_finalizations (
   job_id uuid not null references commerce.ebook_delivery_jobs(id),
   created_at timestamptz not null default now()
 );
+create index ebook_payment_finalizations_job_id_idx on commerce.ebook_payment_finalizations(job_id);
 create table commerce.ebook_payment_effects (
   flow_order bigint not null references commerce.ebook_payment_finalizations(flow_order) deferrable initially deferred,
   kind text not null check (kind in ('cupo', 'discount', 'delivery')),
@@ -104,6 +105,13 @@ begin
     end if;
   end loop;
   discount := nullif(upper(btrim(manifest->>'discount_code')), '');
+  -- Different orders may contain the same bundle in opposite display order.
+  -- Acquire shared inventory rows canonically before any per-item mutation;
+  -- keep the following loop in manifest order to preserve grant/payload ordering.
+  perform 1 from commerce.ebook_cupos c
+    where exists (select 1 from jsonb_array_elements(manifest->'resources') x
+      where x->>'resource' = c.resource and x->>'tier' = c.tier and x->>'tier' <> 'regular')
+    order by c.resource, c.tier for update of c;
   for item in select value from jsonb_array_elements(manifest->'resources') loop
     select value into prior from jsonb_array_elements(current_snapshot->'purchases') where value->>'resource' = item->>'resource';
     if prior is not null then

@@ -25,6 +25,8 @@ Valida recursos únicos, tier, montos enteros positivos y suma pagada, y rechaza
 grants extras, duplicados o contradictorios. En una única transacción inserta todos
 los grants faltantes, efectos, job y receipt y elimina el pendiente. Errores SQL
 inesperados revierten todo. No se inventa un manifiesto para históricos sin él.
+Antes de mutar items se bloquean los cupos en orden canónico resource/tier para
+evitar deadlocks entre bundles A,B y B,A. Grants y payload conservan su orden.
 
 Los cupos nuevos se consumen sólo si quedan disponibles. Cupo agotado/faltante o
 descuento no canjeable dejan `needs_review` durable en efectos, manteniendo acceso
@@ -65,6 +67,8 @@ jobs003: no revoca acceso ni supone que borrar receipt habilita un nuevo envío.
 ## Matriz SQL real requerida (los mocks no la reemplazan)
 
 - Dos finalizaciones concurrentes misma orden: un receipt/job y un efecto por item.
+- Bundles A,B y B,A concurrentes: ambos finalizan sin deadlock, conservan orden
+  de grants y cada cupo aumenta exactamente dos veces si hay disponibilidad.
 - Dos órdenes para el mismo commerceOrder: sólo una puede consumir el manifiesto.
 - Snapshot de grants/manifiesto modificado: cero escrituras, retry con estado actual.
 - Bundle nuevo: todos grants, cupos, descuento, job y receipt o ninguno ante fallo.
