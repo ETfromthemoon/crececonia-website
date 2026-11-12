@@ -1,4 +1,5 @@
 import EbookCard from "@/components/EbookCard";
+import EbookCatalogBrowser from "@/components/marketplace/EbookCatalogBrowser";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ResourceNav from "@/components/ResourceNav";
@@ -75,7 +76,7 @@ export default async function EbooksPage() {
       <section className="ebook-store-hero">
         <div className="ebook-store-shell ebook-store-hero-grid">
           <div>
-            <span className="ebook-store-kicker">Biblioteca CrececonIA · {bookCards.length} títulos</span>
+            <span className="ebook-store-kicker">Ebooks de CrececonIA · {bookCards.length} títulos</span>
             <h1>Aprende algo.<br /><em>Aplícalo esta semana.</em></h1>
           </div>
           <div className="ebook-store-hero-aside">
@@ -94,7 +95,20 @@ export default async function EbooksPage() {
             <div><span>01 / Biblioteca</span><h2>Encuentra tu próximo paso.</h2></div>
             <p>Cada libro funciona solo. Lee para quién es y para quién no antes de elegir; si buscas una progresión completa, revisa las rutas más abajo.</p>
           </div>
-          <div className="ebook-store-grid">{bookCards.map(({ key, ...card }, index) => <EbookCard key={key} index={index} {...card} />)}</div>
+          <EbookCatalogBrowser books={bookCards} />
+        </div>
+      </section>
+
+      <section id="vender" className="ebook-marketplace-seller">
+        <div className="ebook-store-shell ebook-marketplace-seller-inner">
+          <div>
+            <span>Crece con tu conocimiento</span>
+            <h2>¿Creaste un ebook sobre IA, tecnología o negocios?</h2>
+          </div>
+          <div>
+            <p>Estamos preparando un espacio para que autores independientes puedan presentar y vender sus libros en esta biblioteca.</p>
+            <p className="ebook-marketplace-seller-note">Próximamente · Publicaciones sujetas a revisión y aprobación.</p>
+          </div>
         </div>
       </section>
 
