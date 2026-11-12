@@ -21,6 +21,7 @@ create table commerce.ebook_library_sessions (
   check (expires_at > created_at)
 );
 create index ebook_library_sessions_email_idx on commerce.ebook_library_sessions(email, expires_at) where revoked_at is null;
+create index ebook_library_sessions_challenge_idx on commerce.ebook_library_sessions(challenge_id);
 
 create table commerce.ebook_library_rate_limits (
   key_hash text not null check (key_hash ~ '^[0-9a-f]{64}$'),
@@ -41,9 +42,10 @@ begin
   delete from commerce.ebook_library_rate_limits where expires_at <= now_at;
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p_email_key, 0));
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p_ip_key, 0));
-  select coalesce(sum(request_count),0)::int into email_hour from commerce.ebook_library_rate_limits where key_hash=p_email_key and window_started_at > now_at - interval '1 hour';
-  select coalesce(sum(request_count),0)::int into email_day from commerce.ebook_library_rate_limits where key_hash=p_email_key and window_started_at > now_at - interval '1 day';
-  select coalesce(sum(request_count),0)::int into ip_hour from commerce.ebook_library_rate_limits where key_hash=p_ip_key and window_started_at > now_at - interval '1 hour';
+  -- Fixed calendar windows: bucket edges cannot accidentally expire a recent request.
+  select coalesce(sum(request_count),0)::int into email_hour from commerce.ebook_library_rate_limits where key_hash=p_email_key and window_started_at >= date_trunc('hour',now_at);
+  select coalesce(sum(request_count),0)::int into email_day from commerce.ebook_library_rate_limits where key_hash=p_email_key and window_started_at >= date_trunc('day',now_at);
+  select coalesce(sum(request_count),0)::int into ip_hour from commerce.ebook_library_rate_limits where key_hash=p_ip_key and window_started_at >= date_trunc('hour',now_at);
   if email_hour >= 3 or email_day >= 5 or ip_hour >= 20 then return false; end if;
   insert into commerce.ebook_library_rate_limits values (p_email_key, date_trunc('hour',now_at), 1, now_at + interval '1 day')
     on conflict (key_hash,window_started_at) do update set request_count=commerce.ebook_library_rate_limits.request_count+1;
