@@ -74,4 +74,30 @@ describe("formatAnalyticsReport", () => {
     expect(text).toContain("no conciliación contable");
   });
 
+  it("explica el cociente enlazado por orden y su cohorte madura sin presentarlo como contabilidad", () => {
+    const text = formatAnalyticsReport(baseReport({ ebookOrderConversion: {
+      maturityDays: 14,
+      eligibleCheckouts: 7,
+      confirmedWithinWindow: 4,
+      checkoutEventsWithoutOrderId: 2,
+      conversionRate: 4 / 7,
+    } }));
+    expect(text).toContain("4/7 checkouts maduros");
+    expect(text).toContain("57.1%");
+    expect(text).toContain("2 eventos de checkout sin ID");
+    expect(text).toContain("no conciliación contable");
+    expect(text).toContain("14 días completos de observación");
+  });
+
+  it("no inventa una tasa si la cohorte no tiene órdenes elegibles", () => {
+    const text = formatAnalyticsReport(baseReport({ ebookOrderConversion: {
+      maturityDays: 14,
+      eligibleCheckouts: 0,
+      confirmedWithinWindow: 0,
+      checkoutEventsWithoutOrderId: 0,
+      conversionRate: null,
+    } }));
+    expect(text).toContain("sin órdenes elegibles");
+  });
+
 });

@@ -62,6 +62,14 @@ export interface PurchaseCoverage {
   eventsWithoutOrderId: number;
 }
 
+export interface EbookOrderConversion {
+  maturityDays: number;
+  eligibleCheckouts: number;
+  confirmedWithinWindow: number;
+  checkoutEventsWithoutOrderId: number;
+  conversionRate: number | null;
+}
+
 export interface AnalyticsReport {
   windowDays: number;
   funnel: FunnelStepResult[];
@@ -78,6 +86,7 @@ export interface AnalyticsReport {
     windowEndExclusive: string;
   };
   purchasesByProduct?: PurchaseCoverage[];
+  ebookOrderConversion?: EbookOrderConversion;
 }
 
 const EVENT_TO_STEP: Record<string, FunnelStep> = {
@@ -280,6 +289,75 @@ async function fetchPurchaseCoverage(apiKey: string, host: string, sinceIso: str
   return coverage;
 }
 
+const EBOOK_ORDER_MATURITY_DAYS = 14;
+
+async function fetchEbookOrderConversion(
+  apiKey: string,
+  host: string,
+  sinceIso: string,
+  untilIso: string,
+): Promise<EbookOrderConversion> {
+  const query = `
+    WITH
+      checkout_orders AS (
+        SELECT
+          trim(JSONExtractString(properties, 'order_id')) AS order_id,
+          min(timestamp) AS checkout_at
+        FROM events
+        WHERE event = 'ebook_checkout_created'
+          AND timestamp >= '${sinceIso}'
+          AND timestamp <= '${untilIso}' - INTERVAL ${EBOOK_ORDER_MATURITY_DAYS} DAY
+          AND notEmpty(trim(JSONExtractString(properties, 'order_id')))
+        GROUP BY order_id
+      ),
+      purchase_events AS (
+        SELECT
+          trim(JSONExtractString(properties, 'order_id')) AS order_id,
+          timestamp AS purchased_at
+        FROM events
+        WHERE event = 'ebook_purchase_confirmed'
+          AND timestamp >= '${sinceIso}'
+          AND timestamp < '${untilIso}'
+          AND notEmpty(trim(JSONExtractString(properties, 'order_id')))
+      ),
+      missing_checkout_ids AS (
+        SELECT count() AS total
+        FROM events
+        WHERE event = 'ebook_checkout_created'
+          AND timestamp >= '${sinceIso}'
+          AND timestamp <= '${untilIso}' - INTERVAL ${EBOOK_ORDER_MATURITY_DAYS} DAY
+          AND empty(trim(JSONExtractString(properties, 'order_id')))
+      )
+    SELECT
+      uniqExact(c.order_id) AS eligible_checkouts,
+      uniqExactIf(c.order_id, p.purchased_at >= c.checkout_at
+        AND p.purchased_at < c.checkout_at + INTERVAL ${EBOOK_ORDER_MATURITY_DAYS} DAY) AS confirmed_within_window,
+      (SELECT total FROM missing_checkout_ids) AS checkout_events_without_order_id
+    FROM checkout_orders c
+    LEFT JOIN purchase_events p ON p.order_id = c.order_id
+  `;
+  const res = await fetch(`${host}/api/projects/${PROJECT_ID}/query/`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ query: { kind: "HogQLQuery", query } }),
+  });
+  if (!res.ok) throw new Error(`PostHog ebook order conversion query falló (${res.status})`);
+  const data = await res.json();
+  const row = Array.isArray(data.results) && data.results.length === 1 ? data.results[0] : null;
+  if (!Array.isArray(row) || row.length !== 3
+    || !row.every((value: unknown) => typeof value === "number" && Number.isSafeInteger(value) && value >= 0)
+    || row[1] > row[0]) {
+    throw new Error("PostHog: conversión de órdenes de ebook inválida");
+  }
+  return {
+    maturityDays: EBOOK_ORDER_MATURITY_DAYS,
+    eligibleCheckouts: row[0],
+    confirmedWithinWindow: row[1],
+    checkoutEventsWithoutOrderId: row[2],
+    conversionRate: row[0] > 0 ? row[1] / row[0] : null,
+  };
+}
+
 export function buildAnalyticsRecommendations(
   metrics: EcosystemMetrics,
   _byPageType: PageTypeCount[]
@@ -350,9 +428,10 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
     throw new Error("La ventana y la fecha del reporte deben ser válidas.");
   }
   const since = new Date(now.getTime() - windowDays * 86_400_000);
-  const [rows, purchasesByProduct] = await Promise.all([
+  const [rows, purchasesByProduct, ebookOrderConversion] = await Promise.all([
     runHogQlQuery(apiKey, host, since.toISOString(), now.toISOString()),
     fetchPurchaseCoverage(apiKey, host, since.toISOString(), now.toISOString()),
+    fetchEbookOrderConversion(apiKey, host, since.toISOString(), now.toISOString()),
   ]);
 
   const funnelTotals: Record<FunnelStep, number> = {
@@ -434,5 +513,6 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
     measurement: { basis: "aggregate_events", sequentialFunnel: false,
       windowStart: since.toISOString(), windowEndExclusive: now.toISOString() },
     purchasesByProduct,
+    ebookOrderConversion,
   };
 }

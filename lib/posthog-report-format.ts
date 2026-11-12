@@ -68,6 +68,17 @@ function formatPurchaseCoverage(report: AnalyticsReport): string {
   ].join("\n");
 }
 
+function formatEbookOrderConversion(report: AnalyticsReport): string {
+  const metric = report.ebookOrderConversion;
+  if (!metric) return "Conversión de órdenes ebook: no disponible en este reporte histórico.";
+  const rate = metric.conversionRate === null ? "sin órdenes elegibles" : pct(metric.conversionRate);
+  return [
+    "Órdenes ebook enlazadas por order_id (telemetría PostHog; no conciliación contable):",
+    `  ${metric.confirmedWithinWindow}/${metric.eligibleCheckouts} checkouts maduros confirmados dentro de ${metric.maturityDays} días (${rate}); ${metric.checkoutEventsWithoutOrderId} eventos de checkout sin ID quedan fuera del cociente.`,
+    `  Sólo incluye checkouts con al menos ${metric.maturityDays} días completos de observación dentro de la ventana; no representa compradores únicos ni ingresos.`,
+  ].join("\n");
+}
+
 function formatRecommendations(recommendations?: string[]): string {
   if (!recommendations || recommendations.length === 0) {
     return "Sugerencias: no hay una recomendación prioritaria clara en esta ventana; mantener la instrumentación y acumular volumen.";
@@ -84,6 +95,8 @@ export function formatAnalyticsReport(report: AnalyticsReport): string {
     formatEcosystemSection(report.ecosystem, report.byPageType),
     "",
     formatPurchaseCoverage(report),
+    "",
+    formatEbookOrderConversion(report),
     "",
     formatVariantSection(report.byVariant),
     "",
