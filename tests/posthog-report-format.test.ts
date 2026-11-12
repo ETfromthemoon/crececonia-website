@@ -20,11 +20,13 @@ function baseReport(overrides: Partial<AnalyticsReport> = {}): AnalyticsReport {
 }
 
 describe("formatAnalyticsReport", () => {
-  it("incluye el funnel con conteos y el % de conversión final", () => {
+  it("identifica conteos agregados sin afirmar conversión por persona", () => {
     const text = formatAnalyticsReport(baseReport());
     expect(text).toContain("page_view: 100");
     expect(text).toContain("purchase_confirmed: 8");
     expect(text).toContain("8.0%");
+    expect(text).toContain("No es un embudo secuencial");
+    expect(text).not.toContain("Conversión total");
   });
 
   it("declara falta de volumen cuando alguna variante tiene menos de 30 page views", () => {
@@ -40,7 +42,7 @@ describe("formatAnalyticsReport", () => {
     expect(text).toContain("59");
   });
 
-  it("marca señal accionable cuando n>=30 por variante y la diferencia es >=20% relativo", () => {
+  it("no declara ganadora una variante aunque el cociente agregado difiera mucho", () => {
     const report = baseReport({
       byVariant: [
         { variant: "control", pageViews: 61, checkoutsStarted: 5, purchasesConfirmed: 3, conversionRate: 3 / 61 },
@@ -48,7 +50,8 @@ describe("formatAnalyticsReport", () => {
       ],
     });
     const text = formatAnalyticsReport(report);
-    expect(text).toMatch(/señal accionable/i);
+    expect(text).not.toMatch(/señal accionable/i);
+    expect(text).toContain("No permite declarar una variante ganadora");
     expect(text).toContain("variant-b");
   });
 
@@ -62,4 +65,13 @@ describe("formatAnalyticsReport", () => {
     const text = formatAnalyticsReport(report);
     expect(text).not.toMatch(/señal accionable/i);
   });
+  it("informa cobertura por producto sin convertir eventos sin ID en órdenes", () => {
+    const text = formatAnalyticsReport(baseReport({ purchasesByProduct: [
+      { product: "ebook", eventCount: 9, uniqueOrders: 2, eventsWithoutOrderId: 3 },
+    ] }));
+    expect(text).toContain("2 órdenes únicas con ID");
+    expect(text).toContain("3 eventos sin ID (no deduplicables)");
+    expect(text).toContain("no conciliación contable");
+  });
+
 });
