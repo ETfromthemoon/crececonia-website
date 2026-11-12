@@ -22,4 +22,25 @@ begin
   if not commerce.revoke_ebook_library_session(repeat('d',64)) then raise exception 'session revocation failed'; end if;
   if commerce.revoke_ebook_library_session(repeat('d',64)) then raise exception 'session revoked twice'; end if;
 end $$;
+do $$
+declare
+  email_key text := repeat('f',64);
+  ip_key text := repeat('e',64);
+  now_at timestamptz := clock_timestamp();
+begin
+  -- A prior hour in the same day must count toward the daily email limit.
+  if date_trunc('hour', now_at) - interval '2 hours' >= date_trunc('day', now_at)
+     and clock_timestamp() < date_trunc('hour', now_at) + interval '1 hour' - interval '5 seconds' then
+    insert into commerce.ebook_library_rate_limits values
+      (email_key, date_trunc('hour', now_at) - interval '1 hour', 3, now_at + interval '1 day'),
+      (email_key, date_trunc('hour', now_at) - interval '2 hours', 2, now_at + interval '1 day');
+    if commerce.reserve_ebook_library_request(email_key, ip_key) then raise exception 'daily email limit not enforced'; end if;
+  end if;
+
+  -- The current IP bucket must enforce the independent IP limit.
+  if clock_timestamp() >= date_trunc('hour', now_at) + interval '1 hour' - interval '5 seconds' then return; end if;
+  insert into commerce.ebook_library_rate_limits values
+    (ip_key, date_trunc('hour', now_at), 20, now_at + interval '1 day');
+  if commerce.reserve_ebook_library_request(repeat('d',64), ip_key) then raise exception 'hourly IP limit not enforced'; end if;
+end $$;
 rollback;
