@@ -19,15 +19,18 @@ import { POST as requestAccess } from "@/app/api/biblioteca/access/request/route
 import { POST as consumeAccess } from "@/app/api/biblioteca/access/consume/route";
 import { GET as download } from "@/app/api/biblioteca/download/route";
 import { POST as logout } from "@/app/api/biblioteca/logout/route";
+import { libraryRateKey } from "@/lib/ebook-library-config";
 
 const origin = "https://www.crececonia.cl";
-const enabledEnv = { EBOOK_LIBRARY_ENABLED: process.env.EBOOK_LIBRARY_ENABLED, EBOOK_LIBRARY_RATE_SECRET: process.env.EBOOK_LIBRARY_RATE_SECRET, NODE_ENV: process.env.NODE_ENV };
+const enabledEnv = { EBOOK_LIBRARY_ENABLED: process.env.EBOOK_LIBRARY_ENABLED, EBOOK_LIBRARY_RATE_SECRET: process.env.EBOOK_LIBRARY_RATE_SECRET, RESEND_API_KEY: process.env.RESEND_API_KEY, RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL, NODE_ENV: process.env.NODE_ENV };
 const request = (path: string, init: RequestInit = {}) => new Request(`${origin}${path}`, init);
 
 beforeEach(() => {
   vi.clearAllMocks();
   process.env.EBOOK_LIBRARY_ENABLED = "true";
   process.env.EBOOK_LIBRARY_RATE_SECRET = "s".repeat(40);
+  process.env.RESEND_API_KEY = "re_test_key";
+  process.env.RESEND_FROM_EMAIL = "CrececonIA <test@example.com>";
   mocks.cookieValue = "session-secret";
   mocks.reserveRequest.mockResolvedValue(true);
   mocks.createChallenge.mockResolvedValue(undefined);
@@ -63,6 +66,14 @@ describe("API biblioteca personal", () => {
     expect(mocks.sendLibraryAccess).not.toHaveBeenCalled();
   });
 
+  it("rechaza cuerpos mayores a 2 KiB antes de crear desafíos o enviar correo", async () => {
+    const response = await requestAccess(request("/api/biblioteca/access/request", { method: "POST", headers: { origin, "content-type": "application/json", "x-vercel-forwarded-for": "203.0.113.8" }, body: JSON.stringify({ email: `${"a".repeat(2_100)}@example.com` }) }));
+    expect(response.status).toBe(413);
+    expect(mocks.reserveRequest).not.toHaveBeenCalled();
+    expect(mocks.createChallenge).not.toHaveBeenCalled();
+    expect(mocks.sendLibraryAccess).not.toHaveBeenCalled();
+  });
+
   it("envía acceso con enlace al dominio canónico y no filtra si hay compra", async () => {
     const response = await requestAccess(request("/api/biblioteca/access/request", { method: "POST", headers: { origin, "content-type": "application/json", "x-vercel-forwarded-for": "203.0.113.8", "x-forwarded-for": "198.51.100.1" }, body: JSON.stringify({ email: " Buyer@Example.com " }) }));
     expect(response.status).toBe(200);
@@ -77,14 +88,30 @@ describe("API biblioteca personal", () => {
     expect(mocks.sendLibraryAccess.mock.calls[0][1]).not.toContain("attacker");
   });
 
+  it("rate-limita el consumo por IP antes de consultar el reto", async () => {
+    mocks.reserveRequest.mockResolvedValueOnce(false);
+    const response = await consumeAccess(request("/api/biblioteca/access/consume", { method: "POST", headers: { origin, "content-type": "application/json", "x-vercel-forwarded-for": "203.0.113.8", "x-forwarded-for": "198.51.100.1" }, body: JSON.stringify({ token: "one-time-token" }) }));
+    expect(response.status).toBe(400);
+    expect(mocks.reserveRequest).toHaveBeenCalledWith(await libraryRateKey("email", "consume:one-time-token"), await libraryRateKey("ip", "203.0.113.8"));
+    expect(mocks.consumeChallenge).not.toHaveBeenCalled();
+  });
+
+  it("rechaza cuerpos de consumo mayores a 2 KiB antes de consultar el reto", async () => {
+    const response = await consumeAccess(request("/api/biblioteca/access/consume", { method: "POST", headers: { origin, "content-type": "application/json", "x-vercel-forwarded-for": "203.0.113.8" }, body: JSON.stringify({ token: "x".repeat(2_100) }) }));
+    expect(response.status).toBe(413);
+    expect(mocks.reserveRequest).not.toHaveBeenCalled();
+    expect(mocks.consumeChallenge).not.toHaveBeenCalled();
+  });
+
   it("consume un reto una sola vez y fija cookie de sesión HttpOnly", async () => {
-    const response = await consumeAccess(request("/api/biblioteca/access/consume", { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify({ token: "one-time-token" }) }));
+    const headers = { origin, "content-type": "application/json", "x-vercel-forwarded-for": "203.0.113.8", "x-forwarded-for": "198.51.100.1" };
+    const response = await consumeAccess(request("/api/biblioteca/access/consume", { method: "POST", headers, body: JSON.stringify({ token: "one-time-token" }) }));
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ ok: true, redirect: "/biblioteca" });
     expect(response.headers.get("set-cookie")).toContain("HttpOnly");
     expect(response.headers.get("set-cookie")).toContain("SameSite=lax");
     mocks.consumeChallenge.mockResolvedValueOnce(false);
-    const replay = await consumeAccess(request("/api/biblioteca/access/consume", { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify({ token: "one-time-token" }) }));
+    const replay = await consumeAccess(request("/api/biblioteca/access/consume", { method: "POST", headers, body: JSON.stringify({ token: "one-time-token" }) }));
     expect(replay.status).toBe(400);
   });
 

@@ -3,6 +3,7 @@ import { createOpaqueToken, hashLibraryValue, libraryRateKey, normalizeLibraryEm
 import { createChallenge, reserveRequest } from "@/lib/ebook-library-repository";
 import { sendLibraryAccess } from "@/lib/ebook-library-email";
 import { SITE_URL } from "@/lib/seo";
+import { readEbookLibraryJson } from "@/lib/ebook-library-body";
 
 export const dynamic = "force-dynamic";
 const generic = () => NextResponse.json({ ok: true, message: "Si podemos procesar la solicitud, recibirás un correo con los siguientes pasos." }, { headers: { "Cache-Control": "no-store" } });
@@ -10,8 +11,9 @@ const generic = () => NextResponse.json({ ok: true, message: "Si podemos procesa
 export async function POST(request: Request) {
   if (!isEbookLibraryEnabled()) return NextResponse.json({ error: "Biblioteca no disponible." }, { status: 503, headers: { "Cache-Control": "no-store" } });
   if (request.headers.get("origin") !== new URL(SITE_URL).origin) return NextResponse.json({ error: "Solicitud no válida." }, { status: 403 });
-  let payload: unknown;
-  try { payload = await request.json(); } catch { return NextResponse.json({ error: "Solicitud no válida." }, { status: 400 }); }
+  const parsed = await readEbookLibraryJson(request);
+  if (!parsed.ok) return NextResponse.json({ error: "Solicitud no válida." }, { status: parsed.status, headers: { "Cache-Control": "no-store" } });
+  const payload = parsed.value;
   const email = normalizeLibraryEmail(payload && typeof payload === "object" ? (payload as Record<string,unknown>).email : null);
   if (!email) return NextResponse.json({ error: "Ingresa un correo válido." }, { status: 400 });
   // Vercel overwrites x-vercel-forwarded-for with the source IP, preventing client spoofing.

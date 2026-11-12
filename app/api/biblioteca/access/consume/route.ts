@@ -1,15 +1,24 @@
 import { NextResponse } from "next/server";
-import { consumeChallenge } from "@/lib/ebook-library-repository";
-import { createOpaqueToken, hashLibraryValue, isEbookLibraryEnabled, EBOOK_LIBRARY_COOKIE, EBOOK_LIBRARY_SESSION_TTL_SECONDS } from "@/lib/ebook-library-config";
+import { consumeChallenge, reserveRequest } from "@/lib/ebook-library-repository";
+import { createOpaqueToken, hashLibraryValue, isEbookLibraryEnabled, EBOOK_LIBRARY_COOKIE, EBOOK_LIBRARY_SESSION_TTL_SECONDS, libraryRateKey } from "@/lib/ebook-library-config";
 import { SITE_URL } from "@/lib/seo";
+import { readEbookLibraryJson } from "@/lib/ebook-library-body";
 
 export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   if (!isEbookLibraryEnabled()) return NextResponse.json({ error: "Biblioteca no disponible." }, { status: 503, headers: {"Cache-Control":"no-store"} });
   if (request.headers.get("origin") !== new URL(SITE_URL).origin) return NextResponse.json({error:"Solicitud no válida."},{status:403});
-  let token: unknown;
-  try { const body:unknown=await request.json(); token=body&&typeof body==="object"?(body as Record<string,unknown>).token:null; } catch { return NextResponse.json({error:"Enlace no válido o vencido."},{status:400}); }
+  const parsed = await readEbookLibraryJson(request);
+  if (!parsed.ok) return NextResponse.json({error:"Enlace no válido o vencido."},{status:parsed.status,headers:{"Cache-Control":"no-store"}});
+  const token = parsed.value && typeof parsed.value === "object" ? (parsed.value as Record<string,unknown>).token : null;
   if(typeof token!=="string"||token.length>100) return NextResponse.json({error:"Enlace no válido o vencido."},{status:400});
+  // Vercel overwrites this header with the source IP; never trust x-forwarded-for here.
+  const ip = request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
+  if (!ip) return NextResponse.json({error:"No pudimos validar el enlace."},{status:503,headers:{"Cache-Control":"no-store"}});
+  try {
+    const allowed = await reserveRequest(await libraryRateKey("email",`consume:${token}`),await libraryRateKey("ip",ip));
+    if (!allowed) return NextResponse.json({error:"Enlace no válido o vencido."},{status:400,headers:{"Cache-Control":"no-store"}});
+  } catch { return NextResponse.json({error:"No pudimos validar el enlace."},{status:503,headers:{"Cache-Control":"no-store"}}); }
   const session=createOpaqueToken();
   try {
     if(!await consumeChallenge(await hashLibraryValue(token),await hashLibraryValue(session))) return NextResponse.json({error:"Enlace no válido o vencido."},{status:400,headers:{"Cache-Control":"no-store"}});

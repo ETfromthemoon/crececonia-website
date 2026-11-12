@@ -4,7 +4,9 @@ import "server-only";
 export function isEbookLibraryEnabled(): boolean {
   return process.env.EBOOK_LIBRARY_ENABLED === "true"
     && process.env.EBOOK_LIBRARY_RATE_SECRET !== undefined
-    && Buffer.byteLength(process.env.EBOOK_LIBRARY_RATE_SECRET, "utf8") >= 32;
+    && Buffer.byteLength(process.env.EBOOK_LIBRARY_RATE_SECRET, "utf8") >= 32
+    && Boolean(process.env.RESEND_API_KEY?.trim())
+    && Boolean(process.env.RESEND_FROM_EMAIL?.trim());
 }
 
 export const EBOOK_LIBRARY_CHALLENGE_TTL_SECONDS = 15 * 60;
