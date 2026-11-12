@@ -236,7 +236,7 @@ export default function ChatWidget() {
     selector: { href: "/ia", label: "Ver todas las alternativas" },
   };
 
-  if (pathname === "/ia" || isAdminPath(pathname)) return null;
+  if (pathname === "/ia" || pathname === "/biblioteca" || pathname.startsWith("/biblioteca/") || isAdminPath(pathname)) return null;
 
   return (
     <>
