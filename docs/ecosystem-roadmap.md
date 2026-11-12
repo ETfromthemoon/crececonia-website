@@ -36,8 +36,8 @@ Cada fila es una capacidad; puede dividirse en varios PR pequeños. Las dependen
 
 ## Orden de ejecución
 
-1. Primera ola: E01 y E02 en paralelo; revisión de arquitectura y dependencias E03-E13.
-2. Segunda ola: E03 y E05, con E12 incremental; verificar infraestructura real antes de añadir servicios.
+1. Primera ola: E01 y E02 en paralelo; revisión de arquitectura y dependencias E03-E13. Primer corte independiente de E05: comprobar error e ID de Resend en class-delivery-email.ts para no completar entregas rechazadas; sin migración ni cambios del workshop.
+2. Segunda ola: E11 antes de ampliar superficies administrativas; después, visibilidad mínima de postulaciones con estado y próxima acción, independiente de disponer de CRM externo. E03 y E05 continúan con E12 incremental; verificar infraestructura real antes de añadir servicios.
 3. Tercera ola: E04, E06 y E07; medir recorridos antes de optimizar adquisición.
 4. Cuarta ola: E08, E09, E10 y E11; E13 se actualiza en cada integración.
 
@@ -65,7 +65,8 @@ El objetivo activo del chat coordina estos PR hasta completarlos. Las automatiza
 - PR #70 contiene una corrección previa del texto de WhatsApp: revisar compatibilidad y supersesión antes de integrar E01.
 - PR #74 (catálogo/skills) y #47 (workshop) no forman parte de estas primeras modificaciones; conservarlos.
 - El checkout original tiene archivos nuevos del usuario, incluido plans/2026-11-12-marketplace-ebooks.md; no incorporarlos ni alterarlos.
-- No se ha certificado aún la configuración productiva de CRM, calendario, respaldos ni todas las credenciales necesarias. No equivale a que esas capacidades no existan.
+- La revisión del conector HighLevel confirmó que pertenece a Acción Fútbol, no a CrececonIA. No debe recibir contactos de CrececonIA. La cuenta correcta está pendiente de identificar/conectar; el trabajo local y la integración desactivada pueden avanzar.
+- No se ha certificado aún la configuración productiva de calendario, respaldos ni todas las credenciales necesarias. No equivale a que esas capacidades no existan.
 
 ## Métricas de éxito
 
