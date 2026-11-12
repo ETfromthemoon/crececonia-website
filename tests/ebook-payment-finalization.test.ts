@@ -23,7 +23,7 @@ describe("dormant atomic ebook finalizer", () => {
   });
   it("finalizes through one transaction function with exact snapshot and frozen provider payload", async () => {
     vi.mocked(queryDatabase).mockResolvedValueOnce([{ snapshot }]).mockResolvedValueOnce([{ result: { outcome: "finalized", job_id: jobId } }]);
-    await expect(finalizeEbookPayment(payment)).resolves.toEqual({ outcome: "finalized", jobId });
+    await expect(finalizeEbookPayment(payment)).resolves.toEqual({ outcome: "finalized", jobId, resources: items.map((item) => item.resource), analytics: { distinctId: undefined, pricingVariant: undefined, discountCode: null } });
     const [sql, values] = vi.mocked(queryDatabase).mock.calls[1];
     expect(sql).toContain("commerce.finalize_ebook_payment");
     expect(values?.[0]).toBe(payment.flowOrder);

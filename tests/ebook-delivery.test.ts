@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/database", () => ({ queryDatabase: vi.fn() }));
 import { queryDatabase } from "@/lib/database";
-import { acceptEbookDelivery, claimEbookDeliveries, enqueueEbookDelivery, failEbookDelivery, type EbookDeliveryFailure } from "@/lib/ebook-delivery";
+import { acceptEbookDelivery, canSendEbookDelivery, wasEbookDeliveryAccepted, claimEbookDeliveries, enqueueEbookDelivery, failEbookDelivery, type EbookDeliveryFailure } from "@/lib/ebook-delivery";
 
 const jobId = "11111111-1111-4111-8111-111111111111";
 const leaseToken = "22222222-2222-4222-8222-222222222222";
@@ -16,6 +16,17 @@ const row = {
 beforeEach(() => vi.resetAllMocks());
 
 describe("ebook delivery repository", () => {
+  it("validates lease and replay headroom with database clock before sending", async () => {
+    vi.mocked(queryDatabase).mockResolvedValue([{ ready: false }]);
+    await expect(canSendEbookDelivery(jobId, leaseToken)).resolves.toBe(false);
+    const [sql, values] = vi.mocked(queryDatabase).mock.calls[0];
+    expect(values).toEqual([jobId, leaseToken]); expect(sql).toContain("clock_timestamp()"); expect(sql).toContain("23 hours"); expect(sql).toContain("25 seconds");
+  });
+  it("readback confirms the same provider ID and exposes only a boolean", async () => {
+    vi.mocked(queryDatabase).mockResolvedValue([{ accepted: true }]);
+    await expect(wasEbookDeliveryAccepted(jobId, "provider-id")).resolves.toBe(true);
+    expect(vi.mocked(queryDatabase).mock.calls[0][1]).toEqual([jobId, "provider-id"]);
+  });
   it("enqueues a frozen provider payload without lossy bigint conversion", async () => {
     vi.mocked(queryDatabase).mockResolvedValue([{ job_id: jobId, outcome: "enqueued" }]);
     await expect(enqueueEbookDelivery(input)).resolves.toEqual({ jobId, outcome: "enqueued" });

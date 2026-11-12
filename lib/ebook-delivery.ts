@@ -135,3 +135,27 @@ export async function failEbookDelivery(jobId: string, leaseToken: string, failu
   if (!row || typeof row.failed !== "boolean") throw new Error("La cola no confirmó el resultado de entrega.");
   return row.failed;
 }
+
+/** Database clock is authoritative; leave enough time for the bounded HTTP request. */
+export async function canSendEbookDelivery(jobId: string, leaseToken: string): Promise<boolean> {
+  uuid(jobId); uuid(leaseToken);
+  const [row] = await query<{ ready: boolean }>(
+    `select exists (select 1 from commerce.ebook_delivery_jobs where id = $1::uuid
+      and status = 'processing' and lease_token = $2::uuid
+      and lease_expires_at > clock_timestamp() + interval '25 seconds'
+      and first_attempt_at > clock_timestamp() - interval '23 hours' + interval '25 seconds') as ready`, [jobId, leaseToken],
+  );
+  if (typeof row?.ready !== "boolean") throw new Error("La cola no confirmó la concesión.");
+  return row.ready;
+}
+
+/** Private readback after an uncertain ACK, without exposing payload or recipient. */
+export async function wasEbookDeliveryAccepted(jobId: string, providerMessageId: string): Promise<boolean> {
+  uuid(jobId);
+  const [row] = await query<{ accepted: boolean }>(
+    "select exists (select 1 from commerce.ebook_delivery_jobs where id = $1::uuid and status = 'provider_accepted' and provider_message_id = $2) as accepted",
+    [jobId, providerMessageId],
+  );
+  if (typeof row?.accepted !== "boolean") throw new Error("La cola no confirmó la aceptación.");
+  return row.accepted;
+}
