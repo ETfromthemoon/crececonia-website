@@ -174,6 +174,7 @@ describe("fetchAnalyticsReport", () => {
     vi.stubGlobal("fetch", vi.fn(async (_url: string, options: RequestInit) => {
       const query = JSON.parse(options.body as string).query.query as string;
       queries.push(query);
+      if (query.includes("AS eligible_checkouts")) return { ok: true, json: async () => ({ results: [[0, 0, 0]] }) };
       return { ok: true, json: async () => ({ results: query.includes("AS unique_orders") ? [] : [
         ["ecosystem_cta_clicked", null, null, 0, "home_route", "home_hero", 6],
         ["ecosystem_cta_clicked", null, null, 0, "buyer@example.test", "home_hero", 900],
@@ -183,7 +184,7 @@ describe("fetchAnalyticsReport", () => {
     const report = await fetchAnalyticsReport(7, new Date("2026-07-30"));
     expect(report.semanticCtaBreakdown).toEqual([{ cta: "home_route", source: "home_hero", clicks: 6 }]);
     expect(report.ecosystem?.ctaClicks).toBe(6);
-    const ecosystemQuery = queries.find((query) => !query.includes("AS unique_orders"))!;
+    const ecosystemQuery = queries.find((query) => !query.includes("AS unique_orders") && !query.includes("AS eligible_checkouts"))!;
     expect(ecosystemQuery).toContain("JSONExtractString(properties, 'cta')");
     expect(ecosystemQuery).toContain("ecosystem_cta_clicked");
   });
