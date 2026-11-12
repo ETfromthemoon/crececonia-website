@@ -7,13 +7,13 @@ import type { LaunchStatus, LaunchTaskStatus } from "@/lib/launch-model";
 
 const STATUS: Record<string, string> = { draft: "Borrador", planning: "En planificación", ready: "Listo", published: "Publicado", completed: "Completado", archived: "Archivado", pending: "Pendiente", connected: "Conectado", error: "Con error", blocked: "Bloqueado", not_applicable: "No aplica" };
 
-export default function LaunchManager({ launch, adminKey }: { launch: LaunchDetail; adminKey: string }) {
+export default function LaunchManager({ launch }: { launch: LaunchDetail }) {
   const router = useRouter();
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   async function action(body: Record<string, unknown>) {
     setBusy(String(body.action)); setMessage("");
-    const response = await fetch(`/api/admin/launches/${launch.id}`, { method: "PATCH", headers: { "content-type": "application/json", "x-admin-key": adminKey }, body: JSON.stringify(body) });
+    const response = await fetch(`/api/admin/launches/${launch.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     const result = await response.json(); setBusy("");
     if (!response.ok) { setMessage(result.error || "No se pudo guardar."); return; }
     setMessage(result.message); router.refresh();

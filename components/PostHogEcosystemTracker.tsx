@@ -11,7 +11,7 @@ export default function PostHogEcosystemTracker() {
   const trackedMilestones = useRef(new Set<number>());
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || pathname.startsWith("/admin")) return;
 
     trackedMilestones.current = new Set();
     const pageType = getPageType(pathname);

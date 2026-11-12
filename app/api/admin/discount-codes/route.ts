@@ -1,13 +1,11 @@
+import { isAdminRequest } from "@/lib/admin-session";
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { generateDiscountCodes, type DiscountType } from "@/lib/discount-codes";
 
 export const dynamic = "force-dynamic";
 
-function isAuthorized(request: Request): boolean {
-  const key = request.headers.get("x-admin-key") ?? new URL(request.url).searchParams.get("key");
-  return Boolean(process.env.ADMIN_SECRET) && key === process.env.ADMIN_SECRET;
-}
+const isAuthorized = isAdminRequest;
 
 export async function GET(request: Request) {
   if (!isAuthorized(request)) {

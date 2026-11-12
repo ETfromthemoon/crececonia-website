@@ -3,7 +3,7 @@
 import { useState, type CSSProperties, type FormEvent } from "react";
 import type { ClassAulaSettings } from "@/lib/class-aula-settings";
 
-type Props = { adminKey: string; initialSettings: ClassAulaSettings };
+type Props = { initialSettings: ClassAulaSettings };
 
 const inputStyle: CSSProperties = {
   width: "100%",
@@ -27,7 +27,7 @@ const labelStyle: CSSProperties = {
   marginBottom: 7,
 };
 
-export default function ClassAulaSettingsForm({ adminKey, initialSettings }: Props) {
+export default function ClassAulaSettingsForm({ initialSettings }: Props) {
   const [settings, setSettings] = useState(initialSettings);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -43,7 +43,7 @@ export default function ClassAulaSettingsForm({ adminKey, initialSettings }: Pro
     setMessage("");
     const response = await fetch("/api/admin/class-settings", {
       method: "PUT",
-      headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(settings),
     });
     const data = await response.json().catch(() => ({}));

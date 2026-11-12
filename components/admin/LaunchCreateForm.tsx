@@ -7,7 +7,7 @@ import { slugifyLaunch } from "@/lib/launch-model";
 
 type ProductOption = { resource: string; title: string; coverSrc: string; price: number };
 
-export default function LaunchCreateForm({ adminKey, products }: { adminKey: string; products: ProductOption[] }) {
+export default function LaunchCreateForm({ products }: { products: ProductOption[] }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -29,10 +29,10 @@ export default function LaunchCreateForm({ adminKey, products }: { adminKey: str
       zernioProfileId: null, automationNotes: formData.get("automationNotes") || null,
       productResources: selected,
     };
-    const response = await fetch("/api/admin/launches", { method: "POST", headers: { "content-type": "application/json", "x-admin-key": adminKey }, body: JSON.stringify(body) });
+    const response = await fetch("/api/admin/launches", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     const result = await response.json();
     if (!response.ok) { setError(result.error || "No se pudo crear."); setBusy(false); return; }
-    router.push(`/admin/lanzamientos/${result.launch.slug}?key=${encodeURIComponent(adminKey)}`);
+    router.push(`/admin/lanzamientos/${result.launch.slug}`);
   }
 
   return <form className="launch-create" action={submit}>

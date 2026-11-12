@@ -10,9 +10,9 @@ type Dashboard = {
 };
 const clp = (value: number) => `$${value.toLocaleString("es-CL")}`;
 
-export default function WorkshopDashboardLive({ adminKey, initial }: { adminKey: string; initial: Dashboard }) {
+export default function WorkshopDashboardLive({ initial }: { initial: Dashboard }) {
   const [data,setData] = useState(initial), [error,setError] = useState("");
-  const refresh = useCallback(async () => { const response = await fetch("/api/admin/workshop-dashboard",{headers:{"x-admin-key":adminKey},cache:"no-store"}); const next=await response.json(); if(!response.ok) throw new Error(next.error); setData(next); setError(""); },[adminKey]);
+  const refresh = useCallback(async () => { const response = await fetch("/api/admin/workshop-dashboard",{cache:"no-store"}); const next=await response.json(); if(!response.ok) throw new Error(next.error); setData(next); setError(""); },[]);
   useEffect(()=>{const id=window.setInterval(()=>refresh().catch((reason)=>setError(reason.message)),15000);return()=>window.clearInterval(id)},[refresh]);
   const ebookEmails = data.deliveries.filter((item)=>item.delivery_kind==="ebooks");
   const ebookSent = ebookEmails.filter((item)=>item.status==="sent").length;

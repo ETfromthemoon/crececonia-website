@@ -2,12 +2,12 @@
 import { useState, type FormEvent } from "react";
 import type { WorkshopSettings } from "@/lib/workshop-settings";
 
-export default function WorkshopSettingsForm({ adminKey, initial }: { adminKey: string; initial: WorkshopSettings }) {
+export default function WorkshopSettingsForm({ initial }: { initial: WorkshopSettings }) {
   const [settings, setSettings] = useState(initial), [status, setStatus] = useState(""), [saving, setSaving] = useState(false);
   const update = (key: keyof WorkshopSettings, value: string | boolean) => setSettings((current) => ({ ...current, [key]: value }));
   async function submit(event: FormEvent) {
     event.preventDefault(); setSaving(true); setStatus("");
-    const response = await fetch("/api/admin/workshop-settings", { method: "PUT", headers: { "Content-Type": "application/json", "x-admin-key": adminKey }, body: JSON.stringify(settings) });
+    const response = await fetch("/api/admin/workshop-settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(settings) });
     const data = await response.json().catch(() => ({}));
     setSaving(false); setStatus(response.ok ? "Guardado. La sala se actualiza al recargar." : data.error ?? "No se pudo guardar.");
   }

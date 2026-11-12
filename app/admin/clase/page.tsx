@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { requireAdminSession } from "@/lib/admin-auth";
 import ClassAulaSettingsForm from "@/components/admin/ClassAulaSettingsForm";
 import { getClassAulaSettings } from "@/lib/class-aula-settings";
 import { CLASS_DATE_LABEL, CLASS_SESSION_LABEL, CLASS_TITLE } from "@/lib/class-product";
@@ -13,10 +13,8 @@ type DeliveryEvent = { class_order_id: string; delivery_kind: string; status: st
 const surface = { background: "var(--carbon)", border: "1px solid var(--border)", borderRadius: 4 } as const;
 const mono = { fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase" } as const;
 
-export default async function AdminClassPage({ searchParams }: { searchParams: Promise<{ key?: string }> }) {
-  const { key } = await searchParams;
-  if (!process.env.ADMIN_SECRET || key !== process.env.ADMIN_SECRET) notFound();
-
+export default async function AdminClassPage() {
+  await requireAdminSession();
   const [settings, dashboardResult] = await Promise.all([
     getClassAulaSettings(),
     getSupabaseAdmin().rpc("class_admin_dashboard"),
@@ -34,8 +32,7 @@ export default async function AdminClassPage({ searchParams }: { searchParams: P
   for (const event of events) eventByOrder.set(event.class_order_id, [...(eventByOrder.get(event.class_order_id) ?? []), event]);
   const sent = (kind: string) => events.filter((event) => event.delivery_kind === kind && event.status === "sent").length;
   const failures = events.filter((event) => event.status === "failed");
-  const adminQuery = `key=${encodeURIComponent(key)}`;
-  const presenterHref = `/admin/clase/presentacion?${adminQuery}`;
+  const presenterHref = "/admin/clase/presentacion";
   const fmtDate = (date: string | null) => date ? new Date(date).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" }) : "—";
   const fmtCLP = (amount: number) => `$${amount.toLocaleString("es-CL")} CLP`;
 
@@ -68,7 +65,7 @@ export default async function AdminClassPage({ searchParams }: { searchParams: P
             <p style={{ ...mono, color: "var(--champagne)", margin: "0 0 8px" }}>01 · Operación antes de abrir</p>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 300, margin: "0 0 12px" }}>Enlaces y disponibilidad del aula</h2>
             <p style={{ color: "var(--smoke)", margin: "0 0 20px", maxWidth: 680 }}>Este es el único lugar para cambiar Meet, WhatsApp, grabación, soporte y abrir o cerrar el aula. Al guardar, los alumnos ven el cambio al recargar su enlace personal.</p>
-            <ClassAulaSettingsForm adminKey={key} initialSettings={settings} />
+            <ClassAulaSettingsForm initialSettings={settings} />
           </div>
           <aside style={{ ...surface, padding: 24 }}>
             <p style={{ ...mono, color: "var(--champagne)", margin: "0 0 12px" }}>Mapa rápido</p>
@@ -107,8 +104,8 @@ export default async function AdminClassPage({ searchParams }: { searchParams: P
 
         <nav style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
           <a href={presenterHref} className="btn-primary" style={{ textDecoration: "none" }}>Presentación del relator</a>
-          <a href={`/admin/ebook?${adminQuery}`} style={{ color: "var(--bone)", border: "1px solid var(--border)", padding: "10px 14px", borderRadius: 4, textDecoration: "none", fontSize: 13 }}>Entregas de ebooks</a>
-          <a href={`/admin/descuentos?${adminQuery}`} style={{ color: "var(--bone)", border: "1px solid var(--border)", padding: "10px 14px", borderRadius: 4, textDecoration: "none", fontSize: 13 }}>Códigos de descuento</a>
+          <a href={"/admin/ebook"} style={{ color: "var(--bone)", border: "1px solid var(--border)", padding: "10px 14px", borderRadius: 4, textDecoration: "none", fontSize: 13 }}>Entregas de ebooks</a>
+          <a href={"/admin/descuentos"} style={{ color: "var(--bone)", border: "1px solid var(--border)", padding: "10px 14px", borderRadius: 4, textDecoration: "none", fontSize: 13 }}>Códigos de descuento</a>
         </nav>
       </div>
     </main>

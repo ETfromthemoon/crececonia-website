@@ -2,7 +2,7 @@
 
 ## Acceso
 
-Abre `/admin/lanzamientos?key=TU_ADMIN_SECRET`. La portada muestra cuántos lanzamientos están activos, listos o bloqueados.
+Abre `/admin/lanzamientos`; si no hay sesión, entra desde `/admin/login` con tu clave administrativa. Los enlaces ya no llevan la clave. La portada muestra cuántos lanzamientos están activos, listos o bloqueados. Consulta `admin-sessions.md` para la transición de accesos antiguos.
 
 ## Crear un lanzamiento
 
