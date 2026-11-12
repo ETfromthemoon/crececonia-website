@@ -12,7 +12,6 @@ export default function Footer() {
           <a href="/implementacion">Implementación</a>
           <a href="/ebooks">Ebooks</a>
           <a href="/centro">Centro de conocimiento</a>
-          <a href="/protocolo-bpi">Método BPI</a>
           <a href="/ia">Elegir mi ruta</a>
         </div>
         <div className="footer-contact">
