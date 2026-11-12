@@ -1,11 +1,11 @@
 // ── Capa de datos del Centro de Conocimiento ───────────────────────────────
-// Trae skills + guías (y enlaces en Fase 2) desde la API pública y los
-// normaliza a un shape común para mostrarlos juntos, agrupados por tema.
+// Normaliza el catálogo versionado de skills, guías, enlaces y repositorios
+// para mostrarlos juntos, agrupados por tema.
 
 import { temasDeItem, type TemaId } from "./temas";
-import { listPublicGuides, listPublicLinks, listPublicSkills } from "./public-catalog";
+import { listPublicGuides, listPublicLinks, listPublicRepositories, listPublicSkills } from "./public-catalog";
 
-export type HubTipo = "skill" | "guia" | "enlace";
+export type HubTipo = "skill" | "guia" | "enlace" | "repositorio";
 
 export interface HubItem {
   tipo: HubTipo;
@@ -74,16 +74,36 @@ function normEnlace(e: Record<string, unknown>): HubItem {
   };
 }
 
-/** Trae todos los items publicados de las fuentes activas, en paralelo. */
+function normRepositorio(repo: Record<string, unknown>): HubItem {
+  const slug = String(repo.slug ?? "");
+  const categoria = String(repo.categoria ?? "");
+  const tags = Array.isArray(repo.tags) ? (repo.tags as string[]) : [];
+  return {
+    tipo: "repositorio",
+    slug,
+    titulo: String(repo.titulo ?? ""),
+    descripcion: String(repo.descripcion ?? ""),
+    categoria,
+    tags,
+    href: String(repo.url ?? ""),
+    externo: true,
+    meta: "GitHub",
+    temas: temasDeItem({ slug, categoria, tags }),
+  };
+}
+
+/** Reúne los recursos publicados del catálogo local. */
 export async function getHubItems(): Promise<HubItem[]> {
   const skills = listPublicSkills();
   const recursos = listPublicGuides();
   const enlacesArr = listPublicLinks();
+  const repositorios = listPublicRepositories();
 
   const items: HubItem[] = [
     ...skills.map((s) => normSkill(s as Record<string, unknown>)),
     ...recursos.map((g) => normGuia(g as Record<string, unknown>)),
     ...enlacesArr.map((e) => normEnlace(e as Record<string, unknown>)),
+    ...repositorios.map((repo) => normRepositorio(repo as Record<string, unknown>)),
   ];
   return items;
 }
@@ -92,4 +112,5 @@ export const TIPO_LABEL: Record<HubTipo, string> = {
   skill: "Skill",
   guia: "Guía",
   enlace: "Enlace",
+  repositorio: "Repositorio",
 };

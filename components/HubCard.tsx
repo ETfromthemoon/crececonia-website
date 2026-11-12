@@ -5,6 +5,7 @@ const TIPO_CTA: Record<HubItem["tipo"], string> = {
   skill: "Ver skill →",
   guia: "Leer la guía →",
   enlace: "Abrir enlace ↗",
+  repositorio: "Ver repositorio ↗",
 };
 
 export default function HubCard({ item }: { item: HubItem }) {
@@ -34,7 +35,7 @@ export default function HubCard({ item }: { item: HubItem }) {
               fontFamily: "var(--font-mono)",
             }}
           >
-            ↓ {item.meta}
+            {item.tipo === "skill" ? "↓ " : ""}{item.meta}
           </span>
         )}
       </div>

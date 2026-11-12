@@ -17,6 +17,7 @@ const TIPOS: { id: HubTipo | "todos"; label: string }[] = [
   { id: "skill", label: "Skills" },
   { id: "guia", label: "Guías" },
   { id: "enlace", label: "Links" },
+  { id: "repositorio", label: "Repositorios" },
 ];
 
 function getTema(id: string) {
@@ -53,7 +54,7 @@ export default async function TemaPage({
   const all = await getHubItems();
   const delTema = all.filter((it) => it.temas.includes(t.id));
   const tipoActivo: HubTipo | "todos" =
-    tipo === "skill" || tipo === "guia" || tipo === "enlace" ? tipo : "todos";
+    tipo === "skill" || tipo === "guia" || tipo === "enlace" || tipo === "repositorio" ? tipo : "todos";
   const items =
     tipoActivo === "todos" ? delTema : delTema.filter((it) => it.tipo === tipoActivo);
 

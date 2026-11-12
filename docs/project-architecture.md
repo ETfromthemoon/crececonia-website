@@ -22,6 +22,7 @@ Actualizado el 2026-11-12 sobre `aca338cc9f7f765446205bd93be939ae6f7a3f69`.
 ## Límites funcionales
 
 - El catálogo de ebooks vive en `lib/ebook-catalog.ts`. Es la lista canónica de productos seleccionables en el centro de lanzamientos.
+- El catálogo público de guías, skills, enlaces y repositorios vive en `content/public-catalog.json`. Se publica mediante PR; `docs/publicacion-recursos.md` describe la incorporación de recursos.
 - El checkout y la entrega de ebooks siguen usando el motor existente bajo `app/api/flow/` y `app/api/ebook/`.
 - El workshop del 6 de septiembre de 2026 es una implementación productiva congelada en sus rutas actuales. Sirvió como referencia de experiencia, pero sus tablas, funciones, precio y administración no dependen del nuevo centro.
 - El centro de lanzamientos vive en `/admin/lanzamientos`, sus datos en siete tablas `launch_*` y su plantilla pública en `/lanzamientos/[slug]`.

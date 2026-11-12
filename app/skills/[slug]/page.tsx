@@ -32,6 +32,7 @@ type Skill = {
   cuando_no_usar?: string;
   prompt_template?: string;
   fuente_modulo?: string;
+  repositorio_url?: string;
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -239,6 +240,17 @@ export default async function SkillPage({
                 >
                   Lectura y prompts disponibles más abajo · sin archivo ZIP
                 </p>
+              )}
+              {s.repositorio_url && (
+                <a
+                  href={s.repositorio_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm underline underline-offset-4"
+                  style={{ color: "var(--champagne)" }}
+                >
+                  Ver código fuente ↗
+                </a>
               )}
             </div>
           </div>

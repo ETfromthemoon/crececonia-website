@@ -8,6 +8,7 @@ const links = [
   { href: "/ebooks", label: "Ebooks" },
   { href: "/centro/guias", label: "Guías" },
   { href: "/centro/skills", label: "Skills" },
+  { href: "/centro/repositorios", label: "Repositorios" },
 ];
 
 export default function ResourceNav() {
