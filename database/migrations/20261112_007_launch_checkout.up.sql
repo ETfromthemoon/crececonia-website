@@ -109,6 +109,13 @@ begin
     return pg_catalog.to_jsonb(existing) - 'idempotency_key_hash';
   end if;
 
+  -- Freeze product membership before checking and snapshotting it. A launch-row
+  -- lock alone does not block edits to existing launch_products rows, so the
+  -- count and primary-product reads could otherwise observe different states.
+  -- Acquire this before the launch row lock to avoid reversing the FK writer's
+  -- launch_products -> launches lock order.
+  lock table public.launch_products in share mode;
+
   select * into launch_row from public.launches l
     where l.slug = p_launch_slug and l.status = 'published' and l.launch_type = 'ebook_release'
       and (l.starts_at is null or l.starts_at <= pg_catalog.clock_timestamp())

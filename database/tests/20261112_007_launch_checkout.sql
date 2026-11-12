@@ -11,13 +11,18 @@ declare
   retry_name text := 'launch-retry-' || replace(gen_random_uuid()::text, '-', '');
   third_name text := 'launch-third-' || replace(gen_random_uuid()::text, '-', '');
   fourth_name text := 'launch-fourth-' || replace(gen_random_uuid()::text, '-', '');
+  multi_product_slug text := 'e10-multi-' || replace(gen_random_uuid()::text, '-', '');
+  multi_product_order text := 'launch-multi-' || replace(gen_random_uuid()::text, '-', '');
   resource_name text := 'ebook:e10-test';
   key_hash bytea := decode(repeat('11', 32), 'hex');
   second_key_hash bytea := decode(repeat('22', 32), 'hex');
   third_key_hash bytea := decode(repeat('33', 32), 'hex');
   fourth_key_hash bytea := decode(repeat('44', 32), 'hex');
+  multi_product_key_hash bytea := decode(repeat('55', 32), 'hex');
   result jsonb;
   reserved integer;
+  multi_product_launch_id uuid;
+  multi_product_tier_id uuid;
 begin
   insert into public.launches (slug, name, launch_type, status, headline, description)
     values (slug, 'Prueba E10', 'ebook_release', 'published', 'Prueba', '') returning id into launch_id;
@@ -111,6 +116,29 @@ begin
      or has_table_privilege('authenticated', 'commerce.launch_checkout_orders', 'SELECT') then
     raise exception 'private_orders_readable_by_public_role';
   end if;
+
+  -- Reject an invalid product set without creating an order or reserving capacity.
+  insert into public.launches (slug, name, launch_type, status, headline, description)
+    values (multi_product_slug, 'Prueba E10 multilibro', 'ebook_release', 'published', 'Prueba', '')
+    returning id into multi_product_launch_id;
+  insert into public.launch_products (launch_id, resource, title_snapshot, role, sort_order) values
+    (multi_product_launch_id, 'ebook:e10-first', 'Primer ebook', 'primary', 0),
+    (multi_product_launch_id, 'ebook:e10-second', 'Segundo ebook', 'included', 1);
+  insert into public.launch_price_tiers (launch_id, label, amount_minor, capacity, sold_count, reserved_count, sort_order, status)
+    values (multi_product_launch_id, 'Tramo de prueba', 15000, 2, 0, 0, 0, 'active')
+    returning id into multi_product_tier_id;
+  begin
+    perform commerce.reserve_launch_checkout(multi_product_order, multi_product_key_hash, multi_product_slug, 'buyer@example.test');
+    raise exception 'multiple_products_were_allowed';
+  exception when others then
+    if sqlerrm = 'multiple_products_were_allowed' then raise; end if;
+    if sqlerrm <> 'launch_checkout_requires_one_product' then raise; end if;
+  end;
+  if exists (select 1 from commerce.launch_checkout_orders where commerce_order = multi_product_order) then
+    raise exception 'invalid_product_set_created_order';
+  end if;
+  select reserved_count into reserved from public.launch_price_tiers where id = multi_product_tier_id;
+  if reserved <> 0 then raise exception 'invalid_product_set_reserved_capacity'; end if;
 end;
 $$;
 
