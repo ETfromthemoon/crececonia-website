@@ -1,3 +1,4 @@
+import { SERVICE_OFFERS } from "@/lib/service-offers";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import QualificationForm from "@/components/QualificationForm";
@@ -43,7 +44,7 @@ const DATA: Record<Service, ServiceData> = {
     steps: ["Definimos un resultado concreto para los próximos 90 días.", "Elegimos qué aprender o construir primero y qué dejar fuera.", "Revisamos avances y bloqueos para sostener el plan cada semana."],
     features: ["Mentoría para profesionales, emprendedores y dueños de negocio", "Aplicación directa a un flujo de trabajo, oportunidad o proyecto real", "Criterio para decidir qué automatizar, qué hacer tú y qué no hacer todavía"],
     fit: {
-      investment: "Desde $400.000 CLP mensuales",
+      investment: SERVICE_OFFERS.mentoria.investment,
       ideal: [
         "Tienes un objetivo concreto que quieres conseguir en los próximos 90 días.",
         "Puedes dedicar tiempo semanal a ejecutar y llegar con avances o bloqueos reales.",
@@ -52,7 +53,7 @@ const DATA: Record<Service, ServiceData> = {
       notFor: [
         "Buscas una clase suelta, respuestas gratis por WhatsApp o un curso grabado.",
         "Esperas que alguien implemente todo por ti.",
-        "No puedes invertir desde $400.000 CLP al mes o no estás dispuesto a seguir un roadmap.",
+        `No puedes asumir una inversión ${SERVICE_OFFERS.mentoria.investment.replace(/^Desde/, "desde")} o no estás dispuesto a seguir un roadmap.`,
       ],
     },
   },
@@ -65,7 +66,7 @@ const DATA: Record<Service, ServiceData> = {
     steps: ["Revisamos el proceso, el impacto y si IA es realmente la respuesta.", "Definimos alcance, límites, responsables, métrica y presupuesto.", "Construimos, probamos con casos reales, capacitamos y dejamos soporte acordado."],
     features: ["Agentes para atención, ventas y operación", "Automatizaciones conectadas a las herramientas que ya usas", "Sistemas a medida con responsables, límites y una métrica de resultado"],
     fit: {
-      investment: "Desde $500.000 CLP + mantención desde $100.000 CLP mensuales",
+      investment: SERVICE_OFFERS.implementacion.investment,
       ideal: [
         "Puedes nombrar un proceso repetitivo que hoy pierde tiempo, oportunidades o calidad.",
         "Hay una persona que decide y un equipo que podrá probar y usar la solución.",
@@ -89,6 +90,7 @@ export default function ServiceLanding({ service }: { service: Service }) {
     <section className="service-content site-container"><div><span className="eyebrow">Cómo se ve</span><h2>Un siguiente paso que cabe en tu realidad.</h2></div><div className="service-features">{data.features.map((feature, index) => <div className="feature-row" key={feature}><span>0{index + 1}</span><p>{feature}</p></div>)}</div></section>
     {data.resourceLinks && <section className="resource-section"><div className="site-container"><div className="steps-heading"><span className="eyebrow">Explora el núcleo</span><h2>Empieza por el formato que necesitas.</h2></div><div className="resource-grid">{data.resourceLinks.map((resource) => <a className="resource-link" href={resource.href} key={resource.href}><strong>{resource.label}</strong><span>{resource.text}</span><small>Entrar ↗</small></a>)}</div></div></section>}
     <section className="service-steps"><div className="site-container"><div className="steps-heading"><span className="eyebrow">El recorrido</span><h2>De la pregunta a la práctica.</h2></div><div className="steps-grid">{data.steps.map((step, index) => <div className="step-item" key={step}><span>0{index + 1}</span><p>{step}</p></div>)}</div></div></section>
+    {service !== "aprender" && <section className="service-content site-container"><div><span className="eyebrow">Condiciones de la propuesta</span><h2>Qué acordamos antes de empezar.</h2></div><div><p>{SERVICE_OFFERS[service].conditions}</p></div></section>}
     {service === "aprender" ? <section className="service-form-section service-learning-next"><div className="site-container"><span className="eyebrow">Compra autónoma</span><h2>Aprende a tu ritmo, sin llamada previa.</h2><p>Elige el ebook que corresponde a tu nivel y objetivo. Si luego necesitas criterio aplicado a tu caso, vuelve por mentoría con un objetivo concreto.</p><a href="/ebooks" className="button button-dark">Ver la biblioteca de ebooks <span>→</span></a></div></section> : <section id="calificar" className="service-form-section site-container"><QualificationForm service={service} /></section>}
     <section className="service-footer-cta"><div className="site-container"><p>¿Todavía no sabes cuál es tu siguiente paso?</p><a href="/ia" className="button button-light">Volver al selector <span>→</span></a></div></section>
   </main><Footer /></>;
