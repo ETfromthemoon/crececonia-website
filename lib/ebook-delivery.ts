@@ -23,7 +23,7 @@ export type EbookDeliveryClaim = {
 
 export type EbookDeliveryFailure = "provider_transient" | "provider_rejected" | "provider_unknown";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const MAX_BIGINT = 9223372036854775807n;
+const MAX_BIGINT = BigInt("9223372036854775807");
 
 function uuid(value: string): void {
   if (!UUID.test(value)) throw new Error("Identificador de entrega inválido.");
