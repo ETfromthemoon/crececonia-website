@@ -10,6 +10,7 @@ describe("trackEbookEvent", () => {
   afterEach(() => {
     process.env.NEXT_PUBLIC_POSTHOG_KEY = originalEnv;
     vi.doUnmock("posthog-js");
+    vi.unstubAllGlobals();
   });
 
   it("no lanza si posthog-js no está inicializado (sin key configurada)", async () => {
@@ -19,6 +20,7 @@ describe("trackEbookEvent", () => {
   });
 
   it("llama a posthog.capture cuando el cliente está inicializado", async () => {
+    vi.stubGlobal("window", { location: new URL("https://www.crececonia.cl/ebooks") });
     const captureMock = vi.fn();
     vi.doMock("posthog-js", () => ({
       default: { __loaded: true, capture: captureMock },

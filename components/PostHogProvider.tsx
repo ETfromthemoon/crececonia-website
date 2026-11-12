@@ -1,50 +1,20 @@
 "use client";
 
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import posthog from "posthog-js";
 import { PostHogProvider as PostHogReactProvider } from "posthog-js/react";
 import PostHogEcosystemTracker from "./PostHogEcosystemTracker";
+import { ensureAnalytics } from "@/lib/analytics-client";
+import { analyticsAllowed } from "@/lib/analytics-privacy";
 
-/**
- * Se llama en el scope del módulo, no en un useEffect: los efectos de un
- * descendiente (ej. el "page view" de EbookPricing) se disparan ANTES que
- * el de este provider, porque React monta efectos de hijos primero. Si la
- * init viviera en un useEffect acá, el primer evento de cada página se
- * perdería siempre contra posthog.__loaded todavía en false. Ejecutar esto
- * al evaluar el módulo (que ocurre durante el render, no después) garantiza
- * que ya está inicializado para cuando el efecto de cualquier hijo corre.
- */
-if (typeof window !== "undefined" && !window.location.pathname.startsWith("/admin") && !posthog.__loaded) {
-  const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-  if (key) {
-    posthog.init(key, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
-      capture_pageview: "history_change",
-      capture_pageleave: "if_capture_pageview",
-      autocapture: true,
-      person_profiles: "identified_only",
-      respect_dnt: true,
-      before_send: (event) => window.location.pathname.startsWith("/admin") ? null : event,
-      session_recording: {
-        blockClass: "ph-no-capture",
-        maskAllInputs: true,
-        maskTextClass: "ph-mask",
-      },
-    });
-  }
-}
+ensureAnalytics();
 
-/**
- * Expone la instancia vía el provider oficial de posthog-js/react para que
- * useFeatureFlagVariantKey y demás hooks funcionen en los componentes hijos.
- * Sin NEXT_PUBLIC_POSTHOG_KEY configurada, posthog.__loaded queda en false y
- * lib/analytics.ts + los hooks tratan eso como "cliente no cargado", sin
- * romper build/dev.
- */
 export default function PostHogProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <PostHogReactProvider client={posthog}>
-      <PostHogEcosystemTracker />
-      {children}
-    </PostHogReactProvider>
-  );
+  const pathname = usePathname();
+  useEffect(() => {
+    ensureAnalytics();
+    if (posthog.__loaded) posthog.set_config({ advanced_disable_flags: !analyticsAllowed() });
+  }, [pathname]);
+  return <PostHogReactProvider client={posthog}><PostHogEcosystemTracker />{children}</PostHogReactProvider>;
 }

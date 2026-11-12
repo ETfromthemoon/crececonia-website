@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { whatsappUrl } from "@/lib/contact";
 import { trackEvent } from "@/lib/analytics";
+import { isAdminPath } from "@/lib/analytics-privacy";
 
 type Message = {
   id: string;
@@ -235,7 +236,7 @@ export default function ChatWidget() {
     selector: { href: "/ia", label: "Ver todas las alternativas" },
   };
 
-  if (pathname === "/ia") return null;
+  if (pathname === "/ia" || isAdminPath(pathname)) return null;
 
   return (
     <>

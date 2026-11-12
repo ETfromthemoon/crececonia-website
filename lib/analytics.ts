@@ -1,4 +1,6 @@
 import posthog from "posthog-js";
+import { ensureAnalytics } from "./analytics-client";
+import { analyticsAllowed, sanitizeAnalyticsProperties } from "./analytics-privacy";
 
 export type AnalyticsProperties = Record<string, unknown>;
 
@@ -51,8 +53,10 @@ function routeProperties(): AnalyticsProperties {
  * conteos y estados.
  */
 export function trackEvent(name: string, properties: AnalyticsProperties = {}): void {
+  if (!analyticsAllowed()) return;
+  ensureAnalytics();
   if (!posthog.__loaded) return;
-  posthog.capture(name, { ...routeProperties(), ...properties });
+  posthog.capture(name, sanitizeAnalyticsProperties({ ...routeProperties(), ...properties }));
 }
 
 /**
@@ -62,12 +66,16 @@ export function trackEvent(name: string, properties: AnalyticsProperties = {}): 
  * inicializarse y esta función es un no-op seguro.
  */
 export function trackEbookEvent(name: string, properties: Record<string, unknown>): void {
+  if (!analyticsAllowed()) return;
+  ensureAnalytics();
   if (!posthog.__loaded) return;
-  posthog.capture(name, properties);
+  posthog.capture(name, sanitizeAnalyticsProperties(properties));
 }
 
 /** Identificador anónimo del navegador para unir eventos cliente/servidor. */
 export function getEbookAnalyticsDistinctId(): string | undefined {
+  if (!analyticsAllowed()) return undefined;
+  ensureAnalytics();
   if (!posthog.__loaded) return undefined;
   return posthog.get_distinct_id();
 }

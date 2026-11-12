@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { getPageType, trackEvent } from "@/lib/analytics";
+import { analyticsAllowed, analyticsLinkDestination } from "@/lib/analytics-privacy";
 
 const SCROLL_MILESTONES = [25, 50, 75, 90];
 
@@ -11,7 +12,7 @@ export default function PostHogEcosystemTracker() {
   const trackedMilestones = useRef(new Set<number>());
 
   useEffect(() => {
-    if (typeof window === "undefined" || pathname.startsWith("/admin")) return;
+    if (!analyticsAllowed()) return;
 
     trackedMilestones.current = new Set();
     const pageType = getPageType(pathname);
@@ -49,22 +50,7 @@ export default function PostHogEcosystemTracker() {
     const onLinkClick = (event: MouseEvent) => {
       const target = event.target instanceof Element ? event.target.closest("a") : null;
       if (!target || target.dataset.analyticsIgnore === "true") return;
-      let destinationType = "internal";
-      let destinationHost: string | undefined;
-      let destinationPath = target.getAttribute("href")?.split("?")[0] ?? "";
-      try {
-        const destination = new URL(target.href, window.location.href);
-        destinationType = destination.origin === window.location.origin ? "internal" : "external";
-        destinationHost = destination.hostname;
-        destinationPath = destination.pathname;
-      } catch {
-        // Enlaces relativos incompletos no deben romper el tracking.
-      }
-      trackEvent("ecosystem_link_clicked", {
-        destination_type: destinationType,
-        destination_host: destinationHost,
-        destination_path: destinationPath,
-      });
+      trackEvent("ecosystem_link_clicked", analyticsLinkDestination(target.href, window.location.href));
     };
 
     const onScroll = () => {
