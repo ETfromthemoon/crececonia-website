@@ -8,6 +8,6 @@ export const metadata: Metadata = {
 export default async function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const signedIn = await hasAdminSession();
   return <div className="ph-no-capture ph-mask">{signedIn && <nav aria-label="Sesión administrativa" style={{ display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "space-between", padding: "16px 24px", borderBottom: "1px solid var(--border)" }}>
-    <a href="/admin/ebook">Administración</a><a href="/admin/ebook/entregas">Entregas de ebooks</a><a href="/admin/postulaciones">Postulaciones</a><a href="/admin/reservas">Reservas</a><form action="/api/admin/session/logout" method="post"><button type="submit">Cerrar sesión</button></form>
+    <a href="/admin/ebook">Administración</a><a href="/admin/ebook/entregas">Entregas de ebooks</a><a href="/admin/postulaciones">Postulaciones</a><a href="/admin/reservas">Reservas</a><a href="/admin/comunicaciones">Comunicaciones</a><form action="/api/admin/session/logout" method="post"><button type="submit">Cerrar sesión</button></form>
   </nav>}{children}</div>;
 }
