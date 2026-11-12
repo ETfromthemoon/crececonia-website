@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { whatsappUrl } from "@/lib/contact";
 import { trackEvent } from "@/lib/analytics";
+import { SERVICE_BUDGETS } from "@/lib/service-qualification";
 
 type Service = "mentoria" | "implementacion";
 type Result = "qualified" | "not-ready" | null;
@@ -18,7 +19,7 @@ const CONTENT: Record<Service, {
   resultLabel: string;
   resultPlaceholder: string;
   resultHint: string;
-  budgetOptions: string[];
+  budgetOptions: readonly string[];
   notReadyTitle: string;
   notReadyText: string;
   alternative: { href: string; label: string };
@@ -29,7 +30,7 @@ const CONTENT: Record<Service, {
     resultLabel: "¿Qué resultado concreto quieres conseguir en los próximos 90 días?",
     resultPlaceholder: "Ej.: diseñar y aplicar un flujo de IA para responder mejor a mis clientes.",
     resultHint: "Describe un resultado, no solo una herramienta que quieres conocer.",
-    budgetOptions: ["Menos de $400.000 CLP mensuales", "$400.000–$600.000 CLP mensuales", "Más de $600.000 CLP mensuales"],
+    budgetOptions: SERVICE_BUDGETS.mentoria,
     notReadyTitle: "La mentoría no es el siguiente paso todavía.",
     notReadyText: "Para que el acompañamiento funcione necesitas un objetivo, tiempo semanal para ejecutar y una inversión desde $400.000 CLP mensuales. Puedes avanzar por tu cuenta y volver cuando esas condiciones estén claras.",
     alternative: { href: "/ebooks", label: "Explorar ebooks para avanzar por mi cuenta" },
@@ -40,7 +41,7 @@ const CONTENT: Record<Service, {
     resultLabel: "¿Qué proceso específico quieres mejorar? Describe cómo funciona hoy.",
     resultPlaceholder: "Ej.: recibimos consultas por WhatsApp, una persona revisa disponibilidad y responde manualmente cada caso.",
     resultHint: "Incluye qué ocurre hoy y dónde se pierde tiempo, calidad, ventas o visibilidad.",
-    budgetOptions: ["Menos de $500.000 CLP", "$500.000–$1.000.000 CLP", "$1.000.000–$2.000.000 CLP", "Más de $2.000.000 CLP"],
+    budgetOptions: SERVICE_BUDGETS.implementacion,
     notReadyTitle: "Todavía no conviene abrir una conversación de implementación.",
     notReadyText: "Una implementación necesita un proceso concreto, alguien que pueda decidir y validar, y una inversión desde $500.000 CLP más mantención. Primero define el caso o revisa si necesitas aprender o recibir acompañamiento.",
     alternative: { href: "/ia", label: "Revisar las otras opciones" },
@@ -62,13 +63,22 @@ export default function QualificationForm({ service }: { service: Service }) {
     confirmed: false,
   });
   const [state, setState] = useState<Result>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [handoffUrl, setHandoffUrl] = useState("");
+  const pending = useRef<{ fingerprint: string; requestId: string } | null>(null);
+  const inFlight = useRef(false);
+  const resultHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => { if (state) resultHeading.current?.focus(); }, [state]);
 
   const canContinue = service === "mentoria"
     ? form.budget !== "Menos de $400.000 CLP mensuales" && form.availability !== "Menos de 2 horas"
     : form.budget !== "Menos de $500.000 CLP" && form.decision !== "No sé quién decide todavía" && form.context.trim().length >= 20;
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (inFlight.current) return;
+    setError("");
 
     if (!canContinue) {
       setState("not-ready");
@@ -88,16 +98,42 @@ export default function QualificationForm({ service }: { service: Service }) {
       `Inversión confirmada: ${form.budget}`,
     ].filter(Boolean).join("\n");
 
-    window.open(whatsappUrl(message), "_blank", "noopener,noreferrer");
-    setState("qualified");
-    trackEvent("qualification_submitted", { service, channel: "whatsapp" });
+    inFlight.current = true;
+    setSaving(true);
+    try {
+      const fingerprint = JSON.stringify({ service, ...form });
+      if (pending.current?.fingerprint !== fingerprint) {
+        pending.current = { fingerprint, requestId: crypto.randomUUID() };
+      }
+      const response = await fetch("/api/public/qualification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ service, ...form, requestId: pending.current.requestId }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || "No pudimos guardar tu postulación. Vuelve a intentarlo.");
+      if (data.qualified === false) {
+        setState("not-ready");
+        trackEvent("qualification_not_ready", { service });
+        return;
+      }
+      if (data.ok !== true || typeof data.id !== "string") throw new Error("No pudimos confirmar el registro. Vuelve a intentarlo.");
+      setHandoffUrl(whatsappUrl(message));
+      setState("qualified");
+      trackEvent("qualification_saved", { service, channel: "web" });
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "No pudimos guardar tu postulación. Vuelve a intentarlo.");
+    } finally {
+      inFlight.current = false;
+      setSaving(false);
+    }
   }
 
   if (state === "qualified") {
     return (
       <div className="qualify-wrap">
-        <div className="qualify-intro"><span className="eyebrow">Postulación enviada</span><h2>Tu contexto ya está listo para revisar.</h2></div>
-        <div className="qualify-success"><span className="success-mark">✓</span><h3>Se abrió WhatsApp con tu postulación.</h3><p>No hace falta volver a explicar lo básico: el mensaje incluye tu objetivo, contexto y rango de inversión. La conversación es para validar encaje y alcance, no para partir de cero.</p><button type="button" className="text-link" onClick={() => setState(null)}>Editar mis respuestas</button></div>
+        <div className="qualify-intro"><span className="eyebrow">Postulación registrada</span><h2 ref={resultHeading} tabIndex={-1}>Guardamos tus respuestas.</h2></div>
+        <div className="qualify-success"><span className="success-mark">✓</span><h3>Continúa la conversación por WhatsApp.</h3><p>Tu postulación quedó registrada aunque no abras WhatsApp. Para conversar, abre el mensaje, revísalo y pulsa Enviar en WhatsApp. Este paso no reserva una sesión.</p><button type="button" className="button button-dark" onClick={() => { window.open(handoffUrl, "_blank", "noopener,noreferrer"); trackEvent("qualification_whatsapp_clicked", { service, channel: "whatsapp" }); }}>Abrir WhatsApp →</button><button type="button" className="text-link" onClick={() => setState(null)}>Editar mis respuestas</button></div>
       </div>
     );
   }
@@ -105,7 +141,7 @@ export default function QualificationForm({ service }: { service: Service }) {
   if (state === "not-ready") {
     return (
       <div className="qualify-wrap">
-        <div className="qualify-intro"><span className="eyebrow">Siguiente paso recomendado</span><h2>{content.notReadyTitle}</h2></div>
+        <div className="qualify-intro"><span className="eyebrow">Siguiente paso recomendado</span><h2 ref={resultHeading} tabIndex={-1}>{content.notReadyTitle}</h2></div>
         <div className="qualify-success"><span className="success-mark">→</span><p>{content.notReadyText}</p><a className="button button-dark" href={content.alternative.href}>{content.alternative.label} <span>→</span></a><button type="button" className="text-link qualify-edit" onClick={() => setState(null)}>Editar mis respuestas</button></div>
       </div>
     );
@@ -114,16 +150,18 @@ export default function QualificationForm({ service }: { service: Service }) {
   return (
     <div className="qualify-wrap">
       <div className="qualify-intro"><span className="eyebrow">Filtro de encaje</span><h2>{content.title}</h2><p>{content.intro}</p></div>
-      <form className="qualify-form" onSubmit={submit}>
-        <label>Tu nombre<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nombre y apellido" /></label>
-        <label>Tu correo<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="tu@empresa.cl" /></label>
-        <label>Empresa o contexto<input required value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} placeholder="Empresa, rol o proyecto" /></label>
-        <label>Tu rol o responsabilidad<input required value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} placeholder={service === "mentoria" ? "Profesional, fundador, líder…" : "Dueño, gerente, responsable del proceso…"} /></label>
-        <label className="full-field">{content.resultLabel}<textarea required value={form.result} onChange={(e) => setForm({ ...form, result: e.target.value })} placeholder={content.resultPlaceholder} rows={4} /><small>{content.resultHint}</small></label>
-        {service === "mentoria" ? <label>¿Cuánto tiempo real puedes dedicar cada semana?<select required value={form.availability} onChange={(e) => setForm({ ...form, availability: e.target.value })}><option value="">Selecciona una opción</option><option>Menos de 2 horas</option><option>2–4 horas</option><option>5 horas o más</option></select></label> : <><label>Herramientas y datos que intervienen<textarea required value={form.context} onChange={(e) => setForm({ ...form, context: e.target.value })} placeholder="WhatsApp, planillas, CRM, correos, etc." rows={2} /></label><label>¿Quién puede aprobar cambios y validar pruebas?<select required value={form.decision} onChange={(e) => setForm({ ...form, decision: e.target.value })}><option value="">Selecciona una opción</option><option>Yo tomo la decisión</option><option>Yo propongo y otra persona aprueba</option><option>Ya hay un responsable disponible</option><option>No sé quién decide todavía</option></select></label></>}
-        <label>Rango de inversión<select required value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })}><option value="">Selecciona una opción</option>{content.budgetOptions.map((option) => <option key={option}>{option}</option>)}</select></label>
-        <label className="full-field qualify-checkbox"><input required type="checkbox" checked={form.confirmed} onChange={(e) => setForm({ ...form, confirmed: e.target.checked })} /><span>{service === "mentoria" ? "Entiendo que la mentoría parte desde $400.000 CLP mensuales y que debo trabajar entre sesiones." : "Entiendo que la implementación parte desde $500.000 CLP y requiere mantención desde $100.000 CLP mensuales."}</span></label>
-        <button type="submit" className="button button-dark full-field">{service === "mentoria" ? "Enviar postulación para revisión" : "Enviar evaluación de implementación"} <span>→</span></button>
+      <form className="qualify-form" onSubmit={submit} aria-busy={saving}>
+        <label>Tu nombre<input disabled={saving} required maxLength={160} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nombre y apellido" /></label>
+        <label>Tu correo<input disabled={saving} required maxLength={254} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="tu@empresa.cl" /></label>
+        <label>Empresa o contexto<input disabled={saving} required maxLength={160} value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} placeholder="Empresa, rol o proyecto" /></label>
+        <label>Tu rol o responsabilidad<input disabled={saving} required maxLength={160} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} placeholder={service === "mentoria" ? "Profesional, fundador, líder…" : "Dueño, gerente, responsable del proceso…"} /></label>
+        <label className="full-field">{content.resultLabel}<textarea disabled={saving} required maxLength={2000} value={form.result} onChange={(e) => setForm({ ...form, result: e.target.value })} placeholder={content.resultPlaceholder} rows={4} /><small>{content.resultHint}</small></label>
+        {service === "mentoria" ? <label>¿Cuánto tiempo real puedes dedicar cada semana?<select disabled={saving} required value={form.availability} onChange={(e) => setForm({ ...form, availability: e.target.value })}><option value="">Selecciona una opción</option><option>Menos de 2 horas</option><option>2–4 horas</option><option>5 horas o más</option></select></label> : <><label>Herramientas y datos que intervienen<textarea disabled={saving} required maxLength={2000} value={form.context} onChange={(e) => setForm({ ...form, context: e.target.value })} placeholder="WhatsApp, planillas, CRM, correos, etc." rows={2} /></label><label>¿Quién puede aprobar cambios y validar pruebas?<select disabled={saving} required value={form.decision} onChange={(e) => setForm({ ...form, decision: e.target.value })}><option value="">Selecciona una opción</option><option>Yo tomo la decisión</option><option>Yo propongo y otra persona aprueba</option><option>Ya hay un responsable disponible</option><option>No sé quién decide todavía</option></select></label></>}
+        <label>Rango de inversión<select disabled={saving} required value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })}><option value="">Selecciona una opción</option>{content.budgetOptions.map((option) => <option key={option}>{option}</option>)}</select></label>
+        <label className="full-field qualify-checkbox"><input disabled={saving} required type="checkbox" checked={form.confirmed} onChange={(e) => setForm({ ...form, confirmed: e.target.checked })} /><span>{service === "mentoria" ? "Entiendo que la mentoría parte desde $400.000 CLP mensuales y que debo trabajar entre sesiones." : "Entiendo que la implementación parte desde $500.000 CLP y requiere mantención desde $100.000 CLP mensuales."}</span></label>
+        <p className="full-field">Guardaremos tus respuestas para revisar tu solicitud. Luego podrás continuar por WhatsApp.</p>
+        {error && <p className="full-field" role="alert">{error}</p>}
+        <button disabled={saving} type="submit" className="button button-dark full-field">{saving ? "Guardando…" : service === "mentoria" ? "Registrar postulación" : "Registrar evaluación"} <span>→</span></button>
       </form>
     </div>
   );
