@@ -87,6 +87,11 @@ describe("login and logout", () => {
     expect(response.status).toBe(403);
     expect(response.headers.has("set-cookie")).toBe(false);
   });
+  it("rejects opaque Origin rather than weakening CSRF for native forms", async () => {
+    const response = await login(loginRequest(`password=${secret}`, "null"));
+    expect(response.status).toBe(403);
+    expect(response.headers.has("set-cookie")).toBe(false);
+  });
   it("rejects bad credentials without echoing them", async () => {
     const response = await login(loginRequest("password=private-wrong-value"));
     expect(response.headers.get("location")).toBe(`${origin}/admin/login?error=1`);
@@ -116,6 +121,12 @@ describe("login and logout", () => {
 });
 
 describe("legacy links and destination safety", () => {
+  it("preserves native same-origin form origins on admin pages", () => {
+    for (const path of ["/admin/login", "/admin/ebook", "/api/admin/session/login"]) {
+      const response = proxy(new NextRequest(`${origin}${path}`));
+      expect(response.headers.get("referrer-policy")).toBe("same-origin");
+    }
+  });
   it.each(["https://evil.test", "//evil.test", "/admin/\\evil", "/admin/%2f%2fevil", "/admin/login", "/admin/logout", "/admin/ebook?next=https://evil.test", "/admin/../outside"])("rejects destination %s", (value) => {
     expect(safeAdminDestination(value)).toBe("/admin/ebook");
   });
