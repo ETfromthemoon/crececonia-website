@@ -19,7 +19,7 @@ function PrivacySync() {
 export default function PostHogProvider({ children }: { children: React.ReactNode }) {
   return <PostHogReactProvider client={posthog}>
     <Suspense fallback={null}><PrivacySync /></Suspense>
-    <PostHogEcosystemTracker />
+    <Suspense fallback={null}><PostHogEcosystemTracker /></Suspense>
     {children}
   </PostHogReactProvider>;
 }

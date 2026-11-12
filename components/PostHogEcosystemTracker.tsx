@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { getPageType, trackEvent } from "@/lib/analytics";
 import { analyticsAllowed, analyticsLinkDestination } from "@/lib/analytics-privacy";
 
@@ -9,6 +9,7 @@ const SCROLL_MILESTONES = [25, 50, 75, 90];
 
 export default function PostHogEcosystemTracker() {
   const pathname = usePathname();
+  const search = useSearchParams().toString();
   const trackedMilestones = useRef(new Set<number>());
 
   useEffect(() => {
@@ -73,7 +74,7 @@ export default function PostHogEcosystemTracker() {
       window.removeEventListener("scroll", onScroll);
       document.removeEventListener("click", onLinkClick);
     };
-  }, [pathname]);
+  }, [pathname, search]);
 
   return null;
 }
