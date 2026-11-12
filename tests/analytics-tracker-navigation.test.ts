@@ -30,7 +30,7 @@ afterEach(() => {
 
 it("starts and cleans up tracking on query-only private/public navigation", () => {
   const scroll = new Set<() => void>();
-  const clicks = new Set<() => void>();
+  const clicks = new Set<(event?: MouseEvent) => void>();
   const disconnect = vi.fn();
   vi.stubGlobal("window", {
     location: { get href() { return `https://example.test/ebooks${state.search ? `?${state.search}` : ""}`; } },
@@ -41,10 +41,11 @@ it("starts and cleans up tracking on query-only private/public navigation", () =
   vi.stubGlobal("document", {
     referrer: "", querySelector: () => null, querySelectorAll: () => [],
     documentElement: { scrollHeight: 1100 },
-    addEventListener: (_: string, listener: () => void) => clicks.add(listener),
-    removeEventListener: (_: string, listener: () => void) => clicks.delete(listener),
+    addEventListener: (_: string, listener: (event?: MouseEvent) => void) => clicks.add(listener),
+    removeEventListener: (_: string, listener: (event?: MouseEvent) => void) => clicks.delete(listener),
   });
   vi.stubGlobal("IntersectionObserver", class { disconnect = disconnect; observe() {} });
+  vi.stubGlobal("Element", class {});
 
   PostHogEcosystemTracker();
   expect(state.track).not.toHaveBeenCalled();
@@ -54,6 +55,10 @@ it("starts and cleans up tracking on query-only private/public navigation", () =
   PostHogEcosystemTracker();
   expect(state.track).toHaveBeenCalledWith("ecosystem_page_view", expect.objectContaining({ route: "/ebooks" }));
   expect(state.track).toHaveBeenCalledWith("ecosystem_scroll_depth", expect.objectContaining({ depth_percent: 50 }));
+  const link = Object.assign(new Element(), { dataset: { analyticsCta: "route_selector", analyticsSource: "ia_selector" }, href: "https://example.test/ia" });
+  const target = Object.assign(new Element(), { closest: () => link });
+  [...clicks][0]({ target } as unknown as MouseEvent);
+  expect(state.track).toHaveBeenCalledWith("ecosystem_cta_clicked", { cta: "route_selector", source: "ia_selector" });
   expect(scroll.size).toBe(1); expect(clicks.size).toBe(1);
   const count = state.track.mock.calls.length;
   PostHogEcosystemTracker();

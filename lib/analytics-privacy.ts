@@ -2,6 +2,12 @@ const UTM_KEYS = new Set(["utm_source", "utm_medium", "utm_campaign", "utm_conte
 const PRIVATE_QUERY = /^(?:token|key|email|phone|tel|t|preview|access_token|authorization|secret)$/i;
 const PRIVATE_PROPERTY = /(?:^|[_$])(?:token|key|email|phone|tel|authorization|secret|password)(?:$|_)/i;
 const CONTACT_VALUE = /(?:mailto:|tel:|[^\s@]+@[^\s@]+\.[^\s@]+)/i;
+const SEMANTIC_CTA_SOURCES: Record<string, ReadonlySet<string>> = {
+  route_selector: new Set(["ia_selector"]),
+  home_route: new Set(["home_hero", "home_footer"]),
+  service_requirements: new Set(["service_hero"]),
+  service_learning: new Set(["service_hero", "service_learning"]),
+};
 
 export function isAdminPath(path: string): boolean {
   return path === "/admin" || path.startsWith("/admin/");
@@ -66,4 +72,12 @@ export function analyticsLinkDestination(href: string, base: string): Record<str
     if (!["http:", "https:"].includes(url.protocol)) return { destination_type: "other" };
     return { destination_type: url.origin === new URL(base).origin ? "internal" : "external", destination_host: url.hostname, destination_path: url.pathname };
   } catch { return { destination_type: "other" }; }
+}
+
+/** Read only static, reviewed CTA labels from markup; never infer them from copy or URLs. */
+export function analyticsSemanticCta(element: HTMLElement): { cta: string; source: string } | undefined {
+  const cta = element.dataset.analyticsCta;
+  const source = element.dataset.analyticsSource;
+  if (!cta || !source || !Object.prototype.hasOwnProperty.call(SEMANTIC_CTA_SOURCES, cta) || !SEMANTIC_CTA_SOURCES[cta].has(source)) return undefined;
+  return { cta, source };
 }

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { analyticsAllowed, analyticsLinkDestination, isPrivateAnalyticsUrl, sanitizeAnalyticsProperties, sanitizeAnalyticsUrl } from "@/lib/analytics-privacy";
+import { analyticsAllowed, analyticsLinkDestination, analyticsSemanticCta, isPrivateAnalyticsUrl, sanitizeAnalyticsProperties, sanitizeAnalyticsUrl } from "@/lib/analytics-privacy";
 import { ensureAnalytics } from "@/lib/analytics-client";
 import { trackEvent } from "@/lib/analytics";
 import { trackMetaEvent } from "@/lib/meta-pixel";
@@ -34,6 +34,13 @@ describe("analytics privacy boundary", () => {
     expect(analyticsLinkDestination("mailto:buyer@example.test?subject=secret", href)).toEqual({ destination_type: "contact", contact_channel: "email" });
     expect(analyticsLinkDestination("tel:+56912345678", href)).toEqual({ destination_type: "contact", contact_channel: "phone" });
     expect(analyticsLinkDestination("/api/ebook/download?token=secret", href).destination_path).toBe("/api/ebook/download");
+  });
+  it("accepts only reviewed static semantic CTA and source labels", () => {
+    expect(analyticsSemanticCta({ dataset: { analyticsCta: "route_selector", analyticsSource: "ia_selector" } } as unknown as HTMLElement)).toEqual({ cta: "route_selector", source: "ia_selector" });
+    expect(analyticsSemanticCta({ dataset: { analyticsCta: "route_selector", analyticsSource: "buyer@example.test" } } as unknown as HTMLElement)).toBeUndefined();
+    expect(analyticsSemanticCta({ dataset: { analyticsCta: "button text", analyticsSource: "ia_selector" } } as unknown as HTMLElement)).toBeUndefined();
+    expect(analyticsSemanticCta({ dataset: { analyticsCta: "route_selector", analyticsSource: "home_hero" } } as unknown as HTMLElement)).toBeUndefined();
+    expect(analyticsSemanticCta({ dataset: { analyticsCta: "constructor", analyticsSource: "prototype" } } as unknown as HTMLElement)).toBeUndefined();
   });
   it.each(["/admin", "/admin/ebook", "/solicitar-llamada?t=secret", "/ebook/book/success?token=secret", "/lanzamientos/private", "/ebook/book?preview=secret", "/anything?%74oken=secret"])("does not initialize or capture on %s", (path) => {
     href = new URL(path, href).href;

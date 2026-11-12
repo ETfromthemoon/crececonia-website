@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { getPageType, trackEvent } from "@/lib/analytics";
-import { analyticsAllowed, analyticsLinkDestination } from "@/lib/analytics-privacy";
+import { analyticsAllowed, analyticsLinkDestination, analyticsSemanticCta } from "@/lib/analytics-privacy";
 
 const SCROLL_MILESTONES = [25, 50, 75, 90];
 
@@ -51,6 +51,8 @@ export default function PostHogEcosystemTracker() {
     const onLinkClick = (event: MouseEvent) => {
       const target = event.target instanceof Element ? event.target.closest("a") : null;
       if (!target || target.dataset.analyticsIgnore === "true") return;
+      const semanticCta = analyticsSemanticCta(target);
+      if (semanticCta) trackEvent("ecosystem_cta_clicked", semanticCta);
       trackEvent("ecosystem_link_clicked", analyticsLinkDestination(target.href, window.location.href));
     };
 
