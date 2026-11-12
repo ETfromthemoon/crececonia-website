@@ -26,6 +26,9 @@ export function planEbookRecovery(
   payment: RecoveryPayment, purchases: RecoveryPurchase[], manifest?: RecoveryManifest,
 ): RecoveryPlan {
   if (payment.status !== 2 || !/^ebook-\d+-[a-z0-9]+$/.test(payment.commerceOrder)) return { kind: "ignored" };
+  if (!Number.isSafeInteger(Number(payment.amount)) || Number(payment.amount) <= 0) {
+    return { kind: "review", reason: "Flow devolvió un monto inválido." };
+  }
   const existing = new Set(purchases.filter((row) => String(row.flow_order) === String(payment.flowOrder)).map((row) => row.resource));
   if (!manifest) return existing.size ? { kind: "registered" } : { kind: "review", reason: "Pago sin manifiesto: no se puede inferir el producto." };
   const items = manifest.resources;
@@ -33,6 +36,9 @@ export function planEbookRecovery(
       !items.every(isItem) || new Set(items.map((item) => item.resource)).size !== items.length ||
       items.reduce((sum, item) => sum + item.amount, 0) !== Number(payment.amount)) {
     return { kind: "review", reason: "Manifiesto inválido o monto distinto al pago." };
+  }
+  if ([...existing].some((resource) => !items.some((item) => item.resource === resource))) {
+    return { kind: "review", reason: "Los recursos registrados contradicen el manifiesto de esta orden." };
   }
   const missing = items.filter((item) => !existing.has(item.resource));
   if (!missing.length) return { kind: "registered" };

@@ -5,6 +5,7 @@ import { listPaidFlowPaymentsForDay, planEbookRecovery, type RecoveryManifest, t
 import { sendEbookDeliveryEmail } from "../lib/ebook-delivery-email";
 import { sendPurchaseNotification } from "../lib/purchase-notification-email";
 import { pathToFileURL } from "node:url";
+import { randomBytes } from "node:crypto";
 
 const PRIMERA_VENTA = "2026-06-18";
 
@@ -15,9 +16,7 @@ export async function recoverDeliveries(args: string[] = []) {
   const apiKey = process.env.FLOW_API_KEY;
   const secretKey = process.env.FLOW_SECRET_KEY;
   if (!apiKey || !secretKey) throw new Error("Faltan FLOW_API_KEY y/o FLOW_SECRET_KEY.");
-  if (!process.env.DATABASE_URL && !(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)) {
-    throw new Error("Falta DATABASE_URL (o la configuración legacy de Supabase).");
-  }
+  if (!process.env.DATABASE_URL) throw new Error("Falta DATABASE_URL: la conciliación requiere la base vigente de Neon.");
   const db = getSupabaseAdmin();
   const [purchases, manifests] = await Promise.all([
     db.from("ebook_purchases").select("flow_order, resource"),
@@ -52,21 +51,32 @@ export async function recoverDeliveries(args: string[] = []) {
   }
   for (const { payment, plan } of plans) {
     if (plan.kind !== "recoverable") continue;
-    const token = `recuperado-${payment.flowOrder}`;
-    for (const item of plan.items) {
-      const { error } = await db.from("ebook_purchases").insert({
+    // El token autoriza descargas: nunca debe ser derivable del número de pago.
+    const token = `recuperado-${randomBytes(32).toString("base64url")}`;
+    // El adaptador Neon convierte el lote en una sola sentencia INSERT. Un
+    // conflicto (por ejemplo con el webhook) revierte todas las filas del lote;
+    // volver a ejecutar el diagnóstico permite conciliar el estado actual.
+    const { error } = await db.from("ebook_purchases").insert(plan.items.map((item) => ({
         email: payment.payer, resource: item.resource, amount: item.amount, tier: item.tier,
         flow_order: payment.flowOrder, flow_token: token, discount_code: null,
-      });
-      if (error) throw new Error(`Falló la recuperación de flowOrder ${payment.flowOrder}; revisar antes de reintentar.`);
-    }
+    })));
+    if (error) throw new Error(`Falló la recuperación de flowOrder ${payment.flowOrder}; vuelve a ejecutar el diagnóstico antes de reintentar.`);
     console.log(`REGISTRADA flowOrder ${payment.flowOrder}. Cupos y descuentos requieren conciliación manual.`);
     if (enviarEmail) {
-      await sendEbookDeliveryEmail({ email: payment.payer!, grants: plan.items.map((item) => ({ resource: item.resource, token })), recovery: true });
+      try {
+        await sendEbookDeliveryEmail({ email: payment.payer!, grants: plan.items.map((item) => ({ resource: item.resource, token })), recovery: true });
+      } catch {
+        throw new Error(`Compra registrada para flowOrder ${payment.flowOrder}, pero el correo de recuperación falló. Usa /ebook/descargar; repetir --aplicar no reenvía compras registradas.`);
+      }
       console.log(`EMAIL aceptado por Resend para flowOrder ${payment.flowOrder}.`);
-      await sendPurchaseNotification({ kind: "Ebook", buyerEmail: payment.payer!, amount: Number(payment.amount), orderId: payment.commerceOrder, items: plan.items.map((item) => item.resource) });
+      try {
+        await sendPurchaseNotification({ kind: "Ebook", buyerEmail: payment.payer!, amount: Number(payment.amount), orderId: payment.commerceOrder, items: plan.items.map((item) => item.resource) });
+      } catch {
+        throw new Error(`Compra registrada y correo aceptado para flowOrder ${payment.flowOrder}, pero la notificación interna falló.`);
+      }
     }
   }
+  console.log("Si un correo falla después de registrar la compra, usa la recuperación por email; repetir --aplicar no reenvía compras ya registradas.");
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

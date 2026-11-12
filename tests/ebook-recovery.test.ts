@@ -32,6 +32,12 @@ describe("conciliación conservadora de ebooks", () => {
   it("no prepara compras sin email verificable", () => {
     expect(planEbookRecovery({ ...payment, payer: undefined }, [], manifest).kind).toBe("review");
   });
+  it("deja para revisión recursos ya registrados que contradicen el manifiesto", () => {
+    expect(planEbookRecovery(payment, [{ flow_order: 99, resource: "ebook:claude-nivel-experto" }], manifest).kind).toBe("review");
+  });
+  it.each(["NaN", "0", "-1", "19440.5", Number.MAX_SAFE_INTEGER + 1])("no prepara un pago con monto inválido: %s", (amount) => {
+    expect(planEbookRecovery({ ...payment, amount }, [], manifest).kind).toBe("review");
+  });
 });
 
 describe("lectura paginada de Flow", () => {
