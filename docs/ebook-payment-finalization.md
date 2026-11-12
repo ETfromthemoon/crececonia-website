@@ -1,9 +1,12 @@
-# Finalización de pagos: E05-B1 (inactiva)
+# Finalización de pagos: E05-B1/B2 (desactivada por defecto)
 
-Esta etapa aporta el contrato transaccional; no conecta webhook, CLI ni worker.
-No aplicar 003/004 a producción ni configurar variables durante esta etapa.
+E05-B1 aportó el contrato transaccional. B2 conecta webhook, CLI y worker detrás
+de flags, sin habilitarlas ni agregar un schedule. No aplicar 003/004 a producción
+ni configurar variables durante esta etapa.
 La flag `EBOOK_PAYMENT_FINALIZATION_ENABLED` sólo acepta `true`; ausente falla
-cerrada en el repositorio. No habilita consumidores ni envíos por sí sola.
+cerrada en el repositorio. El webhook conserva su camino legacy mientras esté
+desactivada; la CLI nueva rechaza `--aplicar` sin flag, conservando su dry-run.
+`EBOOK_DELIVERY_WORKER_ENABLED=true` también es necesaria para reclamar/enviar.
 
 ## Contrato para B2
 
@@ -46,18 +49,45 @@ outboxes propios). No incluir tokens, payloads ni destinatarios en logs/respuest
 
 ## Activación y rollback pendientes
 
-Antes de B2: SQL real en Neon aislado y revisión DB/código. B2 debe conectar TODOS
-los escritores, webhook y recuperación CLI, a este protocolo con la misma flag.
+Antes de activar: SQL real en Neon aislado y revisión DB/código. TODOS
+los escritores, webhook y recuperación CLI, deben usar este protocolo y la misma flag.
 No puede coexistir un CLI legado escribiendo mientras el webhook usa el finalizador.
 Cerrar recuperación y dejar terminar callbacks viejos durante el cambio de versión;
 verificar versión/capacidad de todos los procesos antes de habilitar la flag.
 
-El worker futuro usa exclusivamente payload/key congelados de 003, claim acorde a
-concurrencia, timeout menor al lease y comprobación temporal antes de cada envío.
+El worker usa exclusivamente payload/key congelados de 003, claim de dos jobs
+procesados concurrentemente, timeout HTTP de 20 s y margen de 25 s tanto contra
+reloj DB como local antes de cada envío.
 Ventana 23 h, cinco intentos; `concurrent_idempotent_requests` se reintenta, conflicto
 de payload requiere revisión. ACK incierto requiere readback privado; no crear key
 nueva ni reenviar sólo por ACK false. Cron autenticado por CRON_SECRET devuelve
-contadores sin PII; no agregar schedule hasta validar schema/integración.
+contadores sin PII en `/api/cron/ebook-delivery`; no agregar schedule hasta validar
+schema/integración. Hace un solo POST REST por claim, sin reintentos internos SDK.
+El guard de servidor permanece en el wrapper web. La CLI inyecta su cliente Neon
+al mismo core sin importar `server-only`; ambas rutas serializan el mismo snapshot
+y payload como JSON explícito antes de SQL. La CLI ya no tiene sender ni INSERT
+legacy; `--enviar-email` sólo explica que el outbox permanece en revisión.
+
+El corte requiere detener/retirar también scripts CLI antiguos y dejar terminar
+callbacks del deploy anterior. Primero validar schema003/004 y deploy de TODOS
+los consumidores con flags desactivadas. Después habilitar finalización en web y
+CLI coordinadamente; nunca habilitar local mientras web siga legacy. Errores con
+flag habilitada devuelven retry, nunca fallback. Habilitar worker sólo tras comprobar
+receipt/grants/job y permisos en el entorno aprobado. Un schedule es una acción
+posterior explícita. Ningún paso de este runbook fue ejecutado en producción.
+
+Owner notice y analytics conservan recursos/atribución del snapshot finalizado y
+se intentan sólo en `finalized`, no replay. Son best effort: una caída justo después
+del commit puede perder ese aviso/evento, sin perder acceso ni job del comprador.
+
+Contrato REST verificado con documentación oficial de Resend:
+[Send Email](https://resend.com/docs/api-reference/emails/send-email) y
+[Errors](https://resend.com/docs/api-reference/errors). POST `/emails` devuelve
+`{id}`; `Idempotency-Key` conserva la identidad por 24 horas. Un 409
+`concurrent_idempotent_requests` es transitorio; otros 409 quedan en revisión.
+Timeout/red inciertos se registran como `provider_unknown`; futuros claims conservan
+la key y payload. Un ACK falso/error tras aceptación hace readback privado del mismo
+provider ID, sin marcar fallo de envío ni realizar otro POST en ese claim.
 
 Rollback: detener workers/consumidores antes de cambiar flag o esquema; exportar y
 reconciliar receipts, efectos y jobs aceptados/ambiguos. Desactivar flag y volver al

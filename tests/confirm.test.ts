@@ -1,4 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const { mockFinalize } = vi.hoisted(() => ({ mockFinalize: vi.fn() }));
+vi.mock("@/lib/ebook-payment-finalization", () => ({ finalizeEbookPayment: mockFinalize }));
+afterEach(() => vi.unstubAllEnvs());
 
 const { mockSendEmail, mockPurchaseNotice, mockCapture, mockDecrement, mockRedeem, mockInsert, mockDelete } = vi.hoisted(() => ({
   mockSendEmail: vi.fn().mockResolvedValue(undefined),
@@ -93,6 +97,7 @@ function webhook() {
 describe("POST /api/flow/confirm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("EBOOK_PAYMENT_FINALIZATION_ENABLED", "");
     pendingResources = null;
     existingResources = new Set();
     pendingMissingHasPurchase = false;
@@ -102,6 +107,26 @@ describe("POST /api/flow/confirm", () => {
     mockDelete.mockResolvedValue({ error: null });
     mockSendEmail.mockResolvedValue(undefined);
     flowStatus();
+  });
+
+  it("con flag usa transacción sin escrituras legacy ni envío directo", async () => {
+    vi.stubEnv("EBOOK_PAYMENT_FINALIZATION_ENABLED", "true");
+    mockFinalize.mockResolvedValue({ outcome: "finalized", jobId: "synthetic", resources: [BOOK_1, AGENTES] });
+    expect((await POST(webhook())).status).toBe(200);
+    expect(mockFinalize).toHaveBeenCalledWith({ flowOrder: "99", commerceOrder: "ebook-123-abc123", email: "comprador@test.com", amount: 19440, token: "tok_pago", source: "webhook" });
+    expect(mockInsert).not.toHaveBeenCalled(); expect(mockDelete).not.toHaveBeenCalled(); expect(mockDecrement).not.toHaveBeenCalled(); expect(mockRedeem).not.toHaveBeenCalled(); expect(mockSendEmail).not.toHaveBeenCalled();
+    expect(mockPurchaseNotice).toHaveBeenCalledWith(expect.objectContaining({ items: [BOOK_1, AGENTES] }));
+  });
+  it("replay finalizado reconoce receipt sin pendiente ni repetir avisos", async () => {
+    vi.stubEnv("EBOOK_PAYMENT_FINALIZATION_ENABLED", "true"); mockFinalize.mockResolvedValue({ outcome: "existing", jobId: "synthetic" });
+    pendingResources = null; expect((await POST(webhook())).status).toBe(200);
+    expect(mockSendEmail).not.toHaveBeenCalled(); expect(mockPurchaseNotice).not.toHaveBeenCalled(); expect(mockCapture).not.toHaveBeenCalled();
+  });
+  it("error del finalizador pide retry sin fallback ni detalles privados", async () => {
+    vi.stubEnv("EBOOK_PAYMENT_FINALIZATION_ENABLED", "true"); mockFinalize.mockRejectedValue(new Error("buyer@example.test secret-token"));
+    const logging = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect((await POST(webhook())).status).toBe(500); expect(mockInsert).not.toHaveBeenCalled(); expect(mockSendEmail).not.toHaveBeenCalled();
+    expect(JSON.stringify(logging.mock.calls)).not.toContain("secret-token"); logging.mockRestore();
   });
 
   it("solicita reintento si Flow no puede verificar el pago por HTTP", async () => {
