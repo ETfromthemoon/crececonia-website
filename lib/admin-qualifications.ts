@@ -13,6 +13,17 @@ export type QualificationSummary = {
 export type QualificationDetail = QualificationSummary & {
   email: string; role: string; result: string; budget: string; availability: string; context: string; decision: string;
 };
+type DatabaseQualification<T extends QualificationSummary> = Omit<T, "lease_expires_at" | "next_attempt_at"> & {
+  lease_expires_at: Date | string | null;
+  next_attempt_at: Date | string | null;
+};
+
+// Neon parses timestamptz as Date; normalize at the database boundary without
+// converting the textual created_at cursor (which retains PostgreSQL microseconds).
+function normalizeSyncDates<T extends QualificationSummary>(row: DatabaseQualification<T>): T {
+  const iso = (value: Date | string | null) => value instanceof Date ? value.toISOString() : value;
+  return { ...row, lease_expires_at: iso(row.lease_expires_at), next_attempt_at: iso(row.next_attempt_at) } as T;
+}
 export type QualificationInbox = {
   rows: QualificationSummary[]; detail: QualificationDetail | null; detailRequested: boolean;
   nextCursor: string | null; integrationInstalled: boolean; now: number;
@@ -59,20 +70,20 @@ export async function loadQualificationInbox(params: { cursor?: string; id?: str
   const join = installed ? "left join commerce.nitido_sync_jobs j on j.qualification_id = q.id" : "";
   const values: unknown[] = cursor ? [cursor.time, cursor.id] : [];
   const where = cursor ? "where (q.created_at, q.id) < ($1::timestamptz, $2::uuid)" : "";
-  const result = await queryDatabase<QualificationSummary>(
+  const result = await queryDatabase<DatabaseQualification<QualificationSummary>>(
     `select ${summaryFields}, ${syncFields(installed)} from commerce.service_qualifications q ${join}
      ${where} order by q.created_at desc, q.id desc limit ${PAGE_SIZE + 1}`, values,
   );
-  const rows = result.slice(0, PAGE_SIZE);
+  const rows = result.slice(0, PAGE_SIZE).map(normalizeSyncDates<QualificationSummary>);
   let detail: QualificationDetail | null = null;
   if (params.id) {
-    const details = await queryDatabase<QualificationDetail>(
+    const details = await queryDatabase<DatabaseQualification<QualificationDetail>>(
       `select ${summaryFields}, ${syncFields(installed)}, q.email,
        q.payload->>'role' as role, q.payload->>'result' as result, q.payload->>'budget' as budget,
        q.payload->>'availability' as availability, q.payload->>'context' as context, q.payload->>'decision' as decision
        from commerce.service_qualifications q ${join} where q.id = $1::uuid`, [params.id],
     );
-    detail = details[0] ?? null;
+    detail = details[0] ? normalizeSyncDates<QualificationDetail>(details[0]) : null;
   }
   return { rows, detail, detailRequested: Boolean(params.id), integrationInstalled: installed,
     nextCursor: result.length > PAGE_SIZE ? encodeQualificationCursor(rows[rows.length - 1]) : null, now: Date.now() };

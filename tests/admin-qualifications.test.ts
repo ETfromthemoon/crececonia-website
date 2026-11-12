@@ -15,6 +15,21 @@ const row: QualificationSummary = {
 beforeEach(() => { vi.resetAllMocks(); vi.mocked(requireAdminSession).mockResolvedValue(undefined); });
 
 describe("authorized qualification queries", () => {
+  it("normalizes Neon Date timestamps in list and detail without expiring leases early", async () => {
+    const databaseRow = { ...row, sync_status: "leased", attempts: 8,
+      lease_expires_at: new Date("2026-11-12T18:00:00.900Z"),
+      next_attempt_at: new Date("2026-11-12T18:01:00.123Z") };
+    vi.mocked(queryDatabase).mockResolvedValueOnce([{ installed: true }]).mockResolvedValueOnce([databaseRow])
+      .mockResolvedValueOnce([{ ...databaseRow, email: "private@example.com" }]);
+    const data = await loadQualificationInbox({ id });
+    for (const normalized of [data.rows[0], data.detail!]) {
+      expect(normalized.lease_expires_at).toBe("2026-11-12T18:00:00.900Z");
+      expect(normalized.next_attempt_at).toBe("2026-11-12T18:01:00.123Z");
+      expect(normalized.created_at).toBe(row.created_at);
+      expect(qualificationSyncView(normalized, true, now + 500).label).toBe("Reserva vigente");
+      expect(qualificationSyncView(normalized, true, now + 900).label).toContain("intentos agotados");
+    }
+  });
   it("authenticates before parsing or database access", async () => {
     vi.mocked(requireAdminSession).mockRejectedValue(new Error("redirect"));
     await expect(loadQualificationInbox({ cursor: "bad" })).rejects.toThrow("redirect");
