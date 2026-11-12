@@ -192,7 +192,7 @@ describe("fetchAnalyticsReport", () => {
       expect(query).toContain("timestamp >= '2026-11-05T12:00:00.000Z'");
     }
     expect(queries.filter((query) => !query.includes("AS eligible_checkouts")).every((query) => query.includes("timestamp < '2026-11-12T12:00:00.000Z'"))).toBe(true);
-    expect(queries.find((query) => query.includes("AS eligible_checkouts"))).toContain("timestamp < '2026-11-12T12:00:00.000Z' - INTERVAL 14 DAY");
+    expect(queries.find((query) => query.includes("AS eligible_checkouts"))?.match(/timestamp <= '2026-11-12T12:00:00\.000Z' - INTERVAL 14 DAY/g)).toHaveLength(2);
     expect(queries.find((query) => query.includes("AS unique_orders"))).not.toContain("pricing_variant");
     expect(report.ebookOrderConversion).toEqual({ maturityDays: 14, eligibleCheckouts: 3, confirmedWithinWindow: 2, checkoutEventsWithoutOrderId: 1, conversionRate: 2 / 3 });
   });

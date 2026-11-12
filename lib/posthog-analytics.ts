@@ -306,7 +306,7 @@ async function fetchEbookOrderConversion(
         FROM events
         WHERE event = 'ebook_checkout_created'
           AND timestamp >= '${sinceIso}'
-          AND timestamp < '${untilIso}' - INTERVAL ${EBOOK_ORDER_MATURITY_DAYS} DAY
+          AND timestamp <= '${untilIso}' - INTERVAL ${EBOOK_ORDER_MATURITY_DAYS} DAY
           AND notEmpty(trim(JSONExtractString(properties, 'order_id')))
         GROUP BY order_id
       ),
@@ -325,7 +325,7 @@ async function fetchEbookOrderConversion(
         FROM events
         WHERE event = 'ebook_checkout_created'
           AND timestamp >= '${sinceIso}'
-          AND timestamp < '${untilIso}' - INTERVAL ${EBOOK_ORDER_MATURITY_DAYS} DAY
+          AND timestamp <= '${untilIso}' - INTERVAL ${EBOOK_ORDER_MATURITY_DAYS} DAY
           AND empty(trim(JSONExtractString(properties, 'order_id')))
       )
     SELECT
