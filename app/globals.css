@@ -499,6 +499,28 @@ p, span, li {
 .ebook-route-copy a span { color:var(--store-lime); font:500 .65rem var(--font-mono); text-transform:uppercase; letter-spacing:.08em; }
 .ebook-store-help { padding:100px 0; background:var(--store-blue); }
 .ebook-store-help-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:100px; align-items:end; }
+.marketplace-calculator-page { min-height:75vh; padding:120px 24px; background:#f2efe8; color:#151618; }
+.marketplace-calculator { width:min(920px,100%); margin:0 auto; }
+.marketplace-calculator-intro { max-width:680px; margin-bottom:38px; }
+.marketplace-calculator-intro>span { color:#64783a; font: .68rem var(--font-mono); letter-spacing:.13em; text-transform:uppercase; }
+.marketplace-calculator-intro h2 { margin-top:16px; font:500 clamp(2.2rem,5vw,4rem)/.98 var(--font-display); letter-spacing:-.05em; }
+.marketplace-calculator-intro p,.marketplace-calculator-panel>p,.marketplace-calculator-notice p { color:#62615d; line-height:1.7; }
+.marketplace-calculator-intro p { margin-top:18px; }
+.marketplace-calculator-panel { padding:clamp(22px,5vw,48px); border:1px solid rgba(21,22,24,.17); background:#f8f6f0; }
+.marketplace-calculator-panel>label { display:block; font-weight:600; }
+.marketplace-price-input { display:flex; align-items:center; gap:12px; max-width:410px; margin-top:12px; padding:10px 14px; border:1px solid rgba(21,22,24,.3); background:white; }
+.marketplace-price-input input { min-width:0; flex:1; border:0; background:transparent; color:#151618; font-size:1.2rem; }
+.marketplace-price-input input:focus-visible { outline:2px solid #64783a; outline-offset:3px; }
+.marketplace-calculator-panel>p { margin-top:10px; font-size:.82rem; }
+.marketplace-estimate-lines { margin-top:30px; }
+.marketplace-estimate-lines>div { display:flex; justify-content:space-between; gap:24px; padding:13px 0; border-top:1px solid rgba(21,22,24,.12); }
+.marketplace-estimate-lines dt { color:#62615d; }
+.marketplace-estimate-lines dd { text-align:right; font-variant-numeric:tabular-nums; }
+.marketplace-estimate-total { color:#151618; font-weight:650; }
+.marketplace-calculator-error { color:#a12727 !important; }
+.marketplace-calculator-notice { margin-top:22px; padding:20px 22px; border-left:3px solid #a77a42; background:#e7e3d9; }
+.marketplace-calculator-notice p { margin-top:8px; font-size:.83rem; }
+@media (max-width:600px) { .marketplace-calculator-page{padding:78px 16px}.marketplace-estimate-lines>div{gap:14px;font-size:.86rem} }
 @media (max-width:1000px) { .ebook-store-grid{grid-template-columns:repeat(2,1fr)} .ebook-route-card{grid-template-columns:145px 1fr}.ebook-route-covers>div{width:92px} }
 @media (max-width:720px) {
   .ebook-store-shell{width:min(100% - 32px,1180px)} .ebook-store-hero{min-height:auto;padding-top:100px}.ebook-store-hero-grid,.ebook-store-heading,.ebook-store-help-grid,.ebook-store-decision-grid{grid-template-columns:1fr;gap:38px}.ebook-store-hero h1{font-size:clamp(2.75rem,13.5vw,4.2rem)}.ebook-store-signal{margin-top:64px}.ebook-store-signal>div{grid-template-columns:1fr 1fr;padding:10px 0}.ebook-store-signal span{padding:10px 4px}.ebook-store-signal span:nth-child(2){border-right:0}.ebook-store-catalog,.ebook-store-routes{padding:82px 0}.ebook-store-heading{margin-bottom:44px}.ebook-store-grid{grid-template-columns:1fr;gap:34px}.ebook-product-copy{min-height:0}.ebook-route-grid{grid-template-columns:1fr}.ebook-route-card,.ebook-route-card:nth-child(2n){border-right:0;grid-template-columns:120px 1fr;padding:28px 0;gap:24px}.ebook-route-covers>div{width:76px}.ebook-route-copy h3{font-size:1.65rem}.ebook-store-help{padding:72px 0}
