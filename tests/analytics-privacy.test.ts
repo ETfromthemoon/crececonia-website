@@ -50,8 +50,10 @@ describe("analytics privacy boundary", () => {
   });
   it("sanitizes SDK output and drops it after public to private navigation", () => {
     ensureAnalytics();
-    const event = { event: "$pageview", properties: { $current_url: "https://example.test/a?token=secret&utm_medium=email" } };
+    const event = { event: "$pageview", properties: { token: "untrusted-event-token", nested: { token: "private-token" }, $current_url: "https://example.test/a?token=secret&utm_medium=email" } };
     expect(config.before_send(event).properties.$current_url).toBe("https://example.test/a?utm_medium=email");
+    expect(config.before_send(event).properties.token).toBe("synthetic");
+    expect(config.before_send(event).properties.nested).toEqual({});
     href = "https://www.crececonia.cl/admin/ebook";
     expect(config.before_send(event)).toBeNull();
     trackEvent("private"); expect(sdk.capture).not.toHaveBeenCalled();

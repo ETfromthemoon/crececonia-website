@@ -6,10 +6,10 @@ export function ensureAnalytics(): void {
   if (!analyticsAllowed() || posthog.__loaded) return;
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
   if (!key) return;
-  posthog.init(key, analyticsConfig());
+  posthog.init(key, analyticsConfig(key));
 }
 
-export function analyticsConfig(): Partial<PostHogConfig> {
+export function analyticsConfig(projectKey: string): Partial<PostHogConfig> {
   return {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
     capture_pageview: "history_change",
@@ -31,7 +31,11 @@ export function analyticsConfig(): Partial<PostHogConfig> {
     person_profiles: "identified_only",
     respect_dnt: true,
     get_current_url: (url) => sanitizeAnalyticsUrl(url) ?? "",
-    before_send: (event) => !event || !analyticsAllowed() ? null : { ...event, properties: sanitizeAnalyticsProperties(event.properties) },
+    before_send: (event) => !event || !analyticsAllowed() ? null : {
+      ...event,
+      // SDK ingestion requires this public project key. Never trust an event token.
+      properties: { ...sanitizeAnalyticsProperties(event.properties), token: projectKey },
+    },
     loaded: (client) => {
       // Remove only old browser attribution/person caches, preserving anonymous ID.
       // These keys are verified against posthog-js 1.407.7 persistence/flags source.

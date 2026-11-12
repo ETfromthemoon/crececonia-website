@@ -20,7 +20,7 @@ it("uses the real SDK to clean caches before transport and resume flags after qu
   let href = "https://www.crececonia.cl/ebooks";
   vi.stubGlobal("window", { location: { get href() { return href; } } });
   vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "synthetic-contract-test");
-  const config = analyticsConfig();
+  const config = analyticsConfig("synthetic-contract-test");
   client.init("synthetic-contract-test", {
     ...config,
     api_host: "https://analytics.example.test",
@@ -41,6 +41,22 @@ it("uses the real SDK to clean caches before transport and resume flags after qu
   expect(requests.every((request) => request.cleaned)).toBe(true);
   expect(JSON.stringify(requests)).not.toMatch(/synthetic-secret|private@example/);
   expect(client.getFeatureFlag("ebook-pricing-variant", { send_event: false })).toBe("variant");
+  client.capture("public-event", {
+    token: "untrusted-event-token",
+    $current_url: "https://example.test/ebooks?token=synthetic-secret&utm_source=launch",
+    email: "private@example.test",
+    nested: { token: "synthetic-secret", $referrer: "https://example.test/?key=synthetic-secret" },
+  });
+  await vi.advanceTimersByTimeAsync(50);
+  const sentEvent = requests.find((request) => request.body.includes("public-event"));
+  expect(sentEvent, "public capture must reach the SDK transport").toBeDefined();
+  const body = JSON.parse(sentEvent!.body);
+  expect(body.api_key).toBe("synthetic-contract-test");
+  const delivered = body.batch.find((event: { event: string }) => event.event === "public-event");
+  expect(delivered.event).toBe("public-event");
+  expect(delivered.properties.token).toBe("synthetic-contract-test");
+  expect(delivered.properties.$current_url).toBe("https://example.test/ebooks?utm_source=launch");
+  expect(sentEvent!.body).not.toMatch(/synthetic-secret|private@example|untrusted-event-token/);
   const beforePrivate = requests.length;
   href += "?token=synthetic-secret";
   syncAnalyticsPrivacy();

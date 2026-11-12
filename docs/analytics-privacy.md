@@ -10,7 +10,7 @@ Los lanzamientos sólo admiten captura cuando el servidor marca el contenido `pu
 
 ## PostHog
 
-`before_send` sanea propiedades anidadas, incluido `$set_once`; descarta eventos en superficies privadas. Se desactivan autocapture, session replay, captura de red/performance y excepciones, además de carga de extensiones externas, porque podrían transmitir DOM o datos por canales fuera del sanitizador. Se conservan eventos explícitos del funnel, pageviews públicos y feature flags de precios.
+`before_send` sanea propiedades anidadas, incluido `$set_once`; descarta eventos en superficies privadas. Después restaura únicamente `properties.token` con la clave pública de proyecto recibida desde configuración, necesaria para ingestión del SDK. Nunca conserva un token aportado por un evento, query o propiedad anidada. Se desactivan autocapture, session replay, captura de red/performance y excepciones, además de carga de extensiones externas, porque podrían transmitir DOM o datos por canales fuera del sanitizador. Se conservan eventos explícitos del funnel, pageviews públicos y feature flags de precios.
 
 El SDK instalado envía propiedades iniciales persistidas en `/flags`, fuera de `before_send`. Por eso el callback `loaded`, que el SDK ejecuta antes de cargar configuración remota, retira únicamente cinco caches antiguos de atribución/persona/grupo antes de solicitar flags. No se fija `advanced_disable_flags` al inicializar: en 1.407.7 ese valor original prevalece sobre cambios posteriores y dejaría las flags apagadas permanentemente. El control de privacidad usa `set_config` después del inicio y observa pathname y query; al volver a una URL pública recarga flags. Se conserva el identificador anónimo; no se resetean usuarios ni borran datos del proveedor. Se deshabilita volver a guardar automáticamente referrer/campañas; los eventos propios y la URL saneada conservan los UTM permitidos. Los nombres de esas caches se verificaron en `posthog-js` 1.407.7: revisar ese contrato al actualizarlo.
 
@@ -24,6 +24,6 @@ Un documento abierto con JavaScript de un deploy anterior conserva ese código h
 
 ## Verificación
 
-La prueba `analytics-sdk-contract.test.ts` usa PostHog 1.407.7 real con transporte fetch interceptado: demuestra orden de limpieza, recepción de variante, bloqueo y recuperación de flags en transiciones de sólo query. No sustituye una prueba de DOM/navegador.
+La prueba `analytics-sdk-contract.test.ts` usa PostHog 1.407.7 real con transporte fetch interceptado: demuestra orden de limpieza, recepción de variante, un evento público efectivamente transportado con la clave del proyecto y sin campos privados, bloqueo y recuperación de flags en transiciones de sólo query. No sustituye una prueba de DOM/navegador.
 
 Pruebas de propiedades anidadas, navegación pública/privada, preservación de UTM y rutas, contactos, orden de limpieza previo a flags, ausencia de emisión Meta incluso con un fbq preexistente y widget administrativo. El Preview debe comprobar además las requests reales de ambos proveedores con credenciales sintéticas; una configuración sin keys sólo demuestra ausencia de carga, no el envío saneado con SDK activo.
