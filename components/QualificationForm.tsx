@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { whatsappUrl } from "@/lib/contact";
 import { trackEvent } from "@/lib/analytics";
-import { SERVICE_BUDGETS } from "@/lib/service-qualification";
+import { SERVICE_BUDGETS, SERVICE_OFFERS, AVAILABILITY, DECISIONS, qualifiesForService } from "@/lib/service-offers";
 
 type Service = "mentoria" | "implementacion";
 type Result = "qualified" | "not-ready" | null;
@@ -32,7 +32,7 @@ const CONTENT: Record<Service, {
     resultHint: "Describe un resultado, no solo una herramienta que quieres conocer.",
     budgetOptions: SERVICE_BUDGETS.mentoria,
     notReadyTitle: "La mentoría no es el siguiente paso todavía.",
-    notReadyText: "Para que el acompañamiento funcione necesitas un objetivo, tiempo semanal para ejecutar y una inversión desde $400.000 CLP mensuales. Puedes avanzar por tu cuenta y volver cuando esas condiciones estén claras.",
+    notReadyText: `Para que el acompañamiento funcione necesitas un objetivo, tiempo semanal para ejecutar y una inversión ${SERVICE_OFFERS.mentoria.investment.replace(/^Desde/, "desde")}. Puedes avanzar por tu cuenta y volver cuando esas condiciones estén claras.`,
     alternative: { href: "/ebooks", label: "Explorar ebooks para avanzar por mi cuenta" },
   },
   implementacion: {
@@ -43,7 +43,7 @@ const CONTENT: Record<Service, {
     resultHint: "Incluye qué ocurre hoy y dónde se pierde tiempo, calidad, ventas o visibilidad.",
     budgetOptions: SERVICE_BUDGETS.implementacion,
     notReadyTitle: "Todavía no conviene abrir una conversación de implementación.",
-    notReadyText: "Una implementación necesita un proceso concreto, alguien que pueda decidir y validar, y una inversión desde $500.000 CLP más mantención. Primero define el caso o revisa si necesitas aprender o recibir acompañamiento.",
+    notReadyText: `Una implementación necesita un proceso concreto, alguien que pueda decidir y validar, y una inversión ${SERVICE_OFFERS.implementacion.investment.replace(/^Desde/, "desde")}. Primero define el caso o revisa si necesitas aprender o recibir acompañamiento.`,
     alternative: { href: "/ia", label: "Revisar las otras opciones" },
   },
 };
@@ -71,9 +71,7 @@ export default function QualificationForm({ service }: { service: Service }) {
   const resultHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { if (state) resultHeading.current?.focus(); }, [state]);
 
-  const canContinue = service === "mentoria"
-    ? form.budget !== "Menos de $400.000 CLP mensuales" && form.availability !== "Menos de 2 horas"
-    : form.budget !== "Menos de $500.000 CLP" && form.decision !== "No sé quién decide todavía" && form.context.trim().length >= 20;
+  const canContinue = qualifiesForService({ service, ...form });
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -156,9 +154,9 @@ export default function QualificationForm({ service }: { service: Service }) {
         <label>Empresa o contexto<input disabled={saving} required maxLength={160} value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} placeholder="Empresa, rol o proyecto" /></label>
         <label>Tu rol o responsabilidad<input disabled={saving} required maxLength={160} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} placeholder={service === "mentoria" ? "Profesional, fundador, líder…" : "Dueño, gerente, responsable del proceso…"} /></label>
         <label className="full-field">{content.resultLabel}<textarea disabled={saving} required maxLength={2000} value={form.result} onChange={(e) => setForm({ ...form, result: e.target.value })} placeholder={content.resultPlaceholder} rows={4} /><small>{content.resultHint}</small></label>
-        {service === "mentoria" ? <label>¿Cuánto tiempo real puedes dedicar cada semana?<select disabled={saving} required value={form.availability} onChange={(e) => setForm({ ...form, availability: e.target.value })}><option value="">Selecciona una opción</option><option>Menos de 2 horas</option><option>2–4 horas</option><option>5 horas o más</option></select></label> : <><label>Herramientas y datos que intervienen<textarea disabled={saving} required maxLength={2000} value={form.context} onChange={(e) => setForm({ ...form, context: e.target.value })} placeholder="WhatsApp, planillas, CRM, correos, etc." rows={2} /></label><label>¿Quién puede aprobar cambios y validar pruebas?<select disabled={saving} required value={form.decision} onChange={(e) => setForm({ ...form, decision: e.target.value })}><option value="">Selecciona una opción</option><option>Yo tomo la decisión</option><option>Yo propongo y otra persona aprueba</option><option>Ya hay un responsable disponible</option><option>No sé quién decide todavía</option></select></label></>}
+        {service === "mentoria" ? <label>¿Cuánto tiempo real puedes dedicar cada semana?<select disabled={saving} required value={form.availability} onChange={(e) => setForm({ ...form, availability: e.target.value })}><option value="">Selecciona una opción</option>{AVAILABILITY.map((option) => <option key={option}>{option}</option>)}</select></label> : <><label>Herramientas y datos que intervienen<textarea disabled={saving} required maxLength={2000} value={form.context} onChange={(e) => setForm({ ...form, context: e.target.value })} placeholder="WhatsApp, planillas, CRM, correos, etc." rows={2} /></label><label>¿Quién puede aprobar cambios y validar pruebas?<select disabled={saving} required value={form.decision} onChange={(e) => setForm({ ...form, decision: e.target.value })}><option value="">Selecciona una opción</option>{DECISIONS.map((option) => <option key={option}>{option}</option>)}</select></label></>}
         <label>Rango de inversión<select disabled={saving} required value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })}><option value="">Selecciona una opción</option>{content.budgetOptions.map((option) => <option key={option}>{option}</option>)}</select></label>
-        <label className="full-field qualify-checkbox"><input disabled={saving} required type="checkbox" checked={form.confirmed} onChange={(e) => setForm({ ...form, confirmed: e.target.checked })} /><span>{service === "mentoria" ? "Entiendo que la mentoría parte desde $400.000 CLP mensuales y que debo trabajar entre sesiones." : "Entiendo que la implementación parte desde $500.000 CLP y requiere mantención desde $100.000 CLP mensuales."}</span></label>
+        <label className="full-field qualify-checkbox"><input disabled={saving} required type="checkbox" checked={form.confirmed} onChange={(e) => setForm({ ...form, confirmed: e.target.checked })} /><span>{SERVICE_OFFERS[service].confirmation}</span></label>
         <p className="full-field">Guardaremos tus respuestas para revisar tu solicitud. Luego podrás continuar por WhatsApp.</p>
         {error && <p className="full-field" role="alert">{error}</p>}
         <button disabled={saving} type="submit" className="button button-dark full-field">{saving ? "Guardando…" : service === "mentoria" ? "Registrar postulación" : "Registrar evaluación"} <span>→</span></button>

@@ -1,3 +1,4 @@
+import { SERVICE_OFFERS } from "@/lib/service-offers";
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import JsonLd from "@/components/JsonLd";
@@ -26,8 +27,8 @@ const routeSelectorJsonLd = {
 
 const links = [
   { icon: "↗", title: "Quiero aprender", description: "Ebooks y guías prácticas para aplicar IA por tu cuenta.", qualifier: "Para quien quiere ejecutar sin acompañamiento 1:1.", href: "/aprender", tag: "COMPRA DIRECTA · EBOOKS" },
-  { icon: "◎", title: "Quiero acompañamiento", description: "Mentoría 1:1 para avanzar con foco y un plan de acción.", qualifier: "Desde $400.000 CLP mensuales · trabajo semanal requerido.", href: "/mentoria", tag: "MENTORÍA · POSTULACIÓN" },
-  { icon: "◒", title: "Quiero que lo implementen", description: "Agentes, automatizaciones y sistemas para un proceso de negocio concreto.", qualifier: "Desde $500.000 CLP + mantención desde $100.000 CLP mensuales.", href: "/implementacion", tag: "IMPLEMENTACIÓN · EVALUACIÓN" },
+  { icon: "◎", title: "Quiero acompañamiento", description: "Mentoría 1:1 para avanzar con foco y un plan de acción.", qualifier: `${SERVICE_OFFERS.mentoria.investment} · trabajo semanal requerido.`, href: "/mentoria", tag: "MENTORÍA · POSTULACIÓN" },
+  { icon: "◒", title: "Quiero que lo implementen", description: "Agentes, automatizaciones y sistemas para un proceso de negocio concreto.", qualifier: `${SERVICE_OFFERS.implementacion.investment}.`, href: "/implementacion", tag: "IMPLEMENTACIÓN · EVALUACIÓN" },
 ];
 
 export default function InstagramHub() {
