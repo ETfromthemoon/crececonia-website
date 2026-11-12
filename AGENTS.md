@@ -89,7 +89,7 @@ Loaded via `next/font/google` in `app/layout.tsx`:
 
 ### Admin auth pattern
 
-Every `/admin/*` page follows the same gate: compare a `?key=` query param against `process.env.ADMIN_SECRET`, `notFound()` on mismatch (see `app/admin/ebook/page.tsx`, `app/admin/descuentos/page.tsx`). API routes under `/api/admin/*` accept the same secret via an `x-admin-key` header or `?key=` query param. There is no session/cookie auth — it's a single shared secret, intentionally simple for a single-admin site.
+Browser administration uses `/admin/login` and an eight-hour signed HttpOnly session cookie. Pages call `requireAdminSession()` before reading data; APIs use `isAdminRequest()` and require exact Origin for cookie-authenticated mutations. `ADMIN_SECRET` remains the single-admin login credential and the explicit `x-admin-key` machine credential; it is no longer passed to browser components or accepted in API query parameters. Legacy admin `?key=` links redirect to a clean login URL. See `docs/admin-sessions.md` for rollout, security limits and public ebook preview exceptions.
 
 ### Env setup
 

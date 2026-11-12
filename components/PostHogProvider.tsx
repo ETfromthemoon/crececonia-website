@@ -13,7 +13,7 @@ import PostHogEcosystemTracker from "./PostHogEcosystemTracker";
  * al evaluar el módulo (que ocurre durante el render, no después) garantiza
  * que ya está inicializado para cuando el efecto de cualquier hijo corre.
  */
-if (typeof window !== "undefined" && !posthog.__loaded) {
+if (typeof window !== "undefined" && !window.location.pathname.startsWith("/admin") && !posthog.__loaded) {
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
   if (key) {
     posthog.init(key, {
@@ -23,7 +23,9 @@ if (typeof window !== "undefined" && !posthog.__loaded) {
       autocapture: true,
       person_profiles: "identified_only",
       respect_dnt: true,
+      before_send: (event) => window.location.pathname.startsWith("/admin") ? null : event,
       session_recording: {
+        blockClass: "ph-no-capture",
         maskAllInputs: true,
         maskTextClass: "ph-mask",
       },

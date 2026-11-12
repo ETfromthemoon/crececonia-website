@@ -1,19 +1,12 @@
+import { requireAdminSession } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { notFound } from "next/navigation";
 import DiscountCodeForm from "@/components/admin/DiscountCodeForm";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminDiscountCodesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ key?: string }>;
-}) {
-  const { key } = await searchParams;
+export default async function AdminDiscountCodesPage() {
+  await requireAdminSession();
 
-  if (!process.env.ADMIN_SECRET || key !== process.env.ADMIN_SECRET) {
-    notFound();
-  }
 
   const db = getSupabaseAdmin();
   const { data: codes } = await db
@@ -76,7 +69,7 @@ export default async function AdminDiscountCodesPage({
           Códigos de descuento — Ebook
         </h1>
 
-        <DiscountCodeForm adminKey={key as string} />
+        <DiscountCodeForm />
 
         <h2
           style={{

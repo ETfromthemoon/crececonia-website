@@ -1,6 +1,7 @@
 "use client";
 
 import Script from "next/script";
+import { usePathname } from "next/navigation";
 
 const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
 
@@ -14,7 +15,8 @@ function isValidPixelId(value: string | undefined): value is string {
  * crear la cuenta de Meta sin empezar a compartir eventos accidentalmente.
  */
 export default function MetaPixel() {
-  if (!isValidPixelId(pixelId)) return null;
+  const pathname = usePathname();
+  if (pathname.startsWith("/admin") || !isValidPixelId(pixelId)) return null;
 
   const source = `
     !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?

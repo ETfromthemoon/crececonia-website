@@ -28,7 +28,7 @@ Este documento es el mapa estable del proyecto. Describe dónde vive cada respon
 
 ## Seguridad
 
-Todas las páginas `/admin/*` validan `ADMIN_SECRET` en el servidor. Las APIs administrativas exigen el mismo secreto en `x-admin-key`. `DATABASE_URL`, credenciales S3, Flow, Resend y `ZERNIO_API_KEY` son sólo de servidor. Ningún secreto debe comenzar con `NEXT_PUBLIC_`.
+Las páginas `/admin/*` validan una sesión administrativa firmada en el servidor. El login usa `ADMIN_SECRET` mediante POST y entrega una cookie HttpOnly de ocho horas; los clientes de máquina conservan el encabezado `x-admin-key`. Las APIs exigen Origin exacto para mutaciones mediante cookie y no aceptan claves por query. `DATABASE_URL`, credenciales S3, Flow, Resend y `ZERNIO_API_KEY` son sólo de servidor. Ningún secreto debe comenzar con `NEXT_PUBLIC_`. Límites y transición: `admin-sessions.md`.
 
 ## Flujo de datos de un lanzamiento
 

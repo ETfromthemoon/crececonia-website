@@ -1,9 +1,10 @@
+import { isAdminRequest } from "@/lib/admin-session";
 import { NextResponse } from "next/server";
 import { LAUNCH_STATUSES, LAUNCH_TASK_STATUSES, type LaunchStatus, type LaunchTaskStatus } from "@/lib/launch-model";
 import { advanceLaunchTier, createLaunchDmAutomation, createLaunchPublicationDraft, syncLaunchWithZernio, transitionLaunch, updateLaunch, updateLaunchTask } from "@/lib/launches";
 
 export const dynamic = "force-dynamic";
-const authorized = (request: Request) => Boolean(process.env.ADMIN_SECRET) && request.headers.get("x-admin-key") === process.env.ADMIN_SECRET;
+const authorized = isAdminRequest;
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!authorized(request)) return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   const [{ id }, body] = await Promise.all([params, request.json().catch(()=>null)]);

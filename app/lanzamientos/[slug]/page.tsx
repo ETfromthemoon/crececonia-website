@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getCatalogEntry, isAdminPreviewKey } from "@/lib/ebook-catalog";
 import { getLaunch, launchDefaultCta } from "@/lib/launches";
+import { hasAdminSession } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 const money = (value: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(value);
@@ -9,7 +10,7 @@ const money = (value: number) => new Intl.NumberFormat("es-CL", { style: "curren
 export default async function LaunchPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ key?: string }> }) {
   const [{ slug }, { key }] = await Promise.all([params, searchParams]);
   const launch = await getLaunch(slug);
-  if (!launch || (launch.status !== "published" && !isAdminPreviewKey(key))) notFound();
+  if (!launch || (launch.status !== "published" && !isAdminPreviewKey(key) && !await hasAdminSession())) notFound();
   const cta = launchDefaultCta(launch);
   const activeTier = launch.tiers.find((tier) => tier.status === "active");
   const date = launch.starts_at ? new Intl.DateTimeFormat("es-CL", { dateStyle: "full", timeStyle: "short", timeZone: launch.timezone }).format(new Date(launch.starts_at)) : "Fecha por anunciar";
