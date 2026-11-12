@@ -26,13 +26,13 @@ export const SERVICE_BUDGETS = {
   implementacion: ["Menos de $500.000 CLP", "$500.000–$1.000.000 CLP", "$1.000.000–$2.000.000 CLP", "Más de $2.000.000 CLP"],
 } as const;
 export type QualificationService = keyof typeof SERVICE_BUDGETS;
-export const AVAILABILITY = ["Menos de 2 horas", "2–4 horas", "5 horas o más"];
-export const DECISIONS = ["Yo tomo la decisión", "Yo propongo y otra persona aprueba", "Ya hay un responsable disponible", "No sé quién decide todavía"];
+export const AVAILABILITY: readonly string[] = Object.freeze(["Menos de 2 horas", "2–4 horas", "5 horas o más"]);
+export const DECISIONS: readonly string[] = Object.freeze(["Yo tomo la decisión", "Yo propongo y otra persona aprueba", "Ya hay un responsable disponible", "No sé quién decide todavía"]);
 
 /** Eligibility only; parseQualification validates the complete server payload. */
 export function qualifiesForService(input: {
   service: QualificationService; budget: string; availability: string; decision: string; context: string;
-}) {
+}): boolean {
   const { service, budget, availability, decision, context } = input;
   return (SERVICE_BUDGETS[service] as readonly string[]).includes(budget)
     && budget !== SERVICE_BUDGETS[service][0]
