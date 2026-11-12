@@ -36,18 +36,20 @@ function formatVariantSection(byVariant: VariantComparison[]): string {
   return `Comparación descriptiva de variantes: ${detail}. No permite declarar una variante ganadora: faltan cohortes de personas, orden temporal y evaluación estadística del experimento.`;
 }
 
-function formatEcosystemSection(metrics?: EcosystemMetrics, byPageType: AnalyticsReport["byPageType"] = []): string {
+function formatEcosystemSection(metrics?: EcosystemMetrics, byPageType: AnalyticsReport["byPageType"] = [], semanticCtaBreakdown: AnalyticsReport["semanticCtaBreakdown"] = []): string {
   if (!metrics) return "Métricas del ecosistema: no disponibles en esta versión del reporte.";
 
   const pages = byPageType.length > 0
     ? byPageType.map((item) => `${item.pageType}=${item.pageViews}`).join(", ")
     : "sin desglose por categoría";
+  const ctas = semanticCtaBreakdown.map((item) => `${item.cta}/${item.source}=${item.clicks}`).join(", ") || "sin desglose";
 
   return [
     "Métricas del ecosistema:",
     `  eventos totales: ${metrics.eventCount}`,
     `  pageviews propios: ${metrics.pageViews} (${pages}) · enlaces/secciones: ${metrics.linkClicks}/${metrics.sectionViews}`,
-    `  CTA semánticos: ${metrics.ctaClicks} · evaluación abierta/enviada/completada: ${metrics.evaluationOpened}/${metrics.evaluationSubmitted}/${metrics.evaluationSucceeded}`,
+    `  CTA semánticos etiquetados: ${metrics.ctaClicks} · evaluación abierta/enviada/completada: ${metrics.evaluationOpened}/${metrics.evaluationSubmitted}/${metrics.evaluationSucceeded}`,
+    `  CTA por ruta/origen: ${ctas}`,
     `  chat abierto/mensajes/fallbacks: ${metrics.chatOpened}/${metrics.chatMessages}/${metrics.chatFallbacks}`,
     `  newsletter prompts/suscripciones: ${metrics.newsletterPrompts}/${metrics.newsletterSignups}`,
     `  skills vistas/descargas: ${metrics.skillViews}/${metrics.skillDownloads}`,
@@ -92,7 +94,7 @@ export function formatAnalyticsReport(report: AnalyticsReport): string {
     "",
     formatFunnelSection(report),
     "",
-    formatEcosystemSection(report.ecosystem, report.byPageType),
+    formatEcosystemSection(report.ecosystem, report.byPageType, report.semanticCtaBreakdown),
     "",
     formatPurchaseCoverage(report),
     "",

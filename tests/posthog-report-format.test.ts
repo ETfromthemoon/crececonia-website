@@ -100,4 +100,17 @@ describe("formatAnalyticsReport", () => {
     expect(text).toContain("sin órdenes elegibles");
   });
 
+  it("muestra el desglose semántico CTA/origen disponible", () => {
+    const text = formatAnalyticsReport(baseReport({
+      ecosystem: { eventCount: 6, pageViews: 0, linkClicks: 0, sectionViews: 0, ctaClicks: 6,
+        evaluationOpened: 0, evaluationSubmitted: 0, evaluationSucceeded: 0, chatOpened: 0, chatMessages: 0,
+        chatFallbacks: 0, newsletterPrompts: 0, newsletterSignups: 0, skillViews: 0, skillDownloadRequests: 0,
+        skillDownloads: 0, ebookCheckoutRequests: 0, ebookCheckoutFailures: 0, ebookCheckouts: 0, purchases: 0,
+        appointmentSubmissions: 0, appointmentSuccesses: 0, qualificationSubmissions: 0,
+        qualificationSaved: 0, qualificationWhatsappClicks: 0, scrollDepth90: 0 },
+      semanticCtaBreakdown: [{ cta: "home_route", source: "home_hero", clicks: 6 }],
+    }));
+    expect(text).toContain("CTA por ruta/origen: home_route/home_hero=6");
+  });
+
 });

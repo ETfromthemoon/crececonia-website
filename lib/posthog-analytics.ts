@@ -1,3 +1,5 @@
+import { isAllowedSemanticCta, SEMANTIC_CTA_PAIRS } from "@/lib/analytics-privacy";
+
 const PROJECT_ID = "533562"; // Settings → General → Project ID en el dashboard de PostHog
 
 export type FunnelStep =
@@ -24,6 +26,12 @@ export interface VariantComparison {
 export interface PageTypeCount {
   pageType: string;
   pageViews: number;
+}
+
+export interface SemanticCtaCount {
+  cta: string;
+  source: string;
+  clicks: number;
 }
 
 export interface EcosystemMetrics {
@@ -76,6 +84,7 @@ export interface AnalyticsReport {
   byVariant: VariantComparison[];
   offerSelectionRate: number;
   ecosystem?: EcosystemMetrics;
+  semanticCtaBreakdown?: SemanticCtaCount[];
   byPageType?: PageTypeCount[];
   recommendations?: string[];
   generatedAt: string;
@@ -145,7 +154,7 @@ const ECOSYSTEM_EVENTS = [
   ...Object.keys(EVENT_TO_STEP),
 ];
 
-type HogQlRow = [event: string, variant: string | null, pageType: string | null, depthPercent: number | null, total: number];
+type HogQlRow = [event: string, variant: string | null, pageType: string | null, depthPercent: number | null, cta: string | null, source: string | null, total: number];
 
 function createEmptyMetrics(): EcosystemMetrics {
   return {
@@ -207,18 +216,22 @@ const EVENT_TO_METRIC: Record<string, keyof EcosystemMetrics> = {
 
 async function runHogQlQuery(apiKey: string, host: string, sinceIso: string, untilIso: string): Promise<HogQlRow[]> {
   const eventList = ECOSYSTEM_EVENTS.map((event) => `'${event}'`).join(", ");
+  const ctaFilter = SEMANTIC_CTA_PAIRS.map(({ cta, source }) => `(JSONExtractString(properties, 'cta') = '${cta}' AND JSONExtractString(properties, 'source') = '${source}')`).join(" OR ");
   const query = `
     SELECT
       event,
       JSONExtractString(properties, 'pricing_variant') AS variant,
       JSONExtractString(properties, 'page_type') AS page_type,
       JSONExtractInt(properties, 'depth_percent') AS depth_percent,
+      if(event = 'ecosystem_cta_clicked', JSONExtractString(properties, 'cta'), '') AS cta,
+      if(event = 'ecosystem_cta_clicked', JSONExtractString(properties, 'source'), '') AS source,
       count() AS total
     FROM events
     WHERE event IN (${eventList})
       AND timestamp >= '${sinceIso}'
       AND timestamp < '${untilIso}'
-    GROUP BY event, variant, page_type, depth_percent
+      AND (event != 'ecosystem_cta_clicked' OR (${ctaFilter}))
+    GROUP BY event, variant, page_type, depth_percent, cta, source
   `;
 
   const res = await fetch(`${host}/api/projects/${PROJECT_ID}/query/`, {
@@ -239,11 +252,15 @@ async function runHogQlQuery(apiKey: string, host: string, sinceIso: string, unt
     // Compatibilidad con respuestas guardadas de la primera versión del reporte.
     if (row.length === 3) {
       const [event, variant, total] = row as unknown as [string, string | null, number];
-      return [event, variant, null, null, total] as HogQlRow;
+      return [event, variant, null, null, null, null, total] as HogQlRow;
     }
     if (row.length === 4) {
       const [event, variant, pageType, total] = row as unknown as [string, string | null, string | null, number];
-      return [event, variant, pageType, null, total] as HogQlRow;
+      return [event, variant, pageType, null, null, null, total] as HogQlRow;
+    }
+    if (row.length === 5) {
+      const [event, variant, pageType, depthPercent, total] = row as unknown as [string, string | null, string | null, number | null, number];
+      return [event, variant, pageType, depthPercent, null, null, total] as HogQlRow;
     }
     return row as HogQlRow;
   });
@@ -443,11 +460,15 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
   };
   const metrics = createEmptyMetrics();
   const pageTypeTotals = new Map<string, number>();
+  const semanticCtaTotals = new Map<string, SemanticCtaCount>();
   const variantTotals = new Map<string, { pageViews: number; checkoutsStarted: number; purchasesConfirmed: number }>();
   const legacyCheckoutByVariant = new Map<string, number>();
   let legacyCheckoutTotal = 0;
 
-  for (const [event, variant, pageType, depthPercent, total] of rows) {
+  for (const [event, variant, pageType, depthPercent, cta, source, total] of rows) {
+    if (event === "ecosystem_cta_clicked" && (cta !== null || source !== null)
+      && (!cta || !source || !isAllowedSemanticCta(cta, source))) continue;
+
     if (event === LEGACY_CHECKOUT_EVENT) {
       legacyCheckoutTotal += total;
       if (variant) legacyCheckoutByVariant.set(variant, (legacyCheckoutByVariant.get(variant) ?? 0) + total);
@@ -460,6 +481,12 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
     const metric = EVENT_TO_METRIC[event];
     if (metric) metrics[metric] = (metrics[metric] ?? 0) + total;
     if (event === "ecosystem_scroll_depth" && depthPercent === 90) metrics.scrollDepth90 += total;
+    if (event === "ecosystem_cta_clicked" && cta && source && isAllowedSemanticCta(cta, source)) {
+      const key = `${cta}\u0000${source}`;
+      const entry = semanticCtaTotals.get(key) ?? { cta, source, clicks: 0 };
+      entry.clicks += total;
+      semanticCtaTotals.set(key, entry);
+    }
 
     if (event === "ecosystem_page_view" && pageType) {
       pageTypeTotals.set(pageType, (pageTypeTotals.get(pageType) ?? 0) + total);
@@ -507,6 +534,7 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
     byVariant,
     offerSelectionRate,
     ecosystem: metrics,
+    semanticCtaBreakdown: Array.from(semanticCtaTotals.values()).sort((a, b) => b.clicks - a.clicks || a.cta.localeCompare(b.cta) || a.source.localeCompare(b.source)),
     byPageType,
     recommendations: buildAnalyticsRecommendations(metrics, byPageType),
     generatedAt: now.toISOString(),

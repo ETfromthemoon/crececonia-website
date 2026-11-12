@@ -182,6 +182,7 @@ describe("fetchAnalyticsReport", () => {
     const { fetchAnalyticsReport } = await import("@/lib/posthog-analytics");
     const report = await fetchAnalyticsReport(7, new Date("2026-07-30"));
     expect(report.semanticCtaBreakdown).toEqual([{ cta: "home_route", source: "home_hero", clicks: 6 }]);
+    expect(report.ecosystem?.ctaClicks).toBe(6);
     const ecosystemQuery = queries.find((query) => !query.includes("AS unique_orders"))!;
     expect(ecosystemQuery).toContain("JSONExtractString(properties, 'cta')");
     expect(ecosystemQuery).toContain("ecosystem_cta_clicked");
