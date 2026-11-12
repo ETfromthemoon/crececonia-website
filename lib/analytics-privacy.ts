@@ -2,12 +2,18 @@ const UTM_KEYS = new Set(["utm_source", "utm_medium", "utm_campaign", "utm_conte
 const PRIVATE_QUERY = /^(?:token|key|email|phone|tel|t|preview|access_token|authorization|secret)$/i;
 const PRIVATE_PROPERTY = /(?:^|[_$])(?:token|key|email|phone|tel|authorization|secret|password)(?:$|_)/i;
 const CONTACT_VALUE = /(?:mailto:|tel:|[^\s@]+@[^\s@]+\.[^\s@]+)/i;
-const SEMANTIC_CTA_SOURCES: Record<string, ReadonlySet<string>> = {
-  route_selector: new Set(["ia_selector"]),
-  home_route: new Set(["home_hero", "home_footer"]),
-  service_requirements: new Set(["service_hero"]),
-  service_learning: new Set(["service_hero", "service_learning"]),
-};
+export const SEMANTIC_CTA_PAIRS = [
+  { cta: "route_selector", source: "ia_selector" },
+  { cta: "home_route", source: "home_hero" },
+  { cta: "home_route", source: "home_footer" },
+  { cta: "service_requirements", source: "service_hero" },
+  { cta: "service_learning", source: "service_hero" },
+  { cta: "service_learning", source: "service_learning" },
+] as const;
+
+export function isAllowedSemanticCta(cta: string, source: string): boolean {
+  return SEMANTIC_CTA_PAIRS.some((pair) => pair.cta === cta && pair.source === source);
+}
 
 export function isAdminPath(path: string): boolean {
   return path === "/admin" || path.startsWith("/admin/");
@@ -78,6 +84,6 @@ export function analyticsLinkDestination(href: string, base: string): Record<str
 export function analyticsSemanticCta(element: HTMLElement): { cta: string; source: string } | undefined {
   const cta = element.dataset.analyticsCta;
   const source = element.dataset.analyticsSource;
-  if (!cta || !source || !Object.prototype.hasOwnProperty.call(SEMANTIC_CTA_SOURCES, cta) || !SEMANTIC_CTA_SOURCES[cta].has(source)) return undefined;
+  if (!cta || !source || !isAllowedSemanticCta(cta, source)) return undefined;
   return { cta, source };
 }
