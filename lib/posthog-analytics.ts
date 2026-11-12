@@ -17,6 +17,7 @@ export interface VariantComparison {
   pageViews: number;
   checkoutsStarted: number;
   purchasesConfirmed: number;
+  /** Legacy field: aggregate purchase-event/pageview ratio, not person conversion. */
   conversionRate: number;
 }
 
@@ -49,7 +50,16 @@ export interface EcosystemMetrics {
   appointmentSubmissions: number;
   appointmentSuccesses: number;
   qualificationSubmissions: number;
+  qualificationSaved?: number;
+  qualificationWhatsappClicks?: number;
   scrollDepth90: number;
+}
+
+export interface PurchaseCoverage {
+  product: "ebook" | "class" | "workshop";
+  eventCount: number;
+  uniqueOrders: number;
+  eventsWithoutOrderId: number;
 }
 
 export interface AnalyticsReport {
@@ -61,6 +71,13 @@ export interface AnalyticsReport {
   byPageType?: PageTypeCount[];
   recommendations?: string[];
   generatedAt: string;
+  measurement?: {
+    basis: "aggregate_events";
+    sequentialFunnel: false;
+    windowStart: string;
+    windowEndExclusive: string;
+  };
+  purchasesByProduct?: PurchaseCoverage[];
 }
 
 const EVENT_TO_STEP: Record<string, FunnelStep> = {
@@ -106,11 +123,15 @@ const ECOSYSTEM_EVENTS = [
   "ebook_combo_toggle",
   "ebook_checkout_created",
   "ebook_purchase_confirmed",
+  "class_purchase_confirmed",
+  "workshop_purchase_confirmed",
   "appointment_submitted",
   "appointment_submit_succeeded",
   "appointment_submit_failed",
   "qualification_not_ready",
   "qualification_submitted",
+  "qualification_saved",
+  "qualification_whatsapp_clicked",
   "ecosystem_scroll_depth",
   ...Object.keys(EVENT_TO_STEP),
 ];
@@ -142,6 +163,8 @@ function createEmptyMetrics(): EcosystemMetrics {
     appointmentSubmissions: 0,
     appointmentSuccesses: 0,
     qualificationSubmissions: 0,
+    qualificationSaved: 0,
+    qualificationWhatsappClicks: 0,
     scrollDepth90: 0,
   };
 }
@@ -169,9 +192,11 @@ const EVENT_TO_METRIC: Record<string, keyof EcosystemMetrics> = {
   appointment_submitted: "appointmentSubmissions",
   appointment_submit_succeeded: "appointmentSuccesses",
   qualification_submitted: "qualificationSubmissions",
+  qualification_saved: "qualificationSaved",
+  qualification_whatsapp_clicked: "qualificationWhatsappClicks",
 };
 
-async function runHogQlQuery(apiKey: string, host: string, sinceIso: string): Promise<HogQlRow[]> {
+async function runHogQlQuery(apiKey: string, host: string, sinceIso: string, untilIso: string): Promise<HogQlRow[]> {
   const eventList = ECOSYSTEM_EVENTS.map((event) => `'${event}'`).join(", ");
   const query = `
     SELECT
@@ -183,6 +208,7 @@ async function runHogQlQuery(apiKey: string, host: string, sinceIso: string): Pr
     FROM events
     WHERE event IN (${eventList})
       AND timestamp >= '${sinceIso}'
+      AND timestamp < '${untilIso}'
     GROUP BY event, variant, page_type, depth_percent
   `;
 
@@ -214,9 +240,49 @@ async function runHogQlQuery(apiKey: string, host: string, sinceIso: string): Pr
   });
 }
 
+// Group only by product event: order counts must not be summed across variant/page breakdowns.
+// Missing identifiers remain separate; treating each legacy event as a sale would hide retries.
+async function fetchPurchaseCoverage(apiKey: string, host: string, sinceIso: string, untilIso: string): Promise<PurchaseCoverage[]> {
+  const productEvents = {
+    ebook_purchase_confirmed: "ebook",
+    class_purchase_confirmed: "class",
+    workshop_purchase_confirmed: "workshop",
+  } as const;
+  const query = `
+    SELECT event, count() AS event_count,
+      uniqExact(nullif(trim(JSONExtractString(properties, 'order_id')), '')) AS unique_orders,
+      sum(if(empty(trim(JSONExtractString(properties, 'order_id'))), 1, 0)) AS missing_order_events
+    FROM events
+    WHERE event IN (${Object.keys(productEvents).map((event) => `'${event}'`).join(", ")})
+      AND timestamp >= '${sinceIso}' AND timestamp < '${untilIso}'
+    GROUP BY event
+  `;
+  const res = await fetch(`${host}/api/projects/${PROJECT_ID}/query/`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ query: { kind: "HogQLQuery", query } }),
+  });
+  if (!res.ok) throw new Error(`PostHog purchase coverage query falló (${res.status})`);
+  const data = await res.json();
+  if (!Array.isArray(data.results)) throw new Error("PostHog: cobertura de compras inválida");
+  const coverage: PurchaseCoverage[] = Object.values(productEvents).map((product) => ({
+    product, eventCount: 0, uniqueOrders: 0, eventsWithoutOrderId: 0,
+  }));
+  for (const row of data.results) {
+    if (!Array.isArray(row) || row.length !== 4 || typeof row[0] !== "string" || !Object.hasOwn(productEvents, row[0])
+      || !row.slice(1).every((value: unknown) => typeof value === "number" && Number.isSafeInteger(value) && value >= 0)
+      || row[2] + row[3] > row[1]) throw new Error("PostHog: cobertura de compras inválida");
+    const product = productEvents[row[0] as keyof typeof productEvents];
+    Object.assign(coverage.find((item) => item.product === product)!, {
+      eventCount: row[1], uniqueOrders: row[2], eventsWithoutOrderId: row[3],
+    });
+  }
+  return coverage;
+}
+
 export function buildAnalyticsRecommendations(
   metrics: EcosystemMetrics,
-  byPageType: PageTypeCount[]
+  _byPageType: PageTypeCount[]
 ): string[] {
   const recommendations: string[] = [];
 
@@ -230,11 +296,11 @@ export function buildAnalyticsRecommendations(
   }
 
   if (metrics.evaluationOpened >= 10 && metrics.evaluationSucceeded / metrics.evaluationOpened < 0.25) {
-    recommendations.push("El formulario de evaluación pierde más del 75% de sus aperturas: revisar longitud, fricción y claridad de los tres pasos antes de cambiar el copy de adquisición.");
+    recommendations.push("La relación agregada de confirmaciones/aperturas de evaluación es menor al 25% (no mide abandono por persona): verificar identidad y secuencia antes de atribuir abandono o cambiar el formulario.");
   }
 
   if (metrics.chatMessages >= 10 && metrics.chatFallbacks / metrics.chatMessages >= 0.25) {
-    recommendations.push("El chat cae a fallback en al menos 25% de los mensajes: priorizar estabilidad del endpoint y medir las preguntas que activan el fallback.");
+    recommendations.push("La relación agregada fallbacks/mensajes es al menos 25%; verificar correspondencia por conversación antes de atribuir una tasa de fallo y revisar estabilidad del endpoint.");
   }
 
   if (metrics.ebookCheckoutRequests > 0 && metrics.ebookCheckouts === 0) {
@@ -250,21 +316,19 @@ export function buildAnalyticsRecommendations(
   }
 
   if (metrics.skillViews >= 20 && metrics.skillDownloads / metrics.skillViews < 0.1) {
-    recommendations.push("Las skills reciben visitas pero pocas descargas: probar un CTA de descarga más temprano y una explicación más concreta del beneficio.");
+    recommendations.push("La relación agregada descargas/vistas de skills es menor al 10%; verificar identidad y secuencia antes de atribuir abandono o cambiar el CTA.");
   }
 
   if (metrics.newsletterPrompts >= 20 && metrics.newsletterSignups / metrics.newsletterPrompts < 0.03) {
-    recommendations.push("La conversión del popup de newsletter es menor al 3%: probar momento de aparición, promesa y fricción del formulario.");
+    recommendations.push("La relación agregada suscripciones/prompts es menor al 3% (no es conversión por persona): verificar exposición e identidad antes de modificar el popup.");
   }
 
   if (metrics.pageViews >= 50 && metrics.scrollDepth90 / metrics.pageViews < 0.15) {
-    recommendations.push("Pocos visitantes llegan al 90% de las páginas: revisar jerarquía del primer viewport y mover el CTA más importante hacia arriba.");
+    recommendations.push("Hay pocos eventos de scroll al 90% respecto de pageviews (no mide visitantes únicos): verificar cobertura de scroll por sesión antes de modificar la jerarquía visual.");
   }
 
-  const topPage = [...byPageType].sort((a, b) => b.pageViews - a.pageViews)[0];
-  if (topPage && topPage.pageViews >= 50 && metrics.ctaClicks / topPage.pageViews < 0.01) {
-    recommendations.push(`La categoría ${topPage.pageType} concentra tráfico pero casi no genera CTA: revisar su siguiente paso y enlazado interno.`);
-  }
+  // Page-category conversion needs CTA counts attributed to that same category.
+  // A global CTA numerator cannot support a recommendation about one page type.
 
   return recommendations;
 }
@@ -282,9 +346,14 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
   }
   const host = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
 
-  const since = new Date(now);
-  since.setDate(since.getDate() - windowDays);
-  const rows = await runHogQlQuery(apiKey, host, since.toISOString());
+  if (!Number.isFinite(windowDays) || windowDays <= 0 || !Number.isFinite(now.getTime())) {
+    throw new Error("La ventana y la fecha del reporte deben ser válidas.");
+  }
+  const since = new Date(now.getTime() - windowDays * 86_400_000);
+  const [rows, purchasesByProduct] = await Promise.all([
+    runHogQlQuery(apiKey, host, since.toISOString(), now.toISOString()),
+    fetchPurchaseCoverage(apiKey, host, since.toISOString(), now.toISOString()),
+  ]);
 
   const funnelTotals: Record<FunnelStep, number> = {
     page_view: 0,
@@ -310,7 +379,7 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
 
     metrics.eventCount += total;
     const metric = EVENT_TO_METRIC[event];
-    if (metric) metrics[metric] += total;
+    if (metric) metrics[metric] = (metrics[metric] ?? 0) + total;
     if (event === "ecosystem_scroll_depth" && depthPercent === 90) metrics.scrollDepth90 += total;
 
     if (event === "ecosystem_page_view" && pageType) {
@@ -362,5 +431,8 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
     byPageType,
     recommendations: buildAnalyticsRecommendations(metrics, byPageType),
     generatedAt: now.toISOString(),
+    measurement: { basis: "aggregate_events", sequentialFunnel: false,
+      windowStart: since.toISOString(), windowEndExclusive: now.toISOString() },
+    purchasesByProduct,
   };
 }

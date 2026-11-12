@@ -42,7 +42,11 @@ describe("fetchAnalyticsReport", () => {
       ok: true,
       json: async () => HOGQL_RESPONSE,
     });
-    vi.stubGlobal("fetch", mockFetch);
+    vi.stubGlobal("fetch", (url: string, options: RequestInit) => {
+      const query = JSON.parse(options.body as string).query.query as string;
+      if (query.includes("AS unique_orders")) return Promise.resolve({ ok: true, json: async () => ({ results: [] }) });
+      return mockFetch(url, options);
+    });
 
     const { fetchAnalyticsReport } = await import("@/lib/posthog-analytics");
     const report = await fetchAnalyticsReport(7, new Date("2026-07-30"));
@@ -84,7 +88,11 @@ describe("fetchAnalyticsReport", () => {
     const mockFetch = vi
       .fn()
       .mockResolvedValue({ ok: false, status: 401, text: async () => "Unauthorized" });
-    vi.stubGlobal("fetch", mockFetch);
+    vi.stubGlobal("fetch", (url: string, options: RequestInit) => {
+      const query = JSON.parse(options.body as string).query.query as string;
+      if (query.includes("AS unique_orders")) return Promise.resolve({ ok: true, json: async () => ({ results: [] }) });
+      return mockFetch(url, options);
+    });
 
     const { fetchAnalyticsReport } = await import("@/lib/posthog-analytics");
     await expect(fetchAnalyticsReport(7, new Date("2026-07-30"))).rejects.toThrow(/401/);
@@ -101,7 +109,11 @@ describe("fetchAnalyticsReport", () => {
         ],
       }),
     });
-    vi.stubGlobal("fetch", mockFetch);
+    vi.stubGlobal("fetch", (url: string, options: RequestInit) => {
+      const query = JSON.parse(options.body as string).query.query as string;
+      if (query.includes("AS unique_orders")) return Promise.resolve({ ok: true, json: async () => ({ results: [] }) });
+      return mockFetch(url, options);
+    });
 
     const { fetchAnalyticsReport } = await import("@/lib/posthog-analytics");
     const report = await fetchAnalyticsReport(7, new Date("2026-07-30"));
@@ -127,10 +139,16 @@ describe("fetchAnalyticsReport", () => {
           ["ecosystem_scroll_depth", null, "landing", 90, 12],
           ["evaluation_opened", null, "landing", 0, 10],
           ["evaluation_submit_succeeded", null, "landing", 0, 2],
+          ["qualification_saved", null, "landing", 0, 3],
+          ["qualification_whatsapp_clicked", null, "landing", 0, 2],
         ],
       }),
     });
-    vi.stubGlobal("fetch", mockFetch);
+    vi.stubGlobal("fetch", (url: string, options: RequestInit) => {
+      const query = JSON.parse(options.body as string).query.query as string;
+      if (query.includes("AS unique_orders")) return Promise.resolve({ ok: true, json: async () => ({ results: [] }) });
+      return mockFetch(url, options);
+    });
 
     const { fetchAnalyticsReport } = await import("@/lib/posthog-analytics");
     const report = await fetchAnalyticsReport(7, new Date("2026-07-30"));
@@ -141,8 +159,53 @@ describe("fetchAnalyticsReport", () => {
       scrollDepth90: 12,
       evaluationOpened: 10,
       evaluationSucceeded: 2,
+      qualificationSaved: 3,
+      qualificationWhatsappClicks: 2,
     });
     expect(report.byPageType).toEqual([{ pageType: "landing", pageViews: 100 }]);
     expect(report.recommendations?.length).toBeGreaterThan(0);
   });
+  it("separa órdenes únicas de reintentos y eventos históricos sin ID en todos los productos", async () => {
+    const queries: string[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (_url: string, options: RequestInit) => {
+      const query = JSON.parse(options.body as string).query.query as string;
+      queries.push(query);
+      return { ok: true, json: async () => ({ results: query.includes("AS unique_orders")
+        ? [["ebook_purchase_confirmed", 8, 3, 2], ["class_purchase_confirmed", 2, 1, 0], ["workshop_purchase_confirmed", 1, 0, 1]]
+        : [["ebook_page_view", "control", null, 0, 20], ["ebook_purchase_confirmed", "control", null, 0, 8]] }) };
+    }));
+    const { fetchAnalyticsReport } = await import("@/lib/posthog-analytics");
+    const report = await fetchAnalyticsReport(7, new Date("2026-11-12T12:00:00Z"));
+    expect(report.purchasesByProduct).toEqual([
+      { product: "ebook", eventCount: 8, uniqueOrders: 3, eventsWithoutOrderId: 2 },
+      { product: "class", eventCount: 2, uniqueOrders: 1, eventsWithoutOrderId: 0 },
+      { product: "workshop", eventCount: 1, uniqueOrders: 0, eventsWithoutOrderId: 1 },
+    ]);
+    expect(report.measurement).toEqual({ basis: "aggregate_events", sequentialFunnel: false,
+      windowStart: "2026-11-05T12:00:00.000Z", windowEndExclusive: "2026-11-12T12:00:00.000Z" });
+    expect(queries).toHaveLength(2);
+    for (const query of queries) {
+      expect(query).toContain("timestamp >= '2026-11-05T12:00:00.000Z'");
+      expect(query).toContain("timestamp < '2026-11-12T12:00:00.000Z'");
+    }
+    expect(queries.find((query) => query.includes("AS unique_orders"))).not.toContain("pricing_variant");
+  });
+
+  it("no presenta cobertura inventada si la segunda consulta falla", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (_url: string, options: RequestInit) => {
+      const query = JSON.parse(options.body as string).query.query as string;
+      return query.includes("AS unique_orders") ? { ok: false, status: 503 } : { ok: true, json: async () => ({ results: [] }) };
+    }));
+    const { fetchAnalyticsReport } = await import("@/lib/posthog-analytics");
+    await expect(fetchAnalyticsReport(7, new Date("2026-11-12"))).rejects.toThrow(/coverage.*503/);
+  });
+
+  it("rechaza conteos de cobertura inconsistentes", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (_url: string, options: RequestInit) => ({ ok: true,
+      json: async () => ({ results: JSON.parse(options.body as string).query.query.includes("AS unique_orders")
+        ? [["ebook_purchase_confirmed", 1, 2, 0]] : [] }) })));
+    const { fetchAnalyticsReport } = await import("@/lib/posthog-analytics");
+    await expect(fetchAnalyticsReport(7, new Date("2026-11-12"))).rejects.toThrow(/cobertura.*inválida/);
+  });
+
 });
