@@ -53,3 +53,12 @@ it("rejects an unrecognized preference state", async () => {
   vi.mocked(queryDatabase).mockResolvedValueOnce([schema]).mockResolvedValueOnce([{ global_state: "unexpected", consent_state: "granted", count: "1" }]);
   await expect(loadCommunicationSimulation()).rejects.toThrow("Invalid preference aggregate");
 });
+it.each(["global_state", "consent_state"] as const)("rejects coerced arrays and objects in %s", async field => {
+  for (const value of [["suppressed"], { toString: () => "suppressed" }]) {
+    vi.mocked(queryDatabase).mockReset().mockResolvedValueOnce([schema]).mockResolvedValueOnce([
+      { global_state: "allowed", consent_state: "granted", count: "1", [field]: value },
+    ]);
+    await expect(loadCommunicationSimulation()).rejects.toThrow("Invalid preference aggregate");
+    expect(queryDatabase).toHaveBeenCalledTimes(2);
+  }
+});

@@ -44,7 +44,8 @@ export async function loadCommunicationSimulation(): Promise<CommunicationSimula
       group by 1, 2`, state === "complete" ? [purpose] : []);
     const cohort: Cohort = { purpose, total: 0, excluded: 0, pending: 0, reasons: {} };
     for (const group of groups) {
-      if (!["unknown", "allowed", "suppressed"].includes(String(group.global_state)) || !["unknown", "missing", "granted", "suppressed"].includes(String(group.consent_state))) throw new Error("Invalid preference aggregate");
+      if (typeof group.global_state !== "string" || !["unknown", "allowed", "suppressed"].includes(group.global_state)
+        || typeof group.consent_state !== "string" || !["unknown", "missing", "granted", "suppressed"].includes(group.consent_state)) throw new Error("Invalid preference aggregate");
       const n = count(group.count);
       const result = evaluateCommunication({ global: group.global_state as CommunicationEligibilityInput["global"],
         consent: group.consent_state as CommunicationEligibilityInput["consent"],
