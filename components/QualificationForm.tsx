@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { whatsappUrl } from "@/lib/contact";
 import { trackEvent } from "@/lib/analytics";
 import { SERVICE_BUDGETS } from "@/lib/service-qualification";
@@ -68,6 +68,8 @@ export default function QualificationForm({ service }: { service: Service }) {
   const [handoffUrl, setHandoffUrl] = useState("");
   const pending = useRef<{ fingerprint: string; requestId: string } | null>(null);
   const inFlight = useRef(false);
+  const resultHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => { if (state) resultHeading.current?.focus(); }, [state]);
 
   const canContinue = service === "mentoria"
     ? form.budget !== "Menos de $400.000 CLP mensuales" && form.availability !== "Menos de 2 horas"
@@ -130,7 +132,7 @@ export default function QualificationForm({ service }: { service: Service }) {
   if (state === "qualified") {
     return (
       <div className="qualify-wrap">
-        <div className="qualify-intro"><span className="eyebrow">Postulación registrada</span><h2>Guardamos tus respuestas.</h2></div>
+        <div className="qualify-intro"><span className="eyebrow">Postulación registrada</span><h2 ref={resultHeading} tabIndex={-1}>Guardamos tus respuestas.</h2></div>
         <div className="qualify-success"><span className="success-mark">✓</span><h3>Continúa la conversación por WhatsApp.</h3><p>Tu postulación quedó registrada aunque no abras WhatsApp. Para conversar, abre el mensaje, revísalo y pulsa Enviar en WhatsApp. Este paso no reserva una sesión.</p><button type="button" className="button button-dark" onClick={() => { window.open(handoffUrl, "_blank", "noopener,noreferrer"); trackEvent("qualification_whatsapp_clicked", { service, channel: "whatsapp" }); }}>Abrir WhatsApp →</button><button type="button" className="text-link" onClick={() => setState(null)}>Editar mis respuestas</button></div>
       </div>
     );
@@ -139,7 +141,7 @@ export default function QualificationForm({ service }: { service: Service }) {
   if (state === "not-ready") {
     return (
       <div className="qualify-wrap">
-        <div className="qualify-intro"><span className="eyebrow">Siguiente paso recomendado</span><h2>{content.notReadyTitle}</h2></div>
+        <div className="qualify-intro"><span className="eyebrow">Siguiente paso recomendado</span><h2 ref={resultHeading} tabIndex={-1}>{content.notReadyTitle}</h2></div>
         <div className="qualify-success"><span className="success-mark">→</span><p>{content.notReadyText}</p><a className="button button-dark" href={content.alternative.href}>{content.alternative.label} <span>→</span></a><button type="button" className="text-link qualify-edit" onClick={() => setState(null)}>Editar mis respuestas</button></div>
       </div>
     );

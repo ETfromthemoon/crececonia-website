@@ -18,7 +18,9 @@ export async function POST(request: Request) {
   if (!value.qualified) return NextResponse.json({ qualified: false });
   try {
     const saved = await saveQualification(value);
-    if (!saved) return NextResponse.json({ detail: "Esta solicitud ya contiene otras respuestas. Vuelve a cargar el formulario." }, { status: 409 });
+    if (saved.outcome === "rate_limited") return NextResponse.json({ detail: "Recibimos varias solicitudes recientes. Conserva tus respuestas e inténtalo más tarde." }, { status: 429, headers: { "Retry-After": "3600" } });
+    if (saved.outcome === "conflict") return NextResponse.json({ detail: "Esta solicitud ya contiene otras respuestas. Vuelve a cargar el formulario." }, { status: 409 });
+    if (saved.outcome !== "saved" || !saved.id) throw new Error("Invalid persistence result");
     return NextResponse.json({ ok: true, qualified: true, id: saved.id });
   } catch {
     // Do not log form content, database parameters or contact details.

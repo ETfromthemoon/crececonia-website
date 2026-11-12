@@ -14,7 +14,7 @@ const request = (body: unknown, origin = "https://www.crececonia.cl") => new Req
   method: "POST", headers: { origin, "Content-Type": "application/json" }, body: JSON.stringify(body),
 });
 
-beforeEach(() => { vi.clearAllMocks(); vi.mocked(queryDatabase).mockResolvedValue([{ id: valid.requestId }]); });
+beforeEach(() => { vi.clearAllMocks(); vi.mocked(queryDatabase).mockResolvedValue([{ id: valid.requestId, outcome: "saved" }]); });
 
 describe("qualification persistence boundary", () => {
   it("acknowledges only after persistence and normalizes email", async () => {
@@ -22,7 +22,7 @@ describe("qualification persistence boundary", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ ok: true, qualified: true, id: valid.requestId });
     const [sql, params] = vi.mocked(queryDatabase).mock.calls[0];
-    expect(sql).toContain("where commerce.service_qualifications.payload_hash = excluded.payload_hash");
+    expect(sql).toContain("commerce.register_service_qualification");
     expect(params?.[2]).toBe("persona@example.com");
     expect(JSON.parse(params?.[3] as string)).toMatchObject({ service: "mentoria", qualified: true });
   });
@@ -32,10 +32,23 @@ describe("qualification persistence boundary", () => {
     expect(vi.mocked(queryDatabase).mock.calls[0]).toEqual(vi.mocked(queryDatabase).mock.calls[1]);
   });
   it("rejects a reused key with different stored payload", async () => {
-    vi.mocked(queryDatabase).mockResolvedValue([]);
+    vi.mocked(queryDatabase).mockResolvedValue([{ id: valid.requestId, outcome: "conflict" }]);
     const response = await POST(request(valid));
     expect(response.status).toBe(409);
     expect(await response.json()).not.toHaveProperty("ok");
+  });
+  it("surfaces the database quota without claiming a saved lead", async () => {
+    vi.mocked(queryDatabase).mockResolvedValue([{ id: null, outcome: "rate_limited" }]);
+    const response = await POST(request(valid));
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBe("3600");
+    expect(await response.json()).not.toHaveProperty("ok");
+  });
+  it("does not acknowledge an empty database result", async () => {
+    vi.mocked(queryDatabase).mockResolvedValue([]);
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect((await POST(request(valid))).status).toBe(503);
+    log.mockRestore();
   });
   it("does not report success when storage is unavailable", async () => {
     vi.mocked(queryDatabase).mockRejectedValue(new Error("private database details"));
