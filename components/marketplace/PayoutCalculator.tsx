@@ -12,7 +12,7 @@ const EXAMPLE_POLICY: PayoutEstimatePolicy = {
   version: "ejemplo-no-comercial-v1",
   saleVatBps: 1_900,
   commissionBps: 500,
-  commissionBasis: "sale_net",
+  commissionBasis: "sale_gross",
   commissionVatBps: 1_900,
   gatewayFeeBps: 0,
   gatewayFixedFeeNetClp: 300,
@@ -71,7 +71,7 @@ export default function PayoutCalculator({ priceValue }: { priceValue?: string }
           <dl className="marketplace-estimate-lines">
             <div><dt>Venta neta estimada</dt><dd>{clp(estimate.saleNetClp)}</dd></div>
             <div><dt>IVA de venta supuesto (19%)</dt><dd>{clp(estimate.saleVatClp)}</dd></div>
-            <div><dt>Comisión ilustrativa (5% de la venta neta)</dt><dd>−{clp(estimate.commissionTotalEstimateClp ?? 0)}</dd></div>
+            <div><dt>Comisión ilustrativa (5% del precio final + IVA supuesto)</dt><dd>−{clp(estimate.commissionTotalEstimateClp ?? 0)}</dd></div>
             <div><dt>Pasarela hipotética (fija $300 + IVA)</dt><dd>−{clp(estimate.gatewayFeeTotalEstimateClp ?? 0)}</dd></div>
             <div className="marketplace-estimate-total"><dt>Depósito ilustrativo al vendedor</dt><dd aria-live="polite">{estimate.sellerPayoutEstimateClp === null ? "Pendiente" : clp(estimate.sellerPayoutEstimateClp)}</dd></div>
             <div><dt>Reserva informativa del IVA de venta</dt><dd>{clp(estimate.sellerSaleVatReserveClp)}</dd></div>
@@ -84,7 +84,7 @@ export default function PayoutCalculator({ priceValue }: { priceValue?: string }
 
       <aside className="marketplace-calculator-notice">
         <strong>Escenario hipotético, no cotización de pago.</strong>
-        <p>Usa IVA supuesto de 19%, una comisión de 5% calculada sobre el neto y una tarifa fija de pasarela de $300 más IVA. La tarifa real, la clasificación tributaria y la base de comisión requieren aprobación. La reserva de IVA no es una retención ni el impuesto definitivo del vendedor.</p>
+        <p>Usa IVA supuesto de 19%, una comisión de 5% calculada sobre el precio final, más IVA supuesto sobre esa comisión, y una tarifa fija de pasarela de $300 más IVA. La tarifa real, la clasificación tributaria y la base de comisión requieren aprobación. La reserva de IVA no es una retención ni el impuesto definitivo del vendedor.</p>
       </aside>
     </section>
   );

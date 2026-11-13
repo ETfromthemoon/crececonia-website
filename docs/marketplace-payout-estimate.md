@@ -4,6 +4,8 @@
 
 La función no clasifica un ebook como afecto, exento o no gravado. El caller debe entregar una tasa autorizada. `1900` puntos base permite reproducir el ejemplo general de 19%, pero no es una decisión tributaria predeterminada. Tampoco configura una tarifa de pagos.
 
+El simulador visible al autor toma provisionalmente el 5% sobre el precio final bruto, igual que el snapshot del checkout de sandbox. Muestra por separado el IVA hipotético de esa comisión y una tarifa ficticia de pasarela; no promete ese depósito ni fija la política comercial definitiva.
+
 ## Validación tributaria pendiente antes de cobrar a terceros
 
 El [artículo 3° bis de la LIVS, recogido por el SII en la Resolución 84/2025](https://www.sii.cl/normativa_legislacion/resoluciones/2025/reso84.pdf), contempla que el operador de una plataforma de intermediación sea contribuyente del IVA de la operación subyacente en ciertos casos; la norma prevé una excepción cuando el vendedor o comprador es contribuyente de IVA. El [Oficio SII 1850/2021](https://www4.sii.cl/gabineteAdmInternet/descargaArchivo?acc=download&extension=pdf&id=3fa727c0-543f-4cc8-83c8-4a42b45fb873&mediaType=application%2Fpdf&nombreDocumento=1850-21%2F07%2F2021.pdf) describe comisión y venta por separado, pero es anterior al artículo 3° bis. Por ello, **no se puede asumir que el vendedor siempre emite la boleta ni que la plataforma solo declara el IVA de su comisión**. La clasificación concreta de ebooks, condición tributaria de cada vendedor/comprador, emisor del documento y liquidación deben validarse con un contador tributario chileno antes de habilitar cobro real.
