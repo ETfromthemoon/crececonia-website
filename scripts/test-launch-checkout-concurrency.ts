@@ -5,6 +5,7 @@ const API_BASE = "https://console.neon.tech/api/v2";
 const WAIT_TIMEOUT_MS = 15_000;
 const POLL_INTERVAL_MS = 150;
 const CONNECTION_TIMEOUT_MS = 10_000;
+const MAX_TEMP_BRANCH_AGE_MS = 72 * 60 * 60 * 1_000;
 
 type NeonBranch = {
   id: string;
@@ -12,6 +13,9 @@ type NeonBranch = {
   default?: boolean;
   primary?: boolean;
   current_state?: string;
+  name?: string;
+  created_at?: string;
+  protected?: boolean;
 };
 
 type NeonEndpoint = {
@@ -37,8 +41,9 @@ Requiere estas variables locales:
 Seguridad:
   - No aplica migraciones ni ejecuta down.sql.
   - Exige --confirm-temporary-neon en cada ejecución.
-  - Verifica por API que la rama no sea la principal, cuelgue de la principal y que el host
-    de conexión pertenezca a un endpoint read-write de esa rama.
+  - Verifica por API que la rama no sea la principal, esté desprotegida, tenga nombre con
+    "validation", se haya creado hace menos de 72 horas, cuelgue de la principal y que su host
+    pertenezca a un endpoint read-write habilitado.
   - Rechaza la URL/host de producción. Sólo borra fixtures aleatorios propios, al final.
   - No imprime URLs, claves, correos ni filas de órdenes.
 
@@ -95,6 +100,13 @@ function assertSafeTargetMetadata(
   if (!targetBranch.parent_id || targetBranch.current_state !== "ready") {
     fail("La rama indicada no es una rama temporal lista y activa.");
   }
+  const createdAt = Date.parse(targetBranch.created_at ?? "");
+  const branchAge = Date.now() - createdAt;
+  if (!targetBranch.name || !/(?:^|[-_])validation(?:[-_]|$)/i.test(targetBranch.name)
+      || targetBranch.protected !== false || !Number.isFinite(createdAt)
+      || branchAge < -5 * 60 * 1_000 || branchAge > MAX_TEMP_BRANCH_AGE_MS) {
+    fail("La rama debe ser no protegida, reciente (máximo 72 horas) y nombrada explícitamente como validation.");
+  }
   if (!parentBranch || parentBranch.id !== targetBranch.parent_id || parentBranch.current_state !== "ready"
       || (parentBranch.default !== true && parentBranch.primary !== true)) {
     fail("La rama temporal no deriva directamente de la rama principal/default del proyecto.");
@@ -118,7 +130,10 @@ function assertSafeTargetMetadata(
 function selfTest(): void {
   const targetUrl = parseNeonConnectionUrl("postgresql://safe@ep-temp-example.us-east-2.aws.neon.tech/db", "test URL");
   const productionUrl = parseNeonConnectionUrl("postgresql://prod@ep-prod-example.us-east-2.aws.neon.tech/db", "test URL");
-  const targetBranch: NeonBranch = { id: "br-temp", parent_id: "br-main", default: false, current_state: "ready" };
+  const targetBranch: NeonBranch = {
+    id: "br-temp", parent_id: "br-main", default: false, current_state: "ready",
+    name: "codex-launch-checkout-validation-test", created_at: new Date().toISOString(), protected: false,
+  };
   const parentBranch: NeonBranch = { id: "br-main", default: true, current_state: "ready" };
   const endpoints: NeonEndpoint[] = [
     { branch_id: "br-temp", host: "ep-temp-example.us-east-2.aws.neon.tech", type: "read_write" },
@@ -155,10 +170,22 @@ function selfTest(): void {
   ), "rama no lista");
   mustReject(() => assertSafeTargetMetadata(
     canonicalNeonHost(targetUrl.hostname), canonicalNeonHost(productionUrl.hostname),
+    "br-temp", { ...targetBranch, name: "staging" }, parentBranch, endpoints,
+  ), "rama persistente sin nombre de validación");
+  mustReject(() => assertSafeTargetMetadata(
+    canonicalNeonHost(targetUrl.hostname), canonicalNeonHost(productionUrl.hostname),
+    "br-temp", { ...targetBranch, protected: true }, parentBranch, endpoints,
+  ), "rama protegida");
+  mustReject(() => assertSafeTargetMetadata(
+    canonicalNeonHost(targetUrl.hostname), canonicalNeonHost(productionUrl.hostname),
+    "br-temp", { ...targetBranch, created_at: new Date(Date.now() - MAX_TEMP_BRANCH_AGE_MS - 1).toISOString() }, parentBranch, endpoints,
+  ), "rama validation demasiado antigua");
+  mustReject(() => assertSafeTargetMetadata(
+    canonicalNeonHost(targetUrl.hostname), canonicalNeonHost(productionUrl.hostname),
     "br-temp", targetBranch, parentBranch,
     [{ ...endpoints[0], type: "read_only" }, endpoints[1]],
   ), "endpoint read-only");
-  console.log("PASS: guardas locales de URL, host pooler, rama temporal, parent y endpoint (sin leer variables ni conectar).");
+  console.log("PASS: guardas locales de URL, host pooler, rama temporal reciente, parent y endpoint (sin leer variables ni conectar).");
 }
 
 function safeId(value: string, name: string): string {
