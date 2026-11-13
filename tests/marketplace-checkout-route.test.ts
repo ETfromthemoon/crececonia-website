@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const database = vi.hoisted(() => vi.fn());
@@ -46,5 +47,41 @@ describe("inicio de checkout marketplace", () => {
     expect((await POST(request(10_000))).status).toBe(409);
     expect(storage).not.toHaveBeenCalled();
     expect(flow).not.toHaveBeenCalled();
+  });
+
+  it("rechaza PDF alterado antes de crear una orden de pago", async () => {
+    process.env.MARKETPLACE_FLOW_SANDBOX_ENABLED = "true";
+    database.mockResolvedValueOnce([{
+      book_id: bookId, revision_id: "e950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29",
+      seller_id: "f950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29", title: "Libro",
+      price_minor: "11900", price_tax_mode: "tax_inclusive", storage_key: "test.pdf",
+      sha256: "a".repeat(64), byte_size: 6,
+    }]);
+    storage.mockResolvedValueOnce({ data: new Blob(["%PDF-X"], { type: "application/pdf" }), error: null });
+    const flow = vi.fn();
+    vi.stubGlobal("fetch", flow);
+    expect((await POST(request())).status).toBe(503);
+    expect(storage).toHaveBeenCalledWith("ebooks", "test.pdf");
+    expect(database).toHaveBeenCalledTimes(1);
+    expect(flow).not.toHaveBeenCalled();
+  });
+
+  it("crea el manifiesto antes de obtener el enlace sandbox de Flow", async () => {
+    process.env.MARKETPLACE_FLOW_SANDBOX_ENABLED = "true";
+    const pdf = "%PDF-test";
+    database.mockResolvedValueOnce([{
+      book_id: bookId, revision_id: "e950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29",
+      seller_id: "f950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29", title: "Libro",
+      price_minor: "11900", price_tax_mode: "tax_inclusive", storage_key: "test.pdf",
+      sha256: createHash("sha256").update(pdf).digest("hex"), byte_size: pdf.length,
+    }]).mockResolvedValueOnce([{ item_id: "item" }]).mockResolvedValueOnce([]);
+    storage.mockResolvedValueOnce({ data: new Blob([pdf], { type: "application/pdf" }), error: null });
+    const flow = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ url: "https://sandbox.flow.cl/app/web/pay.php", token: "test-token" }) });
+    vi.stubGlobal("fetch", flow);
+    const response = await POST(request());
+    expect(response.status).toBe(200);
+    expect((await response.json()).redirectUrl).toContain("token=test-token");
+    expect(database.mock.calls[1][0]).toContain("marketplace_order_items");
+    expect(flow).toHaveBeenCalledTimes(1);
   });
 });
