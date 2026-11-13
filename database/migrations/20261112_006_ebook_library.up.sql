@@ -1,3 +1,5 @@
+begin;
+
 -- Dormant personal library. No public role can access these tables or functions.
 create table commerce.ebook_library_challenges (
   id uuid primary key default gen_random_uuid(),
@@ -78,3 +80,5 @@ $$;
 
 revoke all on commerce.ebook_library_challenges, commerce.ebook_library_sessions, commerce.ebook_library_rate_limits from public, anon, authenticated;
 revoke all on function commerce.reserve_ebook_library_request(text,text), commerce.consume_ebook_library_challenge(text,text), commerce.revoke_ebook_library_session(text) from public, anon, authenticated;
+
+commit;
