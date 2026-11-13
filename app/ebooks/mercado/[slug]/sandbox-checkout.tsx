@@ -39,6 +39,11 @@ export default function MarketplaceSandboxCheckout({
         body: JSON.stringify({ bookId, email, expectedAmount, requestId }),
       });
       const data = await response.json();
+      if (response.status === 410 && data.canStartNewAttempt === true) {
+        requestIds.current.delete(requestKey);
+        try { window.sessionStorage.removeItem(requestKey); } catch { /* Keep the in-memory value cleared. */ }
+        throw new Error("El intento anterior venció. Revisa primero el estado del pago; luego puedes volver a intentar.");
+      }
       if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "No se pudo iniciar la compra.");
       const destination = new URL(data.redirectUrl);
       if (destination.protocol !== "https:" || !/(^|\.)flow\.cl$/.test(destination.hostname)) {
