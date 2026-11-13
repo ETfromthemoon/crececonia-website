@@ -1,3 +1,5 @@
+begin;
+
 -- Preparatory registry only: no historical grants, campaigns or send jobs.
 create table commerce.communication_contacts (
   id uuid primary key default gen_random_uuid(),
@@ -95,3 +97,5 @@ end;
 $$;
 revoke all on commerce.communication_contacts, commerce.communication_preferences, commerce.communication_preference_events from public, anon, authenticated;
 revoke all on function commerce.record_communication_preference(uuid, text, text, text, text, bigint, text, text, uuid) from public, anon, authenticated;
+
+commit;

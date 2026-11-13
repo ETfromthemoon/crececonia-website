@@ -3,8 +3,9 @@
 E06A prepara un registro de permisos y bajas y `/admin/comunicaciones`. La vista
 requiere sesión antes de consultar Neon. Sólo ejecuta SELECT y muestra conteos;
 no crea contactos, exporta destinatarios, encola trabajos ni importa transporte de correo.
-La migración 005 está preparada, **no aplicada en producción**. Su prueba aislada y
-aprobación específica son requisitos de `database/README.md`.
+La migración 005 está preparada, **no aplicada en producción**. El `up` es atómico;
+el `down` se niega a destruir registros de consentimiento y requiere que las tres tablas
+estén vacías. Su prueba aislada y aprobación específica son requisitos de `database/README.md`.
 
 ## Fuentes y límites de la simulación
 
