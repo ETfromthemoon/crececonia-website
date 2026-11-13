@@ -11,8 +11,11 @@ import { POST } from "../app/api/marketplace/checkout/route";
 
 const env = { ...process.env };
 const bookId = "c950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29";
-const request = (expectedAmount = 11_900) => new Request("https://www.crececonia.cl/api/marketplace/checkout", {
-  method: "POST", body: JSON.stringify({ bookId, email: "buyer@example.cl", expectedAmount }),
+const requestId = "c650e6f2-dc5c-4ce5-8ddd-e515b3d8fe29";
+const orderId = "a950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29";
+const request = (expectedAmount = 11_900, id = requestId) => new Request("https://www.crececonia.cl/api/marketplace/checkout", {
+  method: "POST", headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ bookId, email: "buyer@example.cl", expectedAmount, requestId: id }),
 });
 
 describe("inicio de checkout marketplace", () => {
@@ -75,17 +78,64 @@ describe("inicio de checkout marketplace", () => {
       seller_id: "f950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29", title: "Libro",
       price_minor: "11900", price_tax_mode: "tax_inclusive", storage_key: "test.pdf",
       sha256: createHash("sha256").update(pdf).digest("hex"), byte_size: pdf.length,
-    }]).mockResolvedValueOnce([{ item_id: "item" }]).mockResolvedValueOnce([]);
+    }]).mockResolvedValueOnce([{ outcome: "created", claimed_order_id: orderId }]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
     storage.mockResolvedValueOnce({ data: new Blob([pdf], { type: "application/pdf" }), error: null });
     const flow = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ url: "https://sandbox.flow.cl/app/web/pay.php", token: "test-token" }) });
     vi.stubGlobal("fetch", flow);
     const response = await POST(request());
     expect(response.status).toBe(200);
     expect((await response.json()).redirectUrl).toContain("token=test-token");
-    expect(database.mock.calls[1][0]).toContain("marketplace_order_items");
+    expect(database.mock.calls[1][0]).toContain("claim_marketplace_checkout");
     expect(database.mock.calls[0][0]).toContain("t.review_status='verified'");
-    expect(database.mock.calls[1][0]).toContain("t.review_status='verified'");
+    expect(database.mock.calls[1][1][1]).toBe(requestId);
     expect(database.mock.calls[0][0]).toContain("r.rights_declared_at is not null");
     expect(flow).toHaveBeenCalledTimes(1);
+  });
+
+  it("reutiliza el enlace de Flow para el mismo intento sin generar otro pago", async () => {
+    process.env.MARKETPLACE_FLOW_SANDBOX_ENABLED = "true";
+    const pdf = "%PDF-test";
+    database.mockResolvedValueOnce([{
+      book_id: bookId, revision_id: "e950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29",
+      seller_id: "f950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29", title: "Libro",
+      price_minor: "11900", price_tax_mode: "tax_inclusive", storage_key: "test.pdf",
+      sha256: createHash("sha256").update(pdf).digest("hex"), byte_size: pdf.length,
+    }]).mockResolvedValueOnce([{ outcome: "replay", claimed_order_id: orderId }])
+      .mockResolvedValueOnce([{ flow_checkout_url: "https://sandbox.flow.cl/pay?token=original", status: "pending", expires_at: new Date(Date.now() + 60_000).toISOString() }]);
+    storage.mockResolvedValueOnce({ data: new Blob([pdf]), error: null });
+    const flow = vi.fn();
+    vi.stubGlobal("fetch", flow);
+    const response = await POST(request());
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ redirectUrl: "https://sandbox.flow.cl/pay?token=original", orderId });
+    expect(flow).not.toHaveBeenCalled();
+  });
+
+  it("rechaza un cuerpo excesivo antes de consultar la base", async () => {
+    process.env.MARKETPLACE_FLOW_SANDBOX_ENABLED = "true";
+    const oversized = new Request("https://www.crececonia.cl/api/marketplace/checkout", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookId, requestId, email: "buyer@example.cl", expectedAmount: 11900, padding: "x".repeat(3000) }),
+    });
+    expect((await POST(oversized)).status).toBe(400);
+    expect(database).not.toHaveBeenCalled();
+  });
+
+  it("no llama a Flow cuando la cuota transaccional rechaza la orden", async () => {
+    process.env.MARKETPLACE_FLOW_SANDBOX_ENABLED = "true";
+    const pdf = "%PDF-test";
+    database.mockResolvedValueOnce([{
+      book_id: bookId, revision_id: "e950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29",
+      seller_id: "f950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29", title: "Libro",
+      price_minor: "11900", price_tax_mode: "tax_inclusive", storage_key: "test.pdf",
+      sha256: createHash("sha256").update(pdf).digest("hex"), byte_size: pdf.length,
+    }]).mockResolvedValueOnce([{ outcome: "rate_limited", claimed_order_id: null }]);
+    storage.mockResolvedValueOnce({ data: new Blob([pdf]), error: null });
+    const flow = vi.fn();
+    vi.stubGlobal("fetch", flow);
+    const response = await POST(request());
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBe("3600");
+    expect(flow).not.toHaveBeenCalled();
   });
 });

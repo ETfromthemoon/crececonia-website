@@ -3,9 +3,10 @@ import { NextResponse } from "next/server";
 import { queryDatabase } from "@/lib/database";
 import { flowSign, getFlowBase } from "@/lib/flow";
 import { downloadPrivateObject } from "@/lib/private-storage";
-import { marketplacePriceSnapshot, marketplaceSandboxEnabled, normalizeBuyerEmail, MARKETPLACE_COMMISSION_BPS, MAX_MARKETPLACE_PDF_BYTES } from "@/lib/marketplace-checkout";
+import { marketplacePriceSnapshot, marketplaceSandboxEnabled, normalizeBuyerEmail, MAX_MARKETPLACE_PDF_BYTES } from "@/lib/marketplace-checkout";
 
 export const runtime = "nodejs";
+const MAX_BODY_BYTES = 2048;
 
 type BookForSale = {
   book_id: string;
@@ -28,18 +29,41 @@ function siteUrl(): URL | null {
   }
 }
 
+async function readCheckoutBody(request: Request): Promise<Record<string, unknown> | null> {
+  if (!request.headers.get("content-type")?.startsWith("application/json")) return null;
+  const reader = request.body?.getReader();
+  if (!reader) return null;
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_BODY_BYTES) { await reader.cancel(); return null; }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  try {
+    const value: unknown = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+  } catch { return null; }
+}
+
 export async function POST(request: Request) {
   if (!marketplaceSandboxEnabled()) return NextResponse.json({ error: "El pago de libros de terceros aún no está disponible." }, { status: 503 });
   const origin = siteUrl();
   if (!origin) return NextResponse.json({ error: "Configuración de pagos incompleta." }, { status: 503 });
 
-  const body = await request.json().catch(() => null);
+  const body = await readCheckoutBody(request);
   const email = normalizeBuyerEmail(body?.email);
   const bookId = typeof body?.bookId === "string" && /^[0-9a-f-]{36}$/.test(body.bookId) ? body.bookId : null;
   const expectedAmount = body?.expectedAmount;
-  if (!email || !bookId || !Number.isSafeInteger(expectedAmount) || expectedAmount <= 0) {
+  const requestId = typeof body?.requestId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.requestId) ? body.requestId.toLowerCase() : null;
+  if (!email || !bookId || !requestId || !Number.isSafeInteger(expectedAmount) || Number(expectedAmount) <= 0) {
     return NextResponse.json({ error: "Datos de compra inválidos." }, { status: 400 });
   }
+  const digest = createHash("sha256").update(JSON.stringify([email, bookId, expectedAmount])).digest("hex");
 
   try {
     const [book] = await queryDatabase<BookForSale>(`
@@ -71,36 +95,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Este libro aún no está listo para su entrega." }, { status: 503 });
     }
 
-    const orderId = randomUUID();
-    const [prepared] = await queryDatabase<{ item_id: string }>(`
-      with eligible as (
-        select b.id as book_id, r.id as revision_id, s.id as seller_id
-        from public.marketplace_books b
-        join public.marketplace_sellers s on s.id=b.seller_id and s.status='active'
-        join public.marketplace_seller_tax_profiles t on t.seller_id=s.id and t.review_status='verified'
-        join public.marketplace_book_revisions r on r.id=b.published_revision_id
-          and r.book_id=b.id and r.moderation_status='approved' and r.rights_declared_at is not null
-        join public.marketplace_assets a on a.revision_id=r.id and a.book_id=b.id
-          and a.asset_kind='ebook_pdf' and a.scan_status='ready' and a.storage_key=$3
-        where b.id=$2 and b.status='published' and b.published_at is not null
-          and r.price_minor=$4 and r.price_tax_mode=$5
-        limit 1
-      ), new_order as (
-        insert into public.marketplace_orders
-          (id,buyer_email,status,idempotency_key,subtotal_minor,total_minor,expires_at)
-        select $1,$6,'pending',$1,$4,$4,now()+interval '30 minutes' from eligible
-        returning id
-      ), new_item as (
-        insert into public.marketplace_order_items
-          (order_id,book_id,revision_id,seller_id,price_minor,tax_mode,tax_rate_bps,
-           tax_minor,commission_rate_bps,commission_basis_minor,commission_minor)
-        select o.id,e.book_id,e.revision_id,e.seller_id,$4,$5,$7,$8,$9,$4,$10
-        from new_order o cross join eligible e
-        returning id
-      ) select id as item_id from new_item`,
-      [orderId, book.book_id, book.storage_key, price.price, price.taxMode, email,
-        price.taxRateBps, price.tax, MARKETPLACE_COMMISSION_BPS, price.commission]);
-    if (!prepared) return NextResponse.json({ error: "El libro dejó de estar disponible." }, { status: 409 });
+    const [claim] = await queryDatabase<{ outcome: string; claimed_order_id: string | null }>(
+      `select * from public.claim_marketplace_checkout($1::uuid,$2::uuid,$3::char(64),$4,$5::uuid,$6::uuid,$7::uuid,$8,$9::bigint,$10,$11::integer,$12::bigint,$13::integer)`,
+      [randomUUID(), requestId, digest, email, book.book_id, book.revision_id, book.seller_id,
+        book.storage_key, price.price, price.taxMode, price.taxRateBps, price.tax, price.commission]);
+    if (!claim || claim.outcome === "unavailable") return NextResponse.json({ error: "El libro dejó de estar disponible." }, { status: 409 });
+    if (claim.outcome === "rate_limited") return NextResponse.json({ error: "Hay demasiados intentos recientes. Inténtalo más tarde." }, { status: 429, headers: { "Retry-After": "3600" } });
+    if (claim.outcome === "conflict") return NextResponse.json({ error: "El identificador ya se usó para otra compra." }, { status: 409 });
+    const orderId = claim.claimed_order_id;
+    if (!orderId) throw new Error("Missing claimed order ID");
+    if (claim.outcome === "replay") {
+      const [existing] = await queryDatabase<{ flow_checkout_url: string | null; status: string; expires_at: string }>(
+        `select flow_checkout_url,status,expires_at from public.marketplace_orders where id=$1`, [orderId]);
+      if (existing?.status === "pending" && new Date(existing.expires_at).getTime() > Date.now() && existing.flow_checkout_url) {
+        const savedUrl = new URL(existing.flow_checkout_url);
+        if (savedUrl.protocol === "https:" && savedUrl.hostname === "sandbox.flow.cl") {
+          return NextResponse.json({ redirectUrl: savedUrl.toString(), orderId });
+        }
+      }
+      return NextResponse.json({ error: "Este intento ya fue registrado. Consulta su estado antes de comenzar otro." }, { status: 409, headers: { "Retry-After": "2" } });
+    }
 
     const apiKey = process.env.FLOW_API_KEY!;
     const params = {
@@ -134,6 +148,8 @@ export async function POST(request: Request) {
         set provider_payment_ref=excluded.provider_payment_ref
         where marketplace_payments.order_id=excluded.order_id`, [orderId, result.token, price.price]);
     redirect.searchParams.set("token", result.token);
+    await queryDatabase(`update public.marketplace_orders set flow_checkout_url=$2
+      where id=$1 and status='pending' and flow_checkout_url is null`, [orderId, redirect.toString()]);
     return NextResponse.json({ redirectUrl: redirect.toString(), orderId });
   } catch (error) {
     console.error("[marketplace/checkout] no se pudo crear la orden", error);
