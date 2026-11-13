@@ -16,8 +16,15 @@ const formatCLP = (value: string) => new Intl.NumberFormat("es-CL", {
   style: "currency", currency: "CLP", maximumFractionDigits: 0,
 }).format(BigInt(value));
 
-export default async function MarketplaceCatalogPage() {
-  const books = await listPublishedMarketplaceBooks();
+export default async function MarketplaceCatalogPage({ searchParams }: {
+  searchParams: Promise<{ page?: string | string[] }>;
+}) {
+  const rawPage = (await searchParams).page;
+  const requestedPage = typeof rawPage === "string" && /^[1-9]\d*$/.test(rawPage) ? Number(rawPage) : 1;
+  const page = Number.isSafeInteger(requestedPage) && requestedPage <= Math.floor(Number.MAX_SAFE_INTEGER / 24) ? requestedPage : 1;
+  const results = await listPublishedMarketplaceBooks(page);
+  const hasNext = results.length > 24;
+  const books = results.slice(0, 24);
   return <>
     <Navbar />
     <main style={{ minHeight: "70vh", maxWidth: 1120, margin: "0 auto", padding: "120px 24px 80px" }}>
@@ -31,7 +38,7 @@ export default async function MarketplaceCatalogPage() {
         <Link href="/ebooks">Todos los ebooks</Link>
         <Link href="/ebooks/vender">Publica tu ebook</Link>
       </nav>
-      {books.length === 0 ? <p>Aún no hay libros de autores invitados publicados.</p> : <div style={{
+      {books.length === 0 ? <p>{page > 1 ? "No hay más libros en esta página." : "Aún no hay libros de autores invitados publicados."}</p> : <div style={{
         display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20,
       }}>
         {books.map((book) => <article key={book.id} style={{ padding: 26, border: "1px solid var(--border)", borderRadius: 18 }}>
@@ -46,6 +53,11 @@ export default async function MarketplaceCatalogPage() {
           <Link href={`/ebooks/mercado/${book.slug}`} aria-label={`Ver ${book.title}`}>Ver libro →</Link>
         </article>)}
       </div>}
+      {(page > 1 || hasNext) && <nav aria-label="Páginas del marketplace" style={{ display: "flex", gap: 24, marginTop: 36 }}>
+        {page > 1 && <Link href={page === 2 ? "/ebooks/mercado" : `/ebooks/mercado?page=${page - 1}`}>← Anterior</Link>}
+        <span>Página {page}</span>
+        {hasNext && <Link href={`/ebooks/mercado?page=${page + 1}`}>Siguiente →</Link>}
+      </nav>}
     </main>
     <Footer />
   </>;

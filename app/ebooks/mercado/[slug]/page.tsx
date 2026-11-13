@@ -17,7 +17,8 @@ export default async function MarketplaceBookPage({ params }: { params: Promise<
   const book = await getPublishedMarketplaceBook(slug);
   if (!book) notFound();
   const sandboxCheckout = process.env.MARKETPLACE_FLOW_SANDBOX_ENABLED === "true"
-    && process.env.FLOW_SANDBOX === "true";
+    && process.env.FLOW_SANDBOX === "true"
+    && (process.env.VERCEL_ENV === "preview" || process.env.NODE_ENV === "development");
   return <>
     <Navbar />
     <main style={{ minHeight: "70vh", maxWidth: 900, margin: "0 auto", padding: "120px 24px 80px" }}>

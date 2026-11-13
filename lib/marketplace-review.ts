@@ -192,7 +192,7 @@ export async function verifyMarketplaceSellerTax(
       set review_status = $2, reviewed_by = 'admin', reviewed_at = now()
       where t.seller_id = $1 and t.review_status = 'pending'
         and t.rut is not null and t.legal_name is not null
-        and t.declared_vat_status <> 'unsure'
+        and ($3 <> 'verify' or t.declared_vat_status <> 'unsure')
       returning t.seller_id as id
     ), audit as (
       insert into marketplace_audit_log(actor_user_id, action, entity_type, entity_id, reason)
@@ -254,7 +254,8 @@ export async function listMarketplaceReviews(): Promise<ReviewRow[]> {
   `);
 }
 
-export async function listPublishedMarketplaceBooks(): Promise<PublishedBook[]> {
+export async function listPublishedMarketplaceBooks(page = 1): Promise<PublishedBook[]> {
+  if (!Number.isSafeInteger(page) || page < 1 || page > Math.floor(Number.MAX_SAFE_INTEGER / 24)) throw new Error("Página inválida.");
   return queryDatabase<PublishedBook>(`
     select b.id, b.slug, r.title, r.subtitle, r.description,
       r.author_display_name, r.category, r.price_minor::text,
@@ -272,9 +273,9 @@ export async function listPublishedMarketplaceBooks(): Promise<PublishedBook[]> 
         where a.book_id = b.id and a.revision_id = r.id
           and a.asset_kind = 'ebook_pdf' and a.scan_status = 'ready'
       )
-    order by b.published_at desc
-    limit 100
-  `);
+    order by b.published_at desc, b.id desc
+    limit 25 offset $1
+  `, [(page - 1) * 24]);
 }
 
 export async function getPublishedMarketplaceBook(slug: string): Promise<PublishedBook | null> {
