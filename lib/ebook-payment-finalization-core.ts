@@ -1,6 +1,7 @@
 
 export type FinalizationQuery = <T extends Record<string, unknown>>(sql: string, values: unknown[]) => Promise<T[]>;
 import { buildEbookDeliveryPayload, type EbookDownloadGrant } from "./ebook-delivery-email";
+import { sanitizeAnalyticsAttribution, sanitizeAnalyticsDistinctId, type AnalyticsAttribution } from "./analytics-privacy";
 
 export type VerifiedEbookPayment = {
   flowOrder: string;
@@ -10,14 +11,14 @@ export type VerifiedEbookPayment = {
   token: string;
   source: "webhook" | "recovery";
 };
-type Item = { resource: string; tier: string; amount: number; analytics_distinct_id?: string; pricing_variant?: string };
+type Item = { resource: string; tier: string; amount: number; analytics_distinct_id?: string; pricing_variant?: string } & AnalyticsAttribution;
 type Snapshot = {
   receipt: null | { commerce_order: string; buyer_email: string; paid_amount: number; job_id: string };
   manifest: null | { resources: Item[]; discount_code: string | null };
   purchases: Array<{ id: string; resource: string; email: string; amount: number; tier: string; token: string }>;
 };
 export type EbookFinalizationResult = { outcome: "finalized" | "existing"; jobId: string; resources?: string[];
-  analytics?: { distinctId?: string; pricingVariant?: string; discountCode: string | null } };
+  analytics?: { distinctId?: string; pricingVariant?: string; discountCode: string | null; attribution: AnalyticsAttribution } };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /** Webhook and CLI share this flag; neither may fall back after an enabled failure. */
@@ -94,9 +95,10 @@ export async function finalizeEbookPaymentWithQuery(databaseQuery: FinalizationQ
     if (finalized?.result?.outcome === "finalized" || finalized?.result?.outcome === "existing") {
       const confirmed = result(finalized.result.outcome, finalized.result.job_id);
       return confirmed.outcome === "finalized" ? { ...confirmed, resources: grants.map((grant) => grant.resource),
-        analytics: { distinctId: snapshot.manifest?.resources.find((item) => typeof item.analytics_distinct_id === "string")?.analytics_distinct_id,
+        analytics: { distinctId: sanitizeAnalyticsDistinctId(snapshot.manifest?.resources.find((item) => typeof item.analytics_distinct_id === "string")?.analytics_distinct_id),
           pricingVariant: snapshot.manifest?.resources.find((item) => typeof item.pricing_variant === "string")?.pricing_variant,
-          discountCode: snapshot.manifest?.discount_code ?? null } } : confirmed;
+          discountCode: snapshot.manifest?.discount_code ?? null,
+          attribution: sanitizeAnalyticsAttribution(snapshot.manifest?.resources[0]) } } : confirmed;
     }
     throw new Error("La base no confirmó la finalización.");
   }

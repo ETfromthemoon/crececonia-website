@@ -1,7 +1,47 @@
 const UTM_KEYS = new Set(["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]);
+const UTM_KEY_LIST = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
+export type AnalyticsAttribution = Partial<Record<(typeof UTM_KEY_LIST)[number], string>>;
 const PRIVATE_QUERY = /^(?:token|key|email|phone|tel|t|preview|access_token|authorization|secret)$/i;
 const PRIVATE_PROPERTY = /(?:^|[_$])(?:token|key|email|phone|tel|authorization|secret|password)(?:$|_)/i;
 const CONTACT_VALUE = /(?:mailto:|tel:|[^\s@]+@[^\s@]+\.[^\s@]+)/i;
+const POSTHOG_ANONYMOUS_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const URL_SCHEME = /^[a-z][a-z0-9+.-]*:/i;
+const URL_PREFIX = /^(?:\/|www\.)/i;
+const DOMAIN_VALUE = /^(?:(?:[a-z0-9-]+\.)+[a-z]{2,}|localhost|(?:\d{1,3}\.){3}\d{1,3})(?::\d+)?(?:[./?#]|$)/i;
+
+function isPhoneLikeValue(value: string): boolean {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value) || !/^[+\d\s().-]+$/.test(value)) return false;
+  const digits = value.replace(/\D/g, "").length;
+  return digits >= 9 && digits <= 15;
+}
+
+function isUrlLikeValue(value: string): boolean {
+  return URL_SCHEME.test(value) || URL_PREFIX.test(value) || DOMAIN_VALUE.test(value);
+}
+
+/** Only copy bounded, non-contact UTM labels into analytics and order snapshots. */
+export function sanitizeAnalyticsAttribution(value: unknown): AnalyticsAttribution {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const source = value as Record<string, unknown>;
+  const attribution: AnalyticsAttribution = {};
+  for (const key of UTM_KEY_LIST) {
+    const candidate = source[key];
+    if (typeof candidate !== "string") continue;
+    const normalized = candidate.trim();
+    if (!normalized || normalized.length > 200 || CONTACT_VALUE.test(normalized) || isPhoneLikeValue(normalized)
+        || isUrlLikeValue(normalized)) continue;
+    attribution[key] = normalized;
+  }
+  return attribution;
+}
+
+/** PostHog's anonymous ID is UUIDv7; accept only that SDK-generated shape. */
+export function sanitizeAnalyticsDistinctId(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim();
+  if (!POSTHOG_ANONYMOUS_ID.test(normalized)) return undefined;
+  return normalized;
+}
 export const SEMANTIC_CTA_PAIRS = [
   { cta: "route_selector", source: "ia_selector" },
   { cta: "home_route", source: "home_hero" },
@@ -45,7 +85,8 @@ export function sanitizeAnalyticsUrl(value: string): string | undefined {
     if (!["http:", "https:"].includes(url.protocol)) return undefined;
     const safe = new URL(url.origin + url.pathname);
     for (const [key, item] of url.searchParams) {
-      if (UTM_KEYS.has(key) && item.length <= 200 && !CONTACT_VALUE.test(item)) safe.searchParams.append(key, item);
+      const attribution = UTM_KEYS.has(key) ? sanitizeAnalyticsAttribution({ [key]: item }) : {};
+      if (key in attribution) safe.searchParams.append(key, attribution[key as keyof AnalyticsAttribution]!);
     }
     return safe.toString();
   } catch { return undefined; }

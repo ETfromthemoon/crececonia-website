@@ -8,7 +8,7 @@ import type { EbookCatalogEntry } from "@/lib/ebook-catalog";
 import { computeEbookTotal } from "@/lib/ebook-promotion";
 import EbookFlashBanner from "./EbookFlashBanner";
 import type { EbookBundleOffer } from "@/lib/ebook-offers";
-import { getEbookAnalyticsDistinctId, trackEbookEvent } from "@/lib/analytics";
+import { getEbookAnalyticsAttribution, getEbookAnalyticsDistinctId, trackEbookEvent } from "@/lib/analytics";
 import { useFeatureFlagVariantKey } from "posthog-js/react";
 import EbookSectionHeading from "./EbookSectionHeading";
 import EbookSoldCounter from "./EbookSoldCounter";
@@ -321,6 +321,7 @@ export default function EbookPricing({
         discountCode: isCombo ? undefined : appliedDiscount?.code,
         previewKey,
         analyticsDistinctId: getEbookAnalyticsDistinctId(),
+        analyticsAttribution: getEbookAnalyticsAttribution(),
         pricingVariant,
         expectedAmount: displayPrice,
       }),

@@ -263,16 +263,35 @@ describe("POST /api/flow/create — 1 solo libro (comportamiento existente)", ()
 
   it("captura una orden de checkout canónica con resource, monto y cantidad de items", async () => {
     flowOk();
-    await POST(postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE] }));
+    const attribution = {
+      utm_source: "instagram", utm_medium: "social", utm_campaign: "ebook-launch",
+      utm_content: "creator-1", utm_term: "automatizacion", fbclid: "private-click-id",
+      gclid: "private-google-click-id", email: "buyer@example.com",
+    };
+    await POST(postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE], analyticsDistinctId: "Sergio Pérez", analyticsAttribution: attribution }));
+    expect(mockPendingInsert).toHaveBeenCalledWith(expect.objectContaining({
+      resources: [expect.objectContaining({
+        resource: DEFAULT_EBOOK_RESOURCE,
+        utm_source: "instagram", utm_medium: "social", utm_campaign: "ebook-launch",
+        utm_content: "creator-1", utm_term: "automatizacion",
+      })],
+    }));
+    const saved = mockPendingInsert.mock.calls.at(-1)?.[0]?.resources?.[0] as Record<string, unknown>;
+    expect(saved).not.toHaveProperty("fbclid");
+    expect(saved).not.toHaveProperty("gclid");
+    expect(saved).not.toHaveProperty("email");
+    expect(saved).not.toHaveProperty("analytics_distinct_id");
     expect(mockCaptureServerEvent).toHaveBeenCalledWith(
       "ebook_checkout_created",
-      "user@test.com",
+      expect.stringMatching(/^ebook-order:ebook-/),
       expect.objectContaining({
         resource: DEFAULT_EBOOK_RESOURCE,
         item_count: 1,
         has_discount_code: false,
         amount: 10800,
         order_id: expect.stringMatching(/^ebook-/),
+        utm_source: "instagram",
+        utm_campaign: "ebook-launch",
       })
     );
   });
