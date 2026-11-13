@@ -6,7 +6,7 @@ Este adaptador es una pieza preparada, no una sincronización activada. No modif
 
 Las rutas del sitio se implementan en un PR separado. Ambas requieren `Authorization: Bearer NITIDO_SYNC_KEY`, una credencial dedicada sin fallback a ADMIN_SECRET.
 
-- `POST /api/integrations/nitido/claim`: `{workerId: UUID, limit: 1}`. Devuelve `{jobs: []}` o un trabajo `{id, leaseToken, leaseExpiresAt, qualification}`. Lease de cinco minutos; UUID canónicos; ISO con zona horaria. `qualification` incluye `id` y los campos persistidos de `parseQualification`: service, name, email, company, role, result, budget, availability, context, decision y qualified.
+- `POST /api/integrations/nitido/claim`: `{workerId: UUID, limit: 1}`. Devuelve `{jobs: []}` o un trabajo `{id, leaseToken, leaseExpiresAt, qualification}`. Lease de cinco minutos; UUID canónicos; ISO con zona horaria. `qualification` incluye `id` y los campos persistidos que consume el adaptador: service, name, email, company, role, result, budget, availability, context y decision. No incluye `qualified`.
 - `POST /api/integrations/nitido/ack`: `{jobId, leaseToken, outcome: "synced", operationId}` sólo después de releer un recibo committed del CRM; o `{jobId, leaseToken, outcome: "needs_review", reasonCode}` para cuarentena (`duplicate_candidate`, `revision_conflict`, `invalid_payload`). La cuarentena no significa sincronizado.
 - ACK idempotente para mismo resultado/operación y mismo token; lease vencido o reasignado responde 409. Los trabajos sin ACK quedan disponibles al vencer el lease. Respuestas no cacheables y lotes acotados son responsabilidad del servidor.
 
