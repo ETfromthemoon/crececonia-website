@@ -6,6 +6,23 @@ import { marketplaceSandboxConfigured, normalizeBuyerEmail } from "@/lib/marketp
 export const runtime = "nodejs";
 type FlowStatus = { status: number; payer: string; amount: string | number; flowOrder: number; commerceOrder: string };
 
+async function readSmallBody(request: Request): Promise<string | null> {
+  if (!request.body) return "";
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > 2048) { await reader.cancel(); return null; }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  return new TextDecoder().decode(Buffer.concat(chunks));
+}
+
 async function getFlowStatus(token: string): Promise<FlowStatus> {
   const params = { apiKey: process.env.FLOW_API_KEY!, token };
   const url = new URL(`${getFlowBase()}/payment/getStatus`);
@@ -22,8 +39,8 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const length = Number(request.headers.get("content-length"));
     if (Number.isFinite(length) && length > 2048) return new Response("BAD REQUEST", { status: 413 });
-    const body = await request.text();
-    if (body.length > 2048) return new Response("BAD REQUEST", { status: 413 });
+    const body = await readSmallBody(request);
+    if (body === null) return new Response("BAD REQUEST", { status: 413 });
     const token = new URLSearchParams(body).get("token");
     if (!token || token.length > 500) return new Response("BAD REQUEST", { status: 400 });
     const payment = await getFlowStatus(token);

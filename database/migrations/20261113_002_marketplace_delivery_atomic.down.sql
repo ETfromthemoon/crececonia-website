@@ -7,4 +7,5 @@ do $$ begin
 end $$;
 drop function if exists public.marketplace_confirm_sandbox_payment(uuid,text,bigint,bigint,text,text);
 alter table public.marketplace_outbox drop column if exists claim_token;
+alter table public.marketplace_outbox drop column if exists delivery_token_expires_at;
 commit;

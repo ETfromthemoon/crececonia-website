@@ -20,7 +20,7 @@ describe("marketplace durable delivery", () => {
       if (sql.includes("with candidate")) {
         if (claimed) return [];
         claimed = true;
-        return [{ id: "job-id", aggregate_id: orderId, claim_token: args[0], attempts: 1 }];
+        return [{ id: "job-id", aggregate_id: orderId, claim_token: args[0], attempts: 1, delivery_token_expires_at: "2026-11-20T12:00:00Z" }];
       }
       if (sql.includes("select o.id,o.buyer_email")) return [{ id: orderId, buyer_email: "buyer@example.cl", paid_at: "2026-11-13T12:00:00Z", item_id: itemId, title: "Libro" }];
       if (sql.includes("status='succeeded'")) return [{ id: "job-id" }];
@@ -31,6 +31,7 @@ describe("marketplace durable delivery", () => {
     const token = database.mock.calls.find(([sql]) => String(sql).includes("with candidate"))![1][0];
     expect(database.mock.calls.find(([sql]) => String(sql).includes("status='succeeded'"))![1]).toEqual(["job-id", token]);
     expect(delivery).toHaveBeenCalledTimes(1);
+    expect(delivery.mock.calls[0][0].tokenExpiresAt).toBe("2026-11-20T12:00:00Z");
   });
 
   it("retries a failed send with backoff without closing the job", async () => {
@@ -39,7 +40,7 @@ describe("marketplace durable delivery", () => {
       if (sql.includes("with candidate")) {
         if (claimed) return [];
         claimed = true;
-        return [{ id: "job-id", aggregate_id: orderId, claim_token: args[0], attempts: 2 }];
+        return [{ id: "job-id", aggregate_id: orderId, claim_token: args[0], attempts: 2, delivery_token_expires_at: "2026-11-20T12:00:00Z" }];
       }
       if (sql.includes("select o.id,o.buyer_email")) return [{ id: orderId, buyer_email: "buyer@example.cl", paid_at: "2026-11-13T12:00:00Z", item_id: itemId, title: "Libro" }];
       return [];

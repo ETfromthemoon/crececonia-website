@@ -58,4 +58,15 @@ describe("confirmación de compra marketplace", () => {
     expect(delivery).not.toHaveBeenCalled();
     expect(database).toHaveBeenCalledTimes(1);
   });
+
+  it("rechaza cuerpos fragmentados que superan 2 KiB antes de consultar Flow", async () => {
+    const request = new Request("https://www.crececonia.cl/api/marketplace/flow/confirm", {
+      method: "POST",
+      body: new ReadableStream({ start(controller) { controller.enqueue(new TextEncoder().encode("token=" + "x".repeat(3000))); controller.close(); } }),
+      duplex: "half",
+    } as RequestInit & { duplex: string });
+    expect((await POST(request)).status).toBe(413);
+    expect(database).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
+  });
 });

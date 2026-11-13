@@ -30,4 +30,18 @@ describe("marketplace delivery retry", () => {
     expect(token).toBeTruthy();
     expect(verifyMarketplaceDownloadToken(token!, "x".repeat(32))).toBe("e950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29");
   });
+
+  it("uses identical payload and idempotency key across a retry", async () => {
+    const input = {
+      orderId: "c950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29",
+      itemId: "e950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29",
+      buyerEmail: "buyer@example.cl",
+      title: "Libro", paidAt: "2026-11-13T12:00:00Z", tokenExpiresAt: "2026-11-20T12:00:00Z",
+    };
+    await sendMarketplaceDelivery(input);
+    vi.advanceTimersByTime(60 * 60 * 1000);
+    await sendMarketplaceDelivery(input);
+    expect(send.mock.calls[0][0]).toEqual(send.mock.calls[1][0]);
+    expect(send.mock.calls[0][1]).toEqual(send.mock.calls[1][1]);
+  });
 });

@@ -7,6 +7,7 @@ export type MarketplaceDelivery = {
   buyerEmail: string;
   title: string;
   paidAt: string;
+  tokenExpiresAt?: string;
 };
 
 export async function sendMarketplaceDelivery(input: MarketplaceDelivery): Promise<void> {
@@ -18,7 +19,8 @@ export async function sendMarketplaceDelivery(input: MarketplaceDelivery): Promi
   if (base.protocol !== "https:") throw new Error("URL de entrega insegura.");
   if (!Number.isFinite(new Date(input.paidAt).getTime())) throw new Error("Fecha de pago inválida.");
   // A delayed retry must never send a link that expired before the email was sent.
-  const expires = Date.now() + 7 * 24 * 60 * 60 * 1000;
+  const expires = input.tokenExpiresAt ? Date.parse(input.tokenExpiresAt) : Date.now() + 7 * 24 * 60 * 60 * 1000;
+  if (!Number.isSafeInteger(expires) || expires <= Date.now()) throw new Error("El enlace de entrega venció antes del envío.");
   const url = new URL("/api/marketplace/checkout/download", base);
   url.searchParams.set("token", createMarketplaceDownloadToken(input.itemId, expires, secret));
   const title = input.title.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);

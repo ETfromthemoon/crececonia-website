@@ -1,6 +1,7 @@
 begin;
 
 alter table public.marketplace_outbox add column claim_token uuid;
+alter table public.marketplace_outbox add column delivery_token_expires_at timestamptz;
 
 create function public.marketplace_confirm_sandbox_payment(
   p_order_id uuid, p_token text, p_flow_order bigint, p_amount bigint,
@@ -23,6 +24,16 @@ begin
   end if;
   select * into v_payment from public.marketplace_payments
     where order_id=p_order_id and attempt_number=1 for update;
+  if not found then
+    -- Flow can complete before checkout receives its create response. The verified
+    -- provider token from getStatus is sufficient to recover that missing row.
+    insert into public.marketplace_payments
+      (order_id,provider,provider_account_ref,provider_payment_ref,attempt_number,amount_minor,status,confirmed_at)
+      values (p_order_id,'flow','crececonia',p_token,1,p_amount,'confirmed',now())
+      on conflict (order_id,attempt_number) do nothing;
+    select * into v_payment from public.marketplace_payments
+      where order_id=p_order_id and attempt_number=1 for update;
+  end if;
   if not found or v_payment.provider<>'flow' or v_payment.provider_payment_ref<>p_token
      or v_payment.amount_minor<>p_amount or v_payment.status not in ('pending','confirmed') then
     raise exception 'marketplace payment attempt mismatch';
