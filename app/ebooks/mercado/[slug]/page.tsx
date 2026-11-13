@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { getPublishedMarketplaceBook } from "@/lib/marketplace-review";
+import { getMarketplaceRecommendations, getPublishedMarketplaceBook } from "@/lib/marketplace-review";
 import MarketplaceSandboxCheckout from "./sandbox-checkout";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +16,12 @@ export default async function MarketplaceBookPage({ params }: { params: Promise<
   const { slug } = await params;
   const book = await getPublishedMarketplaceBook(slug);
   if (!book) notFound();
+  let recommendations: Awaited<ReturnType<typeof getMarketplaceRecommendations>> = [];
+  try {
+    recommendations = await getMarketplaceRecommendations(book);
+  } catch (error) {
+    console.error("marketplace_recommendations_unavailable", error instanceof Error ? error.message : "unknown");
+  }
   const sandboxCheckout = process.env.MARKETPLACE_FLOW_SANDBOX_ENABLED === "true"
     && process.env.FLOW_SANDBOX === "true"
     && (process.env.VERCEL_ENV === "preview" || process.env.NODE_ENV === "development");
@@ -31,6 +37,18 @@ export default async function MarketplaceBookPage({ params }: { params: Promise<
       <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.7, marginBottom: 40 }}>{book.description}</div>
       {sandboxCheckout ? <MarketplaceSandboxCheckout bookId={book.id} priceMinor={book.price_minor} />
         : <p role="status">La compra de este libro estará disponible próximamente.</p>}
+      {recommendations.length > 0 && <section aria-labelledby="related-books" style={{ marginTop: 64 }}>
+        <p className="eyebrow">También te puede interesar</p>
+        <h2 id="related-books" style={{ fontSize: "2rem", margin: "12px 0 24px" }}>Sigue explorando</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
+          {recommendations.map((recommended) => <article key={recommended.id} style={{ border: "1px solid var(--border)", borderRadius: 16, padding: 22 }}>
+            <p className="eyebrow">{categoryLabel[recommended.category]}</p>
+            <h3 style={{ fontSize: "1.3rem", margin: "12px 0" }}><Link href={`/ebooks/mercado/${recommended.slug}`}>{recommended.title}</Link></h3>
+            <p>Por {recommended.author_display_name}</p>
+            <p style={{ color: "var(--champagne)" }}>{formatCLP(recommended.price_minor)}</p>
+          </article>)}
+        </div>
+      </section>}
     </main>
     <Footer />
   </>;

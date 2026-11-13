@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import PayoutCalculator from "@/components/marketplace/PayoutCalculator";
 
 type Seller = { id: string; display_name: string; public_slug: string; bio: string; status: string };
 type TaxProfile = { rut: string; legal_name: string; declared_vat_status: string; review_status: string };
@@ -20,6 +21,8 @@ export default function SellerPortal() {
   const [taxProfile, setTaxProfile] = useState<TaxProfile | null>(null);
   const [books, setBooks] = useState<Book[]>([]);
   const [message, setMessage] = useState("");
+  const [pricePreview, setPricePreview] = useState("");
+  const [revisionPrices, setRevisionPrices] = useState<Record<string, string>>({});
 
   async function refresh() {
     try {
@@ -45,7 +48,7 @@ export default function SellerPortal() {
     const body: Record<string, unknown> = { ...values };
     if (path.endsWith("/profile")) body.acceptTerms = values.acceptTerms === "on";
     if (path.includes("/books")) { body.declareRights = values.declareRights === "on"; body.priceClp = Number(values.priceClp); }
-    try { await post(path, body, method); setMessage(success); form.reset(); await refresh(); }
+    try { await post(path, body, method); setMessage(success); form.reset(); if (path === "/api/marketplace/seller/books") setPricePreview(""); await refresh(); }
     catch (error) { setMessage(error instanceof Error ? error.message : "No pudimos guardar los datos."); }
   }
 
@@ -114,7 +117,8 @@ export default function SellerPortal() {
           <label>Título <input name="title" defaultValue={book.title} required minLength={3} maxLength={180} style={inputStyle} /></label>
           <label>Descripción <textarea name="description" defaultValue={book.description} required minLength={20} maxLength={10000} rows={6} style={inputStyle} /></label>
           <label>Categoría <select name="category" defaultValue={book.category} style={inputStyle}><option value="ia">IA</option><option value="tecnologia">Tecnología</option><option value="negocios">Negocios</option></select></label>
-          <label>Precio en CLP <input name="priceClp" type="number" defaultValue={Number(book.price_minor)} min={500} max={10000000} step={1} required style={inputStyle} /></label>
+          <label>Precio en CLP <input name="priceClp" type="number" value={revisionPrices[book.id] ?? String(book.price_minor)} onChange={(event) => setRevisionPrices((prices) => ({ ...prices, [book.id]: event.target.value }))} min={500} max={10000000} step={1} required style={inputStyle} /></label>
+          <PayoutCalculator priceValue={revisionPrices[book.id] ?? String(book.price_minor)} />
           <label><input name="declareRights" type="checkbox" required /> Confirmo que tengo los derechos de la versión corregida.</label>
           <p><button type="submit">Guardar nueva revisión</button></p>
         </form>}
@@ -130,8 +134,9 @@ export default function SellerPortal() {
         <label htmlFor="book-slug">Identificador del libro</label><input id="book-slug" name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxLength={120} style={inputStyle} />
         <label htmlFor="book-description">Descripción (mínimo 20 caracteres)</label><textarea id="book-description" name="description" required minLength={20} maxLength={10000} rows={6} style={inputStyle} />
         <label htmlFor="book-category">Categoría</label><select id="book-category" name="category" style={inputStyle}><option value="ia">IA</option><option value="tecnologia">Tecnología</option><option value="negocios">Negocios</option></select>
-        <label htmlFor="book-price">Precio en pesos chilenos, IVA por definir en revisión</label><input id="book-price" name="priceClp" type="number" min={500} max={10000000} step={1} required style={inputStyle} />
-        <p>Antes de fijar el precio, <a href="/ebooks/vender/simulador" target="_blank" rel="noopener noreferrer">estima tu ingreso, comisión, IVA y costo de pasarela</a>. El resultado usa supuestos ilustrativos; la revisión tributaria define el tratamiento aplicable.</p>
+        <label htmlFor="book-price">Precio en pesos chilenos, IVA por definir en revisión</label><input id="book-price" name="priceClp" type="number" min={500} max={10000000} step={1} required value={pricePreview} onChange={(event) => setPricePreview(event.target.value)} aria-describedby="book-price-help" style={inputStyle} />
+        <p id="book-price-help">El cálculo siguiente usa supuestos ilustrativos. El tratamiento tributario aplicable se confirma durante la revisión.</p>
+        <PayoutCalculator priceValue={pricePreview} />
         <label><input name="declareRights" type="checkbox" required /> Declaro que tengo los derechos para vender este ebook.</label>
         <p><button type="submit" className="button button-dark">Guardar borrador</button></p>
       </form>

@@ -5,7 +5,7 @@ vi.mock("@/lib/database", () => ({ queryDatabase: vi.fn() }));
 vi.mock("@/lib/private-storage", () => ({ downloadPrivateObject: vi.fn() }));
 
 import { queryDatabase } from "@/lib/database";
-import { listPublishedMarketplaceBooks, moderateMarketplaceBook, setMarketplaceSellerStatus, verifyMarketplaceSellerTax } from "@/lib/marketplace-review";
+import { getMarketplaceRecommendations, listPublishedMarketplaceBooks, moderateMarketplaceBook, setMarketplaceSellerStatus, verifyMarketplaceSellerTax } from "@/lib/marketplace-review";
 
 const bookId = "11111111-1111-4111-8111-111111111111";
 const revisionId = "22222222-2222-4222-8222-222222222222";
@@ -89,5 +89,27 @@ describe("marketplace moderation transition contracts", () => {
     expect(values).toEqual([96]);
     await expect(listPublishedMarketplaceBooks(0)).rejects.toThrow("Página inválida");
     expect(database).toHaveBeenCalledTimes(1);
+  });
+
+  it("recommends related approved books from other authors using a gated live query", async () => {
+    const current = { id: bookId, slug: "actual", title: "Actual", subtitle: "", description: "Libro actual",
+      author_display_name: "Autora", category: "ia" as const, price_minor: "5000", seller_name: "Autora", seller_slug: "autora" };
+    const candidate = (id: string, category: "ia" | "negocios", seller: string) => ({
+      ...current, id, slug: id, category, seller_slug: seller,
+      published_at: "2026-01-01T12:00:00.000Z",
+    });
+    database.mockResolvedValueOnce([
+      candidate("same-author", "ia", "autora"),
+      candidate("other-author", "ia", "otra"),
+      candidate("other-topic", "negocios", "tercera"),
+    ]);
+    const result = await getMarketplaceRecommendations(current);
+    expect(result.map((book) => book.id)).toEqual(["other-author", "same-author", "other-topic"]);
+    const [sql, values] = database.mock.calls[0];
+    expect(sql).toContain("s.status = 'active'");
+    expect(sql).toContain("t.review_status = 'verified'");
+    expect(sql).toContain("r.moderation_status = 'approved'");
+    expect(sql).toContain("a.scan_status = 'ready'");
+    expect(values).toEqual([bookId, "ia"]);
   });
 });

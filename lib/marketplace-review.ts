@@ -2,6 +2,7 @@ import "server-only";
 import { queryDatabase } from "@/lib/database";
 import { downloadPrivateObject } from "@/lib/private-storage";
 import { validateMarketplacePdf } from "@/lib/marketplace-asset-validation";
+import { recommendMarketplaceBooks } from "@/lib/marketplace/recommendations";
 
 export type ReviewAction = "approve" | "request_changes" | "reject" | "publish" | "pause";
 
@@ -300,6 +301,40 @@ export async function getPublishedMarketplaceBook(slug: string): Promise<Publish
     limit 1
   `, [slug]);
   return books[0] ?? null;
+}
+
+/** The SQL eligibility checks are authoritative; the pure ranker only orders safe candidates. */
+export async function getMarketplaceRecommendations(current: PublishedBook): Promise<PublishedBook[]> {
+  const candidates = await queryDatabase<PublishedBook & { published_at: string }>(`
+    select b.id, b.slug, b.published_at::text, r.title, r.subtitle, r.description,
+      r.author_display_name, r.category, r.price_minor::text,
+      s.display_name as seller_name, s.public_slug as seller_slug
+    from marketplace_books b
+    join marketplace_sellers s on s.id = b.seller_id and s.status = 'active'
+    join marketplace_seller_tax_profiles t on t.seller_id = s.id and t.review_status = 'verified'
+    join marketplace_book_revisions r on r.id = b.published_revision_id
+      and r.book_id = b.id and r.moderation_status = 'approved'
+    where b.status = 'published' and b.id <> $1 and b.published_at <= now()
+      and r.rights_declared_at is not null and r.price_minor > 0
+      and r.price_tax_mode in ('tax_inclusive', 'exempt')
+      and exists (
+        select 1 from marketplace_assets a
+        where a.book_id = b.id and a.revision_id = r.id
+          and a.asset_kind = 'ebook_pdf' and a.scan_status = 'ready'
+      )
+    order by (r.category = $2) desc, b.published_at desc, b.id desc
+    limit 100
+  `, [current.id, current.category]);
+  const ranked = recommendMarketplaceBooks(candidates.map((candidate) => ({
+    id: candidate.id, sellerId: candidate.seller_slug, category: candidate.category,
+    publishedAt: candidate.published_at, status: "published" as const,
+    sellerActive: true, assetReady: true, paymentReady: true,
+  })), {
+    currentBookId: current.id, currentSellerId: current.seller_slug,
+    currentCategory: current.category, now: Date.now(), limit: 4,
+  });
+  const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]));
+  return ranked.map((item) => byId.get(item.id)!).filter(Boolean);
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

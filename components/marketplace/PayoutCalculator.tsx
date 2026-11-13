@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import {
   estimateMarketplacePayout,
   type PayoutEstimatePolicy,
@@ -22,8 +22,12 @@ const EXAMPLE_POLICY: PayoutEstimatePolicy = {
 
 const clp = (amount: number) => `$${amount.toLocaleString("es-CL")} CLP`;
 
-export default function PayoutCalculator() {
-  const [price, setPrice] = useState("11900");
+export default function PayoutCalculator({ priceValue }: { priceValue?: string }) {
+  const titleId = useId();
+  const inputId = useId();
+  const helpId = useId();
+  const [internalPrice, setInternalPrice] = useState("11900");
+  const price = priceValue ?? internalPrice;
   const estimate = useMemo(() => {
     const amountClp = Number(price);
     if (!Number.isSafeInteger(amountClp) || amountClp < 1) return null;
@@ -38,30 +42,30 @@ export default function PayoutCalculator() {
   }, [price]);
 
   return (
-    <section className="marketplace-calculator" aria-labelledby="calculator-title">
+    <section className="marketplace-calculator" aria-labelledby={titleId}>
       <div className="marketplace-calculator-intro">
         <span>Simulador para autores</span>
-        <h2 id="calculator-title">Calcula un escenario de venta</h2>
+        <h2 id={titleId}>Calcula un escenario de venta</h2>
         <p>Ingresa el precio final que pagaría el comprador. Los resultados son una demostración con supuestos visibles.</p>
       </div>
 
       <div className="marketplace-calculator-panel">
-        <label htmlFor="marketplace-price">Precio final del ebook</label>
+        {priceValue === undefined && <><label htmlFor={inputId}>Precio final del ebook</label>
         <div className="marketplace-price-input">
           <span aria-hidden="true">$</span>
           <input
-            id="marketplace-price"
+            id={inputId}
             type="number"
             min="1"
             step="1"
             inputMode="numeric"
             value={price}
-            onChange={(event) => setPrice(event.target.value)}
-            aria-describedby="marketplace-price-help"
+            onChange={(event) => setInternalPrice(event.target.value)}
+            aria-describedby={helpId}
           />
           <span>CLP</span>
-        </div>
-        <p id="marketplace-price-help">Precio bruto en pesos chilenos, con el IVA de venta supuesto incluido en este ejemplo.</p>
+        </div></>}
+        <p id={helpId}>Precio bruto en pesos chilenos, con el IVA de venta supuesto incluido en este ejemplo.</p>
 
         {estimate ? (
           <dl className="marketplace-estimate-lines">
