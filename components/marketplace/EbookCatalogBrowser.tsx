@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import EbookCard from "@/components/EbookCard";
 import { trackEbookEvent } from "@/lib/analytics";
 import { catalogResultBucket, searchLengthBucket } from "@/lib/marketplace/catalog-analytics";
@@ -23,6 +23,7 @@ type CatalogBook = {
 export default function EbookCatalogBrowser({ books }: { books: CatalogBook[] }) {
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState("all");
+  const lastTrackedQuery = useRef("");
   const levels = useMemo(() => [...new Set(books.map((book) => book.level))].sort(), [books]);
   const filteredBooks = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("es-CL");
@@ -35,8 +36,13 @@ export default function EbookCatalogBrowser({ books }: { books: CatalogBook[] })
 
   useEffect(() => {
     const lengthBucket = searchLengthBucket(query);
-    if (!lengthBucket) return;
+    if (!lengthBucket) {
+      lastTrackedQuery.current = "";
+      return;
+    }
+    if (lastTrackedQuery.current === query.trim()) return;
     const timer = window.setTimeout(() => {
+      lastTrackedQuery.current = query.trim();
       trackEbookEvent("marketplace_catalog_search", {
         query_length_bucket: lengthBucket,
         result_bucket: catalogResultBucket(filteredBooks.length),
