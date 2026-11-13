@@ -1,5 +1,7 @@
 import { requireAdminSession } from "@/lib/admin-auth";
 import { listMarketplaceReviewAssets, listMarketplaceReviews, listSellerReviews } from "@/lib/marketplace-review";
+import { marketplaceDemoAvailable } from "@/lib/marketplace-demo";
+import DemoMarketplaceAdmin from "./DemoMarketplaceAdmin";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +14,7 @@ export default async function MarketplaceReviewPage({
 }: {
   searchParams: Promise<{ resultado?: string }>;
 }) {
+  if (marketplaceDemoAvailable()) return <DemoMarketplaceAdmin />;
   await requireAdminSession();
   const [rows, sellers, assets] = await Promise.all([
     listMarketplaceReviews(), listSellerReviews(), listMarketplaceReviewAssets(),

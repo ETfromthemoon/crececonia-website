@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import PayoutCalculator from "@/components/marketplace/PayoutCalculator";
+import SellerDemo from "./SellerDemo";
 
 type Seller = { id: string; display_name: string; public_slug: string; bio: string; status: string };
 type TaxProfile = { rut: string; legal_name: string; declared_vat_status: string; review_status: string };
@@ -23,7 +24,7 @@ const demoBooks: Book[] = [
 export default function SellerPortal({ demoAvailable }: { demoAvailable: boolean }) {
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
-  const [demoMode, setDemoMode] = useState(false);
+  const [demoMode, setDemoMode] = useState(demoAvailable);
   const [seller, setSeller] = useState<Seller | null>(null);
   const [taxProfile, setTaxProfile] = useState<TaxProfile | null>(null);
   const [books, setBooks] = useState<Book[]>([]);
@@ -45,7 +46,7 @@ export default function SellerPortal({ demoAvailable }: { demoAvailable: boolean
     } catch { setMessage("No pudimos cargar el panel. Actualiza la página e inténtalo de nuevo."); }
     finally { setLoading(false); }
   }
-  useEffect(() => { void refresh(); }, []);
+  useEffect(() => { if (!demoAvailable) void refresh(); else setLoading(false); }, [demoAvailable]);
 
   async function submit(event: FormEvent<HTMLFormElement>, path: string, success: string, method: "POST" | "PATCH" = "POST") {
     event.preventDefault();
@@ -76,6 +77,8 @@ export default function SellerPortal({ demoAvailable }: { demoAvailable: boolean
       if (response.ok) await refresh();
     } catch { setMessage("No pudimos enviar el libro a revisión."); }
   }
+
+  if (demoMode) return <SellerDemo onExit={() => { setDemoMode(false); setLoggedIn(false); setSeller(null); setTaxProfile(null); setBooks([]); }} />;
 
   return <main className="site-container" style={{ maxWidth: 800, paddingTop: 100, paddingBottom: 100 }}>
     <p className="eyebrow">Marketplace de ebooks</p>

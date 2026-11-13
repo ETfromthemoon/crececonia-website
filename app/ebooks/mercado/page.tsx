@@ -3,6 +3,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { listPublishedMarketplaceBooks } from "@/lib/marketplace-review";
 import { createPageMetadata } from "@/lib/seo";
+import { marketplaceDemoAvailable, marketplacePublicAvailable } from "@/lib/marketplace-demo";
+import DemoCatalog from "./DemoCatalog";
+import "./demo.css";
 
 export const dynamic = "force-dynamic";
 export const metadata = createPageMetadata({
@@ -19,6 +22,8 @@ const formatCLP = (value: string) => new Intl.NumberFormat("es-CL", {
 export default async function MarketplaceCatalogPage({ searchParams }: {
   searchParams: Promise<{ page?: string | string[] }>;
 }) {
+  if (marketplaceDemoAvailable()) return <><Navbar /><DemoCatalog /><Footer /></>;
+  if (!marketplacePublicAvailable()) return <><Navbar /><main className="md-shop"><section className="md-hero"><div className="md-wrap"><div className="md-kicker">CRECECONIA / MARKETPLACE</div><h1>Pronto, nuevas<br /><em>voces para aprender.</em></h1><p>Estamos preparando una biblioteca de ebooks de autores independientes sobre IA, tecnología y negocios. Cada libro pasará por revisión antes de publicarse.</p><Link className="md-button" href="/ebooks">Explorar ebooks de CrececonIA ↗</Link></div></section></main><Footer /></>;
   const rawPage = (await searchParams).page;
   const requestedPage = typeof rawPage === "string" && /^[1-9]\d*$/.test(rawPage) ? Number(rawPage) : 1;
   const page = Number.isSafeInteger(requestedPage) && requestedPage <= Math.floor(Number.MAX_SAFE_INTEGER / 24) ? requestedPage : 1;

@@ -4,6 +4,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getMarketplaceRecommendations, getPublishedMarketplaceBook } from "@/lib/marketplace-review";
 import MarketplaceSandboxCheckout from "./sandbox-checkout";
+import { marketplaceDemoAvailable, marketplacePublicAvailable } from "@/lib/marketplace-demo";
+import { getDemoBook } from "@/lib/marketplace/demo-catalog";
+import DemoBookDetail from "./DemoBookDetail";
+import "../demo.css";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +18,12 @@ const formatCLP = (value: string) => new Intl.NumberFormat("es-CL", {
 
 export default async function MarketplaceBookPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  if (marketplaceDemoAvailable()) {
+    const demoBook = getDemoBook(slug);
+    if (!demoBook) notFound();
+    return <><Navbar /><DemoBookDetail book={demoBook} /><Footer /></>;
+  }
+  if (!marketplacePublicAvailable()) notFound();
   const book = await getPublishedMarketplaceBook(slug);
   if (!book) notFound();
   let recommendations: Awaited<ReturnType<typeof getMarketplaceRecommendations>> = [];
