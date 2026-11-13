@@ -42,7 +42,7 @@ begin
   insert into public.marketplace_entitlements (order_item_id,buyer_email,book_id,status)
     values (v_item.id,p_buyer_email,v_item.book_id,'active') on conflict (order_item_id) do nothing;
   if not exists(select 1 from public.marketplace_entitlements
-    where order_item_id=v_item.id and buyer_email=p_buyer_email and status='active') then
+    where order_item_id=v_item.id and buyer_email=p_buyer_email and book_id=v_item.book_id and status='active') then
     raise exception 'marketplace entitlement requires review';
   end if;
   insert into public.marketplace_ledger_entries
