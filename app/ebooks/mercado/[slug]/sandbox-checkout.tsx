@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 export default function MarketplaceSandboxCheckout({
   bookId, priceMinor,
@@ -11,6 +11,7 @@ export default function MarketplaceSandboxCheckout({
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const requestIds = useRef(new Map<string, string>());
   const expectedAmount = Number(priceMinor);
   const validAmount = Number.isSafeInteger(expectedAmount) && expectedAmount > 0;
 
@@ -20,10 +21,22 @@ export default function MarketplaceSandboxCheckout({
     setError("");
     setBusy(true);
     try {
+      const emailBytes = new TextEncoder().encode(email.trim().toLowerCase());
+      const digest = await window.crypto.subtle.digest("SHA-256", emailBytes);
+      const emailHash = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+      const requestKey = `marketplace-checkout:${bookId}:${emailHash}:${expectedAmount}`;
+      let requestId = requestIds.current.get(requestKey);
+      try {
+        const saved = window.sessionStorage.getItem(requestKey);
+        if (saved && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(saved)) requestId = saved;
+      } catch { /* Private browsing can disable session storage. */ }
+      requestId ??= window.crypto.randomUUID();
+      requestIds.current.set(requestKey, requestId);
+      try { window.sessionStorage.setItem(requestKey, requestId); } catch { /* Keep the in-memory value. */ }
       const response = await fetch("/api/marketplace/checkout", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ bookId, email, expectedAmount }),
+        body: JSON.stringify({ bookId, email, expectedAmount, requestId }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "No se pudo iniciar la compra.");
