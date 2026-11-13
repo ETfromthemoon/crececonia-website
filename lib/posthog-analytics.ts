@@ -55,6 +55,9 @@ export interface EcosystemMetrics {
   ebookCheckoutFailures: number;
   ebookCheckouts: number;
   purchases: number;
+  marketplaceSearches: number;
+  marketplaceFilters: number;
+  marketplaceBookSelections: number;
   appointmentSubmissions: number;
   appointmentSuccesses: number;
   qualificationSubmissions: number;
@@ -141,6 +144,9 @@ const ECOSYSTEM_EVENTS = [
   "ebook_combo_toggle",
   "ebook_checkout_created",
   "ebook_purchase_confirmed",
+  "marketplace_catalog_search",
+  "marketplace_catalog_filter",
+  "marketplace_book_selected",
   "class_purchase_confirmed",
   "workshop_purchase_confirmed",
   "appointment_submitted",
@@ -178,6 +184,9 @@ function createEmptyMetrics(): EcosystemMetrics {
     ebookCheckoutFailures: 0,
     ebookCheckouts: 0,
     purchases: 0,
+    marketplaceSearches: 0,
+    marketplaceFilters: 0,
+    marketplaceBookSelections: 0,
     appointmentSubmissions: 0,
     appointmentSuccesses: 0,
     qualificationSubmissions: 0,
@@ -207,6 +216,9 @@ const EVENT_TO_METRIC: Record<string, keyof EcosystemMetrics> = {
   ebook_checkout_failed: "ebookCheckoutFailures",
   ebook_checkout_created: "ebookCheckouts",
   ebook_purchase_confirmed: "purchases",
+  marketplace_catalog_search: "marketplaceSearches",
+  marketplace_catalog_filter: "marketplaceFilters",
+  marketplace_book_selected: "marketplaceBookSelections",
   appointment_submitted: "appointmentSubmissions",
   appointment_submit_succeeded: "appointmentSuccesses",
   qualification_submitted: "qualificationSubmissions",
@@ -408,6 +420,10 @@ export function buildAnalyticsRecommendations(
 
   if (metrics.ebookCheckouts > 0 && metrics.purchases === 0) {
     recommendations.push("Hay checkouts creados pero ninguna compra confirmada: revisar webhook/confirmación de Flow y la entrega posterior antes de optimizar precios.");
+  }
+
+  if (metrics.marketplaceSearches >= 20 && metrics.marketplaceBookSelections === 0) {
+    recommendations.push("Hay búsquedas en el catálogo pero ninguna selección de libro registrada: revisar resultados y enlaces antes de cambiar ofertas. Son conteos de eventos, no una tasa de conversión por persona.");
   }
 
   if (metrics.skillViews >= 20 && metrics.skillDownloads / metrics.skillViews < 0.1) {

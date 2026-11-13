@@ -54,6 +54,7 @@ function formatEcosystemSection(metrics?: EcosystemMetrics, byPageType: Analytic
     `  newsletter prompts/suscripciones: ${metrics.newsletterPrompts}/${metrics.newsletterSignups}`,
     `  skills vistas/descargas: ${metrics.skillViews}/${metrics.skillDownloads}`,
     `  ebooks: eventos de checkout solicitado/fallido/creado/compra: ${metrics.ebookCheckoutRequests}/${metrics.ebookCheckoutFailures}/${metrics.ebookCheckouts}/${metrics.purchases}`,
+    `  marketplace: búsquedas/filtros/libros seleccionados: ${metrics.marketplaceSearches ?? 0}/${metrics.marketplaceFilters ?? 0}/${metrics.marketplaceBookSelections ?? 0} (eventos; no visitantes únicos)`,
     `  solicitudes de llamada intentadas/registradas (no llamadas realizadas): ${metrics.appointmentSubmissions}/${metrics.appointmentSuccesses}`,
     `  aperturas de WhatsApp desde calificación (evento histórico; no envío confirmado): ${metrics.qualificationSubmissions}`,
     `  registros de calificación confirmados/clics de WhatsApp: ${metrics.qualificationSaved ?? 0}/${metrics.qualificationWhatsappClicks ?? 0} (no mensajes confirmados)`,

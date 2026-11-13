@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import EbookCard from "@/components/EbookCard";
+import { trackEbookEvent } from "@/lib/analytics";
+import { catalogResultBucket, searchLengthBucket } from "@/lib/marketplace/catalog-analytics";
 
 type CatalogBook = {
   key: string;
@@ -31,6 +33,19 @@ export default function EbookCatalogBrowser({ books }: { books: CatalogBook[] })
     });
   }, [books, level, query]);
 
+  useEffect(() => {
+    const lengthBucket = searchLengthBucket(query);
+    if (!lengthBucket) return;
+    const timer = window.setTimeout(() => {
+      trackEbookEvent("marketplace_catalog_search", {
+        query_length_bucket: lengthBucket,
+        result_bucket: catalogResultBucket(filteredBooks.length),
+        level_filter: level,
+      });
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [query, level, filteredBooks.length]);
+
   return (
     <>
       <div className="ebook-marketplace-controls" aria-label="Buscar y filtrar ebooks">
@@ -45,7 +60,11 @@ export default function EbookCatalogBrowser({ books }: { books: CatalogBook[] })
         </label>
         <label className="ebook-marketplace-level">
           <span>Nivel</span>
-          <select value={level} onChange={(event) => setLevel(event.target.value)}>
+          <select value={level} onChange={(event) => {
+            const nextLevel = event.target.value;
+            setLevel(nextLevel);
+            trackEbookEvent("marketplace_catalog_filter", { level_filter: nextLevel });
+          }}>
             <option value="all">Todos los niveles</option>
             {levels.map((option) => <option key={option} value={option}>{option}</option>)}
           </select>
@@ -57,7 +76,14 @@ export default function EbookCatalogBrowser({ books }: { books: CatalogBook[] })
 
       {filteredBooks.length ? (
         <div className="ebook-store-grid">
-          {filteredBooks.map(({ key, ...card }, index) => <EbookCard key={key} index={index} {...card} />)}
+          {filteredBooks.map(({ key, ...card }, index) => <EbookCard key={key} index={index} {...card} onSelect={() => trackEbookEvent("marketplace_book_selected", {
+            resource: key,
+            availability: card.status,
+            level_filter: level,
+            search_active: Boolean(searchLengthBucket(query)),
+            placement: "catalog",
+            card_position: index + 1,
+          })} />)}
         </div>
       ) : (
         <p className="ebook-marketplace-empty" role="status">
