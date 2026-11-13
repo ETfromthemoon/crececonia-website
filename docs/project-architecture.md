@@ -2,18 +2,20 @@
 
 Este documento es el mapa estable del proyecto. Describe dónde vive cada responsabilidad, qué sistema es la fuente de verdad y qué no debe mezclarse.
 
+Actualizado el 2026-11-12 sobre `aca338cc9f7f765446205bd93be939ae6f7a3f69`.
+
 ## Vista general
 
 | Capa | Responsabilidad | Fuente de verdad |
 | --- | --- | --- |
-| Next.js App Router | Sitio público, tienda, checkout, aulas y administración | `app/` |
+| Next.js 16.4.6 App Router | Sitio público, tienda, checkout, aulas y administración | `app/` |
 | Componentes | Experiencias visuales y formularios | `components/` |
 | Dominio | Catálogo, precios, pagos, entregas y lanzamientos | `lib/` |
 | PostgreSQL | Compras, cupos, configuración y operación | Neon, vía `DATABASE_URL` |
 | Archivos privados | PDFs y recursos pagados | Neon Object Storage, vía `STORAGE_S3_*` |
 | Pagos | Cobro y confirmación | Flow |
 | Email | Entrega y notificaciones | Resend |
-| Medición | Funnel y atribución | PostHog y Meta |
+| Medición | Eventos y reportes del funnel | PostHog; Meta browser suspendido, eventos Meta servidor existentes conservados |
 | Coordinación social | Perfiles, borradores, DM y seguimiento | Zernio API |
 | Despliegue | Producción y previews | Vercel, desde GitHub |
 
@@ -30,6 +32,16 @@ Este documento es el mapa estable del proyecto. Describe dónde vive cada respon
 
 Las páginas `/admin/*` validan una sesión administrativa firmada en el servidor. El login usa `ADMIN_SECRET` mediante POST y entrega una cookie HttpOnly de ocho horas; los clientes de máquina conservan el encabezado `x-admin-key`. Las APIs exigen Origin exacto para mutaciones mediante cookie y no aceptan claves por query. `DATABASE_URL`, credenciales S3, Flow, Resend y `ZERNIO_API_KEY` son sólo de servidor. Ningún secreto debe comenzar con `NEXT_PUBLIC_`. Límites y transición: `admin-sessions.md`.
 
+La barrera de analítica bloquea superficies privadas y sanea URLs y propiedades de los eventos públicos. El chat comercial no aparece en administración. El SDK browser de Meta está suspendido; esto no modifica campañas ni eventos de servidor. Alcance y límites: [privacidad de analítica](analytics-privacy.md).
+
+## Captación, servicios y entrega
+
+- Las postulaciones calificadas se guardan de forma idempotente y se consultan en `/admin/postulaciones`, protegido por sesión. El CRM confirmado es Nítido local; PR #82 integra la outbox transaccional, API autenticada y worker local, pero la sincronización sigue desactivada (sin `NITIDO_SYNC_KEY`) y la migración 002 no está aplicada en producción. El repositorio Nítido actualmente identificado se declara maqueta sin backend, autenticación ni persistencia; verificar la topología y el contrato operativo antes de conectar. HighLevel no es el destino de estos contactos. Véase [operación de postulaciones](service-qualification-operations.md).
+- `lib/service-offers.ts` centraliza las condiciones, precios y criterios compartidos de mentoría e implementación. No establece por sí mismo una reserva ni un contrato individual. Véase [ofertas de servicios](service-offers.md).
+- El finalizador de pagos compartido conecta webhook y CLI; el worker vive en `/api/cron/ebook-delivery`. La ruta durable requiere `EBOOK_PAYMENT_FINALIZATION_ENABLED` y `EBOOK_DELIVERY_WORKER_ENABLED`, migraciones 003/004 y programación del worker. Estos elementos siguen pendientes de activación coordinada; integrar código no los habilita. El webhook conserva el camino legacy con la flag apagada. Véase [finalización de pagos](ebook-payment-finalization.md).
+- `/admin/ebook/entregas` es una bandeja de solo lectura. Distingue esquema ausente, instalación parcial y fallo de consulta; separa efectos contables de aceptación del correo. Aceptado por Resend no acredita entrega en bandeja ni descarga. Véase [operación de entregas](ebook-delivery-operations.md).
+- La configuración administrativa de reservas automáticas (PR #101) está integrada, pero mantiene `canBook: false`: no hay proveedor/calendario conectado, horarios configurados ni reservas activas. Las preferencias de comunicación siguen en preparación y no hay nueva secuencia comercial activada. Su estado se sigue en el [roadmap](ecosystem-roadmap.md).
+
 ## Flujo de datos de un lanzamiento
 
 1. El administrador crea un lanzamiento y elige ebooks del catálogo.
@@ -37,7 +49,7 @@ Las páginas `/admin/*` validan una sesión administrativa firmada en el servido
 3. El panel sincroniza el perfil y las cuentas de CrececonIA desde Zernio.
 4. Desde la ficha se crean borradores en Zernio y, con confirmación explícita, automatizaciones de captación por DM. La publicidad queda pausada hasta aprobación y conexión de una cuenta publicitaria.
 5. El panel bloquea el estado “Listo” y “Publicado” hasta que todas las tareas obligatorias estén aprobadas y exista un destino de CTA o un ebook principal.
-6. La página pública sólo responde para un lanzamiento publicado; el administrador puede verla antes con su clave.
+6. La página pública sólo responde para un lanzamiento publicado. Antes de publicarlo, admite sesión administrativa o la excepción legacy `isAdminPreviewKey`; para nuevas revisiones se usa la sesión, sin promover enlaces con claves. Las vistas previas privadas quedan excluidas de analítica.
 7. Cada cambio relevante queda registrado en `launch_activity`.
 
 ## Cambios futuros

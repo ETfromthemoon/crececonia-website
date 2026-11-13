@@ -1,10 +1,5 @@
-export const SERVICE_BUDGETS = {
-  mentoria: ["Menos de $400.000 CLP mensuales", "$400.000–$600.000 CLP mensuales", "Más de $600.000 CLP mensuales"],
-  implementacion: ["Menos de $500.000 CLP", "$500.000–$1.000.000 CLP", "$1.000.000–$2.000.000 CLP", "Más de $2.000.000 CLP"],
-} as const;
-export type QualificationService = keyof typeof SERVICE_BUDGETS;
-const AVAILABILITY = ["Menos de 2 horas", "2–4 horas", "5 horas o más"];
-const DECISIONS = ["Yo tomo la decisión", "Yo propongo y otra persona aprueba", "Ya hay un responsable disponible", "No sé quién decide todavía"];
+import { SERVICE_BUDGETS, AVAILABILITY, DECISIONS, qualifiesForService } from "@/lib/service-offers";
+export { SERVICE_BUDGETS, type QualificationService } from "@/lib/service-offers";
 
 export function parseQualification(body: unknown) {
   if (!body || typeof body !== "object") throw new Error("invalid");
@@ -30,8 +25,6 @@ export function parseQualification(body: unknown) {
   return {
     requestId, service, email, name: text("name", 160), company: text("company", 160),
     role: text("role", 160), result: text("result", 2000), budget, availability, decision, context,
-    qualified: budget !== SERVICE_BUDGETS[service][0] && (service === "mentoria"
-      ? availability !== AVAILABILITY[0]
-      : decision !== DECISIONS[3] && context.length >= 20),
+    qualified: qualifiesForService({ service, budget, availability, decision, context }),
   };
 }

@@ -74,4 +74,44 @@ describe("formatAnalyticsReport", () => {
     expect(text).toContain("no conciliación contable");
   });
 
+  it("explica el cociente enlazado por orden y su cohorte madura sin presentarlo como contabilidad", () => {
+    const text = formatAnalyticsReport(baseReport({ ebookOrderConversion: {
+      maturityDays: 14,
+      eligibleCheckouts: 7,
+      confirmedWithinWindow: 4,
+      checkoutEventsWithoutOrderId: 2,
+      conversionRate: 4 / 7,
+    } }));
+    expect(text).toContain("4/7 checkouts maduros");
+    expect(text).toContain("57.1%");
+    expect(text).toContain("2 eventos de checkout sin ID");
+    expect(text).toContain("no conciliación contable");
+    expect(text).toContain("14 días completos de observación");
+  });
+
+  it("no inventa una tasa si la cohorte no tiene órdenes elegibles", () => {
+    const text = formatAnalyticsReport(baseReport({ ebookOrderConversion: {
+      maturityDays: 14,
+      eligibleCheckouts: 0,
+      confirmedWithinWindow: 0,
+      checkoutEventsWithoutOrderId: 0,
+      conversionRate: null,
+    } }));
+    expect(text).toContain("sin órdenes elegibles");
+  });
+
+  it("muestra el desglose semántico CTA/origen disponible", () => {
+    const text = formatAnalyticsReport(baseReport({
+      ecosystem: { eventCount: 6, pageViews: 0, linkClicks: 0, sectionViews: 0, ctaClicks: 6,
+        evaluationOpened: 0, evaluationSubmitted: 0, evaluationSucceeded: 0, chatOpened: 0, chatMessages: 0,
+        chatFallbacks: 0, newsletterPrompts: 0, newsletterSignups: 0, skillViews: 0, skillDownloadRequests: 0,
+        skillDownloads: 0, ebookCheckoutRequests: 0, ebookCheckoutFailures: 0, ebookCheckouts: 0, purchases: 0,
+        marketplaceSearches: 0, marketplaceFilters: 0, marketplaceBookSelections: 0,
+        appointmentSubmissions: 0, appointmentSuccesses: 0, qualificationSubmissions: 0,
+        qualificationSaved: 0, qualificationWhatsappClicks: 0, scrollDepth90: 0 },
+      semanticCtaBreakdown: [{ cta: "home_route", source: "home_hero", clicks: 6 }],
+    }));
+    expect(text).toContain("CTA por ruta/origen: home_route/home_hero=6");
+  });
+
 });

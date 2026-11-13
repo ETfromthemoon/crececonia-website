@@ -16,7 +16,6 @@ export function GET() {
 
 ## Método y conocimiento
 
-- [Protocolo BPI](${SITE_URL}/protocolo-bpi): Bases, Procesos, IA. La IA se implementa después de entender el proceso y la métrica que debe mejorar.
 - [Biblioteca de ebooks](${SITE_URL}/ebooks): libros prácticos sobre Claude, agentes de IA y creación de sitios web con IA.
 - [Centro de Conocimiento](${SITE_URL}/centro): guías, skills y enlaces organizados por objetivo.
 

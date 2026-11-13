@@ -7,6 +7,8 @@ import { getOfferIdForResources } from "@/lib/ebook-offers";
 import { getComboDiscountPercent } from "@/lib/ebook-bundles";
 import { captureServerEvent } from "@/lib/posthog-server";
 import { sendPurchaseNotification } from "@/lib/purchase-notification-email";
+import { isEbookFinalizationEnabled } from "@/lib/ebook-payment-finalization-core";
+import { sanitizeAnalyticsAttribution, sanitizeAnalyticsDistinctId, type AnalyticsAttribution } from "@/lib/analytics-privacy";
 
 interface FlowPayment {
   status: number;
@@ -16,7 +18,7 @@ interface FlowPayment {
   commerceOrder: string;
 }
 
-interface PendingResource {
+interface PendingResource extends AnalyticsAttribution {
   resource: string;
   tier: Tier;
   amount: number;
@@ -52,8 +54,9 @@ function isPendingResource(value: unknown): value is PendingResource {
   );
 }
 
-function retry(message: string, error?: unknown): Response {
-  console.error(`[flow/confirm] ${message}`, error ?? "");
+function retry(message: string, _error?: unknown): Response {
+  // Driver/provider errors can contain signed URLs, recipients or download tokens.
+  console.error(`[flow/confirm] ${message}`);
   // Una orden incompleta debe quedar pendiente para que Flow pueda reintentar;
   // nunca se responde OK fingiendo que ya fue entregada.
   return new Response("RETRY", { status: 500 });
@@ -71,7 +74,33 @@ export async function POST(request: Request) {
     const buyerEmail = payment.payer;
     const paidAmount = Number(payment.amount);
     if (!buyerEmail || !Number.isSafeInteger(paidAmount) || paidAmount <= 0) {
-      return retry(`respuesta inválida de Flow para token ${token}`);
+      return retry("respuesta de pago inválida de Flow");
+    }
+
+    if (isEbookFinalizationEnabled()) {
+      // Never fall through to legacy writes or direct email if finalization fails.
+      try {
+        if (!Number.isSafeInteger(payment.flowOrder) || payment.flowOrder <= 0) throw new Error("Invalid order");
+        const { finalizeEbookPayment } = await import("@/lib/ebook-payment-finalization");
+        const finalized = await finalizeEbookPayment({ flowOrder: String(payment.flowOrder), commerceOrder: payment.commerceOrder,
+          email: buyerEmail, amount: paidAmount, token, source: "webhook" });
+        if (finalized.outcome === "finalized") {
+          // Ancillary events are best effort, never a reason to resend the buyer email.
+          try { await sendPurchaseNotification({ kind: "Ebook", buyerEmail, amount: paidAmount, orderId: payment.commerceOrder, items: finalized.resources ?? [] }); }
+          catch { console.error("[flow/confirm] notificación interna pendiente de revisión"); }
+          const resources = finalized.resources ?? [];
+          try { await captureServerEvent("ebook_purchase_confirmed", sanitizeAnalyticsDistinctId(finalized.analytics?.distinctId) ?? `ebook-order:${payment.commerceOrder}`, {
+            amount: paidAmount, order_id: payment.commerceOrder, resource: resources[0], resources, item_count: resources.length,
+            discount_code: finalized.analytics?.discountCode, pricing_variant: finalized.analytics?.pricingVariant,
+            ...(finalized.analytics?.attribution ?? {}),
+            discount_percent: getComboDiscountPercent(resources.length, resources), offer_id: getOfferIdForResources(resources),
+          }); }
+          catch { console.error("[flow/confirm] analytics no confirmado"); }
+        }
+        return new Response("OK", { status: 200 });
+      } catch {
+        return retry("finalización transaccional pendiente de reintento");
+      }
     }
 
     const db = getSupabaseAdmin();
@@ -187,9 +216,9 @@ export async function POST(request: Request) {
       }
     }
 
-    const analyticsDistinctId = resources.find((item) => item.analytics_distinct_id)?.analytics_distinct_id;
+    const analyticsDistinctId = sanitizeAnalyticsDistinctId(resources.find((item) => item.analytics_distinct_id)?.analytics_distinct_id);
     try {
-      await captureServerEvent("ebook_purchase_confirmed", analyticsDistinctId ?? buyerEmail, {
+      await captureServerEvent("ebook_purchase_confirmed", analyticsDistinctId ?? `ebook-order:${commerceOrder}`, {
         resource: resources[0].resource,
         resources: resources.map((item) => item.resource),
         item_count: resources.length,
@@ -199,6 +228,7 @@ export async function POST(request: Request) {
         offer_id: getOfferIdForResources(resources.map((item) => item.resource)),
         order_id: commerceOrder,
         pricing_variant: resources.find((item) => item.pricing_variant)?.pricing_variant,
+        ...sanitizeAnalyticsAttribution(resources[0]),
       });
     } catch (err) {
       console.error("[flow/confirm] falló el evento de PostHog:", err);

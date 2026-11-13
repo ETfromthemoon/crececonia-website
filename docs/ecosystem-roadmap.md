@@ -56,7 +56,29 @@ Cada fila es una capacidad; puede dividirse en varios PR pequeños. Las dependen
 
 El objetivo activo del chat coordina estos PR hasta completarlos. Las automatizaciones son auditorías recurrentes del ecosistema (comercial, medición y confiabilidad), no vigilantes de un PR particular. Revisan primero trabajo existente para no duplicarlo. Hallazgos repetidos se actualizan, no generan ramas nuevas sin necesidad.
 
-## Estado inicial y conflictos conocidos
+## Estado verificado al 13 de noviembre de 2026 (America/Santiago)
+
+Estado actualizado el 2026-11-13 (America/Santiago) sobre `2191d32a96f27ac8ddbbead372e75764ec87676a`. El seguimiento posterior vive en [issue #83](https://github.com/ETfromthemoon/crececonia-website/issues/83). Una capacidad puede tener código integrado sin estar activada; esta tabla no declara completo el objetivo integral.
+
+| Capacidad | Evidencia integrada | Pendiente para completar |
+| --- | --- | --- |
+| E01 Captación | PR #79: persistencia idempotente, migración productiva aprobada y aplicada; pruebas SQL aisladas de concurrencia y límites. | Mantener verificación del recorrido al conectar CRM. |
+| E02 Medición | PR #78: separación de métricas agregadas y órdenes únicas. PR #96: saneamiento de URLs/propiedades, bloqueo de superficies privadas y recuperación de eventos al volver a públicas; Meta browser suspendido. Véase [privacidad](analytics-privacy.md). | Recorrido secuencial, atribución de ingresos y futura integración segura de Meta browser. |
+| E03 CRM | Nítido local confirmado por Sergio. PR #81: adaptador local integrado. PR #87: bandeja web desplegada, lectura protegida por sesión. PR #82: outbox transaccional, API autenticada y worker local integrados en `71103a7`; sin `NITIDO_SYNC_KEY`, el servidor mantiene claim/ACK desactivados. | Migración 002 no aplicada en producción; falta validar worker contra contrato CRM aislado y probar claim/ACK/replay/cuarentena. El repositorio Nítido identificado (`CRM WORKSHOP`) se declara maqueta sin backend, autenticación ni persistencia; confirmar su topología y construir/validar el contrato operativo antes de conectar. Etapas, próxima acción y alertas siguen pendientes. La bandeja no sustituye el seguimiento en Nítido. |
+| E04 Continuidad | PR #94: BPI/Test de Fit retirados; rutas antiguas explican el cambio y enlazan a `/ia`. Historial y APIs conservados. PR #101: panel administrativo y esquema de configuración de reservas integrados, con `canBook: false` en todos los estados. | No hay proveedor ni calendario conectado, configuración de horarios ni reservas activas; duración, disponibilidad y políticas operativas siguen pendientes. Continúa la coordinación manual. |
+| E05 Entrega | PR #80: errores de correo de clases comprobados. PR #84: recuperación de ebooks con tokens aleatorios e inserción atómica. PR #86/#91/#97: outbox, finalizador compartido webhook/CLI y worker integrados, inactivos. PR #99: [bandeja readonly](ebook-delivery-operations.md) desplegada. | Activación coordinada de [finalización y worker](ebook-payment-finalization.md), cron y resolución/reconciliación operativa. Migraciones 003/004 probadas sólo en Neon aislado; no aplicadas en producción. Sin flags, cron ni envíos nuevos activados. |
+| E06 Recuperación y preferencias | Recuperación técnica inicial en #84. | Registro de preferencias y simulación en implementación separada; no hay migración productiva ni baja pública nueva disponible. Pendientes cancelación al comprar, límites y baja. No confundir recuperación de acceso con campaña comercial. |
+| E07 Ofertas | PR #94 retira oferta obsoleta. PR #98 centraliza condiciones, precios y criterios compatibles en `lib/service-offers.ts`; [runbook de ofertas](service-offers.md). | Evidencia de casos/resultados y seguimiento del contacto real; no cambiar precios ni inventar resultados sin autorización/evidencia. |
+| E08 Seguimiento segmentado | Sin secuencia nueva activada. | Depende del registro de preferencias en preparación; faltan segmentación, contenido aprobado, exclusiones, bajas y simulación verificada antes de activar. |
+| E09 Biblioteca personal | Descargas existentes conservadas. | Identidad personal, acceso conjunto seguro y recuperación sin enumeración de compradores. |
+| E10 Lanzamientos | Centro existente conservado. PR #109 integró el contrato de reservas Flow y la migración 007 en `770de15`; PR #112 integró en `2191d32` un harness aislado de concurrencia. SQL probado y revertido sólo en Neon temporal autorizado; producción intacta. | Antes de vender, integrar Flow y una finalización atómica con E05 que también cierre la reserva/cupo; resolver recuperación de creación ambigua y añadir reconciliador. La prueba manual de dos sesiones pasó en Neon; el harness del repositorio aún no se ha ejecutado allí por falta de `NEON_API_KEY` local. No aplicar 007 en producción ni activar checkout hasta cerrar estos gates; mantener checklist por tipo y aprobación explícita de publicación, DM y gasto. |
+| E11 Administración | PR #85/#93: sesiones y login/logout nativos comprobados. PR #96: chat administrativo aislado y barrera analítica de superficies privadas integrados y desplegados. | Mantener estas barreras al añadir nuevas superficies administrativas y privadas. |
+| E12 Operación | CI, revisiones independientes, pruebas SQL aisladas y auditorías recurrentes. PR #100: Next 16.4.6 y dependencias parcheadas; instalación reproducible, 646 pruebas/build y audits completo/producción sin vulnerabilidades reportadas en esa verificación. | Inventario operativo completo, alertas, restauración comprobada y limpieza autorizada de ramas temporales. Mantener verificación de dependencias; un audit sin hallazgos no certifica ausencia de vulnerabilidades. |
+| E13 Documentación | Runbooks específicos acompañan las integraciones y este estado distingue preparación de activación. | Actualizar arquitectura y operación conforme se cierren las capacidades restantes. |
+
+Los PR se encuentran en el [repositorio de GitHub](https://github.com/ETfromthemoon/crececonia-website/pulls). Las aprobaciones productivas son específicas: la autorización de E01 no autoriza por extensión las migraciones de Nítido ni de entrega. No se han activado campañas, DM ni gasto como parte de este objetivo.
+
+## Estado inicial y conflictos conocidos (histórico)
 
 - Base origin/main: dcd468c (PR #75).
 - E01: worktree ecosystem-leads; implementación iniciada.
@@ -65,7 +87,7 @@ El objetivo activo del chat coordina estos PR hasta completarlos. Las automatiza
 - PR #70 contiene una corrección previa del texto de WhatsApp: revisar compatibilidad y supersesión antes de integrar E01.
 - PR #74 (catálogo/skills) y #47 (workshop) no forman parte de estas primeras modificaciones; conservarlos.
 - El checkout original tiene archivos nuevos del usuario, incluido plans/2026-11-12-marketplace-ebooks.md; no incorporarlos ni alterarlos.
-- La revisión del conector HighLevel confirmó que pertenece a Acción Fútbol, no a CrececonIA. No debe recibir contactos de CrececonIA. La cuenta correcta está pendiente de identificar/conectar; el trabajo local y la integración desactivada pueden avanzar.
+- La revisión del conector HighLevel confirmó que pertenece a Acción Fútbol, no a CrececonIA. No debe recibir contactos de CrececonIA. Posteriormente Sergio confirmó Nítido local como CRM correcto; la conexión productiva sigue pendiente según la tabla anterior.
 - No se ha certificado aún la configuración productiva de calendario, respaldos ni todas las credenciales necesarias. No equivale a que esas capacidades no existan.
 
 ## Métricas de éxito
