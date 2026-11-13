@@ -9,6 +9,8 @@ do $$ begin
   if has_function_privilege('anon','commerce.consume_ebook_library_challenge(text,text)','execute') or has_function_privilege('authenticated','commerce.consume_ebook_library_challenge(text,text)','execute') then raise exception 'public role can consume challenge'; end if;
   if has_function_privilege('anon','commerce.revoke_ebook_library_session(text)','execute') or has_function_privilege('authenticated','commerce.revoke_ebook_library_session(text)','execute') then raise exception 'public role can revoke session'; end if;
   if not exists (select 1 from pg_indexes where schemaname='commerce' and indexname='ebook_library_sessions_challenge_idx') then raise exception 'session challenge index missing'; end if;
+  if not exists (select 1 from pg_indexes where schemaname='commerce' and indexname='ebook_library_sessions_expiry_idx') then raise exception 'session expiry index missing'; end if;
+  if not exists (select 1 from pg_indexes where schemaname='commerce' and indexname='ebook_library_sessions_revoked_idx') then raise exception 'session revoked index missing'; end if;
 end $$;
 do $$
 declare email_key text := repeat('a',64); ip_key text := repeat('b',64); challenge_id uuid; expiry timestamptz;

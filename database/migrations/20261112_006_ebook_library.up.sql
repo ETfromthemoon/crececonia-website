@@ -22,6 +22,8 @@ create table commerce.ebook_library_sessions (
 );
 create index ebook_library_sessions_email_idx on commerce.ebook_library_sessions(email, expires_at) where revoked_at is null;
 create index ebook_library_sessions_challenge_idx on commerce.ebook_library_sessions(challenge_id);
+create index ebook_library_sessions_expiry_idx on commerce.ebook_library_sessions(expires_at);
+create index ebook_library_sessions_revoked_idx on commerce.ebook_library_sessions(revoked_at) where revoked_at is not null;
 
 create table commerce.ebook_library_rate_limits (
   key_hash text not null check (key_hash ~ '^[0-9a-f]{64}$'),
