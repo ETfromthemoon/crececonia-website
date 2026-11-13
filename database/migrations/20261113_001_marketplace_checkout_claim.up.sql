@@ -28,6 +28,16 @@ begin
     end if;
     return;
   end if;
+  -- A fresh UUID must not bypass an earlier, still payable attempt for this book.
+  select o.* into existing from public.marketplace_orders o
+    join public.marketplace_order_items i on i.order_id=o.id
+    where o.buyer_email=p_email and i.book_id=p_book_id
+      and o.status='pending' and o.expires_at>now()
+    order by o.created_at desc limit 1;
+  if found then
+    return query select 'pending_other'::text, existing.id;
+    return;
+  end if;
   if (select count(*) from public.marketplace_orders
       where buyer_email = p_email and created_at > now() - interval '1 hour') >= 5 then
     return query select 'rate_limited'::text, null::uuid;

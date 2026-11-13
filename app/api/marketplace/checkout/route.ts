@@ -102,6 +102,7 @@ export async function POST(request: Request) {
     if (!claim || claim.outcome === "unavailable") return NextResponse.json({ error: "El libro dejó de estar disponible." }, { status: 409 });
     if (claim.outcome === "rate_limited") return NextResponse.json({ error: "Hay demasiados intentos recientes. Inténtalo más tarde." }, { status: 429, headers: { "Retry-After": "3600" } });
     if (claim.outcome === "conflict") return NextResponse.json({ error: "El identificador ya se usó para otra compra." }, { status: 409 });
+    if (claim.outcome === "pending_other") return NextResponse.json({ error: "Ya existe un intento de pago reciente para este libro y correo. Espera a que venza antes de comenzar otro." }, { status: 409, headers: { "Retry-After": "1800" } });
     const orderId = claim.claimed_order_id;
     if (!orderId) throw new Error("Missing claimed order ID");
     if (claim.outcome === "replay") {
@@ -113,7 +114,11 @@ export async function POST(request: Request) {
           return NextResponse.json({ redirectUrl: savedUrl.toString(), orderId });
         }
       }
-      return NextResponse.json({ error: "Este intento ya fue registrado. Consulta su estado antes de comenzar otro." }, { status: 409, headers: { "Retry-After": "2" } });
+      if (existing?.status === "pending" && new Date(existing.expires_at).getTime() <= Date.now()) {
+        return NextResponse.json({ error: "Este intento venció. Revisa el estado del pago antes de comenzar otro.", canStartNewAttempt: true }, { status: 410 });
+      }
+      const retryAfter = existing?.expires_at ? Math.max(1, Math.ceil((new Date(existing.expires_at).getTime() - Date.now()) / 1000)) : 1800;
+      return NextResponse.json({ error: "Este intento ya fue registrado. Espera su vencimiento o consulta el estado del pago." }, { status: 409, headers: { "Retry-After": String(retryAfter) } });
     }
 
     const apiKey = process.env.FLOW_API_KEY!;
@@ -127,7 +132,7 @@ export async function POST(request: Request) {
     const form = new URLSearchParams(Object.entries({ ...params, s: flowSign(params, process.env.FLOW_SECRET_KEY!) }).map(([key, value]) => [key, String(value)]));
     let response: Response;
     try {
-      response = await fetch(`${getFlowBase()}/payment/create`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: form });
+      response = await fetch(`${getFlowBase()}/payment/create`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: form, signal: AbortSignal.timeout(10_000) });
     } catch {
       // Flow may have created the order even if the network failed on our side.
       // Keep the manifest pending so a late paid callback can still be reconciled.
