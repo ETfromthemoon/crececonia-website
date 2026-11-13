@@ -8,6 +8,10 @@ const base: RecommendableBook = {
 const context = { now: Date.parse("2026-11-13T12:00:00Z"), currentCategory: "ia", currentSellerId: "seller-1" };
 
 describe("marketplace recommendations", () => {
+  it("keeps an approved listing when an unavailable revision appears first", () => {
+    const draft = { ...base, status: "draft" as const };
+    expect(recommendMarketplaceBooks([draft, base], context)).toEqual([base]);
+  });
   it("only offers purchasable published titles and never repeats the current or purchased book", () => {
     const books = [base, { ...base, id: "draft", status: "draft" as const },
       { ...base, id: "missing", assetReady: false }, { ...base, id: "payment", paymentReady: false },

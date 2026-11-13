@@ -38,11 +38,11 @@ export function recommendMarketplaceBooks(
   const seen = new Set<string>();
   const eligible = books.filter((book) => {
     if (!book.id || seen.has(book.id)) return false;
-    seen.add(book.id);
     if (book.id === context.currentBookId || purchased.has(book.id)) return false;
     if (book.status !== "published" || !book.sellerActive || !book.assetReady || !book.paymentReady) return false;
     if (book.requiresExperience && !context.experienced) return false;
     if (book.visibleFrom && (!Number.isFinite(Date.parse(book.visibleFrom)) || Date.parse(book.visibleFrom) > context.now)) return false;
+    seen.add(book.id);
     return true;
   });
 
