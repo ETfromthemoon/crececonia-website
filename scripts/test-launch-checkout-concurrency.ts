@@ -413,7 +413,7 @@ async function cleanupFixtures(
       if (!fixture || row.tier_id !== fixture.tierId || !orders.includes(row.commerce_order)) {
         fail("Una orden no pertenece a los UUID/identificadores generados por el harness; se preservaron los datos.");
       }
-      if (!["creating", "creation_submitted", "creation_failed"].includes(row.status)
+      if (!["creating", "creation_failed"].includes(row.status)
           || row.flow_order !== null || (row.status === "creation_failed" && row.capacity_held)) {
         fail("Una orden del harness alcanzó un estado no reversible seguro; se preservaron sus datos.");
       }
