@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const MARKETPLACE_COMMISSION_BPS = 500;
 export const MARKETPLACE_VAT_BPS = 1900;
+export const MAX_MARKETPLACE_PDF_BYTES = 4 * 1024 * 1024;
 
 /** Flow's existing account is a single merchant account. Third-party sales stay in sandbox. */
 export function marketplaceSandboxConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
@@ -12,7 +13,8 @@ export function marketplaceSandboxConfigured(env: NodeJS.ProcessEnv = process.en
 }
 
 export function marketplaceSandboxEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
-  return env.MARKETPLACE_FLOW_SANDBOX_ENABLED === "true" && marketplaceSandboxConfigured(env);
+  return (env.VERCEL_ENV === "preview" || env.NODE_ENV === "development") &&
+    env.MARKETPLACE_FLOW_SANDBOX_ENABLED === "true" && marketplaceSandboxConfigured(env);
 }
 
 export function normalizeBuyerEmail(value: unknown): string | null {

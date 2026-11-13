@@ -1,4 +1,5 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
+import { flowGetStatus } from "./fixtures/flow-getstatus";
 
 const database = vi.hoisted(() => vi.fn());
 const delivery = vi.hoisted(() => vi.fn());
@@ -29,7 +30,7 @@ describe("confirmación de compra marketplace", () => {
     process.env.RESEND_API_KEY = "test";
     delete process.env.MARKETPLACE_FLOW_SANDBOX_ENABLED;
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({
-      status: 2, payer: "buyer@example.cl", amount: "11900", flowOrder: 123,
+      ...flowGetStatus({ amount: 11900, payer: "buyer@example.cl" }),
       commerceOrder: `mkt-${orderId}`,
     }) }));
     delivery.mockReset().mockResolvedValue(undefined);
@@ -42,7 +43,7 @@ describe("confirmación de compra marketplace", () => {
   });
 
   it("registra derecho, ledger y entrega una vez ante webhooks repetidos", async () => {
-    let sent = false;
+    let outboxStatus = "pending";
     database.mockImplementation(async (sql: string) => {
       if (sql.includes("select o.id,o.buyer_email,o.status")) return [{
         id: orderId, buyer_email: "buyer@example.cl", status: "pending", total_minor: "11900",
@@ -51,11 +52,20 @@ describe("confirmación de compra marketplace", () => {
       if (sql.includes("select id,provider_payment_ref,status")) return [{ id: "payment-id", provider_payment_ref: "flow-test-token", status: "pending" }];
       if (sql.includes("insert into public.marketplace_payments")) return [{ id: "payment-id" }];
       if (sql.includes("update public.marketplace_orders set status='paid'")) return [{ id: orderId }];
+      if (sql.includes("update public.marketplace_outbox") && sql.includes("set status='processing'")) {
+        if (outboxStatus !== "pending") return [];
+        outboxStatus = "processing";
+        return [{ id: "outbox-id", lease_until: "2026-11-13T12:02:00Z" }];
+      }
+      if (sql.includes("select status from public.marketplace_outbox")) return [{ status: outboxStatus }];
       if (sql.includes("select o.id,o.buyer_email,o.paid_at")) return [{
         id: orderId, buyer_email: "buyer@example.cl", paid_at: "2026-11-13T12:00:00Z",
-        item_id: itemId, title: "Libro", outbox_status: sent ? "succeeded" : "pending",
+        item_id: itemId, title: "Libro",
       }];
-      if (sql.includes("update public.marketplace_outbox set status='succeeded'")) sent = true;
+      if (sql.includes("set status='succeeded'")) {
+        outboxStatus = "succeeded";
+        return [{ id: "outbox-id" }];
+      }
       return [];
     });
     expect((await POST(callback())).status).toBe(200);

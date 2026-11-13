@@ -18,9 +18,10 @@ describe("cobro marketplace", () => {
   });
 
   it("permite Flow sólo cuando sandbox y secretos están configurados", () => {
-    const env = { ...process.env, FLOW_SANDBOX: "true", FLOW_API_KEY: "key", FLOW_SECRET_KEY: "secret", DATABASE_URL: "postgres://test", RESEND_API_KEY: "resend", MARKETPLACE_SITE_URL: "https://marketplace.example.cl", MARKETPLACE_DOWNLOAD_SECRET: "x".repeat(32) };
+    const env = { ...process.env, VERCEL_ENV: "preview", FLOW_SANDBOX: "true", FLOW_API_KEY: "key", FLOW_SECRET_KEY: "secret", DATABASE_URL: "postgres://test", RESEND_API_KEY: "resend", MARKETPLACE_SITE_URL: "https://marketplace.example.cl", MARKETPLACE_DOWNLOAD_SECRET: "x".repeat(32) };
     expect(marketplaceSandboxEnabled({ ...env, MARKETPLACE_FLOW_SANDBOX_ENABLED: "true" })).toBe(true);
     expect(marketplaceSandboxEnabled({ ...env, FLOW_SANDBOX: "false", MARKETPLACE_FLOW_SANDBOX_ENABLED: "true" })).toBe(false);
+    expect(marketplaceSandboxEnabled({ ...env, VERCEL_ENV: "production", MARKETPLACE_FLOW_SANDBOX_ENABLED: "true" })).toBe(false);
     expect(marketplaceSandboxEnabled(env)).toBe(false);
   });
 

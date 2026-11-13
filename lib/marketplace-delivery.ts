@@ -16,8 +16,9 @@ export async function sendMarketplaceDelivery(input: MarketplaceDelivery): Promi
   if (!key || !secret || !site) throw new Error("La entrega del marketplace no está configurada.");
   const base = new URL(site);
   if (base.protocol !== "https:") throw new Error("URL de entrega insegura.");
-  const expires = new Date(input.paidAt).getTime() + 7 * 24 * 60 * 60 * 1000;
-  if (!Number.isFinite(expires)) throw new Error("Fecha de pago inválida.");
+  if (!Number.isFinite(new Date(input.paidAt).getTime())) throw new Error("Fecha de pago inválida.");
+  // A delayed retry must never send a link that expired before the email was sent.
+  const expires = Date.now() + 7 * 24 * 60 * 60 * 1000;
   const url = new URL("/api/marketplace/checkout/download", base);
   url.searchParams.set("token", createMarketplaceDownloadToken(input.itemId, expires, secret));
   const title = input.title.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);

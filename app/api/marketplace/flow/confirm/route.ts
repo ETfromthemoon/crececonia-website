@@ -28,21 +28,41 @@ async function getFlowStatus(token: string): Promise<FlowStatus> {
 }
 
 async function deliver(orderId: string): Promise<void> {
-  const [row] = await queryDatabase<{
-    id: string; buyer_email: string; paid_at: string; item_id: string; title: string; outbox_status: string;
-  }>(`
-    select o.id,o.buyer_email,o.paid_at,i.id as item_id,r.title,x.status as outbox_status
-    from public.marketplace_orders o
-    join public.marketplace_order_items i on i.order_id=o.id
-    join public.marketplace_book_revisions r on r.id=i.revision_id
-    join public.marketplace_entitlements e on e.order_item_id=i.id and e.status='active'
-    join public.marketplace_outbox x on x.idempotency_key='marketplace-delivery/'||o.id::text
-    where o.id=$1 and o.status='paid'`, [orderId]);
-  if (!row) throw new Error("La orden pagada no tiene entrega completa.");
-  if (row.outbox_status === "succeeded") return;
-  await sendMarketplaceDelivery({ orderId: row.id, itemId: row.item_id, buyerEmail: row.buyer_email, title: row.title, paidAt: row.paid_at });
-  await queryDatabase(`update public.marketplace_outbox set status='succeeded',completed_at=now(),attempts=attempts+1
-    where idempotency_key=$1 and status<>'succeeded'`, [`marketplace-delivery/${orderId}`]);
+  const outboxKey = `marketplace-delivery/${orderId}`;
+  const [claim] = await queryDatabase<{ id: string; lease_until: string }>(`
+    update public.marketplace_outbox
+    set status='processing',lease_until=now()+interval '2 minutes',attempts=attempts+1
+    where idempotency_key=$1 and
+      (status in ('pending','failed') or (status='processing' and lease_until<now()))
+    returning id,lease_until`, [outboxKey]);
+  if (!claim) {
+    const [state] = await queryDatabase<{ status: string }>(
+      "select status from public.marketplace_outbox where idempotency_key=$1", [outboxKey]);
+    if (state?.status === "succeeded") return;
+    throw new Error("La entrega está siendo procesada por otro callback.");
+  }
+  try {
+    const [row] = await queryDatabase<{
+      id: string; buyer_email: string; paid_at: string; item_id: string; title: string;
+    }>(`
+      select o.id,o.buyer_email,o.paid_at,i.id as item_id,r.title
+      from public.marketplace_orders o
+      join public.marketplace_order_items i on i.order_id=o.id
+      join public.marketplace_book_revisions r on r.id=i.revision_id
+      join public.marketplace_entitlements e on e.order_item_id=i.id and e.status='active'
+      where o.id=$1 and o.status='paid'`, [orderId]);
+    if (!row) throw new Error("La orden pagada no tiene entrega completa.");
+    await sendMarketplaceDelivery({ orderId: row.id, itemId: row.item_id, buyerEmail: row.buyer_email, title: row.title, paidAt: row.paid_at });
+    const [completed] = await queryDatabase<{ id: string }>(`update public.marketplace_outbox
+      set status='succeeded',completed_at=now(),lease_until=null
+      where id=$1 and status='processing' and lease_until=$2 returning id`, [claim.id, claim.lease_until]);
+    if (!completed) throw new Error("La entrega no pudo cerrar su reserva.");
+  } catch (error) {
+    await queryDatabase(`update public.marketplace_outbox
+      set status='failed',lease_until=null,last_error_code='delivery_failed'
+      where id=$1 and status='processing' and lease_until=$2`, [claim.id, claim.lease_until]).catch(() => undefined);
+    throw error;
+  }
 }
 
 export async function POST(request: Request): Promise<Response> {
