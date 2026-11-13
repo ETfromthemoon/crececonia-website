@@ -36,11 +36,11 @@ La barrera de analítica bloquea superficies privadas y sanea URLs y propiedades
 
 ## Captación, servicios y entrega
 
-- Las postulaciones calificadas se guardan de forma idempotente y se consultan en `/admin/postulaciones`, protegido por sesión. El CRM confirmado es Nítido local; su adaptador está preparado, pero la sincronización no está activada. HighLevel no es el destino de estos contactos. Véase [operación de postulaciones](service-qualification-operations.md).
+- Las postulaciones calificadas se guardan de forma idempotente y se consultan en `/admin/postulaciones`, protegido por sesión. El CRM confirmado es Nítido local; PR #82 integra la outbox transaccional, API autenticada y worker local, pero la sincronización sigue desactivada (sin `NITIDO_SYNC_KEY`) y la migración 002 no está aplicada en producción. El repositorio Nítido actualmente identificado se declara maqueta sin backend, autenticación ni persistencia; verificar la topología y el contrato operativo antes de conectar. HighLevel no es el destino de estos contactos. Véase [operación de postulaciones](service-qualification-operations.md).
 - `lib/service-offers.ts` centraliza las condiciones, precios y criterios compartidos de mentoría e implementación. No establece por sí mismo una reserva ni un contrato individual. Véase [ofertas de servicios](service-offers.md).
 - El finalizador de pagos compartido conecta webhook y CLI; el worker vive en `/api/cron/ebook-delivery`. La ruta durable requiere `EBOOK_PAYMENT_FINALIZATION_ENABLED` y `EBOOK_DELIVERY_WORKER_ENABLED`, migraciones 003/004 y programación del worker. Estos elementos siguen pendientes de activación coordinada; integrar código no los habilita. El webhook conserva el camino legacy con la flag apagada. Véase [finalización de pagos](ebook-payment-finalization.md).
 - `/admin/ebook/entregas` es una bandeja de solo lectura. Distingue esquema ausente, instalación parcial y fallo de consulta; separa efectos contables de aceptación del correo. Aceptado por Resend no acredita entrega en bandeja ni descarga. Véase [operación de entregas](ebook-delivery-operations.md).
-- Reservas automáticas y preferencias de comunicación están en preparación, fuera de esta base integrada. No hay nueva agenda ni secuencia comercial activada como parte de esas etapas. Su estado se sigue en el [roadmap](ecosystem-roadmap.md).
+- La configuración administrativa de reservas automáticas (PR #101) está integrada, pero mantiene `canBook: false`: no hay proveedor/calendario conectado, horarios configurados ni reservas activas. Las preferencias de comunicación siguen en preparación y no hay nueva secuencia comercial activada. Su estado se sigue en el [roadmap](ecosystem-roadmap.md).
 
 ## Flujo de datos de un lanzamiento
 

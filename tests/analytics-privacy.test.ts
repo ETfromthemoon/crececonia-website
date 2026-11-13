@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { analyticsAllowed, analyticsLinkDestination, isPrivateAnalyticsUrl, sanitizeAnalyticsProperties, sanitizeAnalyticsUrl } from "@/lib/analytics-privacy";
+import { analyticsAllowed, analyticsLinkDestination, analyticsSemanticCta, isPrivateAnalyticsUrl, sanitizeAnalyticsAttribution, sanitizeAnalyticsDistinctId, sanitizeAnalyticsProperties, sanitizeAnalyticsUrl } from "@/lib/analytics-privacy";
 import { ensureAnalytics } from "@/lib/analytics-client";
 import { trackEvent } from "@/lib/analytics";
 import { trackMetaEvent } from "@/lib/meta-pixel";
@@ -34,6 +34,49 @@ describe("analytics privacy boundary", () => {
     expect(analyticsLinkDestination("mailto:buyer@example.test?subject=secret", href)).toEqual({ destination_type: "contact", contact_channel: "email" });
     expect(analyticsLinkDestination("tel:+56912345678", href)).toEqual({ destination_type: "contact", contact_channel: "phone" });
     expect(analyticsLinkDestination("/api/ebook/download?token=secret", href).destination_path).toBe("/api/ebook/download");
+  });
+  it("keeps only bounded UTM labels and drops contact values, URLs, and click IDs", () => {
+    expect(sanitizeAnalyticsAttribution({
+      utm_source: " instagram ", utm_medium: " social ", utm_campaign: "buyer@example.test",
+      utm_content: "https://private.example/path", utm_term: "ia",
+      fbclid: "click-123", gclid: "click-456", email: "buyer@example.test",
+      utm_id: "campaign-789", utm_source_extra: "ignored",
+    })).toEqual({ utm_source: "instagram", utm_medium: "social", utm_term: "ia" });
+    expect(sanitizeAnalyticsAttribution({ utm_medium: "x".repeat(201) })).toEqual({});
+  });
+  it("drops phone-like UTM values while retaining ISO date labels", () => {
+    expect(sanitizeAnalyticsAttribution({
+      utm_source: "+56 9 1234 5678", utm_medium: "912-345-678", utm_campaign: "2026-11-12",
+    })).toEqual({ utm_campaign: "2026-11-12" });
+  });
+  it("drops URL-like UTM values without blocking ordinary dotted campaign labels", () => {
+    expect(sanitizeAnalyticsAttribution({
+      utm_source: "//example.com/profile?token=x", utm_medium: "/personal/profile",
+      utm_campaign: "example.com?token=x", utm_content: "ftp://example.com/private",
+      utm_term: "www.example.com/profile",
+    })).toEqual({});
+    expect(sanitizeAnalyticsAttribution({
+      utm_source: "javascript:alert(1)", utm_medium: "data:text/html,private",
+      utm_campaign: "localhost:3000/profile?token=x", utm_content: "127.0.0.1/private",
+    })).toEqual({});
+    expect(sanitizeAnalyticsAttribution({ utm_campaign: "campaign.v2" })).toEqual({ utm_campaign: "campaign.v2" });
+  });
+  it("filters UTM phone values from sanitized URLs and rejects contact-like distinct IDs", () => {
+    expect(sanitizeAnalyticsUrl("https://crececonia.cl/ebook?utm_source=instagram&utm_medium=%2B56912345678"))
+      .toBe("https://crececonia.cl/ebook?utm_source=instagram");
+    expect(sanitizeAnalyticsDistinctId("buyer@example.test")).toBeUndefined();
+    expect(sanitizeAnalyticsDistinctId("+56 9 1234 5678")).toBeUndefined();
+    expect(sanitizeAnalyticsDistinctId("https://example.test/profile")).toBeUndefined();
+    expect(sanitizeAnalyticsDistinctId("019525c0-0000-7000-8000-000000000001")).toBe("019525c0-0000-7000-8000-000000000001");
+    expect(sanitizeAnalyticsDistinctId("Sergio Pérez")).toBeUndefined();
+    expect(sanitizeAnalyticsDistinctId("anon-1")).toBeUndefined();
+  });
+  it("accepts only reviewed static semantic CTA and source labels", () => {
+    expect(analyticsSemanticCta({ dataset: { analyticsCta: "route_selector", analyticsSource: "ia_selector" } } as unknown as HTMLElement)).toEqual({ cta: "route_selector", source: "ia_selector" });
+    expect(analyticsSemanticCta({ dataset: { analyticsCta: "route_selector", analyticsSource: "buyer@example.test" } } as unknown as HTMLElement)).toBeUndefined();
+    expect(analyticsSemanticCta({ dataset: { analyticsCta: "button text", analyticsSource: "ia_selector" } } as unknown as HTMLElement)).toBeUndefined();
+    expect(analyticsSemanticCta({ dataset: { analyticsCta: "route_selector", analyticsSource: "home_hero" } } as unknown as HTMLElement)).toBeUndefined();
+    expect(analyticsSemanticCta({ dataset: { analyticsCta: "constructor", analyticsSource: "prototype" } } as unknown as HTMLElement)).toBeUndefined();
   });
   it.each(["/admin", "/admin/ebook", "/solicitar-llamada?t=secret", "/ebook/book/success?token=secret", "/lanzamientos/private", "/ebook/book?preview=secret", "/anything?%74oken=secret"])("does not initialize or capture on %s", (path) => {
     href = new URL(path, href).href;

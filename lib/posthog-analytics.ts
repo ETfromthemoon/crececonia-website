@@ -1,3 +1,5 @@
+import { isAllowedSemanticCta, SEMANTIC_CTA_PAIRS } from "@/lib/analytics-privacy";
+
 const PROJECT_ID = "533562"; // Settings → General → Project ID en el dashboard de PostHog
 
 export type FunnelStep =
@@ -24,6 +26,12 @@ export interface VariantComparison {
 export interface PageTypeCount {
   pageType: string;
   pageViews: number;
+}
+
+export interface SemanticCtaCount {
+  cta: string;
+  source: string;
+  clicks: number;
 }
 
 export interface EcosystemMetrics {
@@ -62,12 +70,21 @@ export interface PurchaseCoverage {
   eventsWithoutOrderId: number;
 }
 
+export interface EbookOrderConversion {
+  maturityDays: number;
+  eligibleCheckouts: number;
+  confirmedWithinWindow: number;
+  checkoutEventsWithoutOrderId: number;
+  conversionRate: number | null;
+}
+
 export interface AnalyticsReport {
   windowDays: number;
   funnel: FunnelStepResult[];
   byVariant: VariantComparison[];
   offerSelectionRate: number;
   ecosystem?: EcosystemMetrics;
+  semanticCtaBreakdown?: SemanticCtaCount[];
   byPageType?: PageTypeCount[];
   recommendations?: string[];
   generatedAt: string;
@@ -78,6 +95,7 @@ export interface AnalyticsReport {
     windowEndExclusive: string;
   };
   purchasesByProduct?: PurchaseCoverage[];
+  ebookOrderConversion?: EbookOrderConversion;
 }
 
 const EVENT_TO_STEP: Record<string, FunnelStep> = {
@@ -136,7 +154,7 @@ const ECOSYSTEM_EVENTS = [
   ...Object.keys(EVENT_TO_STEP),
 ];
 
-type HogQlRow = [event: string, variant: string | null, pageType: string | null, depthPercent: number | null, total: number];
+type HogQlRow = [event: string, variant: string | null, pageType: string | null, depthPercent: number | null, cta: string | null, source: string | null, total: number];
 
 function createEmptyMetrics(): EcosystemMetrics {
   return {
@@ -198,18 +216,22 @@ const EVENT_TO_METRIC: Record<string, keyof EcosystemMetrics> = {
 
 async function runHogQlQuery(apiKey: string, host: string, sinceIso: string, untilIso: string): Promise<HogQlRow[]> {
   const eventList = ECOSYSTEM_EVENTS.map((event) => `'${event}'`).join(", ");
+  const ctaFilter = SEMANTIC_CTA_PAIRS.map(({ cta, source }) => `(JSONExtractString(properties, 'cta') = '${cta}' AND JSONExtractString(properties, 'source') = '${source}')`).join(" OR ");
   const query = `
     SELECT
       event,
       JSONExtractString(properties, 'pricing_variant') AS variant,
       JSONExtractString(properties, 'page_type') AS page_type,
       JSONExtractInt(properties, 'depth_percent') AS depth_percent,
+      if(event = 'ecosystem_cta_clicked', JSONExtractString(properties, 'cta'), '') AS cta,
+      if(event = 'ecosystem_cta_clicked', JSONExtractString(properties, 'source'), '') AS source,
       count() AS total
     FROM events
     WHERE event IN (${eventList})
       AND timestamp >= '${sinceIso}'
       AND timestamp < '${untilIso}'
-    GROUP BY event, variant, page_type, depth_percent
+      AND (event != 'ecosystem_cta_clicked' OR (${ctaFilter}))
+    GROUP BY event, variant, page_type, depth_percent, cta, source
   `;
 
   const res = await fetch(`${host}/api/projects/${PROJECT_ID}/query/`, {
@@ -230,11 +252,15 @@ async function runHogQlQuery(apiKey: string, host: string, sinceIso: string, unt
     // Compatibilidad con respuestas guardadas de la primera versión del reporte.
     if (row.length === 3) {
       const [event, variant, total] = row as unknown as [string, string | null, number];
-      return [event, variant, null, null, total] as HogQlRow;
+      return [event, variant, null, null, null, null, total] as HogQlRow;
     }
     if (row.length === 4) {
       const [event, variant, pageType, total] = row as unknown as [string, string | null, string | null, number];
-      return [event, variant, pageType, null, total] as HogQlRow;
+      return [event, variant, pageType, null, null, null, total] as HogQlRow;
+    }
+    if (row.length === 5) {
+      const [event, variant, pageType, depthPercent, total] = row as unknown as [string, string | null, string | null, number | null, number];
+      return [event, variant, pageType, depthPercent, null, null, total] as HogQlRow;
     }
     return row as HogQlRow;
   });
@@ -278,6 +304,75 @@ async function fetchPurchaseCoverage(apiKey: string, host: string, sinceIso: str
     });
   }
   return coverage;
+}
+
+const EBOOK_ORDER_MATURITY_DAYS = 14;
+
+async function fetchEbookOrderConversion(
+  apiKey: string,
+  host: string,
+  sinceIso: string,
+  untilIso: string,
+): Promise<EbookOrderConversion> {
+  const query = `
+    WITH
+      checkout_orders AS (
+        SELECT
+          trim(JSONExtractString(properties, 'order_id')) AS order_id,
+          min(timestamp) AS checkout_at
+        FROM events
+        WHERE event = 'ebook_checkout_created'
+          AND timestamp >= '${sinceIso}'
+          AND timestamp <= '${untilIso}' - INTERVAL ${EBOOK_ORDER_MATURITY_DAYS} DAY
+          AND notEmpty(trim(JSONExtractString(properties, 'order_id')))
+        GROUP BY order_id
+      ),
+      purchase_events AS (
+        SELECT
+          trim(JSONExtractString(properties, 'order_id')) AS order_id,
+          timestamp AS purchased_at
+        FROM events
+        WHERE event = 'ebook_purchase_confirmed'
+          AND timestamp >= '${sinceIso}'
+          AND timestamp < '${untilIso}'
+          AND notEmpty(trim(JSONExtractString(properties, 'order_id')))
+      ),
+      missing_checkout_ids AS (
+        SELECT count() AS total
+        FROM events
+        WHERE event = 'ebook_checkout_created'
+          AND timestamp >= '${sinceIso}'
+          AND timestamp <= '${untilIso}' - INTERVAL ${EBOOK_ORDER_MATURITY_DAYS} DAY
+          AND empty(trim(JSONExtractString(properties, 'order_id')))
+      )
+    SELECT
+      uniqExact(c.order_id) AS eligible_checkouts,
+      uniqExactIf(c.order_id, p.purchased_at >= c.checkout_at
+        AND p.purchased_at < c.checkout_at + INTERVAL ${EBOOK_ORDER_MATURITY_DAYS} DAY) AS confirmed_within_window,
+      (SELECT total FROM missing_checkout_ids) AS checkout_events_without_order_id
+    FROM checkout_orders c
+    LEFT JOIN purchase_events p ON p.order_id = c.order_id
+  `;
+  const res = await fetch(`${host}/api/projects/${PROJECT_ID}/query/`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ query: { kind: "HogQLQuery", query } }),
+  });
+  if (!res.ok) throw new Error(`PostHog ebook order conversion query falló (${res.status})`);
+  const data = await res.json();
+  const row = Array.isArray(data.results) && data.results.length === 1 ? data.results[0] : null;
+  if (!Array.isArray(row) || row.length !== 3
+    || !row.every((value: unknown) => typeof value === "number" && Number.isSafeInteger(value) && value >= 0)
+    || row[1] > row[0]) {
+    throw new Error("PostHog: conversión de órdenes de ebook inválida");
+  }
+  return {
+    maturityDays: EBOOK_ORDER_MATURITY_DAYS,
+    eligibleCheckouts: row[0],
+    confirmedWithinWindow: row[1],
+    checkoutEventsWithoutOrderId: row[2],
+    conversionRate: row[0] > 0 ? row[1] / row[0] : null,
+  };
 }
 
 export function buildAnalyticsRecommendations(
@@ -350,9 +445,10 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
     throw new Error("La ventana y la fecha del reporte deben ser válidas.");
   }
   const since = new Date(now.getTime() - windowDays * 86_400_000);
-  const [rows, purchasesByProduct] = await Promise.all([
+  const [rows, purchasesByProduct, ebookOrderConversion] = await Promise.all([
     runHogQlQuery(apiKey, host, since.toISOString(), now.toISOString()),
     fetchPurchaseCoverage(apiKey, host, since.toISOString(), now.toISOString()),
+    fetchEbookOrderConversion(apiKey, host, since.toISOString(), now.toISOString()),
   ]);
 
   const funnelTotals: Record<FunnelStep, number> = {
@@ -364,11 +460,15 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
   };
   const metrics = createEmptyMetrics();
   const pageTypeTotals = new Map<string, number>();
+  const semanticCtaTotals = new Map<string, SemanticCtaCount>();
   const variantTotals = new Map<string, { pageViews: number; checkoutsStarted: number; purchasesConfirmed: number }>();
   const legacyCheckoutByVariant = new Map<string, number>();
   let legacyCheckoutTotal = 0;
 
-  for (const [event, variant, pageType, depthPercent, total] of rows) {
+  for (const [event, variant, pageType, depthPercent, cta, source, total] of rows) {
+    if (event === "ecosystem_cta_clicked" && (cta !== null || source !== null)
+      && (!cta || !source || !isAllowedSemanticCta(cta, source))) continue;
+
     if (event === LEGACY_CHECKOUT_EVENT) {
       legacyCheckoutTotal += total;
       if (variant) legacyCheckoutByVariant.set(variant, (legacyCheckoutByVariant.get(variant) ?? 0) + total);
@@ -381,6 +481,12 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
     const metric = EVENT_TO_METRIC[event];
     if (metric) metrics[metric] = (metrics[metric] ?? 0) + total;
     if (event === "ecosystem_scroll_depth" && depthPercent === 90) metrics.scrollDepth90 += total;
+    if (event === "ecosystem_cta_clicked" && cta && source && isAllowedSemanticCta(cta, source)) {
+      const key = `${cta}\u0000${source}`;
+      const entry = semanticCtaTotals.get(key) ?? { cta, source, clicks: 0 };
+      entry.clicks += total;
+      semanticCtaTotals.set(key, entry);
+    }
 
     if (event === "ecosystem_page_view" && pageType) {
       pageTypeTotals.set(pageType, (pageTypeTotals.get(pageType) ?? 0) + total);
@@ -428,11 +534,13 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
     byVariant,
     offerSelectionRate,
     ecosystem: metrics,
+    semanticCtaBreakdown: Array.from(semanticCtaTotals.values()).sort((a, b) => b.clicks - a.clicks || a.cta.localeCompare(b.cta) || a.source.localeCompare(b.source)),
     byPageType,
     recommendations: buildAnalyticsRecommendations(metrics, byPageType),
     generatedAt: now.toISOString(),
     measurement: { basis: "aggregate_events", sequentialFunnel: false,
       windowStart: since.toISOString(), windowEndExclusive: now.toISOString() },
     purchasesByProduct,
+    ebookOrderConversion,
   };
 }

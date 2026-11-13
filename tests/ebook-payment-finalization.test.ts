@@ -23,7 +23,7 @@ describe("dormant atomic ebook finalizer", () => {
   });
   it("finalizes through one transaction function with exact snapshot and frozen provider payload", async () => {
     vi.mocked(queryDatabase).mockResolvedValueOnce([{ snapshot }]).mockResolvedValueOnce([{ result: { outcome: "finalized", job_id: jobId } }]);
-    await expect(finalizeEbookPayment(payment)).resolves.toEqual({ outcome: "finalized", jobId, resources: items.map((item) => item.resource), analytics: { distinctId: undefined, pricingVariant: undefined, discountCode: null } });
+    await expect(finalizeEbookPayment(payment)).resolves.toEqual({ outcome: "finalized", jobId, resources: items.map((item) => item.resource), analytics: { distinctId: undefined, pricingVariant: undefined, discountCode: null, attribution: {} } });
     const [sql, values] = vi.mocked(queryDatabase).mock.calls[1];
     expect(sql).toContain("commerce.finalize_ebook_payment");
     expect(values?.[0]).toBe(payment.flowOrder);
@@ -35,6 +35,18 @@ describe("dormant atomic ebook finalizer", () => {
     await expect(finalizeEbookPayment(payment)).resolves.toEqual({ outcome: "existing", jobId });
     expect(buildEbookDeliveryPayload).not.toHaveBeenCalled();
     expect(queryDatabase).toHaveBeenCalledTimes(1);
+  });
+  it("returns only allowlisted UTM attribution from the order manifest", async () => {
+    const attributedSnapshot = {
+      ...snapshot,
+      manifest: {
+        resources: [{ ...items[0], utm_source: "instagram", utm_campaign: "ebook-launch", email: "buyer@example.test", fbclid: "click-id" }, items[1]],
+        discount_code: null,
+      },
+    };
+    vi.mocked(queryDatabase).mockResolvedValueOnce([{ snapshot: attributedSnapshot }]).mockResolvedValueOnce([{ result: { outcome: "finalized", job_id: jobId } }]);
+    const finalized = await finalizeEbookPayment(payment);
+    expect(finalized).toMatchObject({ analytics: { attribution: { utm_source: "instagram", utm_campaign: "ebook-launch" } } });
   });
   it("rejects a receipt with a different verified payment identity", async () => {
     vi.mocked(queryDatabase).mockResolvedValueOnce([{ snapshot: { ...snapshot, receipt: { ...receipt, paid_amount: 1 } } }]);

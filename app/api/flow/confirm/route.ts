@@ -8,6 +8,7 @@ import { getComboDiscountPercent } from "@/lib/ebook-bundles";
 import { captureServerEvent } from "@/lib/posthog-server";
 import { sendPurchaseNotification } from "@/lib/purchase-notification-email";
 import { isEbookFinalizationEnabled } from "@/lib/ebook-payment-finalization-core";
+import { sanitizeAnalyticsAttribution, sanitizeAnalyticsDistinctId, type AnalyticsAttribution } from "@/lib/analytics-privacy";
 
 interface FlowPayment {
   status: number;
@@ -17,7 +18,7 @@ interface FlowPayment {
   commerceOrder: string;
 }
 
-interface PendingResource {
+interface PendingResource extends AnalyticsAttribution {
   resource: string;
   tier: Tier;
   amount: number;
@@ -88,9 +89,10 @@ export async function POST(request: Request) {
           try { await sendPurchaseNotification({ kind: "Ebook", buyerEmail, amount: paidAmount, orderId: payment.commerceOrder, items: finalized.resources ?? [] }); }
           catch { console.error("[flow/confirm] notificación interna pendiente de revisión"); }
           const resources = finalized.resources ?? [];
-          try { await captureServerEvent("ebook_purchase_confirmed", finalized.analytics?.distinctId ?? buyerEmail, {
+          try { await captureServerEvent("ebook_purchase_confirmed", sanitizeAnalyticsDistinctId(finalized.analytics?.distinctId) ?? `ebook-order:${payment.commerceOrder}`, {
             amount: paidAmount, order_id: payment.commerceOrder, resource: resources[0], resources, item_count: resources.length,
             discount_code: finalized.analytics?.discountCode, pricing_variant: finalized.analytics?.pricingVariant,
+            ...(finalized.analytics?.attribution ?? {}),
             discount_percent: getComboDiscountPercent(resources.length, resources), offer_id: getOfferIdForResources(resources),
           }); }
           catch { console.error("[flow/confirm] analytics no confirmado"); }
@@ -214,9 +216,9 @@ export async function POST(request: Request) {
       }
     }
 
-    const analyticsDistinctId = resources.find((item) => item.analytics_distinct_id)?.analytics_distinct_id;
+    const analyticsDistinctId = sanitizeAnalyticsDistinctId(resources.find((item) => item.analytics_distinct_id)?.analytics_distinct_id);
     try {
-      await captureServerEvent("ebook_purchase_confirmed", analyticsDistinctId ?? buyerEmail, {
+      await captureServerEvent("ebook_purchase_confirmed", analyticsDistinctId ?? `ebook-order:${commerceOrder}`, {
         resource: resources[0].resource,
         resources: resources.map((item) => item.resource),
         item_count: resources.length,
@@ -226,6 +228,7 @@ export async function POST(request: Request) {
         offer_id: getOfferIdForResources(resources.map((item) => item.resource)),
         order_id: commerceOrder,
         pricing_variant: resources.find((item) => item.pricing_variant)?.pricing_variant,
+        ...sanitizeAnalyticsAttribution(resources[0]),
       });
     } catch (err) {
       console.error("[flow/confirm] falló el evento de PostHog:", err);
