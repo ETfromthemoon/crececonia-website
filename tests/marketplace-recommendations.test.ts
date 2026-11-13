@@ -21,6 +21,12 @@ describe("marketplace recommendations", () => {
     expect(recommendMarketplaceBooks(books, { ...context, purchasedBookIds: ["other"] }).map((b) => b.id)).toEqual(["a"]);
   });
 
+  it("hides listings published in the future or with an invalid publication date", () => {
+    const future = { ...base, id: "future", publishedAt: "2026-11-13T12:00:01Z" };
+    const invalid = { ...base, id: "invalid", publishedAt: "not-a-date" };
+    expect(recommendMarketplaceBooks([base, future, invalid], context).map((book) => book.id)).toEqual(["a"]);
+  });
+
   it("does not infer experience from a page view", () => {
     const advanced = { ...base, id: "expert", requiresExperience: true };
     expect(recommendMarketplaceBooks([advanced], context)).toEqual([]);

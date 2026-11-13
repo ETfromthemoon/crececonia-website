@@ -41,6 +41,8 @@ export function recommendMarketplaceBooks(
     if (book.id === context.currentBookId || purchased.has(book.id)) return false;
     if (book.status !== "published" || !book.sellerActive || !book.assetReady || !book.paymentReady) return false;
     if (book.requiresExperience && !context.experienced) return false;
+    const publishedAt = Date.parse(book.publishedAt);
+    if (!Number.isFinite(publishedAt) || publishedAt > context.now) return false;
     if (book.visibleFrom && (!Number.isFinite(Date.parse(book.visibleFrom)) || Date.parse(book.visibleFrom) > context.now)) return false;
     seen.add(book.id);
     return true;
