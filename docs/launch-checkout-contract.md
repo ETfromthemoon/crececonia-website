@@ -14,6 +14,7 @@ No hay expirador ni reconciliador en esta etapa. Las reservas desconocidas o aba
 
 - Validar la migración en Neon temporal, incluyendo concurrencia de reservas, status Flow terminal, rollback e idempotencia. Esta migración no se ha ejecutado en ninguna base.
 - Implementar el endpoint Flow y la rama de confirmación; nunca usar el total enviado por el navegador.
+- Las RPC de esta etapa devuelven columnas de la orden que incluyen `buyer_email` y, tras consultar Flow, `observed_payment_payer`. Todo endpoint futuro debe construir una proyección explícita de campos permitidos; no serializar ni devolver directamente el resultado completo de la RPC al navegador.
 - Finalizar pago, grants y outbox E05 en una transacción común; E05 y su worker siguen desactivados hasta rollout coordinado.
 - Implementar recuperación de `creation_unknown`, pagos confirmados y expiraciones antes de abrir tráfico.
 - La landing debe mostrar el precio sólo con checkout de lanzamiento habilitado y quitar CTA cuando el cupo esté agotado.
