@@ -109,4 +109,20 @@ begin
 end;
 $$;
 
+-- The app passes a verified owner ID from its server session. Database callers
+-- must not be able to choose that ID through PostgreSQL's default PUBLIC grant.
+revoke execute on function public.marketplace_create_book_draft(text, text, text, text, text, bigint),
+  public.marketplace_revise_book_draft(text, uuid, text, text, text, bigint)
+from public;
+
+do $$
+declare v_role text;
+begin
+  foreach v_role in array array['anon', 'authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = v_role) then
+      execute format('revoke execute on function public.marketplace_create_book_draft(text, text, text, text, text, bigint), public.marketplace_revise_book_draft(text, uuid, text, text, text, bigint) from %I', v_role);
+    end if;
+  end loop;
+end $$;
+
 commit;
