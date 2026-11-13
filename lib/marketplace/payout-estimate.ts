@@ -48,7 +48,7 @@ export interface PayoutEstimate {
   unresolved: string[];
 }
 
-const BPS = 10_000n;
+const BPS = BigInt(10_000);
 const MAX_SAFE_BIGINT = BigInt(Number.MAX_SAFE_INTEGER);
 
 function positiveInteger(value: number, name: string): bigint {
@@ -67,7 +67,7 @@ function validRate(value: number, name: string): bigint {
 
 /** Half-up rounding for non-negative integer ratios, without floating point. */
 function roundRatio(numerator: bigint, denominator: bigint): bigint {
-  return (numerator + denominator / 2n) / denominator;
+  return (numerator + denominator / BigInt(2)) / denominator;
 }
 
 function toClp(value: bigint, name: string): number {
@@ -81,7 +81,7 @@ export function estimateMarketplacePayout(
 ): PayoutEstimate {
   if (!policy.version.trim()) throw new TypeError("policy.version is required");
   const amount = positiveInteger(price.amountClp, "price.amountClp");
-  if (amount === 0n) throw new RangeError("price.amountClp must be greater than zero");
+  if (amount === BigInt(0)) throw new RangeError("price.amountClp must be greater than zero");
 
   const saleVatRate = validRate(policy.saleVatBps, "saleVatBps");
   const commissionRate = validRate(policy.commissionBps, "commissionBps");
