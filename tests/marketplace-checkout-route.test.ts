@@ -111,6 +111,25 @@ describe("inicio de checkout marketplace", () => {
     expect(flow).not.toHaveBeenCalled();
   });
 
+  it("permite renovar la clave sólo al vencer un intento sin enlace", async () => {
+    process.env.MARKETPLACE_FLOW_SANDBOX_ENABLED = "true";
+    const pdf = "%PDF-test";
+    database.mockResolvedValueOnce([{
+      book_id: bookId, revision_id: "e950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29",
+      seller_id: "f950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29", title: "Libro",
+      price_minor: "11900", price_tax_mode: "tax_inclusive", storage_key: "test.pdf",
+      sha256: createHash("sha256").update(pdf).digest("hex"), byte_size: pdf.length,
+    }]).mockResolvedValueOnce([{ outcome: "replay", claimed_order_id: orderId }])
+      .mockResolvedValueOnce([{ flow_checkout_url: null, status: "pending", expires_at: new Date(Date.now() - 1000).toISOString() }]);
+    storage.mockResolvedValueOnce({ data: new Blob([pdf]), error: null });
+    const flow = vi.fn();
+    vi.stubGlobal("fetch", flow);
+    const response = await POST(request());
+    expect(response.status).toBe(410);
+    expect((await response.json()).canStartNewAttempt).toBe(true);
+    expect(flow).not.toHaveBeenCalled();
+  });
+
   it("rechaza un cuerpo excesivo antes de consultar la base", async () => {
     process.env.MARKETPLACE_FLOW_SANDBOX_ENABLED = "true";
     const oversized = new Request("https://www.crececonia.cl/api/marketplace/checkout", {
@@ -136,6 +155,23 @@ describe("inicio de checkout marketplace", () => {
     const response = await POST(request());
     expect(response.status).toBe(429);
     expect(response.headers.get("Retry-After")).toBe("3600");
+    expect(flow).not.toHaveBeenCalled();
+  });
+
+  it("bloquea una clave nueva mientras exista otro intento pagable del mismo comprador y libro", async () => {
+    process.env.MARKETPLACE_FLOW_SANDBOX_ENABLED = "true";
+    const pdf = "%PDF-test";
+    database.mockResolvedValueOnce([{
+      book_id: bookId, revision_id: "e950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29",
+      seller_id: "f950e6f2-dc5c-4ce5-8ddd-e515b3d8fe29", title: "Libro",
+      price_minor: "11900", price_tax_mode: "tax_inclusive", storage_key: "test.pdf",
+      sha256: createHash("sha256").update(pdf).digest("hex"), byte_size: pdf.length,
+    }]).mockResolvedValueOnce([{ outcome: "pending_other", claimed_order_id: orderId }]);
+    storage.mockResolvedValueOnce({ data: new Blob([pdf]), error: null });
+    const flow = vi.fn();
+    vi.stubGlobal("fetch", flow);
+    const response = await POST(request());
+    expect(response.status).toBe(409);
     expect(flow).not.toHaveBeenCalled();
   });
 });
