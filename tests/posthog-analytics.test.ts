@@ -144,6 +144,8 @@ describe("fetchAnalyticsReport", () => {
           ["evaluation_submit_succeeded", null, "landing", 0, 2],
           ["qualification_saved", null, "landing", 0, 3],
           ["qualification_whatsapp_clicked", null, "landing", 0, 2],
+          ["marketplace_catalog_search", null, "ebooks", 0, 23],
+          ["marketplace_catalog_filter", null, "ebooks", 0, 5],
         ],
       }),
     });
@@ -165,9 +167,13 @@ describe("fetchAnalyticsReport", () => {
       evaluationSucceeded: 2,
       qualificationSaved: 3,
       qualificationWhatsappClicks: 2,
+      marketplaceSearches: 23,
+      marketplaceFilters: 5,
+      marketplaceBookSelections: 0,
     });
     expect(report.byPageType).toEqual([{ pageType: "landing", pageViews: 100 }]);
     expect(report.recommendations?.length).toBeGreaterThan(0);
+    expect(report.recommendations).toEqual(expect.arrayContaining([expect.stringContaining("búsquedas en el catálogo")]));
   });
   it("desglosa CTA únicamente para pares permitidos y descarta valores arbitrarios", async () => {
     const queries: string[] = [];
