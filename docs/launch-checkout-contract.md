@@ -12,7 +12,7 @@ No hay expirador ni reconciliador en esta etapa. Las reservas desconocidas o aba
 
 ## Gates previos a venta
 
-- La migración 007 se probó y revirtió sólo en la rama Neon temporal autorizada; no se aplicó a producción. La prueba de contrato y las pruebas manuales de concurrencia con dos sesiones pasaron allí. El harness del repositorio en #112 aún no se ha ejecutado contra Neon porque falta `NEON_API_KEY` local.
+- La migración 007 se probó y revirtió sólo en la rama Neon temporal autorizada; no se aplicó a producción. La prueba de contrato y las pruebas manuales de concurrencia con dos sesiones pasaron allí. El harness del repositorio integrado en #112 todavía no se ha ejecutado contra Neon porque falta `NEON_API_KEY` local.
 - Implementar el endpoint Flow y la rama de confirmación; nunca usar el total enviado por el navegador.
 - Las RPC de esta etapa devuelven columnas de la orden que incluyen `buyer_email` y, tras consultar Flow, `observed_payment_payer`. Todo endpoint futuro debe construir una proyección explícita de campos permitidos; no serializar ni devolver directamente el resultado completo de la RPC al navegador.
 - Finalizar pago, grants y outbox E05 en una transacción común; E05 y su worker siguen desactivados hasta rollout coordinado.
