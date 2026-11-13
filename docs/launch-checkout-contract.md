@@ -12,7 +12,7 @@ No hay expirador ni reconciliador en esta etapa. Las reservas desconocidas o aba
 
 ## Gates previos a venta
 
-- Validar la migración en Neon temporal, incluyendo concurrencia de reservas, status Flow terminal, rollback e idempotencia. Esta migración no se ha ejecutado en ninguna base.
+- La migración 007 se probó y revirtió sólo en la rama Neon temporal autorizada; no se aplicó a producción. La prueba de contrato y las pruebas manuales de concurrencia con dos sesiones pasaron allí. El harness del repositorio en #112 aún no se ha ejecutado contra Neon porque falta `NEON_API_KEY` local.
 - Implementar el endpoint Flow y la rama de confirmación; nunca usar el total enviado por el navegador.
 - Las RPC de esta etapa devuelven columnas de la orden que incluyen `buyer_email` y, tras consultar Flow, `observed_payment_payer`. Todo endpoint futuro debe construir una proyección explícita de campos permitidos; no serializar ni devolver directamente el resultado completo de la RPC al navegador.
 - Finalizar pago, grants y outbox E05 en una transacción común; E05 y su worker siguen desactivados hasta rollout coordinado.
@@ -22,4 +22,4 @@ No hay expirador ni reconciliador en esta etapa. Las reservas desconocidas o aba
 
 ## Prueba aislada
 
-`database/tests/20261112_007_launch_checkout.sql` contiene una prueba transaccional de contrato para fechas de apertura, snapshots, replay y conflicto de idempotencia, estados ambiguos, pagos discrepantes/tardíos, liberación terminal única, bloqueo por cupo/excepción, inmutabilidad de snapshots y privilegios. No demuestra concurrencia multi-sesión; esa matriz se completa en la rama Neon temporal autorizada.
+`database/tests/20261112_007_launch_checkout.sql` contiene una prueba transaccional de contrato para fechas de apertura, snapshots, replay y conflicto de idempotencia, estados ambiguos, pagos discrepantes/tardíos, liberación terminal única, bloqueo por cupo/excepción, inmutabilidad de snapshots y privilegios. No demuestra concurrencia multi-sesión; la prueba manual de dos sesiones en la rama Neon temporal observó el lock, confirmó replay idempotente con una orden/reserva y verificó rechazo por capacidad agotada.
