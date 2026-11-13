@@ -55,7 +55,13 @@ begin
   if (select count(*) from public.marketplace_ledger_entries
       where journal_id=p_order_id and source_type='payment_confirmed')<>3
      or (select coalesce(sum(debit_minor-credit_minor),0) from public.marketplace_ledger_entries
-      where journal_id=p_order_id and source_type='payment_confirmed')<>0 then
+      where journal_id=p_order_id and source_type='payment_confirmed')<>0
+     or not exists(select 1 from public.marketplace_ledger_entries
+      where journal_id=p_order_id and account_code='processor_clearing' and debit_minor=p_amount and credit_minor=0)
+     or not exists(select 1 from public.marketplace_ledger_entries
+      where journal_id=p_order_id and account_code='seller_payable' and credit_minor=p_amount-v_item.commission_minor and debit_minor=0)
+     or not exists(select 1 from public.marketplace_ledger_entries
+      where journal_id=p_order_id and account_code='platform_commission' and credit_minor=v_item.commission_minor and debit_minor=0) then
     raise exception 'marketplace journal requires review';
   end if;
   insert into public.marketplace_outbox (event_type,aggregate_type,aggregate_id,idempotency_key,payload)
