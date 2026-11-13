@@ -124,7 +124,7 @@ export default async function MarketplaceReviewPage({
           </form>}
           {row.book_status === "published" && <form action="/api/admin/marketplace" method="post" style={{ marginTop: 20 }}>
             <input type="hidden" name="book_id" value={row.book_id} />
-            <input type="hidden" name="revision_id" value={row.revision_id} />
+            <input type="hidden" name="revision_id" value={row.published_revision_id ?? ""} />
             <button name="action" value="pause">Pausar publicación</button>
           </form>}
         </article>;

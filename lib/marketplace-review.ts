@@ -8,6 +8,7 @@ export type ReviewAction = "approve" | "request_changes" | "reject" | "publish" 
 export type ReviewRow = {
   book_id: string;
   revision_id: string;
+  published_revision_id: string | null;
   slug: string;
   title: string;
   subtitle: string;
@@ -232,7 +233,7 @@ export async function setMarketplaceBookTaxMode(
 
 export async function listMarketplaceReviews(): Promise<ReviewRow[]> {
   return queryDatabase<ReviewRow>(`
-    select b.id as book_id, r.id as revision_id, b.slug, r.title,
+    select b.id as book_id, r.id as revision_id, b.published_revision_id, b.slug, r.title,
       r.subtitle, r.description, r.author_display_name, r.category,
       s.display_name as seller_name, s.status as seller_status,
       b.status as book_status, r.moderation_status, r.price_minor::text,
@@ -376,7 +377,7 @@ export async function moderateMarketplaceBook(input: {
       from marketplace_books b
       join marketplace_book_revisions r on r.id = b.current_revision_id and r.book_id = b.id
       join marketplace_sellers s on s.id = b.seller_id
-      join marketplace_seller_tax_profiles t on t.seller_id = s.id
+      left join marketplace_seller_tax_profiles t on t.seller_id = s.id
       where b.id = $1 and r.id = $2
         and b.status = 'in_review' and r.moderation_status = 'pending'
         and (
