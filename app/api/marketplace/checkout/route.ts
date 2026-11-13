@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { queryDatabase } from "@/lib/database";
 import { flowSign, getFlowBase } from "@/lib/flow";
@@ -15,6 +15,8 @@ type BookForSale = {
   price_minor: string | number;
   price_tax_mode: string;
   storage_key: string;
+  sha256: string;
+  byte_size: string | number;
 };
 
 function siteUrl(): URL | null {
@@ -42,7 +44,7 @@ export async function POST(request: Request) {
   try {
     const [book] = await queryDatabase<BookForSale>(`
       select b.id as book_id, r.id as revision_id, s.id as seller_id,
-             r.title, r.price_minor, r.price_tax_mode, a.storage_key
+             r.title, r.price_minor, r.price_tax_mode, a.storage_key,a.sha256,a.byte_size
       from public.marketplace_books b
       join public.marketplace_sellers s on s.id=b.seller_id and s.status='active'
       join public.marketplace_book_revisions r on r.id=b.published_revision_id
@@ -57,9 +59,11 @@ export async function POST(request: Request) {
     if (expectedAmount !== price.price) return NextResponse.json({ error: "El precio cambió. Revisa el total antes de pagar." }, { status: 409 });
 
     // A paid order must never point at a PDF that is absent from private storage.
-    const file = await downloadPrivateObject("marketplace", book.storage_key);
-    if (file.error || !file.data || file.data.size < 5 ||
-      Buffer.from(await file.data.slice(0, 5).arrayBuffer()).toString("ascii") !== "%PDF-") {
+    const file = await downloadPrivateObject("ebooks", book.storage_key);
+    const fileBytes = file.data ? Buffer.from(await file.data.arrayBuffer()) : null;
+    if (file.error || !fileBytes || fileBytes.length !== Number(book.byte_size) ||
+      fileBytes.subarray(0, 5).toString("ascii") !== "%PDF-" ||
+      createHash("sha256").update(fileBytes).digest("hex") !== book.sha256) {
       return NextResponse.json({ error: "Este libro aún no está listo para su entrega." }, { status: 503 });
     }
 

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { queryDatabase } from "@/lib/database";
 import { verifyMarketplaceDownloadToken } from "@/lib/marketplace-checkout";
@@ -6,7 +7,7 @@ import { downloadPrivateObject } from "@/lib/private-storage";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type Grant = { storage_key: string; title: string };
+type Grant = { storage_key: string; title: string; sha256: string; byte_size: string | number };
 
 export async function GET(request: Request): Promise<Response> {
   const secret = process.env.MARKETPLACE_DOWNLOAD_SECRET;
@@ -15,7 +16,7 @@ export async function GET(request: Request): Promise<Response> {
   if (!itemId) return NextResponse.json({ error: "El enlace de descarga no es válido o venció." }, { status: 401 });
   try {
     const [grant] = await queryDatabase<Grant>(`
-      select a.storage_key,r.title
+      select a.storage_key,a.sha256,a.byte_size,r.title
       from public.marketplace_entitlements e
       join public.marketplace_order_items i on i.id=e.order_item_id
       join public.marketplace_orders o on o.id=i.order_id
@@ -25,10 +26,11 @@ export async function GET(request: Request): Promise<Response> {
       where e.order_item_id=$1 and e.status='active' and o.status='paid'
       order by a.created_at desc limit 1`, [itemId]);
     if (!grant) return NextResponse.json({ error: "La compra no tiene acceso vigente." }, { status: 404 });
-    const file = await downloadPrivateObject("marketplace", grant.storage_key);
+    const file = await downloadPrivateObject("ebooks", grant.storage_key);
     if (file.error || !file.data) return NextResponse.json({ error: "El archivo no está disponible. Escríbenos para recuperarlo." }, { status: 503 });
     const bytes = Buffer.from(await file.data.arrayBuffer());
-    if (bytes.length < 5 || bytes.subarray(0, 5).toString("ascii") !== "%PDF-") {
+    if (bytes.length !== Number(grant.byte_size) || bytes.subarray(0, 5).toString("ascii") !== "%PDF-" ||
+      createHash("sha256").update(bytes).digest("hex") !== grant.sha256) {
       return NextResponse.json({ error: "El archivo requiere revisión." }, { status: 503 });
     }
     const name = grant.title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "ebook";
