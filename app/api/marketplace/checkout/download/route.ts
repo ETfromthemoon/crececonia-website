@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { queryDatabase } from "@/lib/database";
-import { verifyMarketplaceDownloadToken } from "@/lib/marketplace-checkout";
+import { MAX_MARKETPLACE_PDF_BYTES, verifyMarketplaceDownloadToken } from "@/lib/marketplace-checkout";
 import { downloadPrivateObject } from "@/lib/private-storage";
 
 export const runtime = "nodejs";
@@ -26,6 +26,9 @@ export async function GET(request: Request): Promise<Response> {
       where e.order_item_id=$1 and e.status='active' and o.status='paid'
       order by a.created_at desc limit 1`, [itemId]);
     if (!grant) return NextResponse.json({ error: "La compra no tiene acceso vigente." }, { status: 404 });
+    if (!Number.isSafeInteger(Number(grant.byte_size)) || Number(grant.byte_size) > MAX_MARKETPLACE_PDF_BYTES) {
+      return NextResponse.json({ error: "El archivo supera el tamaño disponible para descarga." }, { status: 503 });
+    }
     const file = await downloadPrivateObject("ebooks", grant.storage_key);
     if (file.error || !file.data) return NextResponse.json({ error: "El archivo no está disponible. Escríbenos para recuperarlo." }, { status: 503 });
     const bytes = Buffer.from(await file.data.arrayBuffer());

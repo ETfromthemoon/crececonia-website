@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { queryDatabase } from "@/lib/database";
 import { flowSign, getFlowBase } from "@/lib/flow";
 import { downloadPrivateObject } from "@/lib/private-storage";
-import { marketplacePriceSnapshot, marketplaceSandboxEnabled, normalizeBuyerEmail, MARKETPLACE_COMMISSION_BPS } from "@/lib/marketplace-checkout";
+import { marketplacePriceSnapshot, marketplaceSandboxEnabled, normalizeBuyerEmail, MARKETPLACE_COMMISSION_BPS, MAX_MARKETPLACE_PDF_BYTES } from "@/lib/marketplace-checkout";
 
 export const runtime = "nodejs";
 
@@ -47,8 +47,9 @@ export async function POST(request: Request) {
              r.title, r.price_minor, r.price_tax_mode, a.storage_key,a.sha256,a.byte_size
       from public.marketplace_books b
       join public.marketplace_sellers s on s.id=b.seller_id and s.status='active'
+      join public.marketplace_seller_tax_profiles t on t.seller_id=s.id and t.review_status='verified'
       join public.marketplace_book_revisions r on r.id=b.published_revision_id
-        and r.book_id=b.id and r.moderation_status='approved'
+        and r.book_id=b.id and r.moderation_status='approved' and r.rights_declared_at is not null
       join public.marketplace_assets a on a.revision_id=r.id and a.book_id=b.id
         and a.asset_kind='ebook_pdf' and a.scan_status='ready'
       where b.id=$1 and b.status='published' and b.published_at is not null
@@ -57,6 +58,9 @@ export async function POST(request: Request) {
     const price = marketplacePriceSnapshot(Number(book.price_minor), book.price_tax_mode);
     if (!price) return NextResponse.json({ error: "La configuración tributaria de este libro requiere revisión." }, { status: 409 });
     if (expectedAmount !== price.price) return NextResponse.json({ error: "El precio cambió. Revisa el total antes de pagar." }, { status: 409 });
+    if (!Number.isSafeInteger(Number(book.byte_size)) || Number(book.byte_size) > MAX_MARKETPLACE_PDF_BYTES) {
+      return NextResponse.json({ error: "Este archivo supera el tamaño permitido para su entrega." }, { status: 409 });
+    }
 
     // A paid order must never point at a PDF that is absent from private storage.
     const file = await downloadPrivateObject("ebooks", book.storage_key);
@@ -73,8 +77,9 @@ export async function POST(request: Request) {
         select b.id as book_id, r.id as revision_id, s.id as seller_id
         from public.marketplace_books b
         join public.marketplace_sellers s on s.id=b.seller_id and s.status='active'
+        join public.marketplace_seller_tax_profiles t on t.seller_id=s.id and t.review_status='verified'
         join public.marketplace_book_revisions r on r.id=b.published_revision_id
-          and r.book_id=b.id and r.moderation_status='approved'
+          and r.book_id=b.id and r.moderation_status='approved' and r.rights_declared_at is not null
         join public.marketplace_assets a on a.revision_id=r.id and a.book_id=b.id
           and a.asset_kind='ebook_pdf' and a.scan_status='ready' and a.storage_key=$3
         where b.id=$2 and b.status='published' and b.published_at is not null
@@ -102,7 +107,7 @@ export async function POST(request: Request) {
       apiKey, commerceOrder: `mkt-${orderId}`, subject: book.title.slice(0, 120),
       currency: "CLP", amount: price.price, email,
       urlConfirmation: new URL("/api/marketplace/flow/confirm", origin).toString(),
-      urlReturn: new URL(`/ebooks?orden=${orderId}`, origin).toString(),
+      urlReturn: new URL("/ebooks/mercado/resultado", origin).toString(),
       timeout: 1800,
     };
     const form = new URLSearchParams(Object.entries({ ...params, s: flowSign(params, process.env.FLOW_SECRET_KEY!) }).map(([key, value]) => [key, String(value)]));
@@ -124,7 +129,10 @@ export async function POST(request: Request) {
     }
     await queryDatabase(`insert into public.marketplace_payments
       (order_id,provider,provider_account_ref,provider_payment_ref,attempt_number,amount_minor)
-      values($1,'flow','crececonia',$2,1,$3)`, [orderId, result.token, price.price]);
+      values($1,'flow','crececonia',$2,1,$3)
+      on conflict (provider,provider_payment_ref) do update
+        set provider_payment_ref=excluded.provider_payment_ref
+        where marketplace_payments.order_id=excluded.order_id`, [orderId, result.token, price.price]);
     redirect.searchParams.set("token", result.token);
     return NextResponse.json({ redirectUrl: redirect.toString(), orderId });
   } catch (error) {

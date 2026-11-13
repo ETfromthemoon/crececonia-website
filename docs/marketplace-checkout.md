@@ -23,6 +23,9 @@ e idempotentes. El correo de entrega usa una clave de idempotencia y un enlace
 firmado de siete días. La descarga comprueba el derecho activo y lee el PDF
 desde Storage privado. Un error de verificación o entrega devuelve 500 para
 permitir reintento; los fallos persistentes requieren conciliación operativa.
+El retorno de Flow muestra un estado de confirmación sin datos personales ni
+afirmar que la compra ya se aprobó; pide no repetir el pago mientras llega el
+correo. El enlace de siete días se calcula al enviar, también en reintentos.
 
 El importe de comisión y el IVA desglosado son **supuestos de prueba**. El
 endpoint estándar `payment/create` de Flow cobra en una cuenta de comercio y
