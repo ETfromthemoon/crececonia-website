@@ -11,6 +11,7 @@
     "posthog:report": "tsx --env-file-if-exists=.env.local scripts/posthog-report.ts",
     "posthog:email": "tsx --env-file-if-exists=.env.local scripts/posthog-report-email.ts",
     "flow:contract": "tsx --env-file-if-exists=.env.local scripts/flow-contract-check.ts",
+    "launch:checkout:concurrency": "tsx scripts/test-launch-checkout-concurrency.ts",
     "ebook:recuperar": "tsx --env-file-if-exists=.env.local scripts/recuperar-entregas.ts",
     "ebook:subir-pdfs": "tsx --env-file-if-exists=.env.local scripts/subir-ebooks-storage.ts",
     "ebook:verificar": "tsx --env-file-if-exists=.env.local scripts/subir-ebooks-storage.ts --solo-verificar",
