@@ -23,7 +23,8 @@ describe("marketplace post-sale decisions", () => {
   it("requires a verified recipient and an active entitlement to recover access", () => {
     expect(buildPostSaleMessage({ ...base, kind: "access-recovery" }, new Date())).toBeNull();
     expect(buildPostSaleMessage({ ...base, kind: "access-recovery", recipientVerified: true, entitlementActive: false }, new Date())).toBeNull();
-    expect(buildPostSaleMessage({ ...base, kind: "access-recovery", recipientVerified: true }, new Date())?.to).toBe(base.buyerEmail);
+    expect(buildPostSaleMessage({ ...base, kind: "access-recovery", recipientVerified: true, recoveryRequestId: "request_1" }, new Date())?.to).toBe(base.buyerEmail);
+    expect(postSaleEventKey("access-recovery", "order_1", "request_1")).not.toBe(postSaleEventKey("access-recovery", "order_1", "request_2"));
   });
 
   it("sends review invitations only after 14 days with verified opt-in and no opt-out", () => {
@@ -35,8 +36,10 @@ describe("marketplace post-sale decisions", () => {
   });
 
   it("keeps distinct events separate and rejects invalid keys", () => {
-    expect(postSaleEventKey("purchase-access", "order_1")).not.toBe(postSaleEventKey("access-recovery", "order_1"));
+    expect(postSaleEventKey("purchase-access", "order_1")).not.toBe(postSaleEventKey("access-recovery", "order_1", "request_1"));
     expect(() => postSaleEventKey("purchase-access", "../x")).toThrow();
+    expect(() => postSaleEventKey("access-recovery", "order_1")).toThrow();
     expect(() => buildPostSaleMessage({ ...base, libraryUrl: "https://evil.example/steal" }, new Date())).toThrow();
+    expect(() => buildPostSaleMessage({ ...base, libraryUrl: "https://www.crececonia.cl/cuenta/biblioteca?token=secret" }, new Date())).toThrow();
   });
 });

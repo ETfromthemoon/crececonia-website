@@ -4,6 +4,7 @@ export type PostSaleKind = "purchase-access" | "access-recovery" | "review-invit
 export type PostSaleEvent = {
   kind: PostSaleKind;
   orderId: string;
+  recoveryRequestId?: string;
   buyerEmail: string;
   bookTitle: string;
   authorName: string;
@@ -28,7 +29,7 @@ const SITE = "https://www.crececonia.cl";
 
 function safeSiteUrl(value: string): string {
   const url = new URL(value);
-  if (url.origin !== SITE || url.username || url.password || url.hash) throw new Error("URL de posventa no autorizada.");
+  if (url.origin !== SITE || url.username || url.password || url.hash || url.search) throw new Error("URL de posventa no autorizada.");
   return url.toString();
 }
 
@@ -37,8 +38,12 @@ function safeCopy(value: string): string {
 }
 
 /** Stable unique key for an outbox row. Never use this as an access token. */
-export function postSaleEventKey(kind: PostSaleKind, orderId: string): string {
+export function postSaleEventKey(kind: PostSaleKind, orderId: string, recoveryRequestId?: string): string {
   if (!/^[a-zA-Z0-9_-]{1,100}$/.test(orderId)) throw new Error("Identificador de orden inválido.");
+  if (kind === "access-recovery") {
+    if (!recoveryRequestId || !/^[a-zA-Z0-9_-]{1,100}$/.test(recoveryRequestId)) throw new Error("Solicitud de recuperación inválida.");
+    return `marketplace:${orderId}:${kind}:${recoveryRequestId}`;
+  }
   return `marketplace:${orderId}:${kind}`;
 }
 
@@ -75,5 +80,5 @@ export function buildPostSaleMessage(event: PostSaleEvent, now: Date): PostSaleM
       text: `Si ya leíste ${book}, puedes dejar una opinión desde tu biblioteca: ${library}\n\nDeja de recibir invitaciones y novedades en ${preference}`,
     },
   };
-  return { eventKey: postSaleEventKey(event.kind, event.orderId), to: event.buyerEmail, ...copy[event.kind] };
+  return { eventKey: postSaleEventKey(event.kind, event.orderId, event.recoveryRequestId), to: event.buyerEmail, ...copy[event.kind] };
 }
