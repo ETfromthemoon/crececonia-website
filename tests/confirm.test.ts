@@ -111,11 +111,12 @@ describe("POST /api/flow/confirm", () => {
 
   it("con flag usa transacción sin escrituras legacy ni envío directo", async () => {
     vi.stubEnv("EBOOK_PAYMENT_FINALIZATION_ENABLED", "true");
-    mockFinalize.mockResolvedValue({ outcome: "finalized", jobId: "synthetic", resources: [BOOK_1, AGENTES] });
+    mockFinalize.mockResolvedValue({ outcome: "finalized", jobId: "synthetic", resources: [BOOK_1, AGENTES], analytics: { discountCode: null, attribution: { utm_source: "instagram" } } });
     expect((await POST(webhook())).status).toBe(200);
     expect(mockFinalize).toHaveBeenCalledWith({ flowOrder: "99", commerceOrder: "ebook-123-abc123", email: "comprador@test.com", amount: 19440, token: "tok_pago", source: "webhook" });
     expect(mockInsert).not.toHaveBeenCalled(); expect(mockDelete).not.toHaveBeenCalled(); expect(mockDecrement).not.toHaveBeenCalled(); expect(mockRedeem).not.toHaveBeenCalled(); expect(mockSendEmail).not.toHaveBeenCalled();
     expect(mockPurchaseNotice).toHaveBeenCalledWith(expect.objectContaining({ items: [BOOK_1, AGENTES] }));
+    expect(mockCapture).toHaveBeenCalledWith("ebook_purchase_confirmed", "ebook-order:ebook-123-abc123", expect.objectContaining({ utm_source: "instagram" }));
   });
   it("replay finalizado reconoce receipt sin pendiente ni repetir avisos", async () => {
     vi.stubEnv("EBOOK_PAYMENT_FINALIZATION_ENABLED", "true"); mockFinalize.mockResolvedValue({ outcome: "existing", jobId: "synthetic" });
@@ -161,8 +162,8 @@ describe("POST /api/flow/confirm", () => {
 
   it("entrega el combo completo una vez, registra sus dos compras y emite un evento de orden", async () => {
     pendingResources = [
-      { resource: BOOK_1, tier: "super-early", amount: 9_720, analytics_distinct_id: "anon-1" },
-      { resource: AGENTES, tier: "regular", amount: 9_720, analytics_distinct_id: "anon-1" },
+      { resource: BOOK_1, tier: "super-early", amount: 9_720, analytics_distinct_id: "019525c0-0000-7000-8000-000000000001", utm_source: "instagram", utm_campaign: "ebook-launch", fbclid: "click-id" },
+      { resource: AGENTES, tier: "regular", amount: 9_720, analytics_distinct_id: "019525c0-0000-7000-8000-000000000001", utm_source: "instagram", utm_campaign: "ebook-launch", fbclid: "click-id" },
     ];
 
     const res = await POST(webhook());
@@ -179,8 +180,8 @@ describe("POST /api/flow/confirm", () => {
     });
     expect(mockCapture).toHaveBeenCalledWith(
       "ebook_purchase_confirmed",
-      "anon-1",
-      expect.objectContaining({ item_count: 2, amount: 19_440, order_id: "ebook-123-abc123" })
+      "019525c0-0000-7000-8000-000000000001",
+      expect.objectContaining({ item_count: 2, amount: 19_440, order_id: "ebook-123-abc123", utm_source: "instagram", utm_campaign: "ebook-launch" })
     );
     expect(mockPurchaseNotice).toHaveBeenCalledWith(expect.objectContaining({
       kind: "Ebook",
