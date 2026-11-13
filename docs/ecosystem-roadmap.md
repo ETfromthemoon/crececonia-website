@@ -56,9 +56,9 @@ Cada fila es una capacidad; puede dividirse en varios PR pequeños. Las dependen
 
 El objetivo activo del chat coordina estos PR hasta completarlos. Las automatizaciones son auditorías recurrentes del ecosistema (comercial, medición y confiabilidad), no vigilantes de un PR particular. Revisan primero trabajo existente para no duplicarlo. Hallazgos repetidos se actualizan, no generan ramas nuevas sin necesidad.
 
-## Estado verificado al 13 de noviembre de 2026
+## Estado verificado al 12 de noviembre de 2026 (America/Santiago)
 
-Estado actualizado el 2026-11-13 sobre `71103a717db99ccd1bcd50aeecd54a81f9eded3d`. El seguimiento posterior vive en [issue #83](https://github.com/ETfromthemoon/crececonia-website/issues/83). Una capacidad puede tener código integrado sin estar activada; esta tabla no declara completo el objetivo integral.
+Estado actualizado el 2026-11-12 (America/Santiago) sobre `71103a717db99ccd1bcd50aeecd54a81f9eded3d`. El seguimiento posterior vive en [issue #83](https://github.com/ETfromthemoon/crececonia-website/issues/83). Una capacidad puede tener código integrado sin estar activada; esta tabla no declara completo el objetivo integral.
 
 | Capacidad | Evidencia integrada | Pendiente para completar |
 | --- | --- | --- |
