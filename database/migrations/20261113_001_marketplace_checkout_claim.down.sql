@@ -1,4 +1,5 @@
 begin;
+lock table public.marketplace_orders in access exclusive mode;
 do $$ begin
   if exists (select 1 from public.marketplace_orders where request_digest is not null or flow_checkout_url is not null) then
     raise exception 'checkout claim data exists; refusing to remove replay columns';
