@@ -1,6 +1,6 @@
 begin;
 
--- Hold the locks through the empty check so a concurrent write cannot be lost.
+-- Hold locks through the empty check so rollback cannot discard live rows.
 do $$
 declare
   table_name text;
@@ -18,7 +18,6 @@ begin
       execute format('lock table public.%I in access exclusive mode', table_name);
     end if;
   end loop;
-
   foreach table_name in array tables loop
     if to_regclass(format('public.%I', table_name)) is not null then
       execute format('select exists (select 1 from public.%I)', table_name) into has_rows;
