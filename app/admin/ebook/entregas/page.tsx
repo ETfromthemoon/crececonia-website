@@ -19,7 +19,7 @@ export default async function EbookDeliveriesPage({ searchParams }: { searchPara
       : "No pudimos consultar las entregas. No se puede determinar si hay registros o incidentes.";
   }
   return <main style={{ minHeight: "100vh", padding: "40px 24px", maxWidth: 1280, margin: "0 auto" }}>
-    <p><a href="/admin/ebook">← Administración</a></p>
+    <p><a href="/admin/ebook">← Administración</a> · <a href="/admin/ebook/conciliacion">Conciliar compras y entregas</a></p>
     <h1 style={{ fontSize: "2rem", margin: "24px 0 12px" }}>Entregas de ebooks</h1>
     <p>Consulta de solo lectura. La aceptación del correo y los efectos de la compra se revisan por separado.</p>
     <p style={{ margin: "12px 0 24px" }}>Aceptado por Resend no significa entregado ni descargado. No se muestran destinatarios ni enlaces privados. Fechas en horario de Chile.</p>
