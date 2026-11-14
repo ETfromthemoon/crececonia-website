@@ -1,12 +1,15 @@
 import { createHash } from "node:crypto";
 import { queryDatabase } from "@/lib/database";
 import { flowSign, getFlowBase } from "@/lib/flow";
-import { sendMarketplaceDelivery } from "@/lib/marketplace-delivery";
-import { marketplaceSandboxConfigured, normalizeBuyerEmail } from "@/lib/marketplace-checkout";
+import { deliverMarketplaceOrder } from "@/lib/marketplace-delivery-worker";
+import { marketplaceFlowGatewayFee, marketplaceSandboxConfigured, normalizeBuyerEmail, MARKETPLACE_FLOW_ACCOUNT_REF } from "@/lib/marketplace-checkout";
 
 export const runtime = "nodejs";
 
-type FlowStatus = { status: number; payer: string; amount: string | number; flowOrder: number; commerceOrder: string };
+type FlowStatus = {
+  status: number; payer: string; amount: string | number; flowOrder: number; commerceOrder: string;
+  currency: string; merchantId?: string | null; paymentData?: unknown;
+};
 type OrderRow = {
   id: string; buyer_email: string; status: string; total_minor: string | number;
   item_id: string; price_minor: string | number; commission_minor: string | number;
@@ -27,44 +30,6 @@ async function getFlowStatus(token: string): Promise<FlowStatus> {
   return payment as FlowStatus;
 }
 
-async function deliver(orderId: string): Promise<void> {
-  const outboxKey = `marketplace-delivery/${orderId}`;
-  const [claim] = await queryDatabase<{ id: string; lease_until: string }>(`
-    update public.marketplace_outbox
-    set status='processing',lease_until=now()+interval '2 minutes',attempts=attempts+1
-    where idempotency_key=$1 and
-      (status in ('pending','failed') or (status='processing' and lease_until<now()))
-    returning id,lease_until`, [outboxKey]);
-  if (!claim) {
-    const [state] = await queryDatabase<{ status: string }>(
-      "select status from public.marketplace_outbox where idempotency_key=$1", [outboxKey]);
-    if (state?.status === "succeeded") return;
-    throw new Error("La entrega está siendo procesada por otro callback.");
-  }
-  try {
-    const [row] = await queryDatabase<{
-      id: string; buyer_email: string; paid_at: string; item_id: string; title: string;
-    }>(`
-      select o.id,o.buyer_email,o.paid_at,i.id as item_id,r.title
-      from public.marketplace_orders o
-      join public.marketplace_order_items i on i.order_id=o.id
-      join public.marketplace_book_revisions r on r.id=i.revision_id
-      join public.marketplace_entitlements e on e.order_item_id=i.id and e.status='active'
-      where o.id=$1 and o.status='paid'`, [orderId]);
-    if (!row) throw new Error("La orden pagada no tiene entrega completa.");
-    await sendMarketplaceDelivery({ orderId: row.id, itemId: row.item_id, buyerEmail: row.buyer_email, title: row.title, paidAt: row.paid_at });
-    const [completed] = await queryDatabase<{ id: string }>(`update public.marketplace_outbox
-      set status='succeeded',completed_at=now(),lease_until=null
-      where id=$1 and status='processing' and lease_until=$2 returning id`, [claim.id, claim.lease_until]);
-    if (!completed) throw new Error("La entrega no pudo cerrar su reserva.");
-  } catch (error) {
-    await queryDatabase(`update public.marketplace_outbox
-      set status='failed',lease_until=null,last_error_code='delivery_failed'
-      where id=$1 and status='processing' and lease_until=$2`, [claim.id, claim.lease_until]).catch(() => undefined);
-    throw error;
-  }
-}
-
 export async function POST(request: Request): Promise<Response> {
   // Disabling new checkouts must not abandon an already paid sandbox order.
   if (!marketplaceSandboxConfigured()) return new Response("UNAVAILABLE", { status: 503 });
@@ -77,7 +42,8 @@ export async function POST(request: Request): Promise<Response> {
     const match = /^mkt-([0-9a-f-]{36})$/.exec(payment.commerceOrder ?? "");
     const buyer = normalizeBuyerEmail(payment.payer);
     const amount = Number(payment.amount);
-    if (!match || !buyer || !Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(payment.flowOrder)) {
+    if (!match || !buyer || !Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(payment.flowOrder)
+      || payment.currency !== "CLP" || payment.merchantId != null) {
       throw new Error("Flow devolvió un pago sin identidad o monto válido.");
     }
     const orderId = match[1];
@@ -91,21 +57,27 @@ export async function POST(request: Request): Promise<Response> {
     if (!order || Number(order.total_minor) !== amount || Number(order.price_minor) !== amount || order.buyer_email !== buyer) {
       throw new Error("El pago no coincide con la orden preparada.");
     }
-    const [existing] = await queryDatabase<{ id: string; provider_payment_ref: string; status: string }>(`
-      select id,provider_payment_ref,status from public.marketplace_payments
+    const [existing] = await queryDatabase<{ id: string; provider_payment_ref: string; provider_account_ref: string; status: string }>(`
+      select id,provider_payment_ref,provider_account_ref,status from public.marketplace_payments
       where order_id=$1 and attempt_number=1`, [orderId]);
-    if (existing && existing.provider_payment_ref !== token) {
+    // Flow can notify before payment/create's response is persisted; retry without
+    // moving the order to manual review until that write has had a chance to land.
+    if (!existing) throw new Error("La referencia Flow aún no está registrada; reintentar.");
+    if (existing.provider_payment_ref !== token || existing.provider_account_ref !== MARKETPLACE_FLOW_ACCOUNT_REF) {
       await queryDatabase("update public.marketplace_orders set status='review_required' where id=$1 and status<>'refunded'", [orderId]);
-      throw new Error("La orden tiene otra transacción de Flow y requiere conciliación.");
+      throw new Error("La transacción o cuenta Flow no coincide con la orden preparada y requiere conciliación.");
     }
+    const gatewayFee = marketplaceFlowGatewayFee(amount, payment.paymentData);
     const [record] = await queryDatabase<{ id: string }>(`
       insert into public.marketplace_payments
-        (order_id,provider,provider_account_ref,provider_payment_ref,attempt_number,amount_minor,status,confirmed_at)
-      values ($1,'flow','crececonia',$2,1,$3,'confirmed',now())
+        (order_id,provider,provider_account_ref,provider_payment_ref,attempt_number,amount_minor,gateway_fee_actual_minor,status,confirmed_at)
+      values ($1,'flow',$5,$2,1,$3,$4,'confirmed',now())
       on conflict (provider,provider_payment_ref) do update
-        set status='confirmed',confirmed_at=coalesce(marketplace_payments.confirmed_at,now())
+        set status='confirmed',confirmed_at=coalesce(marketplace_payments.confirmed_at,now()),
+            gateway_fee_actual_minor=coalesce(excluded.gateway_fee_actual_minor,marketplace_payments.gateway_fee_actual_minor)
         where marketplace_payments.order_id=excluded.order_id
-      returning id`, [orderId, token, amount]);
+          and marketplace_payments.provider_account_ref=excluded.provider_account_ref
+      returning id`, [orderId, token, amount, gatewayFee, MARKETPLACE_FLOW_ACCOUNT_REF]);
     if (!record) throw new Error("No se registró el pago.");
     const digest = createHash("sha256").update(`${orderId}:${token}:${amount}:2`).digest("hex");
     await queryDatabase(`insert into public.marketplace_payment_events
@@ -137,7 +109,7 @@ export async function POST(request: Request): Promise<Response> {
       (event_type,aggregate_type,aggregate_id,idempotency_key,payload)
       values ('purchase_delivery','order',$1,$2,'{}'::jsonb)
       on conflict (idempotency_key) do nothing`, [orderId, `marketplace-delivery/${orderId}`]);
-    await deliver(orderId);
+    await deliverMarketplaceOrder(orderId);
     return new Response("OK");
   } catch (error) {
     console.error("[marketplace/flow/confirm] la confirmación requiere reintento", error);

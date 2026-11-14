@@ -5,7 +5,7 @@ vi.mock("@/lib/database", () => ({ queryDatabase: vi.fn() }));
 vi.mock("@/lib/private-storage", () => ({ downloadPrivateObject: vi.fn() }));
 
 import { queryDatabase } from "@/lib/database";
-import { getMarketplaceRecommendations, listPublishedMarketplaceBooks, moderateMarketplaceBook, setMarketplaceSellerStatus, verifyMarketplaceSellerTax } from "@/lib/marketplace-review";
+import { getMarketplaceRecommendations, getPublishedMarketplaceCover, listPublishedMarketplaceBooks, moderateMarketplaceBook, setMarketplaceSellerStatus, verifyMarketplaceSellerTax } from "@/lib/marketplace-review";
 
 const bookId = "11111111-1111-4111-8111-111111111111";
 const revisionId = "22222222-2222-4222-8222-222222222222";
@@ -28,6 +28,7 @@ describe("marketplace moderation transition contracts", () => {
     expect(sql).toContain("r.rights_declared_at is not null");
     expect(sql).toContain("r.price_tax_mode in ('tax_inclusive', 'exempt')");
     expect(sql).toContain("a.scan_status = 'ready'");
+    expect(sql).toContain("a.asset_kind = 'cover'");
     expect(values).toEqual([bookId, revisionId, "approve", "approved", null, "approved"]);
   });
 
@@ -39,6 +40,7 @@ describe("marketplace moderation transition contracts", () => {
     expect(sql).toContain("s.status = 'active'");
     expect(sql).toContain("t.review_status = 'verified'");
     expect(sql).toContain("a.scan_status = 'ready'");
+    expect(sql).toContain("a.asset_kind = 'cover'");
     expect(sql).toContain("published_revision_id = b.current_revision_id");
     expect(values).toEqual([bookId, revisionId]);
   });
@@ -89,6 +91,25 @@ describe("marketplace moderation transition contracts", () => {
     expect(values).toEqual([96]);
     await expect(listPublishedMarketplaceBooks(0)).rejects.toThrow("Página inválida");
     expect(database).toHaveBeenCalledTimes(1);
+  });
+
+  it("filters the live catalog with parameterized literal search and approved category", async () => {
+    await listPublishedMarketplaceBooks(2, { query: "IA%", category: "ia" });
+    const [sql, values] = database.mock.calls[0];
+    expect(sql).toContain("strpos(lower(concat_ws");
+    expect(sql).toContain("r.category = $3");
+    expect(values).toEqual([24, "IA%", "ia"]);
+    expect(sql).toContain("cover.scan_status = 'ready'");
+  });
+
+  it("selects a cover only for a published approved revision with a ready PDF", async () => {
+    await getPublishedMarketplaceCover(bookId);
+    const [sql, values] = database.mock.calls[0];
+    expect(sql).toContain("b.status = 'published'");
+    expect(sql).toContain("r.moderation_status = 'approved'");
+    expect(sql).toContain("a.asset_kind = 'cover' and a.scan_status = 'ready'");
+    expect(sql).toContain("pdf.asset_kind = 'ebook_pdf' and pdf.scan_status = 'ready'");
+    expect(values).toEqual([bookId]);
   });
 
   it("recommends related approved books from other authors using a gated live query", async () => {

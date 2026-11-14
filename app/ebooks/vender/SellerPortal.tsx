@@ -6,7 +6,10 @@ import SellerDemo from "./SellerDemo";
 
 type Seller = { id: string; display_name: string; public_slug: string; bio: string; status: string };
 type TaxProfile = { rut: string; legal_name: string; declared_vat_status: string; review_status: string };
-type Book = { id: string; slug: string; status: string; title: string; description: string; category: string; price_minor: number; has_pdf: boolean; has_cover: boolean };
+type Book = { id: string; revision_id?: string; slug: string; status: string; title: string; description: string; category: string; price_minor: number; has_pdf: boolean; has_cover: boolean };
+type SalesSummary = { sale_count: number; gross_minor: string; commission_minor: string };
+type SellerSale = { order_item_id: string; order_id: string; title: string; price_minor: string; commission_minor: string; gateway_fee_actual_minor: string | null; paid_at: string };
+const formatCLP = (amount: string | bigint) => `$${new Intl.NumberFormat("es-CL").format(BigInt(amount))} CLP`;
 
 const inputStyle = { display: "block", width: "100%", margin: "8px 0 18px", padding: 12, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--ink)" };
 
@@ -28,6 +31,8 @@ export default function SellerPortal({ demoAvailable }: { demoAvailable: boolean
   const [seller, setSeller] = useState<Seller | null>(null);
   const [taxProfile, setTaxProfile] = useState<TaxProfile | null>(null);
   const [books, setBooks] = useState<Book[]>([]);
+  const [salesSummary, setSalesSummary] = useState<SalesSummary>({ sale_count: 0, gross_minor: "0", commission_minor: "0" });
+  const [recentSales, setRecentSales] = useState<SellerSale[]>([]);
   const [message, setMessage] = useState("");
   const [pricePreview, setPricePreview] = useState("");
   const [revisionPrices, setRevisionPrices] = useState<Record<string, string>>({});
@@ -38,10 +43,12 @@ export default function SellerPortal({ demoAvailable }: { demoAvailable: boolean
       if (!response.ok && response.status !== 401) throw new Error();
       setLoggedIn(response.ok);
       if (response.ok) {
-        const data = await response.json() as { seller: Seller | null; taxProfile: TaxProfile | null; books: Book[] };
+        const data = await response.json() as { seller: Seller | null; taxProfile: TaxProfile | null; books: Book[]; salesSummary: SalesSummary; recentSales: SellerSale[] };
         setSeller(data.seller);
         setTaxProfile(data.taxProfile);
         setBooks(data.books);
+        setSalesSummary(data.salesSummary);
+        setRecentSales(data.recentSales);
       }
     } catch { setMessage("No pudimos cargar el panel. Actualiza la página e inténtalo de nuevo."); }
     finally { setLoading(false); }
@@ -56,7 +63,21 @@ export default function SellerPortal({ demoAvailable }: { demoAvailable: boolean
     const body: Record<string, unknown> = { ...values };
     if (path.endsWith("/profile")) body.acceptTerms = values.acceptTerms === "on";
     if (path.includes("/books")) { body.declareRights = values.declareRights === "on"; body.priceClp = Number(values.priceClp); }
-    try { await post(path, body, method); setMessage(success); form.reset(); if (path === "/api/marketplace/seller/books") setPricePreview(""); await refresh(); }
+    try {
+      await post(path, body, method);
+      setMessage(success);
+      form.reset();
+      if (path === "/api/marketplace/seller/books") setPricePreview("");
+      if (method === "PATCH" && path.includes("/books/")) {
+        const bookId = path.split("/").at(-1);
+        if (bookId) setRevisionPrices((prices) => {
+          const next = { ...prices };
+          delete next[bookId];
+          return next;
+        });
+      }
+      await refresh();
+    }
     catch (error) { setMessage(error instanceof Error ? error.message : "No pudimos guardar los datos."); }
   }
 
@@ -127,8 +148,10 @@ export default function SellerPortal({ demoAvailable }: { demoAvailable: boolean
       <h2>Mis ebooks</h2>
       {books.length ? <ul>{books.map((book) => <li key={book.id} style={{ marginBottom: 28 }}>
         <strong>{book.title ?? book.slug}</strong> · {book.status} · ${Number(book.price_minor).toLocaleString("es-CL")} CLP
-        {book.status === "changes_requested" && <form onSubmit={(event) => void submit(event, `/api/marketplace/seller/books/${book.id}`, "Nueva revisión guardada. Sube el PDF y la portada corregidos.", "PATCH")}>
-          <p>El equipo pidió cambios. Guarda una nueva revisión antes de volver a enviar el libro.</p>
+        {(book.status === "draft" || book.status === "changes_requested") && <details open={book.status === "changes_requested"}>
+          <summary>{book.status === "draft" ? "Editar borrador" : "Responder a la revisión"}</summary>
+          <form key={`${book.id}:${book.revision_id}`} onSubmit={(event) => void submit(event, `/api/marketplace/seller/books/${book.id}`, "Nueva revisión guardada. Sube el PDF y la portada a esta versión antes de enviarla.", "PATCH")}>
+          <p>Al guardar se crea una versión nueva. Después deberás subir su PDF y portada, aunque ya hayas subido archivos a la versión anterior.</p>
           <label>Título <input name="title" defaultValue={book.title} required minLength={3} maxLength={180} style={inputStyle} /></label>
           <label>Descripción <textarea name="description" defaultValue={book.description} required minLength={20} maxLength={10000} rows={6} style={inputStyle} /></label>
           <label>Categoría <select name="category" defaultValue={book.category} style={inputStyle}><option value="ia">IA</option><option value="tecnologia">Tecnología</option><option value="negocios">Negocios</option></select></label>
@@ -136,13 +159,30 @@ export default function SellerPortal({ demoAvailable }: { demoAvailable: boolean
           <PayoutCalculator priceValue={revisionPrices[book.id] ?? String(book.price_minor)} />
           <label><input name="declareRights" type="checkbox" required /> Confirmo que tengo los derechos de la versión corregida.</label>
           <p><button type="submit">Guardar nueva revisión</button></p>
-        </form>}
+        </form></details>}
         {book.status === "draft" && <div>
           <form onSubmit={(event) => void upload(event, book.id, "ebook_pdf")}><input type="hidden" name="kind" value="ebook_pdf" /><label>PDF privado (hasta 4 MiB) <input name="file" type="file" accept="application/pdf" required /></label> <button type="submit">{book.has_pdf ? "Reemplazar PDF" : "Subir PDF"}</button></form>
           <form onSubmit={(event) => void upload(event, book.id, "cover")}><input type="hidden" name="kind" value="cover" /><label>Portada JPG o PNG (hasta 4 MiB) <input name="file" type="file" accept="image/jpeg,image/png" required /></label> <button type="submit">{book.has_cover ? "Reemplazar portada" : "Subir portada"}</button></form>
           <button type="button" disabled={!book.has_pdf || !book.has_cover} onClick={() => void sendForReview(book.id)}>Enviar a revisión</button>
         </div>}
       </li>)}</ul> : <p>Aún no tienes borradores.</p>}
+      <section aria-labelledby="seller-sales-heading" style={{ marginTop: 40, borderTop: "1px solid var(--border)", paddingTop: 28 }}>
+        <h2 id="seller-sales-heading">Ventas confirmadas</h2>
+        <p>Solo se incluyen órdenes con estado pagado. El monto tras comisión no es una liquidación: aún faltan pasarela, impuestos, reembolsos y otros ajustes.</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, margin: "24px 0" }}>
+          <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{salesSummary.sale_count}</strong><span>Ventas pagadas</span></div>
+          <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{formatCLP(salesSummary.gross_minor)}</strong><span>Total bruto pagado</span></div>
+          <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{formatCLP(BigInt(salesSummary.gross_minor) - BigInt(salesSummary.commission_minor))}</strong><span>Tras comisión, antes de otros cargos</span></div>
+        </div>
+        {recentSales.length > 0 ? <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", minWidth: 550 }}>
+          <thead><tr><th scope="col">Ebook</th><th scope="col">Fecha de pago</th><th scope="col">Precio</th><th scope="col">Comisión</th><th scope="col">Pasarela</th></tr></thead>
+          <tbody>{recentSales.map((sale) => <tr key={sale.order_item_id}>
+            <td>{sale.title}</td><td><time dateTime={sale.paid_at}>{new Date(sale.paid_at).toLocaleDateString("es-CL")}</time></td>
+            <td>{formatCLP(sale.price_minor)}</td><td>{formatCLP(sale.commission_minor)}</td>
+            <td>{sale.gateway_fee_actual_minor === null ? "Por conciliar" : formatCLP(sale.gateway_fee_actual_minor)}</td>
+          </tr>)}</tbody>
+        </table></div> : <p>Aún no hay ventas confirmadas de tus ebooks.</p>}
+      </section>
       {!demoMode && <><h2>Crear borrador</h2>
       <form onSubmit={(event) => void submit(event, "/api/marketplace/seller/books", "Borrador guardado. La publicación requiere portada, PDF y aprobación editorial.")}>
         <label htmlFor="book-title">Título</label><input id="book-title" name="title" required minLength={3} maxLength={180} style={inputStyle} />

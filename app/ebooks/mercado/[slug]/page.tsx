@@ -8,10 +8,12 @@ import { marketplaceDemoAvailable, marketplacePublicAvailable } from "@/lib/mark
 import { getDemoBook } from "@/lib/marketplace/demo-catalog";
 import DemoBookDetail from "./DemoBookDetail";
 import "../demo.css";
+import "../real.css";
 
 export const dynamic = "force-dynamic";
 
 const categoryLabel = { ia: "Inteligencia artificial", tecnologia: "Tecnología", negocios: "Negocios" };
+const coverTone = { ia: "violet", tecnologia: "blue", negocios: "lime" };
 const formatCLP = (value: string) => new Intl.NumberFormat("es-CL", {
   style: "currency", currency: "CLP", maximumFractionDigits: 0,
 }).format(BigInt(value));
@@ -37,28 +39,33 @@ export default async function MarketplaceBookPage({ params }: { params: Promise<
     && (process.env.VERCEL_ENV === "preview" || process.env.NODE_ENV === "development");
   return <>
     <Navbar />
-    <main style={{ minHeight: "70vh", maxWidth: 900, margin: "0 auto", padding: "120px 24px 80px" }}>
-      <Link href="/ebooks/mercado">← Todos los autores</Link>
-      <p className="eyebrow" style={{ marginTop: 40 }}>{categoryLabel[book.category]}</p>
-      <h1 style={{ fontSize: "clamp(2.5rem, 7vw, 5rem)", lineHeight: 1.05, margin: "18px 0" }}>{book.title}</h1>
-      {book.subtitle && <p style={{ fontSize: "1.4rem", color: "var(--muted)" }}>{book.subtitle}</p>}
-      <p>Por {book.author_display_name} · {book.seller_name}</p>
-      <p style={{ fontSize: "2rem", color: "var(--champagne)", margin: "32px 0" }}>{formatCLP(book.price_minor)}</p>
-      <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.7, marginBottom: 40 }}>{book.description}</div>
-      {sandboxCheckout ? <MarketplaceSandboxCheckout bookId={book.id} priceMinor={book.price_minor} />
-        : <p role="status">La compra de este libro estará disponible próximamente.</p>}
-      {recommendations.length > 0 && <section aria-labelledby="related-books" style={{ marginTop: 64 }}>
-        <p className="eyebrow">También te puede interesar</p>
-        <h2 id="related-books" style={{ fontSize: "2rem", margin: "12px 0 24px" }}>Sigue explorando</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
-          {recommendations.map((recommended) => <article key={recommended.id} style={{ border: "1px solid var(--border)", borderRadius: 16, padding: 22 }}>
-            <p className="eyebrow">{categoryLabel[recommended.category]}</p>
-            <h3 style={{ fontSize: "1.3rem", margin: "12px 0" }}><Link href={`/ebooks/mercado/${recommended.slug}`}>{recommended.title}</Link></h3>
-            <p>Por {recommended.author_display_name}</p>
-            <p style={{ color: "var(--champagne)" }}>{formatCLP(recommended.price_minor)}</p>
-          </article>)}
+    <main className="md-shop"><div className="md-wrap md-detail mr-detail">
+      <Link className="md-back" href="/ebooks/mercado">← Volver al marketplace</Link>
+      <div className="md-detail-hero">
+        {book.has_cover ? <img className="mr-detail-cover" src={`/api/marketplace/covers/${book.id}`} alt={`Portada de ${book.title}`} />
+          : <div className={`md-cover md-cover-${coverTone[book.category]}`} aria-hidden="true"><span>CRECECONIA / AUTORES</span><strong>{book.title}</strong><small>{book.author_display_name.toUpperCase()}</small></div>}
+        <div className="md-detail-main">
+          <p className="md-kicker">{categoryLabel[book.category]} / Ebook digital</p>
+          <h1>{book.title}</h1>
+          {book.subtitle && <p className="md-detail-subtitle">{book.subtitle}</p>}
+          <p className="md-detail-author">Por <strong>{book.author_display_name}</strong> · {book.seller_name}</p>
+          <p className="md-detail-description mr-description">{book.description}</p>
+          <div className="md-detail-purchase"><div><span>PRECIO FINAL</span><strong>{formatCLP(book.price_minor)}</strong></div>
+            {sandboxCheckout ? <MarketplaceSandboxCheckout bookId={book.id} priceMinor={book.price_minor} /> : <span>Compra disponible próximamente</span>}
+          </div>
+          {!sandboxCheckout && <p className="md-detail-disclaimer">Este título todavía no admite pagos en línea.</p>}
         </div>
+      </div>
+      {recommendations.length > 0 && <section className="mr-related" aria-labelledby="related-books">
+        <p className="md-kicker">LECTURAS QUE SE CONECTAN</p>
+        <h2 id="related-books">También te puede interesar.</h2>
+        <div className="mr-related-grid">{recommendations.map((recommended) =>
+          <Link className="mr-related-card" key={recommended.id} href={`/ebooks/mercado/${recommended.slug}`}>
+            <span>{categoryLabel[recommended.category]}</span><h3>{recommended.title}</h3>
+            <p>Por {recommended.author_display_name}</p><strong>{formatCLP(recommended.price_minor)} ↗</strong>
+          </Link>)}</div>
       </section>}
+    </div>
     </main>
     <Footer />
   </>;

@@ -17,9 +17,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     || body?.declareRights !== true) return new Response("Datos del ebook inválidos", { status: 400 });
   try {
     const [revision] = await queryDatabase<{ revision_id: string }>(
-      `select public.marketplace_revise_book_draft($1,$2::uuid,$3,$4,$5,$6) as revision_id`,
+      `select public.marketplace_edit_book_draft($1,$2::uuid,$3,$4,$5,$6) as revision_id`,
       [sellerIdentityFromRequest(request), id, title, description, category, price]);
-    if (!revision?.revision_id) return new Response("El libro no está disponible para corrección", { status: 409 });
+    if (!revision?.revision_id) return new Response("El libro no está disponible para edición", { status: 409 });
     return NextResponse.json({ ok: true, revisionId: revision.revision_id });
   } catch (error) {
     console.error("marketplace_seller_revision_error", error instanceof Error ? error.message : "unknown");

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { queryDatabase } from "@/lib/database";
 import { flowSign, getFlowBase } from "@/lib/flow";
 import { downloadPrivateObject } from "@/lib/private-storage";
-import { marketplacePriceSnapshot, marketplaceSandboxEnabled, normalizeBuyerEmail, MARKETPLACE_COMMISSION_BPS, MAX_MARKETPLACE_PDF_BYTES } from "@/lib/marketplace-checkout";
+import { marketplacePriceSnapshot, marketplaceSandboxEnabled, normalizeBuyerEmail, MARKETPLACE_COMMISSION_BPS, MARKETPLACE_FLOW_ACCOUNT_REF, MAX_MARKETPLACE_PDF_BYTES } from "@/lib/marketplace-checkout";
 
 export const runtime = "nodejs";
 
@@ -129,10 +129,10 @@ export async function POST(request: Request) {
     }
     await queryDatabase(`insert into public.marketplace_payments
       (order_id,provider,provider_account_ref,provider_payment_ref,attempt_number,amount_minor)
-      values($1,'flow','crececonia',$2,1,$3)
+      values($1,'flow',$4,$2,1,$3)
       on conflict (provider,provider_payment_ref) do update
         set provider_payment_ref=excluded.provider_payment_ref
-        where marketplace_payments.order_id=excluded.order_id`, [orderId, result.token, price.price]);
+        where marketplace_payments.order_id=excluded.order_id`, [orderId, result.token, price.price, MARKETPLACE_FLOW_ACCOUNT_REF]);
     redirect.searchParams.set("token", result.token);
     return NextResponse.json({ redirectUrl: redirect.toString(), orderId });
   } catch (error) {

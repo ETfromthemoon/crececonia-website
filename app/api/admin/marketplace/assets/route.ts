@@ -1,5 +1,5 @@
 import { isAdminRequest } from "@/lib/admin-session";
-import { reviewMarketplacePdf } from "@/lib/marketplace-review";
+import { reviewMarketplaceAsset } from "@/lib/marketplace-review";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -16,13 +16,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Falta confirmar la revisión manual." }, { status: 400 });
   }
   try {
-    const changed = await reviewMarketplacePdf(
+    const changed = await reviewMarketplaceAsset(
       String(form.get("asset_id") ?? ""), action, String(form.get("reason") ?? ""),
     );
     if (!changed) return NextResponse.json({ error: "El archivo cambió o ya fue revisado." }, { status: 409 });
     return NextResponse.redirect(new URL("/admin/marketplace?resultado=guardado", request.url), { status: 303 });
   } catch (error) {
     console.error("[marketplace/asset-review]", error);
-    return NextResponse.json({ error: "No se pudo validar el PDF." }, { status: 400 });
+    return NextResponse.json({ error: "No se pudo validar el archivo." }, { status: 400 });
   }
 }

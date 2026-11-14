@@ -3,6 +3,33 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 export const MARKETPLACE_COMMISSION_BPS = 500;
 export const MARKETPLACE_VAT_BPS = 1900;
 export const MAX_MARKETPLACE_PDF_BYTES = 4 * 1024 * 1024;
+export const MARKETPLACE_FLOW_ACCOUNT_REF = "crececonia";
+
+function flowWholeClp(value: unknown): number | null {
+  if (typeof value !== "number" && (typeof value !== "string" || !/^\d+(?:\.0+)?$/.test(value))) return null;
+  const amount = Number(value);
+  return Number.isSafeInteger(amount) && amount >= 0 ? amount : null;
+}
+
+/** Provider deductions in CLP, only when fee/tax/balance fields reconcile. */
+export function marketplaceFlowGatewayFee(
+  amount: number,
+  paymentData: unknown,
+): number | null {
+  if (!Number.isSafeInteger(amount) || amount <= 0 || !paymentData || typeof paymentData !== "object") return null;
+  const data = paymentData as Record<string, unknown>;
+  if (data.currency !== undefined && data.currency !== "CLP") return null;
+  const fee = flowWholeClp(data.fee);
+  const taxes = data.taxes === undefined || data.taxes === null ? null : flowWholeClp(data.taxes);
+  const balance = data.balance === undefined || data.balance === null ? null : flowWholeClp(data.balance);
+  if (fee === null || (data.taxes != null && taxes === null) || (data.balance != null && balance === null)) return null;
+  const total = fee + (taxes ?? 0);
+  if (!Number.isSafeInteger(total) || total > amount) return null;
+  // Without a separate tax field, the balance must prove that fee is the full deduction.
+  if (taxes === null && balance === null) return null;
+  if (balance !== null && amount - balance !== total) return null;
+  return total;
+}
 
 /** Flow's existing account is a single merchant account. Third-party sales stay in sandbox. */
 export function marketplaceSandboxConfigured(env: NodeJS.ProcessEnv = process.env): boolean {

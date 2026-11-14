@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createMarketplaceDownloadToken,
   marketplacePriceSnapshot,
+  marketplaceFlowGatewayFee,
   marketplaceSandboxEnabled,
   normalizeBuyerEmail,
   verifyMarketplaceDownloadToken,
@@ -15,6 +16,15 @@ describe("cobro marketplace", () => {
     expect(marketplacePriceSnapshot(10_000, "exempt")?.tax).toBe(0);
     expect(marketplacePriceSnapshot(10_000, "pending_review")).toBeNull();
     expect(marketplacePriceSnapshot(1.5, "tax_inclusive")).toBeNull();
+  });
+
+  it("registra solo deducciones Flow completas y conciliadas en CLP", () => {
+    expect(marketplaceFlowGatewayFee(17_900, { fee: "571.00", taxes: 108, balance: 17_221, currency: "CLP" })).toBe(679);
+    expect(marketplaceFlowGatewayFee(17_900, { fee: "571.00", taxes: 108, balance: 17_222, currency: "CLP" })).toBeNull();
+    expect(marketplaceFlowGatewayFee(17_900, { fee: "571.50", taxes: 108, balance: 17_221, currency: "CLP" })).toBeNull();
+    expect(marketplaceFlowGatewayFee(17_900, { fee: "571.00", balance: 17_329, currency: "CLP" })).toBe(571);
+    expect(marketplaceFlowGatewayFee(17_900, { fee: "571.00", currency: "CLP" })).toBeNull();
+    expect(marketplaceFlowGatewayFee(17_900, { fee: "571.00", taxes: 108, currency: "USD" })).toBeNull();
   });
 
   it("permite Flow sólo cuando sandbox y secretos están configurados", () => {

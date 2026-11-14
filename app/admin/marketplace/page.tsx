@@ -64,7 +64,7 @@ export default async function MarketplaceReviewPage({
     {rows.length === 0 && <p style={{ marginTop: 40 }}>No hay libros pendientes de revisión.</p>}
     <div style={{ display: "grid", gap: 24, marginTop: 40 }}>
       {rows.map((row) => {
-        const ready = Boolean(row.rights_declared_at && row.ready_pdf && row.price_tax_mode !== "pending_review");
+        const ready = Boolean(row.rights_declared_at && row.ready_pdf && row.ready_cover && row.price_tax_mode !== "pending_review");
         return <article key={row.book_id} style={{ border: "1px solid var(--border)", borderRadius: 16, padding: 24 }}>
           <p className="eyebrow">{row.seller_name} · {row.seller_status}</p>
           <h2 style={{ fontSize: "1.5rem", margin: "10px 0" }}>{row.title}</h2>
@@ -74,20 +74,22 @@ export default async function MarketplaceReviewPage({
           <ul style={{ marginTop: 16, paddingLeft: 20 }}>
             <li>Derechos declarados: {row.rights_declared_at ? row.rights_declaration_version ?? "sí" : "pendiente"}</li>
             <li>PDF validado: {row.ready_pdf ? "sí" : "pendiente"}</li>
+            <li>Portada revisada: {row.ready_cover ? "sí" : "pendiente"}</li>
             <li>Tratamiento tributario: {row.price_tax_mode}</li>
           </ul>
           {assets.filter((asset) => asset.revision_id === row.revision_id).map((asset) =>
             <div key={asset.id} style={{ padding: 16, margin: "16px 0", border: "1px solid var(--border)", borderRadius: 8 }}>
               <p>Archivo: {asset.asset_kind} · {asset.scan_status} · {asset.byte_size} bytes</p>
               {asset.asset_kind === "ebook_pdf" && <a href={`/api/admin/marketplace/assets/${asset.id}`}>Descargar PDF para revisión</a>}
-              {asset.scan_status === "quarantined" && asset.asset_kind === "ebook_pdf" &&
+              {asset.asset_kind === "cover" && <a href={`/api/admin/marketplace/assets/${asset.id}`} target="_blank" rel="noopener noreferrer">Abrir portada para revisión</a>}
+              {asset.scan_status === "quarantined" && (asset.asset_kind === "ebook_pdf" || asset.asset_kind === "cover") &&
                 <form action="/api/admin/marketplace/assets" method="post" style={{ marginTop: 14 }}>
                   <input type="hidden" name="asset_id" value={asset.id} />
                   <label htmlFor={`asset-reason-${asset.id}`}>Resultado de revisión del archivo</label>
                   <textarea id={`asset-reason-${asset.id}`} name="reason" minLength={10} maxLength={2000} required
                     style={{ display: "block", width: "100%", minHeight: 75, margin: "8px 0 12px", color: "#111" }} />
                   <label style={{ display: "block", marginBottom: 12 }}>
-                    <input name="manual_review_confirmed" value="yes" type="checkbox" /> Revisé el PDF y confirmo que corresponde al contenido declarado.
+                    <input name="manual_review_confirmed" value="yes" type="checkbox" /> Revisé el archivo y confirmo que corresponde al contenido declarado.
                   </label>
                   <button name="action" value="accept" style={{ marginRight: 12 }}>Aprobar archivo</button>
                   <button name="action" value="reject">Rechazar archivo</button>

@@ -8,6 +8,7 @@
     { "path": "/api/cron/class-reminder/10m", "schedule": "50 21 23 8 *" },
     { "path": "/api/cron/class-follow-up", "schedule": "0 16 * * *" }
     ,{ "path": "/api/cron/workshop-delivery/initial", "schedule": "7 12 * * *" }
+    ,{ "path": "/api/cron/marketplace-delivery", "schedule": "0 7 * * *" }
   ],
   "headers": [
     {

@@ -83,6 +83,7 @@ describe("inicio de checkout marketplace", () => {
     expect(response.status).toBe(200);
     expect((await response.json()).redirectUrl).toContain("token=test-token");
     expect(database.mock.calls[1][0]).toContain("marketplace_order_items");
+    expect(database.mock.calls[2][1]).toEqual([expect.any(String), "test-token", 11900, "crececonia"]);
     expect(database.mock.calls[0][0]).toContain("t.review_status='verified'");
     expect(database.mock.calls[1][0]).toContain("t.review_status='verified'");
     expect(database.mock.calls[0][0]).toContain("r.rights_declared_at is not null");

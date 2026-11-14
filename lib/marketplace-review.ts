@@ -1,7 +1,7 @@
 import "server-only";
 import { queryDatabase } from "@/lib/database";
 import { downloadPrivateObject } from "@/lib/private-storage";
-import { validateMarketplacePdf } from "@/lib/marketplace-asset-validation";
+import { validateMarketplaceCover, validateMarketplacePdf } from "@/lib/marketplace-asset-validation";
 import { recommendMarketplaceBooks } from "@/lib/marketplace/recommendations";
 
 export type ReviewAction = "approve" | "request_changes" | "reject" | "publish" | "pause";
@@ -25,6 +25,7 @@ export type ReviewRow = {
   rights_declared_at: string | null;
   rights_declaration_version: string | null;
   ready_pdf: boolean;
+  ready_cover: boolean;
   moderation_reason: string | null;
 };
 
@@ -58,26 +59,33 @@ export async function getMarketplaceReviewAsset(assetId: string): Promise<Review
       a.content_type, a.byte_size::text, a.sha256, a.scan_status
     from marketplace_assets a
     join marketplace_books b on b.id = a.book_id and b.current_revision_id = a.revision_id
-    where a.id = $1 and a.asset_kind = 'ebook_pdf'
+    where a.id = $1 and a.asset_kind in ('ebook_pdf', 'cover')
     limit 1
   `, [assetId]);
   return rows[0] ?? null;
 }
 
-export async function readMarketplaceReviewPdf(asset: ReviewAsset): Promise<Blob> {
-  if (asset.asset_kind !== "ebook_pdf"
-    || asset.content_type !== "application/pdf"
-    || !/^marketplace\/quarantine\/[a-f0-9-]+\/[a-f0-9-]+\/[a-f0-9-]+\.pdf$/i.test(asset.storage_key)) {
-    throw new Error("El archivo no corresponde a un PDF del marketplace.");
+export async function readMarketplaceReviewAsset(asset: ReviewAsset): Promise<Blob> {
+  const prefix = `marketplace/quarantine/${asset.book_id}/${asset.revision_id}/`;
+  const fileName = asset.storage_key.startsWith(prefix) ? asset.storage_key.slice(prefix.length) : "";
+  const validPdf = asset.asset_kind === "ebook_pdf" && asset.content_type === "application/pdf"
+    && /^[a-f0-9-]+\.pdf$/i.test(fileName);
+  const validCover = asset.asset_kind === "cover"
+    && ((asset.content_type === "image/png" && /^[a-f0-9-]+\.png$/i.test(fileName))
+      || (asset.content_type === "image/jpeg" && /^[a-f0-9-]+\.jpg$/i.test(fileName)));
+  if (!validPdf && !validCover) {
+    throw new Error("El archivo no corresponde a un activo del marketplace.");
   }
   const { data, error } = await downloadPrivateObject("ebooks", asset.storage_key);
-  if (error || !data) throw new Error("No se pudo obtener el PDF privado.");
-  const issue = validateMarketplacePdf(new Uint8Array(await data.arrayBuffer()), asset.byte_size, asset.sha256);
+  if (error || !data) throw new Error("No se pudo obtener el archivo privado.");
+  const bytes = new Uint8Array(await data.arrayBuffer());
+  const issue = validPdf ? validateMarketplacePdf(bytes, asset.byte_size, asset.sha256)
+    : validateMarketplaceCover(bytes, asset.content_type, asset.byte_size, asset.sha256);
   if (issue) throw new Error(issue);
   return data;
 }
 
-export async function reviewMarketplacePdf(
+export async function reviewMarketplaceAsset(
   assetId: string, action: "accept" | "reject", reason: string,
 ): Promise<boolean> {
   const asset = await getMarketplaceReviewAsset(assetId);
@@ -86,7 +94,7 @@ export async function reviewMarketplacePdf(
   if (explanation.length < 10 || explanation.length > 2000) {
     throw new Error("Indica un motivo de 10 a 2000 caracteres.");
   }
-  if (action === "accept") await readMarketplaceReviewPdf(asset);
+  if (action === "accept") await readMarketplaceReviewAsset(asset);
   const status = action === "accept" ? "ready" : "rejected";
   const result = await queryDatabase<{ id: string }>(`
     with changed as (
@@ -115,6 +123,7 @@ export type PublishedBook = {
   price_minor: string;
   seller_name: string;
   seller_slug: string;
+  has_cover?: boolean;
 };
 
 export type SellerReview = {
@@ -244,7 +253,12 @@ export async function listMarketplaceReviews(): Promise<ReviewRow[]> {
         select 1 from marketplace_assets a
         where a.book_id = b.id and a.revision_id = r.id
           and a.asset_kind = 'ebook_pdf' and a.scan_status = 'ready'
-      ) as ready_pdf
+      ) as ready_pdf,
+      exists (
+        select 1 from marketplace_assets a
+        where a.book_id = b.id and a.revision_id = r.id
+          and a.asset_kind = 'cover' and a.scan_status = 'ready'
+      ) as ready_cover
     from marketplace_books b
     join marketplace_book_revisions r on r.id = b.current_revision_id
     join marketplace_sellers s on s.id = b.seller_id
@@ -255,12 +269,24 @@ export async function listMarketplaceReviews(): Promise<ReviewRow[]> {
   `);
 }
 
-export async function listPublishedMarketplaceBooks(page = 1): Promise<PublishedBook[]> {
+type PublishedBookFilters = { query?: string; category?: "ia" | "tecnologia" | "negocios" };
+
+export async function listPublishedMarketplaceBooks(page = 1, filters: PublishedBookFilters = {}): Promise<PublishedBook[]> {
   if (!Number.isSafeInteger(page) || page < 1 || page > Math.floor(Number.MAX_SAFE_INTEGER / 24)) throw new Error("Página inválida.");
+  const query = filters.query?.trim() ?? "";
+  if (query.length > 100) throw new Error("Búsqueda demasiado larga.");
+  if (filters.category && !["ia", "tecnologia", "negocios"].includes(filters.category)) throw new Error("Categoría inválida.");
+  const parameters: Array<string | number> = [(page - 1) * 24];
+  const searchCondition = query ? `and strpos(lower(concat_ws(' ', r.title, r.subtitle, r.description,
+      r.author_display_name, s.display_name)), lower($${parameters.push(query)})) > 0` : "";
+  const categoryCondition = filters.category ? `and r.category = $${parameters.push(filters.category)}` : "";
   return queryDatabase<PublishedBook>(`
     select b.id, b.slug, r.title, r.subtitle, r.description,
       r.author_display_name, r.category, r.price_minor::text,
-      s.display_name as seller_name, s.public_slug as seller_slug
+      s.display_name as seller_name, s.public_slug as seller_slug,
+      exists (select 1 from marketplace_assets cover where cover.book_id = b.id
+        and cover.revision_id = r.id and cover.asset_kind = 'cover'
+        and cover.scan_status = 'ready') as has_cover
     from marketplace_books b
     join marketplace_sellers s on s.id = b.seller_id and s.status = 'active'
     join marketplace_seller_tax_profiles t on t.seller_id = s.id and t.review_status = 'verified'
@@ -274,9 +300,11 @@ export async function listPublishedMarketplaceBooks(page = 1): Promise<Published
         where a.book_id = b.id and a.revision_id = r.id
           and a.asset_kind = 'ebook_pdf' and a.scan_status = 'ready'
       )
+    ${searchCondition}
+    ${categoryCondition}
     order by b.published_at desc, b.id desc
     limit 25 offset $1
-  `, [(page - 1) * 24]);
+  `, parameters);
 }
 
 export async function getPublishedMarketplaceBook(slug: string): Promise<PublishedBook | null> {
@@ -284,7 +312,10 @@ export async function getPublishedMarketplaceBook(slug: string): Promise<Publish
   const books = await queryDatabase<PublishedBook>(`
     select b.id, b.slug, r.title, r.subtitle, r.description,
       r.author_display_name, r.category, r.price_minor::text,
-      s.display_name as seller_name, s.public_slug as seller_slug
+      s.display_name as seller_name, s.public_slug as seller_slug,
+      exists (select 1 from marketplace_assets cover where cover.book_id = b.id
+        and cover.revision_id = r.id and cover.asset_kind = 'cover'
+        and cover.scan_status = 'ready') as has_cover
     from marketplace_books b
     join marketplace_sellers s on s.id = b.seller_id and s.status = 'active'
     join marketplace_seller_tax_profiles t on t.seller_id = s.id and t.review_status = 'verified'
@@ -303,12 +334,37 @@ export async function getPublishedMarketplaceBook(slug: string): Promise<Publish
   return books[0] ?? null;
 }
 
+/** Only the latest manually approved cover of a currently sellable revision is public. */
+export async function getPublishedMarketplaceCover(bookId: string): Promise<ReviewAsset | null> {
+  if (!UUID.test(bookId)) return null;
+  const rows = await queryDatabase<ReviewAsset>(`
+    select a.id, a.book_id, a.revision_id, a.asset_kind, a.storage_key,
+      a.content_type, a.byte_size::text, a.sha256, a.scan_status
+    from marketplace_books b
+    join marketplace_sellers s on s.id = b.seller_id and s.status = 'active'
+    join marketplace_seller_tax_profiles t on t.seller_id = s.id and t.review_status = 'verified'
+    join marketplace_book_revisions r on r.id = b.published_revision_id
+      and r.book_id = b.id and r.moderation_status = 'approved'
+    join marketplace_assets a on a.book_id = b.id and a.revision_id = r.id
+      and a.asset_kind = 'cover' and a.scan_status = 'ready'
+    where b.id = $1 and b.status = 'published' and b.published_at is not null
+      and r.rights_declared_at is not null and r.price_tax_mode in ('tax_inclusive', 'exempt')
+      and exists (select 1 from marketplace_assets pdf where pdf.book_id = b.id
+        and pdf.revision_id = r.id and pdf.asset_kind = 'ebook_pdf' and pdf.scan_status = 'ready')
+    order by a.created_at desc limit 1
+  `, [bookId]);
+  return rows[0] ?? null;
+}
+
 /** The SQL eligibility checks are authoritative; the pure ranker only orders safe candidates. */
 export async function getMarketplaceRecommendations(current: PublishedBook): Promise<PublishedBook[]> {
   const candidates = await queryDatabase<PublishedBook & { published_at: string }>(`
     select b.id, b.slug, b.published_at::text, r.title, r.subtitle, r.description,
       r.author_display_name, r.category, r.price_minor::text,
-      s.display_name as seller_name, s.public_slug as seller_slug
+      s.display_name as seller_name, s.public_slug as seller_slug,
+      exists (select 1 from marketplace_assets cover where cover.book_id = b.id
+        and cover.revision_id = r.id and cover.asset_kind = 'cover'
+        and cover.scan_status = 'ready') as has_cover
     from marketplace_books b
     join marketplace_sellers s on s.id = b.seller_id and s.status = 'active'
     join marketplace_seller_tax_profiles t on t.seller_id = s.id and t.review_status = 'verified'
@@ -390,6 +446,11 @@ export async function moderateMarketplaceBook(input: {
             where a.book_id = b.id and a.revision_id = r.id
               and a.asset_kind = 'ebook_pdf' and a.scan_status = 'ready'
           )
+          and exists (
+            select 1 from marketplace_assets a
+            where a.book_id = b.id and a.revision_id = r.id
+              and a.asset_kind = 'cover' and a.scan_status = 'ready'
+          )
         returning b.id
       ), audit as (
         insert into marketplace_audit_log(actor_user_id, action, entity_type, entity_id)
@@ -426,6 +487,11 @@ export async function moderateMarketplaceBook(input: {
               select 1 from marketplace_assets a
               where a.book_id = b.id and a.revision_id = r.id
                 and a.asset_kind = 'ebook_pdf' and a.scan_status = 'ready'
+            )
+            and exists (
+              select 1 from marketplace_assets a
+              where a.book_id = b.id and a.revision_id = r.id
+                and a.asset_kind = 'cover' and a.scan_status = 'ready'
             )
           )
         )
