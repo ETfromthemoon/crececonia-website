@@ -21,12 +21,19 @@ const EXAMPLE_POLICY: PayoutEstimatePolicy = {
 };
 
 const clp = (amount: number) => `$${amount.toLocaleString("es-CL")} CLP`;
+const balance = (amount: number | null) => amount === null
+  ? "Pendiente"
+  : amount < 0
+    ? `Déficit de ${clp(-amount)}`
+    : amount === 0
+      ? "Sin saldo disponible"
+      : clp(amount);
 
-export default function PayoutCalculator({ priceValue }: { priceValue?: string }) {
+export default function PayoutCalculator({ priceValue, initialPrice = "11900" }: { priceValue?: string; initialPrice?: string }) {
   const titleId = useId();
   const inputId = useId();
   const helpId = useId();
-  const [internalPrice, setInternalPrice] = useState("11900");
+  const [internalPrice, setInternalPrice] = useState(initialPrice);
   const price = priceValue ?? internalPrice;
   const estimate = useMemo(() => {
     const amountClp = Number(price);
@@ -73,9 +80,9 @@ export default function PayoutCalculator({ priceValue }: { priceValue?: string }
             <div><dt>IVA de venta supuesto (19%)</dt><dd>{clp(estimate.saleVatClp)}</dd></div>
             <div><dt>Comisión ilustrativa (5% del precio final + IVA supuesto)</dt><dd>−{clp(estimate.commissionTotalEstimateClp ?? 0)}</dd></div>
             <div><dt>Pasarela hipotética (fija $300 + IVA)</dt><dd>−{clp(estimate.gatewayFeeTotalEstimateClp ?? 0)}</dd></div>
-            <div className="marketplace-estimate-total"><dt>Depósito ilustrativo al vendedor</dt><dd aria-live="polite">{estimate.sellerPayoutEstimateClp === null ? "Pendiente" : clp(estimate.sellerPayoutEstimateClp)}</dd></div>
+            <div className="marketplace-estimate-total"><dt>Depósito ilustrativo al vendedor</dt><dd aria-live="polite">{estimate.sellerPayoutEstimateClp !== null && estimate.sellerPayoutEstimateClp <= 0 ? `Sin depósito positivo: ${balance(estimate.sellerPayoutEstimateClp)}` : balance(estimate.sellerPayoutEstimateClp)}</dd></div>
             <div><dt>Reserva informativa del IVA de venta</dt><dd>{clp(estimate.sellerSaleVatReserveClp)}</dd></div>
-            <div className="marketplace-estimate-total"><dt>Disponible tras esa reserva</dt><dd aria-live="polite">{estimate.sellerAfterVatReserveEstimateClp === null ? "Pendiente" : clp(estimate.sellerAfterVatReserveEstimateClp)}</dd></div>
+            <div className="marketplace-estimate-total"><dt>Disponible tras esa reserva</dt><dd aria-live="polite">{balance(estimate.sellerAfterVatReserveEstimateClp)}</dd></div>
           </dl>
         ) : (
           <p className="marketplace-calculator-error" role="status">Ingresa un precio entero positivo en pesos chilenos.</p>
