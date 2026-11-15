@@ -147,7 +147,7 @@ export default function EbookHero() {
                   : "Comprar ahora"}
               </button>
 
-              {priceInfo?.promotionEndsAt && <p style={{ color: ACCENT }}>Antes <s>${priceInfo.previousPrice?.toLocaleString("es-CL")} CLP</s><br /><strong>50% de descuento · Solo por hoy hasta las 23:59</strong></p>}
+              {priceInfo?.promotionEndsAt && <p style={{ color: ACCENT }}>Antes <s>${priceInfo.previousPrice?.toLocaleString("es-CL")} CLP</s><br /><strong>30% de descuento · Solo por hoy hasta las 23:59</strong></p>}
               {!priceInfo?.promotionEndsAt && priceInfo?.tier === "super-early" && (
                 <p
                   style={{

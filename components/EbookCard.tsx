@@ -22,7 +22,7 @@ type Props = {
 
 export default function EbookCard({ title, description, href, coverSrc, coverSrcs = [], status, priceLabel, previousPriceLabel, level, outcome, audience, pageCount, itemCount, variant = "book", index = 0, onSelect }: Props) {
   const isComingSoon = status === "coming-soon";
-  const promotion = previousPriceLabel ? <p style={{ margin: "12px 0", fontSize: "0.9rem" }}><span>Antes </span><s>{previousPriceLabel}</s><br /><strong>50% de descuento · Solo por hoy</strong></p> : null;
+  const promotion = previousPriceLabel ? <p style={{ margin: "12px 0", fontSize: "0.9rem" }}><span>Antes </span><s>{previousPriceLabel}</s><br /><strong>30% de descuento · Solo por hoy</strong></p> : null;
   if (variant === "route") {
     return (
       <article className="ebook-route-card" style={{ "--route-index": index } as React.CSSProperties}>

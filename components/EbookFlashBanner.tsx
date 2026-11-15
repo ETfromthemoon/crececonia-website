@@ -15,8 +15,8 @@ export default function EbookFlashBanner({ active }: { active: boolean }) {
   if (!active) return null;
   return (
     <aside aria-label="Promoción de ebooks" style={{ padding: "18px 24px", background: "var(--champagne, #dac5a7)", color: "#242424", textAlign: "center" }}>
-      <strong>Solo por hoy: 50% de descuento en todos los ebooks y bundles.</strong>
-      <p style={{ marginTop: 6 }}>7 de noviembre · Hasta las 23:59, hora de Santiago. Precio rebajado automáticamente, sin cupón. No acumulable con otros códigos.</p>
+      <strong>Solo por hoy: 30% de descuento en todos los ebooks y bundles.</strong>
+      <p style={{ marginTop: 6 }}>15 de noviembre · Hasta las 23:59, hora de Santiago. Precio rebajado automáticamente, sin cupón. No acumulable con otros códigos.</p>
     </aside>
   );
 }
