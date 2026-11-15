@@ -151,6 +151,7 @@ describe("marketplace moderation transition contracts", () => {
     expect(sql).toContain("r.category = $3");
     expect(values).toEqual([24, "IA%", "ia"]);
     expect(sql).toContain("cover.scan_status = 'ready'");
+    expect(sql).toContain("t.reviewed_at >= now() - interval '6 months'");
   });
 
   it("selects a cover only for a published approved revision with a ready PDF", async () => {
@@ -160,6 +161,7 @@ describe("marketplace moderation transition contracts", () => {
     expect(sql).toContain("r.moderation_status = 'approved'");
     expect(sql).toContain("a.asset_kind = 'cover' and a.scan_status = 'ready'");
     expect(sql).toContain("pdf.asset_kind = 'ebook_pdf' and pdf.scan_status = 'ready'");
+    expect(sql).toContain("t.reviewed_at >= now() - interval '6 months'");
     expect(values).toEqual([bookId]);
   });
 
@@ -180,6 +182,7 @@ describe("marketplace moderation transition contracts", () => {
     const [sql, values] = database.mock.calls[0];
     expect(sql).toContain("s.status = 'active'");
     expect(sql).toContain("t.review_status = 'verified'");
+    expect(sql).toContain("t.reviewed_at >= now() - interval '6 months'");
     expect(sql).toContain("r.moderation_status = 'approved'");
     expect(sql).toContain("pdf.id = v.pdf_asset_id");
     expect(sql).toContain("pdf.scan_status = 'ready'");

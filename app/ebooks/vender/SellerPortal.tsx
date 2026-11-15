@@ -8,7 +8,8 @@ type Seller = { id: string; display_name: string; public_slug: string; bio: stri
 type TaxProfile = { rut: string; legal_name: string; declared_vat_status: string; review_status: string };
 type Book = { id: string; revision_id?: string; slug: string; status: string; title: string; description: string; category: string; price_minor: number; has_pdf: boolean; has_cover: boolean };
 type SalesSummary = { sale_count: number; gross_minor: string; commission_minor: string };
-type SellerSale = { order_item_id: string; order_id: string; title: string; price_minor: string; commission_minor: string; gateway_fee_actual_minor: string | null; paid_at: string };
+type PayoutBalance = { ledger_net_minor: string; settled_minor: string; available_minor: string; blocked: boolean };
+type SellerSale = { order_item_id: string; order_id: string; title: string; price_minor: string; commission_minor: string; gateway_fee_actual_minor: string | null; seller_net_minor: string | null; paid_at: string };
 const formatCLP = (amount: string | bigint) => `$${new Intl.NumberFormat("es-CL").format(BigInt(amount))} CLP`;
 
 const inputStyle = { display: "block", width: "100%", margin: "8px 0 18px", padding: 12, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--ink)" };
@@ -33,6 +34,7 @@ export default function SellerPortal({ demoAvailable }: { demoAvailable: boolean
   const [books, setBooks] = useState<Book[]>([]);
   const [salesSummary, setSalesSummary] = useState<SalesSummary>({ sale_count: 0, gross_minor: "0", commission_minor: "0" });
   const [recentSales, setRecentSales] = useState<SellerSale[]>([]);
+  const [payoutBalance, setPayoutBalance] = useState<PayoutBalance | null>(null);
   const [message, setMessage] = useState("");
   const [pricePreview, setPricePreview] = useState("");
   const [revisionPrices, setRevisionPrices] = useState<Record<string, string>>({});
@@ -43,12 +45,13 @@ export default function SellerPortal({ demoAvailable }: { demoAvailable: boolean
       if (!response.ok && response.status !== 401) throw new Error();
       setLoggedIn(response.ok);
       if (response.ok) {
-        const data = await response.json() as { seller: Seller | null; taxProfile: TaxProfile | null; books: Book[]; salesSummary: SalesSummary; recentSales: SellerSale[] };
+        const data = await response.json() as { seller: Seller | null; taxProfile: TaxProfile | null; books: Book[]; salesSummary: SalesSummary; recentSales: SellerSale[]; payoutBalance: PayoutBalance | null };
         setSeller(data.seller);
         setTaxProfile(data.taxProfile);
         setBooks(data.books);
         setSalesSummary(data.salesSummary);
         setRecentSales(data.recentSales);
+        setPayoutBalance(data.payoutBalance);
       }
     } catch { setMessage("No pudimos cargar el panel. Actualiza la página e inténtalo de nuevo."); }
     finally { setLoading(false); }
@@ -84,8 +87,14 @@ export default function SellerPortal({ demoAvailable }: { demoAvailable: boolean
   async function upload(event: FormEvent<HTMLFormElement>, bookId: string, kind: "ebook_pdf" | "cover") {
     event.preventDefault();
     setMessage("");
+    const form = new FormData(event.currentTarget);
+    const file = form.get("file");
+    if (!(file instanceof File) || file.size > 4 * 1024 * 1024) {
+      setMessage(`El ${kind === "ebook_pdf" ? "PDF" : "archivo de portada"} debe pesar como máximo 4 MiB.`);
+      return;
+    }
     try {
-      const response = await fetch(`/api/marketplace/seller/books/${bookId}/assets`, { method: "POST", body: new FormData(event.currentTarget), credentials: "same-origin" });
+      const response = await fetch(`/api/marketplace/seller/books/${bookId}/assets`, { method: "POST", body: form, credentials: "same-origin" });
       setMessage(response.ok ? "Archivo recibido para revisión." : await response.text());
       if (response.ok) await refresh();
     } catch { setMessage("No pudimos subir el archivo. Inténtalo nuevamente."); }
@@ -168,18 +177,24 @@ export default function SellerPortal({ demoAvailable }: { demoAvailable: boolean
       </li>)}</ul> : <p>Aún no tienes borradores.</p>}
       <section aria-labelledby="seller-sales-heading" style={{ marginTop: 40, borderTop: "1px solid var(--border)", paddingTop: 28 }}>
         <h2 id="seller-sales-heading">Ventas confirmadas</h2>
-        <p>Solo se incluyen órdenes con estado pagado. El monto tras comisión no es una liquidación: aún faltan pasarela, impuestos, reembolsos y otros ajustes.</p>
+        <p>Las ventas pagadas muestran el precio cobrado. Los saldos para transferir se calculan con los movimientos contables y la comisión real de Flow cuando esté disponible.</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, margin: "24px 0" }}>
           <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{salesSummary.sale_count}</strong><span>Ventas pagadas</span></div>
           <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{formatCLP(salesSummary.gross_minor)}</strong><span>Total bruto pagado</span></div>
           <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{formatCLP(BigInt(salesSummary.gross_minor) - BigInt(salesSummary.commission_minor))}</strong><span>Tras comisión, antes de otros cargos</span></div>
+          <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{payoutBalance ? formatCLP(payoutBalance.settled_minor) : "—"}</strong><span>Ya transferido</span></div>
+          <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{payoutBalance && !payoutBalance.blocked && BigInt(payoutBalance.available_minor) >= BigInt(0) ? formatCLP(payoutBalance.available_minor) : "En conciliación"}</strong><span>Saldo disponible para transferir</span></div>
         </div>
+        {payoutBalance?.blocked && <p role="status">Hay cargos de Flow, reembolsos u otras incidencias pendientes de conciliación. El saldo disponible se mostrará cuando termine la revisión.</p>}
+        {payoutBalance && BigInt(payoutBalance.available_minor) < BigInt(0) && <p role="status">El saldo requiere revisión por ajustes o reembolsos anteriores a una transferencia.</p>}
+        <p>Los importes de transferencia no descuentan automáticamente el IVA de la venta. La emisión de boletas y su tratamiento tributario se revisan por separado.</p>
         {recentSales.length > 0 ? <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", minWidth: 550 }}>
-          <thead><tr><th scope="col">Ebook</th><th scope="col">Fecha de pago</th><th scope="col">Precio</th><th scope="col">Comisión</th><th scope="col">Pasarela</th></tr></thead>
+          <thead><tr><th scope="col">Ebook</th><th scope="col">Fecha de pago</th><th scope="col">Precio</th><th scope="col">Comisión</th><th scope="col">Pasarela</th><th scope="col">Neto contable</th></tr></thead>
           <tbody>{recentSales.map((sale) => <tr key={sale.order_item_id}>
             <td>{sale.title}</td><td><time dateTime={sale.paid_at}>{new Date(sale.paid_at).toLocaleDateString("es-CL")}</time></td>
             <td>{formatCLP(sale.price_minor)}</td><td>{formatCLP(sale.commission_minor)}</td>
             <td>{sale.gateway_fee_actual_minor === null ? "Por conciliar" : formatCLP(sale.gateway_fee_actual_minor)}</td>
+            <td>{sale.seller_net_minor === null ? "Por conciliar" : formatCLP(sale.seller_net_minor)}</td>
           </tr>)}</tbody>
         </table></div> : <p>Aún no hay ventas confirmadas de tus ebooks.</p>}
       </section>

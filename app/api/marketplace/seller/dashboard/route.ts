@@ -5,10 +5,11 @@ import { sellerIdentityFromRequest } from "@/lib/marketplace-seller-auth";
 export const dynamic = "force-dynamic";
 
 type SalesSummary = { sale_count: number; gross_minor: string; commission_minor: string };
+type PayoutBalance = { ledger_net_minor: string; settled_minor: string; available_minor: string; blocked: boolean };
 type SellerSale = {
   order_item_id: string; order_id: string; title: string; price_minor: string; commission_minor: string;
   commission_tax_minor: string; gateway_fee_actual_minor: string | null;
-  tax_minor: string; tax_mode: string; paid_at: string;
+  seller_net_minor: string | null; tax_minor: string; tax_mode: string; paid_at: string;
 };
 
 export async function GET(request: Request) {
@@ -28,7 +29,7 @@ export async function GET(request: Request) {
        from marketplace_books b
        left join marketplace_book_revisions r on r.id = b.current_revision_id
        where b.seller_id = $1 order by b.created_at desc`, [seller.id]) : [];
-    const [summaries, sales] = seller ? await Promise.all([
+    const [summaries, sales, balances] = seller ? await Promise.all([
       queryDatabase<SalesSummary>(`select count(*)::integer as sale_count,
           coalesce(sum(i.price_minor), 0)::text as gross_minor,
           coalesce(sum(i.commission_minor), 0)::text as commission_minor
@@ -38,18 +39,31 @@ export async function GET(request: Request) {
       queryDatabase<SellerSale>(`select i.id as order_item_id, o.id as order_id, r.title, i.price_minor::text,
           i.commission_minor::text, i.commission_tax_minor::text,
           i.tax_minor::text, i.tax_mode, o.paid_at,
-          (select p.gateway_fee_actual_minor::text from public.marketplace_payments p
-           where p.order_id = o.id and p.status = 'confirmed'
-           order by p.attempt_number desc limit 1) as gateway_fee_actual_minor
+          payment.gateway_fee_actual_minor::text,
+          case when payment.gateway_fee_actual_minor is not null then (
+            select sum(le.credit_minor - le.debit_minor)::text
+            from public.marketplace_ledger_entries le
+            where le.order_item_id = i.id and le.account_code = 'seller_payable'
+          ) else null end as seller_net_minor
         from public.marketplace_order_items i
         join public.marketplace_orders o on o.id = i.order_id
         join public.marketplace_book_revisions r on r.id = i.revision_id
+        left join lateral (
+          select p.gateway_fee_actual_minor from public.marketplace_payments p
+          where p.order_id = o.id and p.status = 'confirmed'
+          order by p.attempt_number desc limit 1
+        ) payment on true
         where i.seller_id = $1 and o.status = 'paid'
         order by o.paid_at desc, o.id desc limit 20`, [seller.id]),
-    ]) : [[], []];
+      queryDatabase<PayoutBalance>(`select ledger_net_minor::text, settled_minor::text,
+          available_minor::text, blocked
+        from public.marketplace_seller_payout_balances
+        where seller_id = $1`, [seller.id]),
+    ]) : [[], [], []];
     return NextResponse.json({ seller, taxProfile: taxProfiles[0] ?? null, books,
       salesSummary: summaries[0] ?? { sale_count: 0, gross_minor: "0", commission_minor: "0" },
       recentSales: sales,
+      payoutBalance: balances[0] ?? null,
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     console.error("marketplace_seller_dashboard_error", error instanceof Error ? error.message : "unknown");

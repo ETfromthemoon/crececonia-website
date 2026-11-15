@@ -271,6 +271,7 @@ export async function listMarketplaceReviews(): Promise<ReviewRow[]> {
           and cover.asset_kind = 'cover' and cover.scan_status = 'ready'
         where v.book_id = b.id and v.revision_id = r.id
           and t.review_status = 'verified'
+          and t.reviewed_at >= now() - interval '6 months'
           and v.verified_at >= greatest(r.reviewed_at, t.reviewed_at)
       ) as publication_verified
     from marketplace_books b
@@ -294,6 +295,7 @@ const verifiedPublicationSql = `exists (
     and cover.book_id = b.id and cover.revision_id = r.id
     and cover.asset_kind = 'cover' and cover.scan_status = 'ready'
   where v.book_id = b.id and v.revision_id = r.id
+    and t.reviewed_at >= now() - interval '6 months'
     and v.verified_at >= greatest(r.reviewed_at, t.reviewed_at)
 )`;
 
@@ -364,6 +366,7 @@ export async function getPublishedMarketplaceCover(bookId: string): Promise<Revi
     join marketplace_book_revisions r on r.id = b.published_revision_id
       and r.book_id = b.id and r.moderation_status = 'approved'
     join marketplace_publication_checks v on v.book_id = b.id and v.revision_id = r.id
+      and t.reviewed_at >= now() - interval '6 months'
       and v.verified_at >= greatest(r.reviewed_at, t.reviewed_at)
     join marketplace_assets a on a.id = v.cover_asset_id
       and a.book_id = b.id and a.revision_id = r.id
@@ -478,7 +481,8 @@ export async function moderateMarketplaceBook(input: {
         where b.id = $1 and r.id = $2 and b.status in ('approved', 'paused')
           and r.moderation_status = 'approved' and r.reviewed_at is not null
           and s.status = 'active' and s.terms_accepted_at is not null
-          and t.review_status = 'verified' and t.reviewed_at is not null
+          and t.review_status = 'verified'
+          and t.reviewed_at >= now() - interval '6 months'
           and r.rights_declared_at is not null and r.rights_declaration_version is not null
           and r.price_tax_mode in ('tax_inclusive', 'exempt')
       ), verified as (
@@ -513,6 +517,7 @@ export async function moderateMarketplaceBook(input: {
           and b.status in ('approved', 'paused')
           and s.status = 'active' and s.terms_accepted_at is not null
           and t.seller_id = s.id and t.review_status = 'verified'
+          and t.reviewed_at >= now() - interval '6 months'
           and v.book_id = b.id and v.revision_id = r.id
           and v.verified_at >= greatest(r.reviewed_at, t.reviewed_at)
           and r.moderation_status = 'approved'

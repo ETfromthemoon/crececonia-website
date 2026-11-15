@@ -39,13 +39,13 @@ describe("marketplace fiscal evidence", () => {
     expect(database).not.toHaveBeenCalled();
   });
 
-  it("lists only paid orders lacking fiscal evidence without buyer data", async () => {
+  it("lists originally paid orders lacking fiscal evidence, including reversals, without buyer data", async () => {
     database.mockResolvedValueOnce([{ order_id: orderId, total_minor: "11900", paid_at: "2026-11-15T21:30:00Z" }]);
     const response = await GET(request("GET", { cookie: true }));
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ orders: [{ order_id: orderId, total_minor: "11900", paid_at: "2026-11-15T21:30:00Z" }] });
     const [sql] = database.mock.calls[0];
-    expect(sql).toContain("o.status = 'paid'");
+    expect(sql).toContain("o.status in ('paid', 'refunded', 'disputed')");
     expect(sql).toContain("not exists (select 1 from public.marketplace_fiscal_evidence");
     expect(sql).not.toContain("buyer_email");
   });
@@ -56,14 +56,14 @@ describe("marketplace fiscal evidence", () => {
     expect(database).not.toHaveBeenCalled();
   });
 
-  it("records only a confirmed Flow payment and audits once", async () => {
+  it("records an original paid Flow transaction even after a reversal and audits once", async () => {
     database.mockResolvedValueOnce([{ id: "22222222-2222-4222-8222-222222222222", inserted: true }]);
     const response = await POST(request("POST", { cookie: true, origin: "https://crececonia.cl" }));
     expect(response.status).toBe(201);
     expect(await response.json()).toEqual({ id: "22222222-2222-4222-8222-222222222222", status: "recorded" });
     const [sql, args] = database.mock.calls[0];
-    expect(sql).toContain("o.status = 'paid'");
-    expect(sql).toContain("p.status = 'confirmed'");
+    expect(sql).toContain("o.status in ('paid', 'refunded', 'disputed')");
+    expect(sql).toContain("p.status in ('confirmed', 'refunded', 'disputed')");
     expect(sql).toContain("p.amount_minor = o.total_minor");
     expect(sql).toContain("on conflict do nothing");
     expect(sql).toContain("'fiscal_evidence_recorded'");

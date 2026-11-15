@@ -3,8 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const database = vi.hoisted(() => vi.fn());
 const storage = vi.hoisted(() => vi.fn());
+const allowAttempt = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/database", () => ({ queryDatabase: database }));
 vi.mock("@/lib/private-storage", () => ({ downloadPrivateObject: storage }));
+vi.mock("@/lib/marketplace-checkout-rate-limit", () => ({
+  allowMarketplaceCheckoutAttempt: allowAttempt,
+  marketplaceClientIp: () => "203.0.113.7",
+}));
 vi.mock("@/lib/flow", () => ({ getFlowBase: () => process.env.FLOW_SANDBOX === "true" ? "https://sandbox.flow.cl/api" : "https://www.flow.cl/api", flowSign: () => "signature" }));
 
 import { POST } from "../app/api/marketplace/checkout/route";
@@ -30,6 +35,7 @@ describe("inicio de checkout marketplace", () => {
     delete process.env.MARKETPLACE_LIVE_ENABLED;
     database.mockReset();
     storage.mockReset();
+    allowAttempt.mockReset().mockResolvedValue(true);
   });
   afterEach(() => { process.env = { ...env }; vi.unstubAllGlobals(); });
 
@@ -37,6 +43,16 @@ describe("inicio de checkout marketplace", () => {
     delete process.env.MARKETPLACE_FLOW_SANDBOX_ENABLED;
     expect((await POST(request())).status).toBe(503);
     expect(database).not.toHaveBeenCalled();
+  });
+
+  it("limita intentos antes de leer el libro o llamar a Flow", async () => {
+    process.env.MARKETPLACE_FLOW_SANDBOX_ENABLED = "true";
+    allowAttempt.mockResolvedValueOnce(false);
+    const response = await POST(request());
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBe("900");
+    expect(database).not.toHaveBeenCalled();
+    expect(storage).not.toHaveBeenCalled();
   });
 
   it("vuelve a leer el precio y rechaza un monto viejo antes de llamar a Flow", async () => {
@@ -92,6 +108,8 @@ describe("inicio de checkout marketplace", () => {
     expect(database.mock.calls[2][1]).toEqual([expect.any(String), "test-token", 11900, "crececonia"]);
     expect(database.mock.calls[0][0]).toContain("t.review_status='verified'");
     expect(database.mock.calls[1][0]).toContain("t.review_status='verified'");
+    expect(database.mock.calls[0][0]).toContain("t.reviewed_at >= now() - interval '6 months'");
+    expect(database.mock.calls[1][0]).toContain("t.reviewed_at >= now() - interval '6 months'");
     expect(database.mock.calls[0][0]).toContain("r.rights_declared_at is not null");
     expect(database.mock.calls[0][0]).toContain("a.id=v.pdf_asset_id");
     expect(database.mock.calls[1][0]).toContain("v.id=$11");

@@ -11,14 +11,14 @@ type Evidence = { id: string; inserted: boolean };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const timestamp = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
 
-/** Lists paid orders that still need a voucher or boleta reference. No buyer PII. */
+/** Lists originally paid orders that still need a voucher or boleta reference. No buyer PII. */
 export async function GET(request: Request) {
   if (!isAdminRequest(request)) return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   try {
     const orders = await queryDatabase<PendingOrder>(`
       select o.id as order_id, o.total_minor::text, o.paid_at::text
       from public.marketplace_orders o
-      where o.status = 'paid' and o.paid_at is not null
+      where o.status in ('paid', 'refunded', 'disputed') and o.paid_at is not null
         and not exists (select 1 from public.marketplace_fiscal_evidence e where e.order_id = o.id)
       order by o.paid_at asc, o.id asc limit 100`);
     return NextResponse.json({ orders });
@@ -45,11 +45,12 @@ export async function POST(request: Request) {
     const rows = await queryDatabase<Evidence>(`
       with eligible as (
         select o.id from public.marketplace_orders o
-        where o.id = $1 and o.status = 'paid' and o.paid_at is not null
+        where o.id = $1 and o.status in ('paid', 'refunded', 'disputed') and o.paid_at is not null
           and exists (
             select 1 from public.marketplace_payments p
             where p.order_id = o.id and p.provider = 'flow' and p.provider_account_ref = $5
-              and p.status = 'confirmed' and p.currency = o.currency and p.amount_minor = o.total_minor
+              and p.status in ('confirmed', 'refunded', 'disputed')
+              and p.currency = o.currency and p.amount_minor = o.total_minor
           )
       ), inserted as (
         insert into public.marketplace_fiscal_evidence

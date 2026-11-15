@@ -6,29 +6,21 @@ import {
   type PayoutEstimatePolicy,
 } from "@/lib/marketplace/payout-estimate";
 
-// Explicitly illustrative values from the estimator example. Replace only when
-// commercial, tax and provider policies have been approved and versioned.
-const EXAMPLE_POLICY: PayoutEstimatePolicy = {
-  version: "ejemplo-no-comercial-v1",
+// The checkout charges 5% of the final price. The 19% sale VAT is an
+// illustrative classification until each book's tax mode is reviewed.
+const CURRENT_POLICY: PayoutEstimatePolicy = {
+  version: "marketplace-5pct-bruto-v1",
   saleVatBps: 1_900,
   commissionBps: 500,
   commissionBasis: "sale_gross",
-  commissionVatBps: 1_900,
+  commissionVatBps: 0,
   gatewayFeeBps: 0,
-  gatewayFixedFeeNetClp: 300,
-  gatewayFeeVatBps: 1_900,
+  gatewayFixedFeeNetClp: 0,
+  gatewayFeeVatBps: 0,
   saleVatWithheldClp: 0,
 };
 
 const clp = (amount: number) => `$${amount.toLocaleString("es-CL")} CLP`;
-const balance = (amount: number | null) => amount === null
-  ? "Pendiente"
-  : amount < 0
-    ? `Déficit de ${clp(-amount)}`
-    : amount === 0
-      ? "Sin saldo disponible"
-      : clp(amount);
-
 export default function PayoutCalculator({ priceValue, initialPrice = "11900" }: { priceValue?: string; initialPrice?: string }) {
   const titleId = useId();
   const inputId = useId();
@@ -41,7 +33,7 @@ export default function PayoutCalculator({ priceValue, initialPrice = "11900" }:
     try {
       return estimateMarketplacePayout(
         { amountClp, includesSaleVat: true },
-        EXAMPLE_POLICY,
+        CURRENT_POLICY,
       );
     } catch {
       return null;
@@ -52,8 +44,8 @@ export default function PayoutCalculator({ priceValue, initialPrice = "11900" }:
     <section className="marketplace-calculator" aria-labelledby={titleId}>
       <div className="marketplace-calculator-intro">
         <span>Simulador para autores</span>
-        <h2 id={titleId}>Calcula un escenario de venta</h2>
-        <p>Ingresa el precio final que pagaría el comprador. Los resultados son una demostración con supuestos visibles.</p>
+        <h2 id={titleId}>Calcula tu venta</h2>
+        <p>Ingresa el precio final que pagaría el comprador. El 5 % de CrececonIA se calcula sobre ese precio; el costo real de Flow se conoce después del pago.</p>
       </div>
 
       <div className="marketplace-calculator-panel">
@@ -72,17 +64,17 @@ export default function PayoutCalculator({ priceValue, initialPrice = "11900" }:
           />
           <span>CLP</span>
         </div></>}
-        <p id={helpId}>Precio bruto en pesos chilenos, con el IVA de venta supuesto incluido en este ejemplo.</p>
+        <p id={helpId}>Precio final en pesos chilenos. El desglose de IVA supone una venta afecta al 19 % y requiere revisión antes de publicar.</p>
 
         {estimate ? (
           <dl className="marketplace-estimate-lines">
-            <div><dt>Venta neta estimada</dt><dd>{clp(estimate.saleNetClp)}</dd></div>
-            <div><dt>IVA de venta supuesto (19%)</dt><dd>{clp(estimate.saleVatClp)}</dd></div>
-            <div><dt>Comisión ilustrativa (5% del precio final + IVA supuesto)</dt><dd>−{clp(estimate.commissionTotalEstimateClp ?? 0)}</dd></div>
-            <div><dt>Pasarela hipotética (fija $300 + IVA)</dt><dd>−{clp(estimate.gatewayFeeTotalEstimateClp ?? 0)}</dd></div>
-            <div className="marketplace-estimate-total"><dt>Depósito ilustrativo al vendedor</dt><dd aria-live="polite">{estimate.sellerPayoutEstimateClp !== null && estimate.sellerPayoutEstimateClp <= 0 ? `Sin depósito positivo: ${balance(estimate.sellerPayoutEstimateClp)}` : balance(estimate.sellerPayoutEstimateClp)}</dd></div>
-            <div><dt>Reserva informativa del IVA de venta</dt><dd>{clp(estimate.sellerSaleVatReserveClp)}</dd></div>
-            <div className="marketplace-estimate-total"><dt>Disponible tras esa reserva</dt><dd aria-live="polite">{balance(estimate.sellerAfterVatReserveEstimateClp)}</dd></div>
+            <div><dt>Venta neta si corresponde IVA (19 %)</dt><dd>{clp(estimate.saleNetClp)}</dd></div>
+            <div><dt>IVA incluido en ese escenario</dt><dd>{clp(estimate.saleVatClp)}</dd></div>
+            <div><dt>Comisión CrececonIA (5 % del precio final)</dt><dd>−{clp(estimate.commissionNetClp)}</dd></div>
+            <div className="marketplace-estimate-total"><dt>Saldo antes del costo de Flow</dt><dd aria-live="polite">{clp(estimate.saleGrossClp - estimate.commissionNetClp)}</dd></div>
+            <div><dt>Costo real de Flow, a cargo del vendedor</dt><dd>Pendiente del pago</dd></div>
+            <div><dt>Referencia tras apartar el IVA supuesto</dt><dd>{clp(estimate.saleGrossClp - estimate.commissionNetClp - estimate.saleVatClp)} antes de Flow</dd></div>
+            <div className="marketplace-estimate-total"><dt>Liquidación final al vendedor</dt><dd aria-live="polite">Pendiente de Flow y revisión tributaria</dd></div>
           </dl>
         ) : (
           <p className="marketplace-calculator-error" role="status">Ingresa un precio entero positivo en pesos chilenos.</p>
@@ -90,8 +82,8 @@ export default function PayoutCalculator({ priceValue, initialPrice = "11900" }:
       </div>
 
       <aside className="marketplace-calculator-notice">
-        <strong>Escenario hipotético, no cotización de pago.</strong>
-        <p>Usa IVA supuesto de 19%, una comisión de 5% calculada sobre el precio final, más IVA supuesto sobre esa comisión, y una tarifa fija de pasarela de $300 más IVA. La tarifa real, la clasificación tributaria y la base de comisión requieren aprobación. La reserva de IVA no es una retención ni el impuesto definitivo del vendedor.</p>
+        <strong>El saldo final se confirma después de la venta.</strong>
+        <p>La plataforma cobra 5 % del precio final, sin sumar otro cargo en este cálculo. Flow descuenta su tarifa real al vendedor y esa cifra se concilia tras el pago. El IVA del 19 % es solo una referencia para libros afectos: CrececonIA revisa cada libro y registra el comprobante manualmente. La cifra «tras apartar IVA» no es una retención automática ni una promesa de depósito.</p>
       </aside>
     </section>
   );

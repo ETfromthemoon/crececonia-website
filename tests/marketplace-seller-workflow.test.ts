@@ -35,19 +35,39 @@ describe("panel real del autor", () => {
     database.mockResolvedValueOnce([]);
     database.mockResolvedValueOnce([]);
     database.mockResolvedValueOnce([{ sale_count: 2, gross_minor: "23800", commission_minor: "1190" }]);
-    database.mockResolvedValueOnce([{ order_item_id: bookId, order_id: bookId, title: "IA para equipos", price_minor: "11900", commission_minor: "595", gateway_fee_actual_minor: null, paid_at: "2026-11-13T12:00:00Z" }]);
+    database.mockResolvedValueOnce([{ order_item_id: bookId, order_id: bookId, title: "IA para equipos", price_minor: "11900", commission_minor: "595", gateway_fee_actual_minor: null, seller_net_minor: null, paid_at: "2026-11-13T12:00:00Z" }]);
+    database.mockResolvedValueOnce([{ ledger_net_minor: "11305", settled_minor: "0", available_minor: "11305", blocked: true }]);
     const response = await GET(new Request("https://crececonia.cl/api/marketplace/seller/dashboard"));
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     const body = await response.json();
     expect(body.salesSummary).toEqual({ sale_count: 2, gross_minor: "23800", commission_minor: "1190" });
     expect(body.recentSales).toHaveLength(1);
+    expect(body.recentSales[0].seller_net_minor).toBeNull();
+    expect(body.payoutBalance).toEqual({ ledger_net_minor: "11305", settled_minor: "0", available_minor: "11305", blocked: true });
     expect(JSON.stringify(body)).not.toContain("buyer_email");
-    for (const [sql, params] of database.mock.calls.slice(3)) {
+    for (const [sql, params] of database.mock.calls.slice(3, 5)) {
       expect(sql).toContain("i.seller_id = $1 and o.status = 'paid'");
       expect(params).toEqual([sellerId]);
       expect(sql).not.toContain("buyer_email");
     }
+    expect(database.mock.calls[4][0]).toContain("le.account_code = 'seller_payable'");
+    expect(database.mock.calls[4][0]).toContain("case when payment.gateway_fee_actual_minor is not null");
+    expect(database.mock.calls[5][0]).toContain("marketplace_seller_payout_balances");
+    expect(database.mock.calls[5][1]).toEqual([sellerId]);
+  });
+
+  it("entrega importes liquidados y neto contable desde los registros del vendedor", async () => {
+    database.mockResolvedValueOnce([{ id: sellerId, display_name: "Andrea", public_slug: "andrea", bio: "", status: "active" }]);
+    database.mockResolvedValueOnce([]);
+    database.mockResolvedValueOnce([]);
+    database.mockResolvedValueOnce([{ sale_count: 1, gross_minor: "11900", commission_minor: "595" }]);
+    database.mockResolvedValueOnce([{ order_item_id: bookId, order_id: bookId, title: "IA para equipos", price_minor: "11900", commission_minor: "595", gateway_fee_actual_minor: "350", seller_net_minor: "10955", paid_at: "2026-11-13T12:00:00Z" }]);
+    database.mockResolvedValueOnce([{ ledger_net_minor: "10955", settled_minor: "5000", available_minor: "5955", blocked: false }]);
+    const response = await GET(new Request("https://crececonia.cl/api/marketplace/seller/dashboard"));
+    const body = await response.json();
+    expect(body.recentSales[0].seller_net_minor).toBe("10955");
+    expect(body.payoutBalance).toEqual({ ledger_net_minor: "10955", settled_minor: "5000", available_minor: "5955", blocked: false });
   });
 
   it("crea una revisión de borrador solo después de validar origen, identidad y derechos", async () => {

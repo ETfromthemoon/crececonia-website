@@ -53,8 +53,7 @@ describe("confirmación de compra marketplace", () => {
         paid_at: null, item_id: itemId, price_minor: "11900", commission_minor: "595", title: "Libro",
       }];
       if (sql.includes("select id,provider_payment_ref,provider_account_ref,status")) return [{ id: "payment-id", provider_payment_ref: "flow-test-token", provider_account_ref: "crececonia", status: "pending" }];
-      if (sql.includes("insert into public.marketplace_payments")) return [{ id: "payment-id" }];
-      if (sql.includes("update public.marketplace_orders set status='paid'")) return [{ id: orderId }];
+      if (sql.includes("marketplace_finalize_flow_payment")) return [{ payment_id: "payment-id", outcome: "paid" }];
       if (sql.includes("update public.marketplace_outbox") && sql.includes("set status='processing'")) {
         if (outboxStatus !== "pending") return [];
         outboxStatus = "processing";
@@ -74,10 +73,10 @@ describe("confirmación de compra marketplace", () => {
     expect((await POST(callback())).status).toBe(200);
     expect((await POST(callback())).status).toBe(200);
     expect(delivery).toHaveBeenCalledTimes(1);
-    expect(database.mock.calls.some(([sql]) => String(sql).includes("insert into public.marketplace_entitlements"))).toBe(true);
-    expect(database.mock.calls.some(([sql]) => String(sql).includes("insert into public.marketplace_ledger_entries"))).toBe(true);
-    const paymentInsert = database.mock.calls.find(([sql]) => String(sql).includes("insert into public.marketplace_payments"));
-    expect(paymentInsert?.[1]).toEqual([orderId, "flow-test-token", 11900, 357, "crececonia"]);
+    const finalizations = database.mock.calls.filter(([sql]) => String(sql).includes("marketplace_finalize_flow_payment"));
+    expect(finalizations).toHaveLength(2);
+    expect(finalizations[0][1]).toEqual([orderId, "flow-test-token", 11900,
+      "buyer@example.cl", `${flowStatus.flowOrder}:paid`, expect.stringMatching(/^[a-f0-9]{64}$/), 357]);
   });
 
   it("no concede acceso si el monto de Flow difiere de la orden", async () => {
@@ -140,14 +139,41 @@ describe("confirmación de compra marketplace", () => {
       if (sql.includes("select id,provider_payment_ref,provider_account_ref,status")) return [{
         id: "payment-id", provider_payment_ref: "flow-test-token", provider_account_ref: "crececonia", status: "pending",
       }];
-      if (sql.includes("insert into public.marketplace_payments")) return [{ id: "payment-id" }];
-      if (sql.includes("update public.marketplace_orders set status='paid'")) return [{ id: orderId }];
+      if (sql.includes("marketplace_finalize_flow_payment")) return [{ payment_id: "payment-id", outcome: "paid" }];
       if (sql.includes("select status from public.marketplace_outbox")) return [{ status: "succeeded" }];
       return [];
     });
     const response = await POST(callback());
     expect(response.status).toBe(200);
     expect(vi.mocked(fetch).mock.calls[0][0].toString()).toContain("https://www.flow.cl/api/payment/getStatus");
-    expect(database.mock.calls.some(([sql]) => String(sql).includes("marketplace_entitlements"))).toBe(true);
+    expect(database.mock.calls.some(([sql]) => String(sql).includes("marketplace_finalize_flow_payment"))).toBe(true);
+  });
+
+  it("no restaura una compra ni su acceso tras un reembolso registrado", async () => {
+    database.mockResolvedValueOnce([{
+      id: orderId, buyer_email: "buyer@example.cl", status: "refunded", total_minor: "11900",
+      item_id: itemId, price_minor: "11900", commission_minor: "595", title: "Libro",
+    }]).mockResolvedValueOnce([{
+      id: "payment-id", provider_payment_ref: "flow-test-token",
+      provider_account_ref: "crececonia", status: "refunded",
+    }]);
+    expect((await POST(callback())).status).toBe(200);
+    expect(database).toHaveBeenCalledTimes(2);
+    expect(database.mock.calls.some(([sql]) => String(sql).includes("marketplace_entitlements"))).toBe(false);
+    expect(delivery).not.toHaveBeenCalled();
+  });
+
+  it("tolera un reverso que se confirmó entre la lectura y el upsert del pago", async () => {
+    database.mockResolvedValueOnce([{
+      id: orderId, buyer_email: "buyer@example.cl", status: "paid", total_minor: "11900",
+      item_id: itemId, price_minor: "11900", commission_minor: "595", title: "Libro",
+    }]).mockResolvedValueOnce([{
+      id: "payment-id", provider_payment_ref: "flow-test-token",
+      provider_account_ref: "crececonia", status: "confirmed",
+    }]).mockResolvedValueOnce([{ payment_id: "payment-id", outcome: "reversed" }]);
+    expect((await POST(callback())).status).toBe(200);
+    expect(String(database.mock.calls[2][0])).toContain("marketplace_finalize_flow_payment");
+    expect(database.mock.calls.some(([sql]) => String(sql).includes("marketplace_entitlements"))).toBe(false);
+    expect(delivery).not.toHaveBeenCalled();
   });
 });

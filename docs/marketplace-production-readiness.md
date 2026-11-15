@@ -1,25 +1,26 @@
-# Estado de producción del marketplace de ebooks
+# Operación del marketplace de ebooks
 
-Actualizado: 15 de noviembre de 2026. Alcance inicial: Chile, CLP, IA, tecnología y negocios. CrececonIA recauda en su cuenta Flow, cobra 5 % del precio bruto y asume la emisión o registro tributario que corresponda; el costo real de Flow se atribuye al vendedor.
+Actualizado: 15 de noviembre de 2026. Alcance inicial: autores de Chile, precios CLP y ebooks de IA, tecnología y negocios. CrececonIA cobra en su cuenta Flow existente, retiene el 5 % del precio final y carga el costo real de Flow al vendedor. Las boletas o vouchers se emiten o validan manualmente y su referencia se registra en el panel.
 
-## Verificado
+## Estado técnico comprobado
 
-- Respaldo de Neon anterior al cambio: snapshot `snap-noisy-poetry-ack3ftal` (`pre-marketplace-activation-2026-11-15`) de la rama principal.
-- Migraciones `20261112_001`, `20261113_001` a `003` y `20261115_001` a `006` aplicadas en Neon producción tras probarlas en una rama aislada. La consulta posterior mostró 20 tablas `marketplace_*`, diez triggers habilitados y cero funciones de borrador ejecutables por `PUBLIC`. No había pedidos ni comprobaciones de publicación que migrar.
-- Publicación de terceros exige aprobación editorial, vendedor y perfil tributario activos, más comprobación final humana con nota y los IDs exactos del PDF y portada. El trigger PostgreSQL rechaza una publicación directa sin esa comprobación y protege la atribución de vendedor. Se ensayaron ambas prohibiciones en una transacción revertida.
-- Cada ítem de pedido conserva el ID del PDF aprobado y queda inmutable; la identidad del archivo aprobado también está protegida. La descarga lee ese archivo exacto. La cuenta Flow existente se usa sin `merchantId` ni reparto automático.
-- El checkout en vivo requiere `MARKETPLACE_LIVE_ENABLED=true`, `MARKETPLACE_PUBLIC_ENABLED=true`, entorno Vercel de producción, `FLOW_SANDBOX=false` y URL canónica. Ambos flags están apagados actualmente. Un callback ya pagado puede terminar su entrega aunque se apague la venta.
-- Existe registro inmutable de evidencia de voucher o boleta emitida fuera de la aplicación. El registro no emite DTE.
+- Neon producción tiene las migraciones `20261112_001`, `20261113_001`–`003`, `20261115_001`–`006` y `20261116_001`–`006`. Las migraciones financieras se probaron primero en una rama aislada con compras, reembolsos y liquidaciones sintéticos revertidos. No había pedidos ni autores de terceros previos a la apertura.
+- Respaldo previo: snapshot `snap-noisy-poetry-ack3ftal` de la rama principal, creado el 15 de noviembre de 2026. Neon rechazó un segundo snapshot por límite de cuota; conservar el primero y las migraciones reversibles versionadas.
+- La tienda y el checkout se activan por separado mediante `MARKETPLACE_PUBLIC_ENABLED` y `MARKETPLACE_LIVE_ENABLED` en Vercel. `FLOW_SANDBOX=false`, `MARKETPLACE_SITE_URL=https://www.crececonia.cl`, `MARKETPLACE_DOWNLOAD_SECRET`, `MARKETPLACE_SESSION_SECRET` y `MARKETPLACE_HEALTH_SECRET` están configurados para producción. No guardar sus valores en Git.
+- El panel [Administración del marketplace](https://www.crececonia.cl/admin/marketplace) usa la sesión administrativa existente. Las identidades de vendedores, pedidos, pagos, evidencias y liquidaciones quedan en Neon; los PDF y portadas quedan en almacenamiento S3 privado.
+- El vendedor puede registrarse con enlace por correo, completar RUT y perfil, subir PDF y portada privados, y enviar un libro a revisión. Cada archivo admite hasta 4 MiB en esta versión. Nadie publica directamente: se exige revisión de identidad, situación tributaria, derechos, contenido, PDF y portada, seguida de una comprobación final registrada. Las ventas se ocultan si la verificación tributaria supera seis meses sin renovarse.
+- El pago Flow se confirma en una única transacción PostgreSQL. La tarifa real se descuenta del saldo del vendedor; si Flow no la informa, el panel permite conciliarla contra el estado de cuenta. Un pago sin tarifa completa o sin respaldo fiscal no se puede liquidar. Reembolsos y contracargos confirmados externamente se registran con reverso y revocación de descarga.
 
-## Antes de activar ventas reales
+## Verificación de apertura
 
-1. Fijar con contador el modelo de emisor, IVA de ebook y comisión, y probar la emisión o aceptación del voucher de Flow por cada transacción. Evitar duplicar boletas cuando el voucher cumple esa función. Documentar notas de crédito, anulaciones y reembolsos. Ver [operación IVA del SII](https://www.sii.cl/destacados/operacion_iva/).
-2. Implementar conciliación de la tarifa real de Flow, saldo exigible al vendedor, liquidación y reversos. El 5 % se registra hoy, pero la comisión de pasarela todavía no reduce el saldo del vendedor en el libro contable.
-3. Implementar límite distribuido para intentos de checkout y probar pago real de extremo a extremo: creación, callback, evidencia tributaria, correo, descarga, reembolso y conciliación. El checkout continúa apagado mientras falte esto.
-4. Conservar evidencia de inicio de actividades y cumplimiento tributario del vendedor al alta y en revisión periódica. Ver [obligaciones SII para plataformas](https://www.sii.cl/destacados/ley_cumplimiento_obligaciones_tributarias/incumplimiento_inicio.html).
-5. Resolver escaneo antimalware, cuotas y política de archivos de terceros; probar preferencias y baja antes de automatizar marketing de posventa.
-6. Configurar y comprobar las variables `MARKETPLACE_SITE_URL` y `MARKETPLACE_DOWNLOAD_SECRET` en Vercel. Hacer un solo despliegue de preview mediante PR cuando el límite de despliegues permita continuar, conforme a la instrucción vigente de no saturar commits.
+1. Desplegar la rama a producción con ambos flags apagados y comprobar el build y CI.
+2. Ejecutar `POST /api/admin/marketplace/health` con `x-marketplace-health-key`: confirma escritura, lectura y borrado de un objeto S3 temporal, contrato de un pago anterior en la cuenta Flow de producción y dominio verificado en Resend. Exigir respuesta HTTP 200 con todos los indicadores verdaderos; no compartir la clave ni rutas de archivos.
+3. Activar primero `MARKETPLACE_PUBLIC_ENABLED=true` y después `MARKETPLACE_LIVE_ENABLED=true`, con un único redespliegue controlado. Comprobar `/ebooks/mercado`, `/ebooks/vender` y `/admin/marketplace`; el último redirige a `/admin/login` sin sesión.
+4. Antes de aprobar el primer libro: comprobar RUT, inicio de actividades y cumplimiento tributario del autor, derechos sobre texto/portada, y revisar el PDF de forma segura. Determinar si la venta corresponde a `tax_inclusive` o `exempt`; para el caso afecto el precio incluye el IVA de 19 %. Repetir la verificación tributaria al menos semestralmente, según el [SII](https://www.sii.cl/destacados/ley_cumplimiento_obligaciones_tributarias/incumplimiento_inicio.html).
+5. En la primera venta real, verificar callback, correo, descarga, evidencia de boleta o voucher, tarifa Flow y saldo del autor antes de transferir dinero. Registrar cada transferencia bancaria en el panel después de ejecutarla externamente. Las devoluciones se ejecutan fuera de la aplicación y luego se registran con la referencia de Flow; las notas de crédito se gestionan en contabilidad manual.
 
-## Despliegue
+## Límites operativos
 
-El código y esquema pueden desplegarse con las ventas desactivadas. `MARKETPLACE_PUBLIC_ENABLED` controla la tienda pública; `MARKETPLACE_LIVE_ENABLED` habilita cobros reales solo junto con el resto de requisitos. El merge a `main` despliega automáticamente por integración de Git. No activar el cobro hasta cerrar los puntos anteriores.
+- La aplicación no emite DTE ni transfiere fondos automáticamente. El administrador debe conciliar cada venta, documento, reverso y pago al autor. El [SII explica](https://www.sii.cl/destacados/operacion_iva/) que el voucher puede reemplazar la boleta según el modelo de emisión declarado; no duplicar documentos.
+- Los archivos se inspeccionan manualmente antes de publicar; no hay escaneo antimalware automático ni subida de archivos mayores de 4 MiB. Si un autor necesita un ebook más grande, ampliar la carga privada antes de aceptarlo.
+- El marketplace puede abrir sin libros publicados. El catálogo se llenará solo después de las aprobaciones finales; los ebooks propios siguen disponibles en `/ebooks`.

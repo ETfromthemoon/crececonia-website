@@ -4,6 +4,7 @@ import { queryDatabase } from "@/lib/database";
 import { flowSign, getFlowBase } from "@/lib/flow";
 import { downloadPrivateObject } from "@/lib/private-storage";
 import { marketplaceCheckoutMode, marketplacePriceSnapshot, normalizeBuyerEmail, MARKETPLACE_COMMISSION_BPS, MARKETPLACE_FLOW_ACCOUNT_REF, MAX_MARKETPLACE_PDF_BYTES } from "@/lib/marketplace-checkout";
+import { allowMarketplaceCheckoutAttempt, marketplaceClientIp } from "@/lib/marketplace-checkout-rate-limit";
 
 export const runtime = "nodejs";
 
@@ -43,8 +44,15 @@ export async function POST(request: Request) {
   if (!email || !bookId || !Number.isSafeInteger(expectedAmount) || expectedAmount <= 0) {
     return NextResponse.json({ error: "Datos de compra inválidos." }, { status: 400 });
   }
+  if (mode === "live" && !marketplaceClientIp(request)) {
+    return NextResponse.json({ error: "No pudimos verificar el origen de la compra." }, { status: 503 });
+  }
 
   try {
+    if (!await allowMarketplaceCheckoutAttempt(request, email, bookId, mode === "live")) {
+      return NextResponse.json({ error: "Demasiados intentos de compra. Espera 15 minutos." },
+        { status: 429, headers: { "Retry-After": "900" } });
+    }
     const [book] = await queryDatabase<BookForSale>(`
       select b.id as book_id, r.id as revision_id, s.id as seller_id,
              v.id as verification_id, a.id as pdf_asset_id,
@@ -52,6 +60,7 @@ export async function POST(request: Request) {
       from public.marketplace_books b
       join public.marketplace_sellers s on s.id=b.seller_id and s.status='active'
       join public.marketplace_seller_tax_profiles t on t.seller_id=s.id and t.review_status='verified'
+        and t.reviewed_at >= now() - interval '6 months'
       join public.marketplace_book_revisions r on r.id=b.published_revision_id
         and r.book_id=b.id and r.moderation_status='approved' and r.rights_declared_at is not null
       join public.marketplace_publication_checks v on v.book_id=b.id and v.revision_id=r.id
@@ -86,6 +95,7 @@ export async function POST(request: Request) {
         from public.marketplace_books b
         join public.marketplace_sellers s on s.id=b.seller_id and s.status='active'
         join public.marketplace_seller_tax_profiles t on t.seller_id=s.id and t.review_status='verified'
+          and t.reviewed_at >= now() - interval '6 months'
         join public.marketplace_book_revisions r on r.id=b.published_revision_id
           and r.book_id=b.id and r.moderation_status='approved' and r.rights_declared_at is not null
         join public.marketplace_publication_checks v on v.id=$11 and v.book_id=b.id and v.revision_id=r.id

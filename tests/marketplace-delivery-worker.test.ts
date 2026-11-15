@@ -114,6 +114,7 @@ describe("recuperación de entregas del marketplace", () => {
     expect(state.status()).toBe("succeeded");
     expect(await deliverMarketplaceOrder(orderId)).toBe("already_sent");
     expect(send).toHaveBeenCalledTimes(1);
+    expect(database.mock.calls.some(([sql]) => String(sql).includes("delete from public.marketplace_checkout_limits"))).toBe(true);
     const list = database.mock.calls.find(([sql]) => String(sql).includes("select aggregate_id from public.marketplace_outbox"));
     expect(list?.[1]).toEqual([5, 5]);
   });
