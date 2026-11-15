@@ -23,7 +23,7 @@ export default async function MarketplaceReviewPage({
   return <main style={{ maxWidth: 1000, margin: "0 auto", padding: "48px 24px", color: "var(--bone)" }}>
     <p className="eyebrow">Administración</p>
     <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", marginBottom: 12 }}>Revisión del marketplace</h1>
-    <p>La aprobación editorial y la publicación son pasos separados. Un cambio de versión vuelve a requerir revisión.</p>
+    <p>La aprobación editorial, la verificación final y la publicación son pasos separados. Un cambio de versión vuelve a requerirlos.</p>
     {resultado === "guardado" && <p role="status" style={{ color: "var(--champagne)" }}>Cambio guardado.</p>}
     <section aria-labelledby="seller-review-title" style={{ marginTop: 48 }}>
       <h2 id="seller-review-title" style={{ fontSize: "2rem" }}>Autores</h2>
@@ -122,10 +122,29 @@ export default async function MarketplaceReviewPage({
               <button name="action" value="reject">Rechazar</button>
             </form>
           </>}
+          {(row.book_status === "approved" || row.book_status === "paused") && !row.publication_verified &&
+            <form action="/api/admin/marketplace" method="post" style={{ marginTop: 20 }}>
+              <input type="hidden" name="book_id" value={row.book_id} />
+              <input type="hidden" name="revision_id" value={row.revision_id} />
+              <fieldset disabled={!ready || row.seller_status !== "active"} style={{ border: "1px solid var(--border)", padding: 16 }}>
+                <legend>Verificación final antes de publicar</legend>
+                <p>Confirma cada punto tras revisar las evidencias. Esta decisión queda registrada para esta versión del libro.</p>
+                <label style={{ display: "block" }}><input type="checkbox" name="confirm_identity" value="yes" required /> Identidad del autor y titularidad del perfil verificadas</label>
+                <label style={{ display: "block" }}><input type="checkbox" name="confirm_tax" value="yes" required /> RUT, inicio de actividades y situación tributaria comprobados</label>
+                <label style={{ display: "block" }}><input type="checkbox" name="confirm_rights" value="yes" required /> Derechos de publicación y declaración del autor revisados</label>
+                <label style={{ display: "block" }}><input type="checkbox" name="confirm_pdf" value="yes" required /> PDF aprobado corresponde a este libro</label>
+                <label style={{ display: "block" }}><input type="checkbox" name="confirm_cover" value="yes" required /> Portada aprobada corresponde a este libro</label>
+                <label htmlFor={`publication-evidence-${row.book_id}`} style={{ display: "block", marginTop: 12 }}>Referencia de la evidencia y decisión (sin documentos personales)</label>
+                <textarea id={`publication-evidence-${row.book_id}`} name="reason" minLength={20} maxLength={2000} required
+                  style={{ display: "block", width: "100%", minHeight: 90, margin: "8px 0 12px", color: "#111" }} />
+                <button name="action" value="verify_publication">Registrar verificación final</button>
+              </fieldset>
+            </form>}
           {(row.book_status === "approved" || row.book_status === "paused") && <form action="/api/admin/marketplace" method="post" style={{ marginTop: 20 }}>
             <input type="hidden" name="book_id" value={row.book_id} />
             <input type="hidden" name="revision_id" value={row.revision_id} />
-            <button name="action" value="publish" disabled={!ready || row.seller_status !== "active"}>Publicar libro</button>
+            <button name="action" value="publish" disabled={!ready || row.seller_status !== "active" || !row.publication_verified}>Publicar libro</button>
+            {!row.publication_verified && <p>Registra la verificación final para habilitar la publicación.</p>}
           </form>}
           {row.book_status === "published" && <form action="/api/admin/marketplace" method="post" style={{ marginTop: 20 }}>
             <input type="hidden" name="book_id" value={row.book_id} />

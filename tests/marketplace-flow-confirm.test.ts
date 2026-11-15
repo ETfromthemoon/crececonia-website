@@ -5,7 +5,7 @@ const database = vi.hoisted(() => vi.fn());
 const delivery = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/database", () => ({ queryDatabase: database }));
 vi.mock("@/lib/marketplace-delivery", () => ({ sendMarketplaceDelivery: delivery }));
-vi.mock("@/lib/flow", () => ({ getFlowBase: () => "https://sandbox.flow.cl/api", flowSign: () => "signature" }));
+vi.mock("@/lib/flow", () => ({ getFlowBase: () => process.env.FLOW_SANDBOX === "true" ? "https://sandbox.flow.cl/api" : "https://www.flow.cl/api", flowSign: () => "signature" }));
 
 import { POST } from "../app/api/marketplace/flow/confirm/route";
 
@@ -125,5 +125,29 @@ describe("confirmación de compra marketplace", () => {
     expect(database.mock.calls.some(([sql]) => String(sql).includes("status='review_required'"))).toBe(true);
     expect(database.mock.calls.some(([sql]) => String(sql).includes("marketplace_entitlements"))).toBe(false);
     expect(delivery).not.toHaveBeenCalled();
+  });
+
+  it("mantiene activo el callback de pagos productivos pendientes al apagar nuevos checkouts", async () => {
+    process.env.FLOW_SANDBOX = "false";
+    process.env.VERCEL_ENV = "production";
+    process.env.MARKETPLACE_SITE_URL = "https://www.crececonia.cl";
+    process.env.MARKETPLACE_LIVE_ENABLED = "false";
+    database.mockImplementation(async (sql: string) => {
+      if (sql.includes("select o.id,o.buyer_email,o.status")) return [{
+        id: orderId, buyer_email: "buyer@example.cl", status: "pending", total_minor: "11900",
+        item_id: itemId, price_minor: "11900", commission_minor: "595", title: "Libro",
+      }];
+      if (sql.includes("select id,provider_payment_ref,provider_account_ref,status")) return [{
+        id: "payment-id", provider_payment_ref: "flow-test-token", provider_account_ref: "crececonia", status: "pending",
+      }];
+      if (sql.includes("insert into public.marketplace_payments")) return [{ id: "payment-id" }];
+      if (sql.includes("update public.marketplace_orders set status='paid'")) return [{ id: orderId }];
+      if (sql.includes("select status from public.marketplace_outbox")) return [{ status: "succeeded" }];
+      return [];
+    });
+    const response = await POST(callback());
+    expect(response.status).toBe(200);
+    expect(vi.mocked(fetch).mock.calls[0][0].toString()).toContain("https://www.flow.cl/api/payment/getStatus");
+    expect(database.mock.calls.some(([sql]) => String(sql).includes("marketplace_entitlements"))).toBe(true);
   });
 });

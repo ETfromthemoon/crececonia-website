@@ -31,17 +31,46 @@ export function marketplaceFlowGatewayFee(
   return total;
 }
 
-/** Flow's existing account is a single merchant account. Third-party sales stay in sandbox. */
+/** Both modes use CrececonIA's existing single Flow merchant account. */
+function marketplaceCommonConfigured(env: NodeJS.ProcessEnv): boolean {
+  try {
+    const site = new URL(env.MARKETPLACE_SITE_URL ?? "");
+    return site.protocol === "https:" && !site.username && !site.password &&
+      Boolean(env.FLOW_API_KEY && env.FLOW_SECRET_KEY && env.DATABASE_URL && env.RESEND_API_KEY &&
+        env.MARKETPLACE_DOWNLOAD_SECRET && env.MARKETPLACE_DOWNLOAD_SECRET.length >= 32);
+  } catch {
+    return false;
+  }
+}
+
 export function marketplaceSandboxConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
-  return env.FLOW_SANDBOX === "true" &&
-    Boolean(env.FLOW_API_KEY && env.FLOW_SECRET_KEY && env.DATABASE_URL && env.RESEND_API_KEY &&
-      env.MARKETPLACE_SITE_URL?.startsWith("https://") &&
-      env.MARKETPLACE_DOWNLOAD_SECRET && env.MARKETPLACE_DOWNLOAD_SECRET.length >= 32);
+  return env.FLOW_SANDBOX === "true" && marketplaceCommonConfigured(env);
 }
 
 export function marketplaceSandboxEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
   return (env.VERCEL_ENV === "preview" || env.NODE_ENV === "development") &&
     env.MARKETPLACE_FLOW_SANDBOX_ENABLED === "true" && marketplaceSandboxConfigured(env);
+}
+
+/** In-flight paid callbacks remain valid after the new-checkout flag is disabled. */
+export function marketplaceLiveConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
+  return env.VERCEL_ENV === "production" && env.FLOW_SANDBOX === "false" &&
+    env.MARKETPLACE_SITE_URL === "https://www.crececonia.cl" && marketplaceCommonConfigured(env);
+}
+
+export function marketplaceLiveEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
+  return env.MARKETPLACE_PUBLIC_ENABLED === "true" &&
+    env.MARKETPLACE_LIVE_ENABLED === "true" && marketplaceLiveConfigured(env);
+}
+
+export function marketplaceCheckoutMode(env: NodeJS.ProcessEnv = process.env): "sandbox" | "live" | null {
+  if (marketplaceSandboxEnabled(env)) return "sandbox";
+  if (marketplaceLiveEnabled(env)) return "live";
+  return null;
+}
+
+export function marketplaceCallbackConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
+  return marketplaceSandboxConfigured(env) || marketplaceLiveConfigured(env);
 }
 
 export function normalizeBuyerEmail(value: unknown): string | null {

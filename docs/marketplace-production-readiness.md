@@ -1,42 +1,25 @@
-# Estado de salida del marketplace de ebooks
+# Estado de producción del marketplace de ebooks
 
-Fecha de auditoría: 13 de noviembre de 2026. Mercado inicial: Chile, CLP, libros de IA, tecnología y negocios con aprobación editorial. Comisión comercial solicitada: 5 % para CrececonIA; costo de pasarela a cargo del vendedor.
+Actualizado: 15 de noviembre de 2026. Alcance inicial: Chile, CLP, IA, tecnología y negocios. CrececonIA recauda en su cuenta Flow, cobra 5 % del precio bruto y asume la emisión o registro tributario que corresponda; el costo real de Flow se atribuye al vendedor.
 
-## Lo que ya existe en el código
+## Verificado
 
-- Alta de vendedor por enlace de correo, perfil y revisión tributaria manual, borradores editables con versiones nuevas y archivos privados en cuarentena.
-- Revisión de autor, PDF, portada y libro, con publicación separada de la aprobación.
-- Catálogo público con búsqueda, categorías, portadas aprobadas, ficha y recomendaciones de libros aprobados.
-- Checkout de prueba con Flow sandbox, confirmación por webhook, asiento de comisión, derecho de descarga, entrega por correo y reintentos de entrega programados.
-- Panel del vendedor con ventas pagadas y total bruto; todavía no muestra una liquidación exigible.
-- Simulador en CLP y demo visual de comprador, vendedor y administración. La demo usa datos ficticios y no cobra.
+- Respaldo de Neon anterior al cambio: snapshot `snap-noisy-poetry-ack3ftal` (`pre-marketplace-activation-2026-11-15`) de la rama principal.
+- Migraciones `20261112_001`, `20261113_001` a `003` y `20261115_001` a `006` aplicadas en Neon producción tras probarlas en una rama aislada. La consulta posterior mostró 20 tablas `marketplace_*`, diez triggers habilitados y cero funciones de borrador ejecutables por `PUBLIC`. No había pedidos ni comprobaciones de publicación que migrar.
+- Publicación de terceros exige aprobación editorial, vendedor y perfil tributario activos, más comprobación final humana con nota y los IDs exactos del PDF y portada. El trigger PostgreSQL rechaza una publicación directa sin esa comprobación y protege la atribución de vendedor. Se ensayaron ambas prohibiciones en una transacción revertida.
+- Cada ítem de pedido conserva el ID del PDF aprobado y queda inmutable; la identidad del archivo aprobado también está protegida. La descarga lee ese archivo exacto. La cuenta Flow existente se usa sin `merchantId` ni reparto automático.
+- El checkout en vivo requiere `MARKETPLACE_LIVE_ENABLED=true`, `MARKETPLACE_PUBLIC_ENABLED=true`, entorno Vercel de producción, `FLOW_SANDBOX=false` y URL canónica. Ambos flags están apagados actualmente. Un callback ya pagado puede terminar su entrega aunque se apague la venta.
+- Existe registro inmutable de evidencia de voucher o boleta emitida fuera de la aplicación. El registro no emite DTE.
 
-## Condiciones para abrir ventas de terceros
+## Antes de activar ventas reales
 
-| Condición | Estado comprobado | Acción antes de activar |
-| --- | --- | --- |
-| Esquema Neon | Las migraciones `core`, `seller_auth`, `draft_edits` y `revision_integrity` se ejecutaron sin error en una rama aislada; las tablas no existen en la rama principal conectada | Completar prueba funcional SQL y revisión de respaldo; solicitar aprobación explícita antes de migrar producción |
-| Contrato de recaudación y reparto | El código usa la cuenta Flow de CrececonIA; no acredita capacidad de comercio integrador ni reparto 95/5 | Confirmar con Flow si la cuenta admite `merchantId`, alta de comercios asociados, tarifas y liquidación; registrar contrato y probar sandbox de extremo a extremo |
-| Tributación y DTE | El 19 % es un escenario, no una regla universal por transacción; el código no emite documentos | Contador tributario chileno debe fijar sujeto de IVA, emisor de boleta/factura/voucher, tratamiento de la comisión y retenciones por tipo de vendedor/comprador |
-| Situación tributaria del autor | Hay revisión manual de RUT y perfil, pero no prueba de inicio de actividades ni verificación periódica de cumplimiento | Establecer evidencia verificable al alta y revisión semestral antes de habilitar vendedores, conforme a la instrucción aplicable del SII |
-| Comisión y pasarela | El 5 % se calcula sobre precio bruto en el sandbox; no hay tarifa real conciliada ni pago neto al vendedor | Aprobar base de la comisión, IVA de comisión y fórmula de liquidación; conciliar comisión efectiva de Flow y respaldar cada pago al autor |
-| Entrega y reversos | Hay cola durable y cron diario con reintentos; falta prueba pública completa, reembolsos y contracargos | Probar pago→callback→descarga→reembolso/contracargo y conciliación; fijar tiempo de recuperación aceptable, pues el cron actual puede tardar hasta un día |
-| Archivos de terceros | Límite de 4 MiB por función, revisión manual y sin escaneo antimalware | Definir tamaños admitidos, escaneo, cuotas y eliminación de objetos huérfanos antes de abrir auto publicación |
-| Posventa y marketing | Reglas puras y medición parcial; no están conectadas a compradores reales ni preferencias | Biblioteca/recuperación verificadas, consentimiento y baja operativos antes de secuencias promocionales |
-| Despliegue de esta rama | Vercel rechazó el último commit por límite de despliegues; el PR #122 quedó anotado | Evitar pushes repetidos mientras dure el límite; usar el preview local temporal y reintentar un único preview de Vercel cuando termine el límite |
+1. Fijar con contador el modelo de emisor, IVA de ebook y comisión, y probar la emisión o aceptación del voucher de Flow por cada transacción. Evitar duplicar boletas cuando el voucher cumple esa función. Documentar notas de crédito, anulaciones y reembolsos. Ver [operación IVA del SII](https://www.sii.cl/destacados/operacion_iva/).
+2. Implementar conciliación de la tarifa real de Flow, saldo exigible al vendedor, liquidación y reversos. El 5 % se registra hoy, pero la comisión de pasarela todavía no reduce el saldo del vendedor en el libro contable.
+3. Implementar límite distribuido para intentos de checkout y probar pago real de extremo a extremo: creación, callback, evidencia tributaria, correo, descarga, reembolso y conciliación. El checkout continúa apagado mientras falte esto.
+4. Conservar evidencia de inicio de actividades y cumplimiento tributario del vendedor al alta y en revisión periódica. Ver [obligaciones SII para plataformas](https://www.sii.cl/destacados/ley_cumplimiento_obligaciones_tributarias/incumplimiento_inicio.html).
+5. Resolver escaneo antimalware, cuotas y política de archivos de terceros; probar preferencias y baja antes de automatizar marketing de posventa.
+6. Configurar y comprobar las variables `MARKETPLACE_SITE_URL` y `MARKETPLACE_DOWNLOAD_SECRET` en Vercel. Hacer un solo despliegue de preview mediante PR cuando el límite de despliegues permita continuar, conforme a la instrucción vigente de no saturar commits.
 
-## Vista previa temporal sin despliegue
+## Despliegue
 
-El build local sirve la demo visual en `http://127.0.0.1:3178/ebooks/mercado`, el espacio de autor en `/ebooks/vender` y el panel administrativo de muestra en `/admin/marketplace` en este mismo computador mientras el proceso siga activo. Es un servidor de prueba de acceso local, sin cobros ni publicación; su proceso y logs se guardan en `%TEMP%/crececonia-marketplace-preview-3178.*`. No equivale a un preview público de Vercel.
-
-## Riesgos técnicos que siguen abiertos
-
-- La migración `revision_integrity` agrega un trigger contra cambios del contenido histórico; se verificó su instalación en la rama aislada. Falta ejercitarlo con datos de prueba y revisar permisos de funciones antes de migrar producción.
-- La subida por función se limita a 4 MiB y no hay escaneo antimalware, cuotas por vendedor ni limpieza de archivos huérfanos.
-- Faltan pruebas de callback Flow real, conciliación de comisión, anulaciones, biblioteca del comprador y preferencias de marketing.
-
-Flow documenta `merchantId` en `payment/create` solo para comercios integradores; esto **no demuestra** que la cuenta actual tenga esa habilitación ni que reparta automáticamente la comisión: [Flow API](https://developers.flow.cl/api), [comercios asociados](https://developers.flow.cl/docs/merchant). El SII indica que el documento tributario depende del modelo de emisión y medio de pago, y exige acreditar inicio de actividades y cumplimiento tributario a plataformas de intermediación: [Operación IVA](https://www.sii.cl/destacados/operacion_iva/), [Circular 38/2025](https://www.sii.cl/noticias/2025/300425noti02srm.htm). El artículo 3° bis requiere analizar quién responde por IVA en cada operación; no extrapolar automáticamente las resoluciones sobre ventas remotas de bienes físicos a ebooks vendidos en Chile: [Circular 39/2025](https://www.sii.cl/normativa_legislacion/circulares/2025/circu39.pdf).
-
-## Regla de activación
-
-`MARKETPLACE_PUBLIC_ENABLED` abre páginas públicas, pero no habilita pagos. `MARKETPLACE_FLOW_SANDBOX_ENABLED` solo permite pruebas fuera de producción. No cambiar las variables para cobrar en vivo hasta que el contrato Flow, política tributaria, esquema migrado, conciliación, entrega y reversos estén probados y aprobados. El merge a `main` desplegaría automáticamente; mantener el PR como borrador hasta pasar estas condiciones.
+El código y esquema pueden desplegarse con las ventas desactivadas. `MARKETPLACE_PUBLIC_ENABLED` controla la tienda pública; `MARKETPLACE_LIVE_ENABLED` habilita cobros reales solo junto con el resto de requisitos. El merge a `main` despliega automáticamente por integración de Git. No activar el cobro hasta cerrar los puntos anteriores.

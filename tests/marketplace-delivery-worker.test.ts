@@ -35,6 +35,17 @@ function setDeliveryDatabase() {
   return { status: () => status, attempts: () => attempts };
 }
 
+function configurePaidCallback() {
+  vi.stubEnv("VERCEL_ENV", "production");
+  vi.stubEnv("FLOW_SANDBOX", "false");
+  vi.stubEnv("FLOW_API_KEY", "test-key");
+  vi.stubEnv("FLOW_SECRET_KEY", "test-secret");
+  vi.stubEnv("DATABASE_URL", "postgresql://test.invalid/db");
+  vi.stubEnv("RESEND_API_KEY", "test-resend");
+  vi.stubEnv("MARKETPLACE_SITE_URL", "https://www.crececonia.cl");
+  vi.stubEnv("MARKETPLACE_DOWNLOAD_SECRET", "x".repeat(32));
+}
+
 describe("recuperación de entregas del marketplace", () => {
   beforeEach(() => {
     vi.stubEnv("CRON_SECRET", "cron-test");
@@ -77,7 +88,25 @@ describe("recuperación de entregas del marketplace", () => {
     expect((await response.json()).sent).toBe(1);
   });
 
+  it("sigue recuperando pagos cuando se apaga la venta pública", async () => {
+    vi.stubEnv("MARKETPLACE_PUBLIC_ENABLED", "false");
+    vi.stubEnv("MARKETPLACE_LIVE_ENABLED", "false");
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("FLOW_SANDBOX", "false");
+    vi.stubEnv("FLOW_API_KEY", "test-key");
+    vi.stubEnv("FLOW_SECRET_KEY", "test-secret");
+    vi.stubEnv("DATABASE_URL", "postgresql://test.invalid/db");
+    vi.stubEnv("RESEND_API_KEY", "test-resend");
+    vi.stubEnv("MARKETPLACE_SITE_URL", "https://www.crececonia.cl");
+    vi.stubEnv("MARKETPLACE_DOWNLOAD_SECRET", "x".repeat(32));
+    setDeliveryDatabase();
+    const response = await GET(new Request("https://example.cl/api/cron/marketplace-delivery", { headers: { authorization: "Bearer cron-test" } }));
+    expect(response.status).toBe(200);
+    expect((await response.json()).sent).toBe(1);
+  });
+
   it("procesa lote acotado y no reenvía una entrega ya cerrada", async () => {
+    configurePaidCallback();
     const state = setDeliveryDatabase();
     const response = await GET(new Request("https://example.cl/api/cron/marketplace-delivery", { headers: { authorization: "Bearer cron-test" } }));
     expect(response.status).toBe(200);
@@ -90,6 +119,7 @@ describe("recuperación de entregas del marketplace", () => {
   });
 
   it("reintenta un error temporal y solo envía al recuperar", async () => {
+    configurePaidCallback();
     const state = setDeliveryDatabase();
     send.mockRejectedValueOnce(new Error("Resend temporal"));
     const first = await GET(new Request("https://example.cl/api/cron/marketplace-delivery", { headers: { authorization: "Bearer cron-test" } }));

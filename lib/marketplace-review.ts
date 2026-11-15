@@ -4,7 +4,7 @@ import { downloadPrivateObject } from "@/lib/private-storage";
 import { validateMarketplaceCover, validateMarketplacePdf } from "@/lib/marketplace-asset-validation";
 import { recommendMarketplaceBooks } from "@/lib/marketplace/recommendations";
 
-export type ReviewAction = "approve" | "request_changes" | "reject" | "publish" | "pause";
+export type ReviewAction = "approve" | "request_changes" | "reject" | "verify_publication" | "publish" | "pause";
 
 export type ReviewRow = {
   book_id: string;
@@ -26,6 +26,7 @@ export type ReviewRow = {
   rights_declaration_version: string | null;
   ready_pdf: boolean;
   ready_cover: boolean;
+  publication_verified: boolean;
   moderation_reason: string | null;
 };
 
@@ -258,7 +259,20 @@ export async function listMarketplaceReviews(): Promise<ReviewRow[]> {
         select 1 from marketplace_assets a
         where a.book_id = b.id and a.revision_id = r.id
           and a.asset_kind = 'cover' and a.scan_status = 'ready'
-      ) as ready_cover
+      ) as ready_cover,
+      exists (
+        select 1 from marketplace_publication_checks v
+        join marketplace_seller_tax_profiles t on t.seller_id = b.seller_id
+        join marketplace_assets pdf on pdf.id = v.pdf_asset_id
+          and pdf.book_id = b.id and pdf.revision_id = r.id
+          and pdf.asset_kind = 'ebook_pdf' and pdf.scan_status = 'ready'
+        join marketplace_assets cover on cover.id = v.cover_asset_id
+          and cover.book_id = b.id and cover.revision_id = r.id
+          and cover.asset_kind = 'cover' and cover.scan_status = 'ready'
+        where v.book_id = b.id and v.revision_id = r.id
+          and t.review_status = 'verified'
+          and v.verified_at >= greatest(r.reviewed_at, t.reviewed_at)
+      ) as publication_verified
     from marketplace_books b
     join marketplace_book_revisions r on r.id = b.current_revision_id
     join marketplace_sellers s on s.id = b.seller_id
@@ -270,6 +284,18 @@ export async function listMarketplaceReviews(): Promise<ReviewRow[]> {
 }
 
 type PublishedBookFilters = { query?: string; category?: "ia" | "tecnologia" | "negocios" };
+
+const verifiedPublicationSql = `exists (
+  select 1 from marketplace_publication_checks v
+  join marketplace_assets pdf on pdf.id = v.pdf_asset_id
+    and pdf.book_id = b.id and pdf.revision_id = r.id
+    and pdf.asset_kind = 'ebook_pdf' and pdf.scan_status = 'ready'
+  join marketplace_assets cover on cover.id = v.cover_asset_id
+    and cover.book_id = b.id and cover.revision_id = r.id
+    and cover.asset_kind = 'cover' and cover.scan_status = 'ready'
+  where v.book_id = b.id and v.revision_id = r.id
+    and v.verified_at >= greatest(r.reviewed_at, t.reviewed_at)
+)`;
 
 export async function listPublishedMarketplaceBooks(page = 1, filters: PublishedBookFilters = {}): Promise<PublishedBook[]> {
   if (!Number.isSafeInteger(page) || page < 1 || page > Math.floor(Number.MAX_SAFE_INTEGER / 24)) throw new Error("Página inválida.");
@@ -295,11 +321,7 @@ export async function listPublishedMarketplaceBooks(page = 1, filters: Published
     where b.status = 'published'
       and r.rights_declared_at is not null
       and r.price_tax_mode in ('tax_inclusive', 'exempt')
-      and exists (
-        select 1 from marketplace_assets a
-        where a.book_id = b.id and a.revision_id = r.id
-          and a.asset_kind = 'ebook_pdf' and a.scan_status = 'ready'
-      )
+      and ${verifiedPublicationSql}
     ${searchCondition}
     ${categoryCondition}
     order by b.published_at desc, b.id desc
@@ -324,11 +346,7 @@ export async function getPublishedMarketplaceBook(slug: string): Promise<Publish
     where b.slug = $1 and b.status = 'published'
       and r.rights_declared_at is not null
       and r.price_tax_mode in ('tax_inclusive', 'exempt')
-      and exists (
-        select 1 from marketplace_assets a
-        where a.book_id = b.id and a.revision_id = r.id
-          and a.asset_kind = 'ebook_pdf' and a.scan_status = 'ready'
-      )
+      and ${verifiedPublicationSql}
     limit 1
   `, [slug]);
   return books[0] ?? null;
@@ -345,13 +363,17 @@ export async function getPublishedMarketplaceCover(bookId: string): Promise<Revi
     join marketplace_seller_tax_profiles t on t.seller_id = s.id and t.review_status = 'verified'
     join marketplace_book_revisions r on r.id = b.published_revision_id
       and r.book_id = b.id and r.moderation_status = 'approved'
-    join marketplace_assets a on a.book_id = b.id and a.revision_id = r.id
+    join marketplace_publication_checks v on v.book_id = b.id and v.revision_id = r.id
+      and v.verified_at >= greatest(r.reviewed_at, t.reviewed_at)
+    join marketplace_assets a on a.id = v.cover_asset_id
+      and a.book_id = b.id and a.revision_id = r.id
       and a.asset_kind = 'cover' and a.scan_status = 'ready'
+    join marketplace_assets pdf on pdf.id = v.pdf_asset_id
+      and pdf.book_id = b.id and pdf.revision_id = r.id
+      and pdf.asset_kind = 'ebook_pdf' and pdf.scan_status = 'ready'
     where b.id = $1 and b.status = 'published' and b.published_at is not null
       and r.rights_declared_at is not null and r.price_tax_mode in ('tax_inclusive', 'exempt')
-      and exists (select 1 from marketplace_assets pdf where pdf.book_id = b.id
-        and pdf.revision_id = r.id and pdf.asset_kind = 'ebook_pdf' and pdf.scan_status = 'ready')
-    order by a.created_at desc limit 1
+    order by v.verified_at desc, v.id desc limit 1
   `, [bookId]);
   return rows[0] ?? null;
 }
@@ -373,11 +395,7 @@ export async function getMarketplaceRecommendations(current: PublishedBook): Pro
     where b.status = 'published' and b.id <> $1 and b.published_at <= now()
       and r.rights_declared_at is not null and r.price_minor > 0
       and r.price_tax_mode in ('tax_inclusive', 'exempt')
-      and exists (
-        select 1 from marketplace_assets a
-        where a.book_id = b.id and a.revision_id = r.id
-          and a.asset_kind = 'ebook_pdf' and a.scan_status = 'ready'
-      )
+      and ${verifiedPublicationSql}
     order by (r.category = $2) desc, b.published_at desc, b.id desc
     limit 100
   `, [current.id, current.category]);
@@ -400,6 +418,13 @@ export async function moderateMarketplaceBook(input: {
   revisionId: string;
   action: ReviewAction;
   reason?: string;
+  publicationChecks?: {
+    identity: boolean;
+    tax: boolean;
+    rights: boolean;
+    pdf: boolean;
+    cover: boolean;
+  };
 }): Promise<boolean> {
   const { bookId, revisionId, action } = input;
   const reason = input.reason?.trim() ?? "";
@@ -407,6 +432,10 @@ export async function moderateMarketplaceBook(input: {
   if (reason.length > 2000) throw new Error("Motivo demasiado largo.");
   if (["request_changes", "reject"].includes(action) && reason.length < 10) {
     throw new Error("Explica el cambio o rechazo en al menos 10 caracteres.");
+  }
+  if (action === "verify_publication" && (reason.length < 20 ||
+    !input.publicationChecks || Object.values(input.publicationChecks).some((checked) => checked !== true))) {
+    throw new Error("Confirma los cinco controles y registra evidencia de al menos 20 caracteres.");
   }
 
   if (action === "pause") {
@@ -425,6 +454,52 @@ export async function moderateMarketplaceBook(input: {
     return result.length === 1;
   }
 
+  if (action === "verify_publication") {
+    const result = await queryDatabase<{ id: string }>(`
+      with eligible as (
+        select b.id as book_id, r.id as revision_id,
+          pdf.id as pdf_asset_id, cover.id as cover_asset_id
+        from marketplace_books b
+        join marketplace_book_revisions r on r.id = b.current_revision_id and r.book_id = b.id
+        join marketplace_sellers s on s.id = b.seller_id
+        join marketplace_seller_tax_profiles t on t.seller_id = s.id
+        cross join lateral (
+          select a.id from marketplace_assets a
+          where a.book_id = b.id and a.revision_id = r.id
+            and a.asset_kind = 'ebook_pdf' and a.scan_status = 'ready'
+          order by a.created_at desc, a.id desc limit 1
+        ) pdf
+        cross join lateral (
+          select a.id from marketplace_assets a
+          where a.book_id = b.id and a.revision_id = r.id
+            and a.asset_kind = 'cover' and a.scan_status = 'ready'
+          order by a.created_at desc, a.id desc limit 1
+        ) cover
+        where b.id = $1 and r.id = $2 and b.status in ('approved', 'paused')
+          and r.moderation_status = 'approved' and r.reviewed_at is not null
+          and s.status = 'active' and s.terms_accepted_at is not null
+          and t.review_status = 'verified' and t.reviewed_at is not null
+          and r.rights_declared_at is not null and r.rights_declaration_version is not null
+          and r.price_tax_mode in ('tax_inclusive', 'exempt')
+      ), verified as (
+        insert into marketplace_publication_checks (
+          book_id, revision_id, pdf_asset_id, cover_asset_id,
+          identity_confirmed, tax_confirmed, rights_confirmed,
+          pdf_confirmed, cover_confirmed, evidence_note, verified_by
+        )
+        select book_id, revision_id, pdf_asset_id, cover_asset_id,
+          true, true, true, true, true, $3, 'admin'
+        from eligible
+        returning book_id
+      ), audit as (
+        insert into marketplace_audit_log(actor_user_id, action, entity_type, entity_id, reason)
+        select 'admin', 'verify_publication', 'marketplace_book', book_id, $3 from verified
+        returning entity_id as id
+      ) select id from audit
+    `, [bookId, revisionId, reason]);
+    return result.length === 1;
+  }
+
   if (action === "publish") {
     const result = await queryDatabase<{ id: string }>(`
       with changed as (
@@ -432,23 +507,25 @@ export async function moderateMarketplaceBook(input: {
         set status = 'published', published_revision_id = b.current_revision_id,
           published_at = now(), updated_at = now()
         from marketplace_book_revisions r, marketplace_sellers s,
-          marketplace_seller_tax_profiles t
+          marketplace_seller_tax_profiles t, marketplace_publication_checks v
         where b.id = $1 and b.current_revision_id = $2 and r.id = $2
           and r.book_id = b.id and s.id = b.seller_id
           and b.status in ('approved', 'paused')
           and s.status = 'active' and s.terms_accepted_at is not null
           and t.seller_id = s.id and t.review_status = 'verified'
+          and v.book_id = b.id and v.revision_id = r.id
+          and v.verified_at >= greatest(r.reviewed_at, t.reviewed_at)
           and r.moderation_status = 'approved'
           and r.rights_declared_at is not null
           and r.price_tax_mode in ('tax_inclusive', 'exempt')
           and exists (
             select 1 from marketplace_assets a
-            where a.book_id = b.id and a.revision_id = r.id
+            where a.id = v.pdf_asset_id and a.book_id = b.id and a.revision_id = r.id
               and a.asset_kind = 'ebook_pdf' and a.scan_status = 'ready'
           )
           and exists (
             select 1 from marketplace_assets a
-            where a.book_id = b.id and a.revision_id = r.id
+            where a.id = v.cover_asset_id and a.book_id = b.id and a.revision_id = r.id
               and a.asset_kind = 'cover' and a.scan_status = 'ready'
           )
         returning b.id

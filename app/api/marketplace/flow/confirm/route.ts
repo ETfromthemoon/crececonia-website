@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { queryDatabase } from "@/lib/database";
 import { flowSign, getFlowBase } from "@/lib/flow";
 import { deliverMarketplaceOrder } from "@/lib/marketplace-delivery-worker";
-import { marketplaceFlowGatewayFee, marketplaceSandboxConfigured, normalizeBuyerEmail, MARKETPLACE_FLOW_ACCOUNT_REF } from "@/lib/marketplace-checkout";
+import { marketplaceCallbackConfigured, marketplaceFlowGatewayFee, normalizeBuyerEmail, MARKETPLACE_FLOW_ACCOUNT_REF } from "@/lib/marketplace-checkout";
 
 export const runtime = "nodejs";
 
@@ -31,8 +31,8 @@ async function getFlowStatus(token: string): Promise<FlowStatus> {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  // Disabling new checkouts must not abandon an already paid sandbox order.
-  if (!marketplaceSandboxConfigured()) return new Response("UNAVAILABLE", { status: 503 });
+  // Disabling new checkouts must not abandon an already paid Flow order.
+  if (!marketplaceCallbackConfigured()) return new Response("UNAVAILABLE", { status: 503 });
   try {
     const params = new URLSearchParams(await request.text());
     const token = params.get("token");

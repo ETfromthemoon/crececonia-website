@@ -1,5 +1,5 @@
 import { deliverMarketplaceOutboxBatch } from "@/lib/marketplace-delivery-worker";
-import { marketplaceSandboxEnabled } from "@/lib/marketplace-checkout";
+import { marketplaceCallbackConfigured } from "@/lib/marketplace-checkout";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
     return new Response("Unauthorized", { status: 401 });
   }
-  if (process.env.MARKETPLACE_PUBLIC_ENABLED !== "true" && !marketplaceSandboxEnabled()) {
+  if (!marketplaceCallbackConfigured()) {
     return Response.json({ skipped: true });
   }
   try {
