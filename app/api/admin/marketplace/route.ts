@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-const actions = new Set<ReviewAction>(["approve", "request_changes", "reject", "publish", "pause"]);
+const actions = new Set<ReviewAction>(["approve", "request_changes", "reject", "verify_publication", "publish", "pause"]);
 
 export async function POST(request: Request) {
   if (!isAdminRequest(request)) return NextResponse.json({ error: "No autorizado." }, { status: 401 });
@@ -16,7 +16,14 @@ export async function POST(request: Request) {
   const reason = String(form.get("reason") ?? "");
   if (!actions.has(action)) return NextResponse.json({ error: "Acción inválida." }, { status: 400 });
   try {
-    const changed = await moderateMarketplaceBook({ action, bookId, revisionId, reason });
+    const publicationChecks = action === "verify_publication" ? {
+      identity: form.get("confirm_identity") === "yes",
+      tax: form.get("confirm_tax") === "yes",
+      rights: form.get("confirm_rights") === "yes",
+      pdf: form.get("confirm_pdf") === "yes",
+      cover: form.get("confirm_cover") === "yes",
+    } : undefined;
+    const changed = await moderateMarketplaceBook({ action, bookId, revisionId, reason, publicationChecks });
     if (!changed) return NextResponse.json({ error: "El libro cambió o aún no cumple las condiciones." }, { status: 409 });
     return NextResponse.redirect(new URL("/admin/marketplace?resultado=guardado", request.url), { status: 303 });
   } catch (error) {

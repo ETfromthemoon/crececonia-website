@@ -3,6 +3,9 @@ import {
   createMarketplaceDownloadToken,
   marketplacePriceSnapshot,
   marketplaceFlowGatewayFee,
+  marketplaceCheckoutMode,
+  marketplaceCallbackConfigured,
+  marketplaceLiveEnabled,
   marketplaceSandboxEnabled,
   normalizeBuyerEmail,
   verifyMarketplaceDownloadToken,
@@ -33,6 +36,21 @@ describe("cobro marketplace", () => {
     expect(marketplaceSandboxEnabled({ ...env, FLOW_SANDBOX: "false", MARKETPLACE_FLOW_SANDBOX_ENABLED: "true" })).toBe(false);
     expect(marketplaceSandboxEnabled({ ...env, VERCEL_ENV: "production", MARKETPLACE_FLOW_SANDBOX_ENABLED: "true" })).toBe(false);
     expect(marketplaceSandboxEnabled(env)).toBe(false);
+  });
+
+  it("prepara la cuenta Flow existente para producción solo con activación explícita", () => {
+    const env = { ...process.env, VERCEL_ENV: "production", FLOW_SANDBOX: "false",
+      FLOW_API_KEY: "key", FLOW_SECRET_KEY: "secret", DATABASE_URL: "postgres://test",
+      RESEND_API_KEY: "resend", MARKETPLACE_SITE_URL: "https://www.crececonia.cl",
+      MARKETPLACE_DOWNLOAD_SECRET: "x".repeat(32), MARKETPLACE_PUBLIC_ENABLED: "true",
+      MARKETPLACE_LIVE_ENABLED: "true" };
+    expect(marketplaceCheckoutMode(env)).toBe("live");
+    expect(marketplaceLiveEnabled({ ...env, MARKETPLACE_LIVE_ENABLED: "false" })).toBe(false);
+    expect(marketplaceCheckoutMode({ ...env, FLOW_SANDBOX: "true" })).toBeNull();
+    expect(marketplaceCheckoutMode({ ...env, VERCEL_ENV: "preview" })).toBeNull();
+    expect(marketplaceCheckoutMode({ ...env, MARKETPLACE_PUBLIC_ENABLED: "false" })).toBeNull();
+    expect(marketplaceCheckoutMode({ ...env, MARKETPLACE_SITE_URL: "https://otro.cl" })).toBeNull();
+    expect(marketplaceCallbackConfigured({ ...env, MARKETPLACE_LIVE_ENABLED: "false" })).toBe(true);
   });
 
   it("verifica enlaces de descarga y los rechaza tras su vencimiento", () => {

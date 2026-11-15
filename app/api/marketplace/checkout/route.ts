@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { queryDatabase } from "@/lib/database";
 import { flowSign, getFlowBase } from "@/lib/flow";
 import { downloadPrivateObject } from "@/lib/private-storage";
-import { marketplacePriceSnapshot, marketplaceSandboxEnabled, normalizeBuyerEmail, MARKETPLACE_COMMISSION_BPS, MARKETPLACE_FLOW_ACCOUNT_REF, MAX_MARKETPLACE_PDF_BYTES } from "@/lib/marketplace-checkout";
+import { marketplaceCheckoutMode, marketplacePriceSnapshot, normalizeBuyerEmail, MARKETPLACE_COMMISSION_BPS, MARKETPLACE_FLOW_ACCOUNT_REF, MAX_MARKETPLACE_PDF_BYTES } from "@/lib/marketplace-checkout";
+import { allowMarketplaceCheckoutAttempt, marketplaceClientIp } from "@/lib/marketplace-checkout-rate-limit";
 
 export const runtime = "nodejs";
 
@@ -11,6 +12,8 @@ type BookForSale = {
   book_id: string;
   revision_id: string;
   seller_id: string;
+  verification_id: string;
+  pdf_asset_id: string;
   title: string;
   price_minor: string | number;
   price_tax_mode: string;
@@ -29,7 +32,8 @@ function siteUrl(): URL | null {
 }
 
 export async function POST(request: Request) {
-  if (!marketplaceSandboxEnabled()) return NextResponse.json({ error: "El pago de libros de terceros aún no está disponible." }, { status: 503 });
+  const mode = marketplaceCheckoutMode();
+  if (!mode) return NextResponse.json({ error: "El pago de libros de terceros aún no está disponible." }, { status: 503 });
   const origin = siteUrl();
   if (!origin) return NextResponse.json({ error: "Configuración de pagos incompleta." }, { status: 503 });
 
@@ -40,20 +44,33 @@ export async function POST(request: Request) {
   if (!email || !bookId || !Number.isSafeInteger(expectedAmount) || expectedAmount <= 0) {
     return NextResponse.json({ error: "Datos de compra inválidos." }, { status: 400 });
   }
+  if (mode === "live" && !marketplaceClientIp(request)) {
+    return NextResponse.json({ error: "No pudimos verificar el origen de la compra." }, { status: 503 });
+  }
 
   try {
+    if (!await allowMarketplaceCheckoutAttempt(request, email, bookId, mode === "live")) {
+      return NextResponse.json({ error: "Demasiados intentos de compra. Espera 15 minutos." },
+        { status: 429, headers: { "Retry-After": "900" } });
+    }
     const [book] = await queryDatabase<BookForSale>(`
       select b.id as book_id, r.id as revision_id, s.id as seller_id,
+             v.id as verification_id, a.id as pdf_asset_id,
              r.title, r.price_minor, r.price_tax_mode, a.storage_key,a.sha256,a.byte_size
       from public.marketplace_books b
       join public.marketplace_sellers s on s.id=b.seller_id and s.status='active'
       join public.marketplace_seller_tax_profiles t on t.seller_id=s.id and t.review_status='verified'
+        and t.reviewed_at >= now() - interval '6 months'
       join public.marketplace_book_revisions r on r.id=b.published_revision_id
         and r.book_id=b.id and r.moderation_status='approved' and r.rights_declared_at is not null
-      join public.marketplace_assets a on a.revision_id=r.id and a.book_id=b.id
+      join public.marketplace_publication_checks v on v.book_id=b.id and v.revision_id=r.id
+        and v.verified_at >= greatest(r.reviewed_at,t.reviewed_at)
+      join public.marketplace_assets a on a.id=v.pdf_asset_id and a.revision_id=r.id and a.book_id=b.id
         and a.asset_kind='ebook_pdf' and a.scan_status='ready'
+      join public.marketplace_assets cover on cover.id=v.cover_asset_id and cover.revision_id=r.id
+        and cover.book_id=b.id and cover.asset_kind='cover' and cover.scan_status='ready'
       where b.id=$1 and b.status='published' and b.published_at is not null
-      order by a.created_at desc limit 1`, [bookId]);
+      order by v.verified_at desc,v.id desc limit 1`, [bookId]);
     if (!book) return NextResponse.json({ error: "Libro no disponible." }, { status: 404 });
     const price = marketplacePriceSnapshot(Number(book.price_minor), book.price_tax_mode);
     if (!price) return NextResponse.json({ error: "La configuración tributaria de este libro requiere revisión." }, { status: 409 });
@@ -78,10 +95,16 @@ export async function POST(request: Request) {
         from public.marketplace_books b
         join public.marketplace_sellers s on s.id=b.seller_id and s.status='active'
         join public.marketplace_seller_tax_profiles t on t.seller_id=s.id and t.review_status='verified'
+          and t.reviewed_at >= now() - interval '6 months'
         join public.marketplace_book_revisions r on r.id=b.published_revision_id
           and r.book_id=b.id and r.moderation_status='approved' and r.rights_declared_at is not null
-        join public.marketplace_assets a on a.revision_id=r.id and a.book_id=b.id
+        join public.marketplace_publication_checks v on v.id=$11 and v.book_id=b.id and v.revision_id=r.id
+          and v.verified_at >= greatest(r.reviewed_at,t.reviewed_at)
+        join public.marketplace_assets a on a.id=v.pdf_asset_id and a.id=$12
+          and a.revision_id=r.id and a.book_id=b.id
           and a.asset_kind='ebook_pdf' and a.scan_status='ready' and a.storage_key=$3
+        join public.marketplace_assets cover on cover.id=v.cover_asset_id and cover.revision_id=r.id
+          and cover.book_id=b.id and cover.asset_kind='cover' and cover.scan_status='ready'
         where b.id=$2 and b.status='published' and b.published_at is not null
           and r.price_minor=$4 and r.price_tax_mode=$5
         limit 1
@@ -92,14 +115,15 @@ export async function POST(request: Request) {
         returning id
       ), new_item as (
         insert into public.marketplace_order_items
-          (order_id,book_id,revision_id,seller_id,price_minor,tax_mode,tax_rate_bps,
+          (order_id,book_id,revision_id,seller_id,pdf_asset_id,price_minor,tax_mode,tax_rate_bps,
            tax_minor,commission_rate_bps,commission_basis_minor,commission_minor)
-        select o.id,e.book_id,e.revision_id,e.seller_id,$4,$5,$7,$8,$9,$4,$10
+        select o.id,e.book_id,e.revision_id,e.seller_id,$12,$4,$5,$7,$8,$9,$4,$10
         from new_order o cross join eligible e
         returning id
       ) select id as item_id from new_item`,
       [orderId, book.book_id, book.storage_key, price.price, price.taxMode, email,
-        price.taxRateBps, price.tax, MARKETPLACE_COMMISSION_BPS, price.commission]);
+        price.taxRateBps, price.tax, MARKETPLACE_COMMISSION_BPS, price.commission,
+        book.verification_id, book.pdf_asset_id]);
     if (!prepared) return NextResponse.json({ error: "El libro dejó de estar disponible." }, { status: 409 });
 
     const apiKey = process.env.FLOW_API_KEY!;
@@ -124,7 +148,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Flow no pudo preparar el pago." }, { status: 502 });
     }
     const redirect = new URL(result.url);
-    if (redirect.protocol !== "https:" || redirect.hostname !== "sandbox.flow.cl" || !result.token) {
+    const flowHost = mode === "sandbox" ? "sandbox.flow.cl" : "www.flow.cl";
+    if (redirect.protocol !== "https:" || redirect.hostname !== flowHost || !result.token) {
       return NextResponse.json({ error: "Flow respondió con un destino inválido." }, { status: 502 });
     }
     await queryDatabase(`insert into public.marketplace_payments

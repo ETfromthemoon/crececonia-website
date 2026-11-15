@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { queryDatabase } from "@/lib/database";
 import { flowSign, getFlowBase } from "@/lib/flow";
 import { deliverMarketplaceOrder } from "@/lib/marketplace-delivery-worker";
-import { marketplaceFlowGatewayFee, marketplaceSandboxConfigured, normalizeBuyerEmail, MARKETPLACE_FLOW_ACCOUNT_REF } from "@/lib/marketplace-checkout";
+import { marketplaceCallbackConfigured, marketplaceFlowGatewayFee, normalizeBuyerEmail, MARKETPLACE_FLOW_ACCOUNT_REF } from "@/lib/marketplace-checkout";
 
 export const runtime = "nodejs";
 
@@ -31,8 +31,8 @@ async function getFlowStatus(token: string): Promise<FlowStatus> {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  // Disabling new checkouts must not abandon an already paid sandbox order.
-  if (!marketplaceSandboxConfigured()) return new Response("UNAVAILABLE", { status: 503 });
+  // Disabling new checkouts must not abandon an already paid Flow order.
+  if (!marketplaceCallbackConfigured()) return new Response("UNAVAILABLE", { status: 503 });
   try {
     const params = new URLSearchParams(await request.text());
     const token = params.get("token");
@@ -64,51 +64,23 @@ export async function POST(request: Request): Promise<Response> {
     // moving the order to manual review until that write has had a chance to land.
     if (!existing) throw new Error("La referencia Flow aún no está registrada; reintentar.");
     if (existing.provider_payment_ref !== token || existing.provider_account_ref !== MARKETPLACE_FLOW_ACCOUNT_REF) {
-      await queryDatabase("update public.marketplace_orders set status='review_required' where id=$1 and status<>'refunded'", [orderId]);
+      await queryDatabase("update public.marketplace_orders set status='review_required' where id=$1 and status in ('pending','paid')", [orderId]);
       throw new Error("La transacción o cuenta Flow no coincide con la orden preparada y requiere conciliación.");
     }
+    // A duplicate payment notification after a recorded external reversal must
+    // never restore the payment, entitlement or seller payable balance.
+    if (order.status === "refunded" || order.status === "disputed"
+      || existing.status === "refunded" || existing.status === "disputed") {
+      return new Response("OK");
+    }
     const gatewayFee = marketplaceFlowGatewayFee(amount, payment.paymentData);
-    const [record] = await queryDatabase<{ id: string }>(`
-      insert into public.marketplace_payments
-        (order_id,provider,provider_account_ref,provider_payment_ref,attempt_number,amount_minor,gateway_fee_actual_minor,status,confirmed_at)
-      values ($1,'flow',$5,$2,1,$3,$4,'confirmed',now())
-      on conflict (provider,provider_payment_ref) do update
-        set status='confirmed',confirmed_at=coalesce(marketplace_payments.confirmed_at,now()),
-            gateway_fee_actual_minor=coalesce(excluded.gateway_fee_actual_minor,marketplace_payments.gateway_fee_actual_minor)
-        where marketplace_payments.order_id=excluded.order_id
-          and marketplace_payments.provider_account_ref=excluded.provider_account_ref
-      returning id`, [orderId, token, amount, gatewayFee, MARKETPLACE_FLOW_ACCOUNT_REF]);
-    if (!record) throw new Error("No se registró el pago.");
     const digest = createHash("sha256").update(`${orderId}:${token}:${amount}:2`).digest("hex");
-    await queryDatabase(`insert into public.marketplace_payment_events
-      (payment_id,provider,provider_event_ref,event_type,payload_digest,processing_status,processed_at)
-      values ($1,'flow',$2,'payment_confirmed',$3,'processed',now())
-      on conflict (provider,provider_event_ref) do nothing`, [record.id, `${payment.flowOrder}:paid`, digest]);
-    const [paid] = await queryDatabase<{ id: string }>(`
-      update public.marketplace_orders set status='paid',paid_at=coalesce(paid_at,now())
-      where id=$1 and status in ('pending','paid') returning id`, [orderId]);
-    if (!paid) throw new Error("La orden no admite confirmación automática.");
-    await queryDatabase(`insert into public.marketplace_entitlements
-      (order_item_id,buyer_email,book_id,status)
-      select i.id,o.buyer_email,i.book_id,'active'
-      from public.marketplace_order_items i join public.marketplace_orders o on o.id=i.order_id
-      where o.id=$1 and o.status='paid'
-      on conflict (order_item_id) do nothing`, [orderId]);
-    // The 5% platform commission is booked on gross CLP. Gateway fee is
-    // reconciled later against the processor statement and charged to seller.
-    const sellerPayable = amount - Number(order.commission_minor);
-    await queryDatabase(`insert into public.marketplace_ledger_entries
-      (journal_id,order_id,order_item_id,payment_id,account_code,debit_minor,credit_minor,source_type,source_ref)
-      values
-      ($1,$1,$2,$3,'processor_clearing',$4,0,'payment_confirmed',$1::text),
-      ($1,$1,$2,$3,'seller_payable',0,$5,'payment_confirmed',$1::text),
-      ($1,$1,$2,$3,'platform_commission',0,$6,'payment_confirmed',$1::text)
-      on conflict (journal_id,account_code,source_type,source_ref) do nothing`,
-      [orderId, order.item_id, record.id, amount, sellerPayable, Number(order.commission_minor)]);
-    await queryDatabase(`insert into public.marketplace_outbox
-      (event_type,aggregate_type,aggregate_id,idempotency_key,payload)
-      values ('purchase_delivery','order',$1,$2,'{}'::jsonb)
-      on conflict (idempotency_key) do nothing`, [orderId, `marketplace-delivery/${orderId}`]);
+    const [finalized] = await queryDatabase<{ payment_id: string; outcome: string }>(`
+      select payment_id,outcome from public.marketplace_finalize_flow_payment($1,$2,$3,$4,$5,$6,$7)`,
+      [orderId, token, amount, buyer, `${payment.flowOrder}:paid`, digest, gatewayFee]);
+    if (!finalized) throw new Error("El pago no pasó la validación atómica.");
+    if (finalized.outcome === "reversed") return new Response("OK");
+    if (finalized.outcome !== "paid") throw new Error("Estado de pago inesperado.");
     await deliverMarketplaceOrder(orderId);
     return new Response("OK");
   } catch (error) {

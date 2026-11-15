@@ -21,10 +21,11 @@ export async function GET(request: Request): Promise<Response> {
       join public.marketplace_order_items i on i.id=e.order_item_id
       join public.marketplace_orders o on o.id=i.order_id
       join public.marketplace_book_revisions r on r.id=i.revision_id
-      join public.marketplace_assets a on a.revision_id=i.revision_id and a.book_id=i.book_id
+      join public.marketplace_assets a on a.id=i.pdf_asset_id
+        and a.revision_id=i.revision_id and a.book_id=i.book_id
         and a.asset_kind='ebook_pdf' and a.scan_status='ready'
       where e.order_item_id=$1 and e.status='active' and o.status='paid'
-      order by a.created_at desc limit 1`, [itemId]);
+      limit 1`, [itemId]);
     if (!grant) return NextResponse.json({ error: "La compra no tiene acceso vigente." }, { status: 404 });
     if (!Number.isSafeInteger(Number(grant.byte_size)) || Number(grant.byte_size) > MAX_MARKETPLACE_PDF_BYTES) {
       return NextResponse.json({ error: "El archivo supera el tamaño disponible para descarga." }, { status: 503 });

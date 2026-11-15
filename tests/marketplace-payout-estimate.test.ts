@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { estimateMarketplacePayout, type PayoutEstimatePolicy } from "@/lib/marketplace/payout-estimate";
+import { renderToStaticMarkup } from "react-dom/server";
+import { createElement } from "react";
+import PayoutCalculator from "@/components/marketplace/PayoutCalculator";
 
 const policy: PayoutEstimatePolicy = {
   version: "example-v1",
@@ -14,6 +17,18 @@ const policy: PayoutEstimatePolicy = {
 };
 
 describe("estimateMarketplacePayout", () => {
+  it("shows the current gross-price commission without inventing Flow's fee or a final payout", () => {
+    const html = renderToStaticMarkup(createElement(PayoutCalculator, { initialPrice: "11900" }));
+    expect(html).toContain("Comisión CrececonIA (5 % del precio final)");
+    expect(html).toContain("−$595 CLP");
+    expect(html).toContain("$11.305 CLP");
+    expect(html).toContain("$9.405 CLP");
+    expect(html).toContain("Pendiente del pago");
+    expect(html).toContain("Pendiente de Flow y revisión tributaria");
+    expect(html).not.toContain("$300");
+    expect(html).not.toContain("5% del precio final + IVA");
+  });
+
   it("extracts 19% included in a CLP final price and reconciles the approved example", () => {
     const estimate = estimateMarketplacePayout({ amountClp: 11_900, includesSaleVat: true }, policy);
     expect(estimate.saleGrossClp).toBe(11_900);
