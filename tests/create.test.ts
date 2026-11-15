@@ -484,15 +484,15 @@ describe("POST /api/flow/create — combos", () => {
 describe("POST /api/flow/create — promoción de noviembre", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.setSystemTime(new Date("2026-11-07T23:59:59-03:00"));
+    vi.setSystemTime(new Date("2026-11-15T23:59:59-03:00"));
     mockGetCurrentPrice.mockResolvedValue({ price: 19700, tier: "regular", remaining: null, originalPrice: 19700 });
     flowOk();
   });
 
   it.each([
-    [[DEFAULT_EBOOK_RESOURCE], 8950],
-    [[DEFAULT_EBOOK_RESOURCE, "ebook:agentes-de-ia"], 16110],
-    [["ebook:creacion-de-webs-con-ia", "ebook:creacion-de-webs-con-ia-parte-2", "ebook:creacion-de-webs-con-ia-parte-3", "ebook:creacion-de-webs-con-ia-parte-4"], 16050],
+    [[DEFAULT_EBOOK_RESOURCE], 13790],
+    [[DEFAULT_EBOOK_RESOURCE, "ebook:agentes-de-ia"], 24822],
+    [["ebook:creacion-de-webs-con-ia", "ebook:creacion-de-webs-con-ia-parte-2", "ebook:creacion-de-webs-con-ia-parte-3", "ebook:creacion-de-webs-con-ia-parte-4"], 41370],
   ])("Flow y el manifiesto coinciden con el total publicado de %s", async (resources, total) => {
     const res = await POST(postJson({ email: "user@test.com", resources, expectedAmount: total }));
     expect(res.status).toBe(200);
@@ -511,7 +511,7 @@ describe("POST /api/flow/create — promoción de noviembre", () => {
   });
 
   it("a medianoche rechaza el total antiguo antes de crear un cobro", async () => {
-    vi.setSystemTime(new Date("2026-11-08T00:00:00-03:00"));
+    vi.setSystemTime(new Date("2026-11-16T00:00:00-03:00"));
     const res = await POST(postJson({ email: "user@test.com", expectedAmount: 8950 }));
     expect(res.status).toBe(409);
     expect(mockPendingInsert).not.toHaveBeenCalled();
@@ -519,7 +519,7 @@ describe("POST /api/flow/create — promoción de noviembre", () => {
   });
 
   it("a medianoche permite pagar el nuevo precio una vez revisado", async () => {
-    vi.setSystemTime(new Date("2026-11-08T00:00:00-03:00"));
+    vi.setSystemTime(new Date("2026-11-16T00:00:00-03:00"));
     const res = await POST(postJson({ email: "user@test.com", expectedAmount: 19700 }));
     expect(res.status).toBe(200);
     expect(flowBody().get("amount")).toBe("19700");

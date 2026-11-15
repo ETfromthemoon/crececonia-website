@@ -530,7 +530,7 @@ export default function EbookPricing({
                 ))}
                 {isCombo && (
                   <p style={{ color: "#2e7d32", fontSize: "0.75rem", fontFamily: "var(--font-mono)", marginTop: 6 }}>
-                    {bundlePreview!.discountPercent}% de descuento por combo aplicado ✓
+                    {flashActive ? "30% de descuento adicional aplicado al precio del combo" : `${bundlePreview!.discountPercent}% de descuento por combo aplicado`} ✓
                   </p>
                 )}
               </div>
