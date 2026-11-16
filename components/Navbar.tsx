@@ -6,13 +6,13 @@ import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
   { label: "Aprender", href: "/aprender" },
-  { label: "Recursos", href: "/centro" },
   { label: "Mentoría", href: "/mentoria" },
   { label: "Implementación", href: "/implementacion" },
+  { label: "Marketplace", href: "/ebooks/mercado" },
 ] as const;
 
 function isCurrentLink(pathname: string, href: (typeof NAV_LINKS)[number]["href"]) {
-  if (href === "/centro") return /^\/(centro|ebooks?|guias|skills)(\/|$)/.test(pathname);
+  if (href === "/ebooks/mercado") return /^\/ebooks?(\/|$)/.test(pathname);
   return pathname === href;
 }
 
