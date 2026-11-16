@@ -12,7 +12,9 @@ describe("editorial homepage", () => {
     const hero = renderToStaticMarkup(<EditorialHero />);
     expect(hero).toContain('href="#biblioteca"');
     expect(hero).toContain('href="/ia"');
-    expect(renderToStaticMarkup(<FeaturedResources />)).toContain('id="biblioteca"');
+    const library = renderToStaticMarkup(<FeaturedResources />);
+    expect(library).toContain('id="biblioteca"');
+    expect(library).toContain('href="/ebooks/mercado"');
   });
   it("labels the simulation and exposes three real selection buttons", () => {
     const html = renderToStaticMarkup(<SkillShowcase />);
