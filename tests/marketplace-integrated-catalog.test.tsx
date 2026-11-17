@@ -24,6 +24,8 @@ describe("catálogo integrado del marketplace", () => {
     expect(html).toContain("Por CrececonIA");
     expect(html).toContain("Por Autora invitada");
     expect(html).toContain("$11.900");
+    expect(html.match(/class="md-card-action"/g)).toHaveLength(8);
+    expect(html).toContain('class="md-card-action" href="/ebook/de-cero-a-claude-en-una-semana"');
   });
 
   it("aplica búsqueda y categoría también a los libros propios", async () => {
