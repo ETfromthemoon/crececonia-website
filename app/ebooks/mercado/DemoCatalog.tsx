@@ -43,15 +43,15 @@ export default function DemoCatalog({ crececoniaBooks = [] }: { crececoniaBooks?
       </div>
       <div className="md-count" aria-live="polite">MOSTRANDO {books.length + ownBooks.length} DE {DEMO_BOOKS.length + crececoniaBooks.length} LIBROS</div>
       {books.length + ownBooks.length ? <div className="md-grid">
-        {ownBooks.map((book) => <Link className="md-card" href={book.href} key={book.href}>
-          <img className="mr-cover-image" src={book.coverSrc} alt={`Portada de ${book.title}`} loading="lazy" />
-          <div className="md-card-info"><span className="md-card-meta">{names[book.category]} · CRECECONIA</span><h3>{book.title}</h3><p>Por CrececonIA</p><div className="md-card-bottom"><strong>Ver precio actual</strong><span>Ver en sitio público ↗</span></div></div>
-        </Link>)}
-        {books.map((book, index) => <Link className="md-card" href={`/ebooks/mercado/${book.slug}`} key={book.slug}>
-        <div className={`md-cover md-cover-${book.cover}`}><span>CRECECONIA / AUTORES</span><strong>{book.title}</strong><small>{book.author.toUpperCase()}</small></div>
-        <div className="md-card-info"><span className="md-card-meta">{names[book.category]} · {book.level}</span><h3>{book.title}</h3><p>{book.subtitle}</p><div className="md-card-bottom"><strong>{money(book.price)} CLP</strong><span aria-label={`Ver ${book.title}`}>Ver libro ↗</span></div></div>
-        {index === 0 && <span className="md-card-tag">DESTACADO</span>}
-      </Link>)}</div> : <p className="md-empty">No encontramos libros con esos filtros. Prueba otro tema.</p>}
+        {ownBooks.map((book) => <article className="md-card" key={book.href}>
+          <Link className="md-card-cover-link" href={book.href} aria-label={`Ver ${book.title} en el sitio público`}><img className="mr-cover-image" src={book.coverSrc} alt={`Portada de ${book.title}`} loading="lazy" /></Link>
+          <div className="md-card-info"><span className="md-card-meta">{names[book.category]} · CRECECONIA</span><h3>{book.title}</h3><p>Por CrececonIA</p><div className="md-card-bottom"><strong>Ver precio actual</strong><Link className="md-card-action" href={book.href}>Ver en sitio público ↗</Link></div></div>
+        </article>)}
+        {books.map((book, index) => <article className="md-card" key={book.slug}>
+          <Link className="md-card-cover-link" href={`/ebooks/mercado/${book.slug}`} aria-label={`Ver ${book.title}`}><div className={`md-cover md-cover-${book.cover}`} aria-hidden="true"><span>CRECECONIA / AUTORES</span><strong>{book.title}</strong><small>{book.author.toUpperCase()}</small></div></Link>
+          <div className="md-card-info"><span className="md-card-meta">{names[book.category]} · {book.level}</span><h3>{book.title}</h3><p>{book.subtitle}</p><div className="md-card-bottom"><strong>{money(book.price)} CLP</strong><Link className="md-card-action" href={`/ebooks/mercado/${book.slug}`}>Ver libro ↗</Link></div></div>
+          {index === 0 && <span className="md-card-tag">DESTACADO</span>}
+        </article>)}</div> : <p className="md-empty">No encontramos libros con esos filtros. Prueba otro tema.</p>}
     </section>
     <section className="md-author-cta"><div className="md-wrap"><div className="md-kicker">02 / PUBLICA CON NOSOTROS</div><h2>Tu conocimiento<br /><em>merece lectores.</em></h2><p>Presenta tu ebook, revisa tus ingresos estimados y sigue el estado de revisión desde tu espacio de autor.</p><Link className="md-button md-button-light" href="/ebooks/vender">Explorar espacio de autores <span aria-hidden>↗</span></Link></div></section>
     <div className="md-demo-note">Demo visual: los autores invitados son ficticios y aquí no se procesan pagos. Los ebooks de CrececonIA son reales; sus enlaces abren el sitio público.</div>

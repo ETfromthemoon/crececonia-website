@@ -88,15 +88,17 @@ export default async function MarketplaceCatalogPage({ searchParams }: {
         </form>
         <p className="mr-count" aria-live="polite">{books.length + crececoniaBooks.length} {books.length + crececoniaBooks.length === 1 ? "libro" : "libros"} en esta página{query ? ` para “${query}”` : ""}</p>
         {books.length + crececoniaBooks.length === 0 ? <p className="md-empty">{page > 1 ? "No hay más libros en esta página." : "Aún no hay libros que coincidan con estos filtros."}</p> : <div className="md-grid">
-          {crececoniaBooks.map(({ entry, category: bookCategory, price }) => <Link className="md-card" href={entry.href} key={entry.resource}>
-            <img className="mr-cover-image" src={entry.coverSrc} alt={`Portada de ${entry.title}`} loading="lazy" />
-            <div className="md-card-info"><span className="md-card-meta">{categoryLabel[bookCategory]} · CrececonIA</span><h3>{entry.title}</h3><p>Por CrececonIA</p><div className="md-card-bottom"><strong>{formatCLP(String(price))}</strong><span>Ver libro ↗</span></div></div>
-          </Link>)}
-          {books.map((book) => <Link className="md-card" href={`/ebooks/mercado/${book.slug}`} key={book.id}>
-            {book.has_cover ? <img className="mr-cover-image" src={`/api/marketplace/covers/${book.id}`} alt={`Portada de ${book.title}`} loading="lazy" />
-              : <div className={`md-cover md-cover-${coverTone[book.category]}`} aria-hidden="true"><span>CRECECONIA / AUTORES</span><strong>{book.title}</strong><small>{book.author_display_name.toUpperCase()}</small></div>}
-            <div className="md-card-info"><span className="md-card-meta">{categoryLabel[book.category]}</span><h3>{book.title}</h3><p>Por {book.author_display_name}</p><div className="md-card-bottom"><strong>{formatCLP(book.price_minor)}</strong><span>Ver libro ↗</span></div></div>
-          </Link>)}
+          {crececoniaBooks.map(({ entry, category: bookCategory, price }) => <article className="md-card" key={entry.resource}>
+            <Link className="md-card-cover-link" href={entry.href} aria-label={`Ver ${entry.title}`}><img className="mr-cover-image" src={entry.coverSrc} alt={`Portada de ${entry.title}`} loading="lazy" /></Link>
+            <div className="md-card-info"><span className="md-card-meta">{categoryLabel[bookCategory]} · CrececonIA</span><h3>{entry.title}</h3><p>Por CrececonIA</p><div className="md-card-bottom"><strong>{formatCLP(String(price))}</strong><Link className="md-card-action" href={entry.href}>Ver libro ↗</Link></div></div>
+          </article>)}
+          {books.map((book) => <article className="md-card" key={book.id}>
+            <Link className="md-card-cover-link" href={`/ebooks/mercado/${book.slug}`} aria-label={`Ver ${book.title}`}>
+              {book.has_cover ? <img className="mr-cover-image" src={`/api/marketplace/covers/${book.id}`} alt={`Portada de ${book.title}`} loading="lazy" />
+                : <div className={`md-cover md-cover-${coverTone[book.category]}`} aria-hidden="true"><span>CRECECONIA / AUTORES</span><strong>{book.title}</strong><small>{book.author_display_name.toUpperCase()}</small></div>}
+            </Link>
+            <div className="md-card-info"><span className="md-card-meta">{categoryLabel[book.category]}</span><h3>{book.title}</h3><p>Por {book.author_display_name}</p><div className="md-card-bottom"><strong>{formatCLP(book.price_minor)}</strong><Link className="md-card-action" href={`/ebooks/mercado/${book.slug}`}>Ver libro ↗</Link></div></div>
+          </article>)}
         </div>}
         {(page > 1 || hasNext) && <nav className="mr-pagination" aria-label="Páginas del marketplace">
           {page > 1 && <Link href={pageHref(page - 1)}>← Anterior</Link>}
