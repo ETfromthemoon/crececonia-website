@@ -19,16 +19,12 @@ async function post(path: string, body: Record<string, unknown>, method: "POST" 
   if (!response.ok) throw new Error(await response.text());
 }
 
-const demoSeller: Seller = { id: "demo", display_name: "Autora de demostración", public_slug: "autora-demo", bio: "Libros de IA aplicada", status: "active" };
-const demoBooks: Book[] = [
-  { id: "demo-1", slug: "ia-para-equipos", status: "published", title: "IA para equipos", description: "Un ejemplo del catálogo de autores.", category: "ia", price_minor: 11900, has_pdf: true, has_cover: true },
-  { id: "demo-2", slug: "negocios-con-datos", status: "in_review", title: "Negocios con datos", description: "Un ejemplo de libro enviado a revisión.", category: "negocios", price_minor: 9900, has_pdf: true, has_cover: true },
-];
-
-export default function SellerPortal({ demoAvailable }: { demoAvailable: boolean }) {
+export default function SellerPortal({ demoAvailable, showRegistration = false }: { demoAvailable: boolean; showRegistration?: boolean }) {
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
-  const [demoMode, setDemoMode] = useState(demoAvailable);
+  const [demoMode, setDemoMode] = useState(demoAvailable && !showRegistration);
+  const [requestingAccess, setRequestingAccess] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState("");
   const [seller, setSeller] = useState<Seller | null>(null);
   const [taxProfile, setTaxProfile] = useState<TaxProfile | null>(null);
   const [books, setBooks] = useState<Book[]>([]);
@@ -57,6 +53,34 @@ export default function SellerPortal({ demoAvailable }: { demoAvailable: boolean
     finally { setLoading(false); }
   }
   useEffect(() => { if (!demoAvailable) void refresh(); else setLoading(false); }, [demoAvailable]);
+
+  async function requestAccess(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (requestingAccess) return;
+    const email = String(new FormData(event.currentTarget).get("email")).trim().toLowerCase();
+    setMessage("");
+    setSubmittedEmail("");
+    setRequestingAccess(true);
+    try {
+      if (!demoAvailable) {
+        const response = await fetch("/api/marketplace/seller/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        if (response.status === 429) {
+          setMessage("Alcanzaste el límite temporal de solicitudes. Revisa los enlaces anteriores o vuelve a intentarlo en una hora.");
+          return;
+        }
+        if (!response.ok) throw new Error();
+      }
+      setSubmittedEmail(email);
+    } catch {
+      setMessage("No pudimos enviar el correo. Inténtalo de nuevo en unos minutos.");
+    } finally {
+      setRequestingAccess(false);
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>, path: string, success: string, method: "POST" | "PATCH" = "POST") {
     event.preventDefault();
@@ -115,14 +139,21 @@ export default function SellerPortal({ demoAvailable }: { demoAvailable: boolean
     <h1>Espacio de autores</h1>
     <p>Publica ebooks sobre IA, tecnología y negocios. Tu perfil y cada libro pasan por revisión antes de aparecer en la tienda.</p>
     {message && <p role="status" style={{ padding: 16, border: "1px solid var(--border)" }}>{message}</p>}
-    {loading ? <p>Cargando…</p> : !loggedIn && demoAvailable ? <section>
-      <h2>Vista de demostración</h2>
-      <p>Explora el panel de autor con datos de ejemplo. Esta vista no crea cuentas, libros ni pagos.</p>
-      <button type="button" className="button button-dark" onClick={() => { setDemoMode(true); setLoggedIn(true); setSeller(demoSeller); setTaxProfile({ rut: "", legal_name: "", declared_vat_status: "vat_registered", review_status: "verified" }); setBooks(demoBooks); setMessage(""); }}>Entrar a la demo</button>
-    </section> : !loggedIn ? <form onSubmit={(event) => { event.preventDefault(); setMessage(""); const form = event.currentTarget; const email = new FormData(form).get("email"); void post("/api/marketplace/seller/login", { email }).then(() => setMessage("Si el correo es válido, recibirás un enlace de acceso. Revisa también la carpeta de spam.")).catch(() => setMessage("No pudimos enviar el enlace. Inténtalo más tarde.")); }}>
+    {loading ? <p>Cargando…</p> : !loggedIn ? <form onSubmit={requestAccess}>
+      <h2>Crea tu cuenta o inicia sesión</h2>
+      {demoAvailable && <p>Preview del registro. Puedes usar un correo de ejemplo. Aquí no se envían mensajes ni se crean cuentas.</p>}
       <label htmlFor="seller-email">Tu correo electrónico</label>
-      <input id="seller-email" name="email" type="email" autoComplete="email" required style={inputStyle} />
-      <button type="submit" className="button button-dark">Recibir enlace de acceso</button>
+      <input id="seller-email" name="email" type="email" autoComplete="email" maxLength={320} required style={inputStyle} />
+      <button type="submit" className="button button-dark" disabled={requestingAccess}>
+        {requestingAccess ? "Solicitando enlace…" : submittedEmail ? "Pedir otro enlace" : "Recibir enlace de acceso"}
+      </button>
+      {submittedEmail && <div role="status" style={{ marginTop: 24 }}>
+        <h3>{demoAvailable ? "Confirmación de ejemplo" : "Revisa tu correo"}</h3>
+        <p>Busca en <strong>{submittedEmail}</strong> el mensaje «Accede a tu espacio de autor en CrececonIA». El enlace dura 15 minutos. Si no lo ves, revisa spam y verifica que el correo esté bien escrito.</p>
+      </div>}
+      {demoAvailable && <p><button type="button" className="button button-dark" onClick={() => setDemoMode(true)}>
+        {submittedEmail ? "Simular confirmación y entrar" : "Entrar directo a la demo"}
+      </button></p>}
     </form> : !seller ? <section>
       <h2>Crea tu perfil público</h2>
       <form onSubmit={(event) => void submit(event, "/api/marketplace/seller/profile", "Perfil enviado para verificación.")}>
