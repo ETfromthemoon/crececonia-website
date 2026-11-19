@@ -26,7 +26,7 @@ describe("operación administrativa del marketplace", () => {
   beforeEach(() => {
     requireAdminSession.mockReset().mockResolvedValue(undefined);
     marketplaceDemoAvailable.mockReset().mockReturnValue(false);
-    orders = [{ id: "order", buyer_email: "comprador@example.cl", total_minor: "11900", commission_minor: "595", status: "paid", created_at: "2026-11-15T12:00:00Z", paid_at: "2026-11-15T12:10:00Z", title: "Libro IA", seller_name: "Autora", payment_id: "payment", payment_status: "confirmed", gateway_fee_actual_minor: null, gateway_fee_reconciled: false, delivery_status: "succeeded", document_kind: null, document_reference: null }];
+    orders = [{ id: "order", buyer_email: "comprador@example.cl", total_minor: "11900", commission_minor: "595", tax_minor: "1900", status: "paid", created_at: "2026-11-15T12:00:00Z", paid_at: "2026-11-15T12:10:00Z", title: "Libro IA", seller_name: "Autora", payment_id: "payment", payment_status: "confirmed", gateway_fee_actual_minor: null, gateway_fee_reconciled: false, delivery_status: "succeeded", document_kind: null, document_reference: null }];
     queryDatabase.mockReset().mockImplementation(async (sql: string) => {
       if (sql.includes("as fiscal_pending")) return [{ sellers: "1", books: "1", buyers: "1", orders: "1", paid: "1", fiscal_pending: "1", paid_sales_minor: "11900", net_commission_minor: "595" }];
       if (sql.includes("from marketplace_sellers s")) return [{ id: "seller", email: "autor@example.cl", display_name: "Autora", public_slug: "autora", status: "active", created_at: "2026-11-15T12:00:00Z" }];
@@ -66,6 +66,7 @@ describe("operación administrativa del marketplace", () => {
     expect(html).toContain("Boletas o vouchers pendientes");
     expect(html).toContain("Comisión CrececonIA tras reversos</p><strong>$595</strong>");
     expect(html).toContain("Comisión CrececonIA de la venta: $595");
+    expect(html).toContain("Total cobrado al comprador: <strong>$11.900</strong> · IVA registrado en la venta: <strong>$1.900</strong>");
     expect(html).toContain("Tarifa Flow observada: por conciliar");
     expect(queryDatabase.mock.calls.some(([sql]) => String(sql).includes("o.status in ('paid', 'refunded', 'disputed')") && String(sql).includes("o.paid_at is not null"))).toBe(true);
     expect(queryDatabase.mock.calls.some(([sql]) => String(sql).includes("aggregate_type='order'"))).toBe(true);
