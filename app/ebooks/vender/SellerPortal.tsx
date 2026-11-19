@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import PayoutCalculator from "@/components/marketplace/PayoutCalculator";
+import InviteAuthor from "@/components/marketplace/InviteAuthor";
 import SellerDemo from "./SellerDemo";
 
 type Seller = { id: string; display_name: string; public_slug: string; bio: string; status: string };
@@ -171,6 +172,7 @@ export default function SellerPortal({ demoAvailable, showRegistration = false }
     </section> : <>
       {demoMode && <p role="status">Estás viendo datos de ejemplo. <a href="/ebooks/vender/simulador">Prueba el simulador de ingresos</a>. La publicación y los cobros no están activos en esta demo.</p>}
       <p><strong>{seller.display_name}</strong> · Estado: {seller.status === "active" ? "Verificado" : seller.status === "rejected" ? "Rechazado" : "En verificación"}</p>
+      <InviteAuthor />
       <p>Revisión tributaria: {taxProfile?.review_status === "verified" ? "Verificada" : taxProfile?.review_status === "rejected" ? "Rechazada: corrige tus datos para volver a solicitar revisión" : "Pendiente"}</p>
       {taxProfile?.review_status === "rejected" && <section>
         <h2>Corregir perfil tributario</h2>

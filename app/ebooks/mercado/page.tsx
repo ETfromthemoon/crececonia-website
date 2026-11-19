@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import InviteAuthor from "@/components/marketplace/InviteAuthor";
 import { listPublishedMarketplaceBooks } from "@/lib/marketplace-review";
 import { createPageMetadata } from "@/lib/seo";
 import { marketplaceDemoAvailable, marketplacePublicAvailable } from "@/lib/marketplace-demo";
@@ -77,6 +78,7 @@ export default async function MarketplaceCatalogPage({ searchParams }: {
         <h1>Ideas para leer.<br /><em>Herramientas para hacer.</em></h1>
         <p>Libros digitales de CrececonIA y autores independientes sobre inteligencia artificial, tecnología y negocios. Cada título de otro autor pasa por revisión antes de publicarse.</p>
         <nav className="mr-links" aria-label="Ebooks"><Link href="/ebooks">Rutas de ebooks CrececonIA</Link><Link href="/ebooks/vender">Publicar mi ebook ↗</Link></nav>
+        <InviteAuthor />
       </div></section>
       <section className="md-wrap md-catalog" aria-labelledby="marketplace-results-title">
         <div className="md-section-head"><div><p className="md-kicker">CRECECONIA Y AUTORES</p><h2 id="marketplace-results-title">Encuentra tu<br /><em>próximo paso.</em></h2></div><p>Busca un tema o filtra por categoría. Cada ficha indica lo que aprenderás antes de elegir.</p></div>

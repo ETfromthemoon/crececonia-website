@@ -1,0 +1,76 @@
+.invite {
+  display: block;
+  width: 100%;
+  max-width: 26rem;
+  margin-block: 12px;
+  color-scheme: light;
+}
+
+.trigger {
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 15px;
+  background: #f4f8ef;
+  color: #20432b;
+  border: 1px solid #64876a;
+  border-radius: 8px;
+  font-size: .88rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.trigger::-webkit-details-marker { display: none; }
+.trigger:hover { background: #e5eedf; }
+
+.panel {
+  margin-top: 8px;
+  padding: 16px;
+  border: 1px solid #b7c5b5;
+  border-radius: 8px;
+  color: #1c3020;
+  background: #fff;
+  font-size: .88rem;
+}
+
+.message {
+  margin: 0;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.actions a,
+.actions button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid #64876a;
+  border-radius: 6px;
+  background: #f4f8ef;
+  color: #20432b;
+  font: inherit;
+  font-weight: 650;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.actions a:hover,
+.actions button:hover { background: #e5eedf; }
+
+.invite :is(summary, a, button):focus-visible {
+  outline: 2px solid #32633b;
+  outline-offset: 3px;
+}
+
+.feedback:not(:empty) { display: block; margin-top: 8px; }
