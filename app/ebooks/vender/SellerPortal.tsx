@@ -214,6 +214,7 @@ export default function SellerPortal({ demoAvailable, showRegistration = false }
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, margin: "24px 0" }}>
           <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{salesSummary.sale_count}</strong><span>Ventas pagadas</span></div>
           <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{formatCLP(salesSummary.gross_minor)}</strong><span>Total bruto pagado</span></div>
+          <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{formatCLP(salesSummary.commission_minor)}</strong><span>Comisión CrececonIA</span></div>
           <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{formatCLP(BigInt(salesSummary.gross_minor) - BigInt(salesSummary.commission_minor))}</strong><span>Tras comisión, antes de otros cargos</span></div>
           <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{payoutBalance ? formatCLP(payoutBalance.settled_minor) : "—"}</strong><span>Ya transferido</span></div>
           <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{payoutBalance && !payoutBalance.blocked && BigInt(payoutBalance.available_minor) >= BigInt(0) ? formatCLP(payoutBalance.available_minor) : "En conciliación"}</strong><span>Saldo disponible para transferir</span></div>

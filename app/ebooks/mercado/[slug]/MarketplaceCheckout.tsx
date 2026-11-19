@@ -2,11 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 
-export default function MarketplaceSandboxCheckout({
-  bookId, priceMinor,
+export default function MarketplaceCheckout({
+  bookId, priceMinor, mode,
 }: {
   bookId: string;
   priceMinor: string;
+  mode: "sandbox" | "live";
 }) {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
@@ -28,7 +29,8 @@ export default function MarketplaceSandboxCheckout({
       const data = await response.json();
       if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "No se pudo iniciar la compra.");
       const destination = new URL(data.redirectUrl);
-      if (destination.protocol !== "https:" || !/(^|\.)flow\.cl$/.test(destination.hostname)) {
+      const flowHost = mode === "live" ? "www.flow.cl" : "sandbox.flow.cl";
+      if (destination.protocol !== "https:" || destination.hostname !== flowHost) {
         throw new Error("La dirección de pago no es válida.");
       }
       window.location.assign(destination.href);
@@ -40,12 +42,14 @@ export default function MarketplaceSandboxCheckout({
 
   if (!validAmount) return <p>La compra no está disponible para este precio. Escríbenos para recibir ayuda.</p>;
   return <form onSubmit={submit} style={{ maxWidth: 480, display: "grid", gap: 14 }}>
-    <p className="eyebrow">Piloto de pago de prueba</p>
+    {mode === "sandbox" && <p className="eyebrow">Pago de prueba</p>}
     <label htmlFor="marketplace-buyer-email">Correo para recibir el libro</label>
     <input id="marketplace-buyer-email" type="email" required maxLength={320} autoComplete="email"
       value={email} onChange={(event) => setEmail(event.target.value)}
       style={{ padding: 14, borderRadius: 8, color: "#111" }} />
-    <button type="submit" disabled={busy}>{busy ? "Preparando pago…" : "Continuar a pago de prueba"}</button>
+    <button className="button button-dark" type="submit" disabled={busy}>
+      {busy ? "Preparando pago…" : mode === "live" ? "Pagar con Flow" : "Continuar a pago de prueba"}
+    </button>
     {error && <p role="alert">{error}</p>}
   </form>;
 }
