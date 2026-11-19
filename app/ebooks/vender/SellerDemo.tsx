@@ -89,7 +89,7 @@ export default function SellerDemo({ onExit }: { onExit: () => void }) {
 
   return <main className="seller-demo">
     <aside className="seller-demo-sidebar" aria-label="Navegación del panel de autores">
-      <Link href="/ebooks" className="seller-demo-brand"><span className="seller-demo-brand-icon">C<span>◦</span></span><span>CRECE CON IA<small>MARKETPLACE</small></span></Link>
+      <Link href="/ebooks/mercado" className="seller-demo-brand"><span className="seller-demo-brand-icon">C<span>◦</span></span><span>CRECE CON IA<small>MARKETPLACE</small></span></Link>
       <div className="seller-demo-workspace"><span className="seller-demo-avatar">AM</span><span><strong>Andrea Muñoz</strong><small>Autora verificada · Demo</small></span><span aria-hidden="true">⌄</span></div>
       <p className="seller-demo-navlabel">ESPACIO DE AUTOR</p>
       <nav>{tabs.map((tab) => <button key={tab.id} type="button" className={view === tab.id ? "active" : ""} onClick={() => { setView(tab.id); setEditing(null); }}><span aria-hidden="true">{tab.icon}</span>{tab.label}{tab.id === "libros" && <small>{books.length}</small>}</button>)}</nav>

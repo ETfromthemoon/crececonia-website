@@ -1,8 +1,10 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 import PayoutCalculator from "@/components/marketplace/PayoutCalculator";
 import SellerDemo from "./SellerDemo";
+import styles from "./portal.module.css";
 
 type Seller = { id: string; display_name: string; public_slug: string; bio: string; status: string };
 type TaxProfile = { rut: string; legal_name: string; declared_vat_status: string; review_status: string };
@@ -134,27 +136,46 @@ export default function SellerPortal({ demoAvailable, showRegistration = false }
 
   if (demoMode) return <SellerDemo onExit={() => { setDemoMode(false); setLoggedIn(false); setSeller(null); setTaxProfile(null); setBooks([]); }} />;
 
+  if (!loggedIn) return <main className={styles.access}>
+    <div className={styles.accessInner}>
+      <Link href="/ebooks/mercado" className={styles.back}>← Volver al Marketplace</Link>
+      <div className={styles.accessGrid}>
+        <div className={styles.intro}>
+          <p className="eyebrow">Marketplace de ebooks</p>
+          <h1>Espacio de autores</h1>
+          <p>Publica ebooks sobre inteligencia artificial, tecnología y negocios. Tu perfil y cada libro pasan por revisión antes de aparecer en la tienda.</p>
+        </div>
+        <section className={styles.accessCard} aria-labelledby="seller-access-title">
+          <h2 id="seller-access-title">Crea tu cuenta o inicia sesión</h2>
+          {demoAvailable
+            ? <p>Prueba el registro con un correo de ejemplo. La confirmación es simulada.</p>
+            : <p>Te enviaremos un enlace para confirmar tu correo y entrar.</p>}
+          {message && <p role="status" className={styles.notice}>{message}</p>}
+          {loading ? <p role="status">Cargando…</p> : <form onSubmit={requestAccess} className={styles.accessForm}>
+            <label htmlFor="seller-email">Tu correo electrónico</label>
+            <input id="seller-email" name="email" type="email" autoComplete="email" maxLength={320} required />
+            <button type="submit" className="button button-dark" disabled={requestingAccess}>
+              {requestingAccess ? "Solicitando enlace…" : submittedEmail ? "Pedir otro enlace" : "Recibir enlace de acceso"}
+            </button>
+          </form>}
+          {submittedEmail && <div role="status" className={styles.notice}>
+            <h3>{demoAvailable ? "Confirmación de ejemplo" : "Revisa tu correo"}</h3>
+            <p>Busca en <strong>{submittedEmail}</strong> el mensaje «Accede a tu espacio de autor en CrececonIA». El enlace dura 15 minutos. Si no lo ves, revisa spam y verifica que el correo esté bien escrito.</p>
+          </div>}
+          {demoAvailable && <button type="button" className={styles.demoLink} onClick={() => setDemoMode(true)}>
+            {submittedEmail ? "Simular confirmación y entrar →" : "Entrar directo a la demo →"}
+          </button>}
+        </section>
+      </div>
+    </div>
+  </main>;
+
   return <main className="site-container" style={{ maxWidth: 800, paddingTop: 100, paddingBottom: 100 }}>
     <p className="eyebrow">Marketplace de ebooks</p>
     <h1>Espacio de autores</h1>
     <p>Publica ebooks sobre IA, tecnología y negocios. Tu perfil y cada libro pasan por revisión antes de aparecer en la tienda.</p>
     {message && <p role="status" style={{ padding: 16, border: "1px solid var(--border)" }}>{message}</p>}
-    {loading ? <p>Cargando…</p> : !loggedIn ? <form onSubmit={requestAccess}>
-      <h2>Crea tu cuenta o inicia sesión</h2>
-      {demoAvailable && <p>Preview del registro. Puedes usar un correo de ejemplo. Aquí no se envían mensajes ni se crean cuentas.</p>}
-      <label htmlFor="seller-email">Tu correo electrónico</label>
-      <input id="seller-email" name="email" type="email" autoComplete="email" maxLength={320} required style={inputStyle} />
-      <button type="submit" className="button button-dark" disabled={requestingAccess}>
-        {requestingAccess ? "Solicitando enlace…" : submittedEmail ? "Pedir otro enlace" : "Recibir enlace de acceso"}
-      </button>
-      {submittedEmail && <div role="status" style={{ marginTop: 24 }}>
-        <h3>{demoAvailable ? "Confirmación de ejemplo" : "Revisa tu correo"}</h3>
-        <p>Busca en <strong>{submittedEmail}</strong> el mensaje «Accede a tu espacio de autor en CrececonIA». El enlace dura 15 minutos. Si no lo ves, revisa spam y verifica que el correo esté bien escrito.</p>
-      </div>}
-      {demoAvailable && <p><button type="button" className="button button-dark" onClick={() => setDemoMode(true)}>
-        {submittedEmail ? "Simular confirmación y entrar" : "Entrar directo a la demo"}
-      </button></p>}
-    </form> : !seller ? <section>
+    {loading ? <p>Cargando…</p> : !seller ? <section>
       <h2>Crea tu perfil público</h2>
       <form onSubmit={(event) => void submit(event, "/api/marketplace/seller/profile", "Perfil enviado para verificación.")}>
         <label htmlFor="seller-name">Nombre público</label><input id="seller-name" name="displayName" required minLength={2} maxLength={120} style={inputStyle} />

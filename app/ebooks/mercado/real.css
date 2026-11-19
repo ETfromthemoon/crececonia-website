@@ -29,7 +29,7 @@
 .mr-pagination a { color: #315335; font-weight: 700; }
 .mr-detail { padding-top: 132px; }
 .mr-detail .md-detail-hero { align-items: start; }
-.mr-detail .mr-detail-cover { width: 100%; min-height: 490px; object-fit: cover; box-shadow: 20px 22px 0 #d9ddd0; background: #d7d8cf; }
+.mr-detail .mr-detail-cover { display: block; width: 100%; max-width: 390px; aspect-ratio: 5 / 8; object-fit: contain; box-shadow: 20px 22px 0 #d9ddd0; background: #d7d8cf; }
 .mr-detail .md-detail-main h1 { overflow-wrap: anywhere; }
 .mr-description { white-space: pre-wrap; line-height: 1.7; }
 .mr-related { margin-top: 90px; }
@@ -42,7 +42,7 @@
   .mr-shop .mr-hero { padding: 112px 0 68px; }
   .mr-filters { display: grid; }
   .mr-filters label { min-width: 0; }
-  .mr-detail .mr-detail-cover { min-height: 370px; max-width: 300px; margin: auto; }
+  .mr-detail .mr-detail-cover { width: min(100%, 280px); margin: auto; }
   .md-card-bottom { display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; align-items: stretch; }
   .md-card-action { width: 100%; white-space: normal; }
 }

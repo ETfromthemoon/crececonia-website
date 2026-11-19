@@ -1,0 +1,125 @@
+.access {
+  min-height: 100svh;
+  padding: clamp(28px, 6vw, 90px) 20px 72px;
+  background: #f5f2ea;
+  color: #19201b;
+}
+
+.accessInner {
+  max-width: 1080px;
+  margin-inline: auto;
+}
+
+.back,
+.demoLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #36583f;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font-size: .9rem;
+  font-weight: 600;
+}
+
+.accessGrid {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, .9fr);
+  align-items: start;
+  gap: clamp(28px, 6vw, 88px);
+  margin-top: clamp(24px, 6vw, 76px);
+}
+
+.intro h1 {
+  max-width: 10ch;
+  margin: 14px 0 20px;
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: .98;
+  color: inherit;
+}
+
+.intro p:last-child {
+  max-width: 42ch;
+  color: #505951;
+  line-height: 1.65;
+}
+
+.accessCard {
+  padding: clamp(22px, 4vw, 38px);
+  border: 1px solid #d4d9ce;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.accessCard h2 {
+  margin: 0 0 10px;
+  font-size: clamp(1.65rem, 3vw, 2.3rem);
+  line-height: 1.1;
+  color: inherit;
+}
+
+.accessCard p {
+  color: #505951;
+  line-height: 1.55;
+}
+
+.accessForm {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.accessForm label {
+  font-weight: 650;
+}
+
+.accessForm input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #788476;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #19201b;
+}
+
+.accessForm button {
+  margin-top: 4px;
+}
+
+.accessForm button:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+.notice {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid #bdcfb8;
+  border-radius: 8px;
+  background: #eff5eb;
+  overflow-wrap: anywhere;
+}
+
+.notice h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  color: inherit;
+}
+
+.demoLink {
+  margin-top: 10px;
+  background: none;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.access :is(a, input, button):focus-visible {
+  outline: 3px solid #36583f;
+  outline-offset: 3px;
+}
+
+@media (max-width: 700px) {
+  .accessGrid { grid-template-columns: minmax(0, 1fr); }
+  .intro h1 { max-width: none; }
+}
