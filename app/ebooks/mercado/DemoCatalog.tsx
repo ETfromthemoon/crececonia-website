@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import InviteAuthor from "@/components/marketplace/InviteAuthor";
 import { useMemo, useState } from "react";
 import { DEMO_BOOKS } from "@/lib/marketplace/demo-catalog";
 
@@ -27,6 +28,7 @@ export default function DemoCatalog({ crececoniaBooks = [] }: { crececoniaBooks?
           <h1>Ideas para leer.<br /><em>Herramientas para hacer.</em></h1>
           <p>Libros de CrececonIA y ejemplos de autores independientes sobre IA, tecnología y negocios. Explora el catálogo y recorre la experiencia de compra.</p>
           <a className="md-button" href="#explorar">Explorar ebooks <span aria-hidden>↗</span></a>
+          <InviteAuthor />
         </div>
         <div className="md-feature-cover" aria-label="Portada de muestra: IA para equipos">
           <div className="md-cover md-cover-violet"><span>CRECECONIA / AUTORES</span><strong>IA para<br />equipos.</strong><small>ANDREA MUÑOZ</small></div>
