@@ -14,7 +14,8 @@ it("shows the real layout with read-only amounts in preview", () => {
   expect(html).toContain("Mis ebooks");
   expect(html).toContain("Ventas confirmadas");
   expect(html).toContain("Liquidaciones");
-  expect(html).toContain("$10.955 CLP");
+  expect(html).toContain("$10.479 CLP");
+  expect(html).toContain("IVA de la comisión</dt><dd>$171 CLP");
   expect(html).not.toContain("Guardar borrador");
   expect(html).not.toContain("Cerrar sesión");
 });

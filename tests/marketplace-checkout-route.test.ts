@@ -114,7 +114,9 @@ describe("inicio de checkout marketplace", () => {
     expect(database.mock.calls[0][0]).toContain("a.id=v.pdf_asset_id");
     expect(database.mock.calls[1][0]).toContain("v.id=$11");
     expect(database.mock.calls[1][0]).toContain("seller_id,pdf_asset_id,price_minor");
-    expect(database.mock.calls[1][1].slice(-2)).toEqual([verificationId, pdfAssetId]);
+    expect(database.mock.calls[1][0]).toContain("commission_basis_minor,commission_minor,commission_tax_minor");
+    expect(database.mock.calls[1][1].slice(6)).toEqual([1900, 1900, 900, 1071, verificationId, pdfAssetId, 10000, 171]);
+    expect(new URLSearchParams(flow.mock.calls[0][1].body).get("amount")).toBe("11900");
     expect(flow).toHaveBeenCalledTimes(1);
   });
 

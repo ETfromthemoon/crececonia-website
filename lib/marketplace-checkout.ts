@@ -1,7 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export const MARKETPLACE_COMMISSION_BPS = 500;
-export const MARKETPLACE_VAT_BPS = 1900;
+export { MARKETPLACE_COMMISSION_BPS, marketplaceSaleBreakdown as marketplacePriceSnapshot } from "./marketplace/commission";
 export const MAX_MARKETPLACE_PDF_BYTES = 4 * 1024 * 1024;
 export const MARKETPLACE_FLOW_ACCOUNT_REF = "crececonia";
 
@@ -77,14 +76,6 @@ export function normalizeBuyerEmail(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const email = value.trim().toLowerCase();
   return email.length <= 320 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
-}
-
-export function marketplacePriceSnapshot(price: number, taxMode: string) {
-  if (!Number.isSafeInteger(price) || price <= 0 || price > 10_000_000) return null;
-  if (taxMode !== "tax_inclusive" && taxMode !== "exempt") return null;
-  const tax = taxMode === "tax_inclusive" ? price - Math.round(price * 10000 / (10000 + MARKETPLACE_VAT_BPS)) : 0;
-  const commission = Math.round(price * MARKETPLACE_COMMISSION_BPS / 10000);
-  return { price, taxMode, tax, taxRateBps: taxMode === "tax_inclusive" ? MARKETPLACE_VAT_BPS : 0, commission };
 }
 
 function downloadSignature(itemId: string, expires: number, secret: string): string {

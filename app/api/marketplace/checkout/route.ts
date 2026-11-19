@@ -116,14 +116,14 @@ export async function POST(request: Request) {
       ), new_item as (
         insert into public.marketplace_order_items
           (order_id,book_id,revision_id,seller_id,pdf_asset_id,price_minor,tax_mode,tax_rate_bps,
-           tax_minor,commission_rate_bps,commission_basis_minor,commission_minor)
-        select o.id,e.book_id,e.revision_id,e.seller_id,$12,$4,$5,$7,$8,$9,$4,$10
+           tax_minor,commission_rate_bps,commission_basis_minor,commission_minor,commission_tax_minor)
+        select o.id,e.book_id,e.revision_id,e.seller_id,$12,$4,$5,$7,$8,$9,$13,$10,$14
         from new_order o cross join eligible e
         returning id
       ) select id as item_id from new_item`,
       [orderId, book.book_id, book.storage_key, price.price, price.taxMode, email,
         price.taxRateBps, price.tax, MARKETPLACE_COMMISSION_BPS, price.commission,
-        book.verification_id, book.pdf_asset_id]);
+        book.verification_id, book.pdf_asset_id, price.commissionBasis, price.commissionTax]);
     if (!prepared) return NextResponse.json({ error: "El libro dejó de estar disponible." }, { status: 409 });
 
     const apiKey = process.env.FLOW_API_KEY!;

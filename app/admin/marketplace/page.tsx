@@ -13,7 +13,7 @@ import styles from "./panel.module.css";
 
 export const dynamic = "force-dynamic";
 
-const formatCLP = (value: string) => new Intl.NumberFormat("es-CL", {
+const formatCLP = (value: string | bigint) => new Intl.NumberFormat("es-CL", {
   style: "currency", currency: "CLP", maximumFractionDigits: 0,
 }).format(BigInt(value));
 
@@ -24,6 +24,7 @@ type MarketplaceOrder = {
   id: string; buyer_email: string; total_minor: string; status: string; created_at: string;
   paid_at: string | null; title: string | null; seller_name: string | null;
   commission_minor: string;
+  commission_tax_minor: string;
   tax_minor: string;
   payment_status: string | null; gateway_fee_actual_minor: string | null;
   gateway_fee_reconciled: boolean | null;
@@ -64,7 +65,8 @@ export default async function MarketplaceReviewPage({
       order by s.created_at desc, s.id desc limit 100`),
     queryDatabase<MarketplaceOrder>(`
       select o.id, o.buyer_email, o.total_minor::text, o.status, o.created_at::text,
-        o.paid_at::text, items.title, items.seller_name, items.commission_minor, items.tax_minor, p.status as payment_status,
+        o.paid_at::text, items.title, items.seller_name, items.commission_minor, items.commission_tax_minor, items.tax_minor,
+        p.status as payment_status,
         p.id as payment_id, p.gateway_fee_actual_minor::text, p.gateway_fee_reconciled,
         delivery.status as delivery_status,
         e.document_kind, e.document_reference
@@ -73,6 +75,7 @@ export default async function MarketplaceReviewPage({
         select string_agg(r.title, ', ' order by r.title) as title,
           string_agg(s.display_name, ', ' order by s.display_name) as seller_name,
           coalesce(sum(oi.commission_minor), 0)::text as commission_minor,
+          coalesce(sum(oi.commission_tax_minor), 0)::text as commission_tax_minor,
           coalesce(sum(oi.tax_minor), 0)::text as tax_minor
         from marketplace_order_items oi
         join marketplace_book_revisions r on r.id=oi.revision_id
@@ -135,7 +138,7 @@ export default async function MarketplaceReviewPage({
           ["Compradores", counts[0]?.buyers], ["Órdenes", counts[0]?.orders],
           ["Pagadas", counts[0]?.paid],
           ["Ventas pagadas", formatCLP(counts[0]?.paid_sales_minor ?? "0")],
-          ["Comisión CrececonIA tras reversos", formatCLP(counts[0]?.net_commission_minor ?? "0")],
+          ["Comisión cobrada con IVA, tras reversos", formatCLP(counts[0]?.net_commission_minor ?? "0")],
           ["Boletas o vouchers pendientes", counts[0]?.fiscal_pending] ] as const).map(([label, value]) =>
           <div key={label} className={layout.metric}>
             <p>{label}</p><strong>{value ?? "0"}</strong>
@@ -155,7 +158,9 @@ export default async function MarketplaceReviewPage({
               {order.paid_at && ` · Pagada: ${new Date(order.paid_at).toLocaleString("es-CL", { timeZone: "America/Santiago" })}`}</p>
             {order.paid_at && <>
               <p>Total cobrado al comprador: <strong>{formatCLP(order.total_minor)}</strong> · IVA registrado en la venta: <strong>{formatCLP(order.tax_minor)}</strong></p>
-              <p>Comisión CrececonIA de la venta: {formatCLP(order.commission_minor)}
+              <p>Comisión CrececonIA sin IVA: {formatCLP(BigInt(order.commission_minor) - BigInt(order.commission_tax_minor))}
+                {" · "}IVA de la comisión: {formatCLP(order.commission_tax_minor)}
+                {" · "}Total de la comisión: {formatCLP(order.commission_minor)}
                 {["refunded", "disputed"].includes(order.status) && " · Reversada"}</p>
             </>}
             <p>Tarifa Flow observada: {order.gateway_fee_actual_minor === null ? "por conciliar" : formatCLP(order.gateway_fee_actual_minor)}

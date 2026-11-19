@@ -12,7 +12,7 @@ type TaxProfile = { rut: string; legal_name: string; declared_vat_status: string
 type Book = { id: string; revision_id?: string; slug: string; status: string; title: string; description: string; category: string; price_minor: number; has_pdf: boolean; has_cover: boolean };
 type SalesSummary = { sale_count: number; gross_minor: string; commission_minor: string };
 type PayoutBalance = { ledger_net_minor: string; settled_minor: string; available_minor: string; blocked: boolean };
-type SellerSale = { order_item_id: string; order_id: string; title: string; price_minor: string; commission_minor: string; gateway_fee_actual_minor: string | null; seller_net_minor: string | null; paid_at: string };
+type SellerSale = { order_item_id: string; order_id: string; title: string; price_minor: string; commission_minor: string; commission_tax_minor: string; tax_minor: string; gateway_fee_actual_minor: string | null; seller_net_minor: string | null; paid_at: string };
 const formatCLP = (amount: string | bigint) => `$${new Intl.NumberFormat("es-CL").format(BigInt(amount))} CLP`;
 const bookStates: Record<string, string> = {
   draft: "Borrador", in_review: "En revisión", changes_requested: "Cambios solicitados",
@@ -25,10 +25,10 @@ const tabs = [
 type View = (typeof tabs)[number][0];
 const sampleSeller: Seller = { id: "sample", display_name: "Andrea Muñoz", public_slug: "andrea", bio: "Autora de ejemplo", status: "active" };
 const sampleBook: Book = { id: "sample", slug: "ia-para-equipos", status: "published", title: "IA para equipos", description: "Ejemplo de un ebook publicado.", category: "ia", price_minor: 11900, has_pdf: true, has_cover: true };
-const sampleSummary: SalesSummary = { sale_count: 1, gross_minor: "11900", commission_minor: "595" };
+const sampleSummary: SalesSummary = { sale_count: 1, gross_minor: "11900", commission_minor: "1071" };
 const emptySummary: SalesSummary = { sale_count: 0, gross_minor: "0", commission_minor: "0" };
-const sampleSale: SellerSale = { order_item_id: "sample", order_id: "sample", title: sampleBook.title, price_minor: "11900", commission_minor: "595", gateway_fee_actual_minor: "350", seller_net_minor: "10955", paid_at: "2026-11-18T15:00:00Z" };
-const sampleBalance: PayoutBalance = { ledger_net_minor: "10955", settled_minor: "0", available_minor: "10955", blocked: false };
+const sampleSale: SellerSale = { order_item_id: "sample", order_id: "sample", title: sampleBook.title, price_minor: "11900", commission_minor: "1071", commission_tax_minor: "171", tax_minor: "1900", gateway_fee_actual_minor: "350", seller_net_minor: "10479", paid_at: "2026-11-18T15:00:00Z" };
+const sampleBalance: PayoutBalance = { ledger_net_minor: "10479", settled_minor: "0", available_minor: "10479", blocked: false };
 
 const inputStyle = { display: "block", width: "100%", margin: "8px 0 18px", padding: 12, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--ink)" };
 
@@ -297,14 +297,17 @@ export default function SellerPortal({ demoAvailable, showRegistration = false, 
         <dl className={styles.metrics}>
           <div><dt>Ventas pagadas</dt><dd>{salesSummary.sale_count}</dd></div>
           <div><dt>Total bruto pagado</dt><dd>{formatCLP(salesSummary.gross_minor)}</dd></div>
-          <div><dt>Comisión CrececonIA</dt><dd>{formatCLP(salesSummary.commission_minor)}</dd></div>
+          <div><dt>Total descontado por comisión</dt><dd>{formatCLP(salesSummary.commission_minor)}</dd></div>
           <div><dt>Después de comisión, antes de otros cargos</dt><dd>{formatCLP(BigInt(salesSummary.gross_minor) - BigInt(salesSummary.commission_minor))}</dd></div>
         </dl>
         {recentSales.length > 0 ? <div className={styles.records}>{recentSales.map((sale) => <article className={styles.panel} key={sale.order_item_id}>
           <div className={styles.bookTitle}><h2>{sale.title}</h2><time dateTime={sale.paid_at}>{new Date(sale.paid_at).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })}</time></div>
           <dl className={styles.saleDetails}>
             <div><dt>Precio cobrado</dt><dd>{formatCLP(sale.price_minor)}</dd></div>
-            <div><dt>Comisión CrececonIA</dt><dd>{formatCLP(sale.commission_minor)}</dd></div>
+            <div><dt>IVA registrado en la venta</dt><dd>{formatCLP(sale.tax_minor)}</dd></div>
+            <div><dt>Comisión CrececonIA</dt><dd>{formatCLP(BigInt(sale.commission_minor) - BigInt(sale.commission_tax_minor))}</dd></div>
+            <div><dt>IVA de la comisión</dt><dd>{formatCLP(sale.commission_tax_minor)}</dd></div>
+            <div><dt>Total descontado por comisión</dt><dd>{formatCLP(sale.commission_minor)}</dd></div>
             <div><dt>Tarifa Flow</dt><dd>{sale.gateway_fee_actual_minor === null ? "Por conciliar" : formatCLP(sale.gateway_fee_actual_minor)}</dd></div>
             <div><dt>Neto contable</dt><dd>{sale.seller_net_minor === null ? "Por conciliar" : formatCLP(sale.seller_net_minor)}</dd></div>
           </dl>
