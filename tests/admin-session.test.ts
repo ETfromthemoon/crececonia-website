@@ -146,7 +146,7 @@ describe("admin boundary wiring", () => {
   }
   it("every admin data page and API has the common authorization guard", () => {
     for (const file of files("app/admin").filter((file) => file.endsWith("page.tsx") && !file.includes("login"))) {
-      expect(readFileSync(file, "utf8"), file).toContain("await requireAdminSession()");
+      expect(readFileSync(file, "utf8"), file).toMatch(/await requireAdminSession\((?:"\/admin\/[a-z0-9/-]+")?\)/);
     }
     for (const file of files("app/api/admin").filter((file) => file.endsWith("route.ts") && !file.includes("session"))) {
       expect(readFileSync(file, "utf8"), file).toContain("isAdminRequest");
