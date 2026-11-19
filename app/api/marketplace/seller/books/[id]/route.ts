@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { queryDatabase } from "@/lib/database";
 import { sellerIdentityFromRequest, sellerMutationAllowed } from "@/lib/marketplace-seller-auth";
+import { isMarketplaceCategory } from "@/lib/marketplace/categories";
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   if (!sellerMutationAllowed(request)) return new Response("Acceso denegado", { status: 403 });
@@ -12,7 +13,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const category = body?.category;
   const price = body?.priceClp;
   if (title.length < 3 || title.length > 180 || description.length < 20 || description.length > 10000
-    || !["ia", "tecnologia", "negocios"].includes(category)
+    || !isMarketplaceCategory(category)
     || !Number.isSafeInteger(price) || price < 500 || price > 10_000_000
     || body?.declareRights !== true) return new Response("Datos del ebook inválidos", { status: 400 });
   try {

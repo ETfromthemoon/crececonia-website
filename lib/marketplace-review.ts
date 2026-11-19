@@ -3,6 +3,7 @@ import { queryDatabase } from "@/lib/database";
 import { downloadPrivateObject } from "@/lib/private-storage";
 import { validateMarketplaceCover, validateMarketplacePdf } from "@/lib/marketplace-asset-validation";
 import { recommendMarketplaceBooks } from "@/lib/marketplace/recommendations";
+import { isMarketplaceCategory, type MarketplaceCategory } from "@/lib/marketplace/categories";
 
 export type ReviewAction = "approve" | "request_changes" | "reject" | "verify_publication" | "publish" | "pause";
 
@@ -120,7 +121,7 @@ export type PublishedBook = {
   subtitle: string;
   description: string;
   author_display_name: string;
-  category: "ia" | "tecnologia" | "negocios";
+  category: MarketplaceCategory;
   price_minor: string;
   seller_name: string;
   seller_slug: string;
@@ -323,7 +324,7 @@ export async function listPublishedMarketplaceBooks(page = 1, filters: Published
   if (!Number.isSafeInteger(page) || page < 1 || page > Math.floor(Number.MAX_SAFE_INTEGER / 24)) throw new Error("Página inválida.");
   const query = filters.query?.trim() ?? "";
   if (query.length > 100) throw new Error("Búsqueda demasiado larga.");
-  if (filters.category && !["ia", "tecnologia", "negocios"].includes(filters.category)) throw new Error("Categoría inválida.");
+  if (filters.category && !isMarketplaceCategory(filters.category)) throw new Error("Categoría inválida.");
   const parameters: Array<string | number> = [(page - 1) * 24];
   const searchCondition = query ? `and strpos(lower(concat_ws(' ', r.title, r.subtitle, r.description,
       r.author_display_name, s.display_name)), lower($${parameters.push(query)})) > 0` : "";

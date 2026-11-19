@@ -6,13 +6,12 @@ import { getMarketplaceRecommendations, getPublishedMarketplaceBook } from "@/li
 import MarketplaceCheckout from "./MarketplaceCheckout";
 import { marketplaceCheckoutMode } from "@/lib/marketplace-checkout";
 import { marketplacePublicAvailable } from "@/lib/marketplace-demo";
+import { MARKETPLACE_CATEGORIES } from "@/lib/marketplace/categories";
 import "../demo.css";
 import "../real.css";
 
 export const dynamic = "force-dynamic";
 
-const categoryLabel = { ia: "Inteligencia artificial", tecnologia: "Tecnología", negocios: "Negocios" };
-const coverTone = { ia: "violet", tecnologia: "blue", negocios: "lime" };
 const formatCLP = (value: string) => new Intl.NumberFormat("es-CL", {
   style: "currency", currency: "CLP", maximumFractionDigits: 0,
 }).format(BigInt(value));
@@ -35,9 +34,9 @@ export default async function MarketplaceBookPage({ params }: { params: Promise<
       <Link className="md-back" href="/ebooks/mercado">← Volver al marketplace</Link>
       <div className="md-detail-hero">
         {book.has_cover ? <img className="mr-detail-cover" src={`/api/marketplace/covers/${book.id}`} alt={`Portada de ${book.title}`} />
-          : <div className={`md-cover md-cover-${coverTone[book.category]}`} aria-hidden="true"><span>CRECECONIA / AUTORES</span><strong>{book.title}</strong><small>{book.author_display_name.toUpperCase()}</small></div>}
+          : <div className={`md-cover md-cover-${MARKETPLACE_CATEGORIES[book.category].coverTone}`} aria-hidden="true"><span>CRECECONIA / AUTORES</span><strong>{book.title}</strong><small>{book.author_display_name.toUpperCase()}</small></div>}
         <div className="md-detail-main">
-          <p className="md-kicker">{categoryLabel[book.category]} / Ebook digital</p>
+          <p className="md-kicker">{MARKETPLACE_CATEGORIES[book.category].label} / Ebook digital</p>
           <h1>{book.title}</h1>
           {book.subtitle && <p className="md-detail-subtitle">{book.subtitle}</p>}
           <p className="md-detail-author">Por <strong>{book.author_display_name}</strong> · {book.seller_name}</p>
@@ -53,7 +52,7 @@ export default async function MarketplaceBookPage({ params }: { params: Promise<
         <h2 id="related-books">También te puede interesar.</h2>
         <div className="mr-related-grid">{recommendations.map((recommended) =>
           <Link className="mr-related-card" key={recommended.id} href={`/ebooks/mercado/${recommended.slug}`}>
-            <span>{categoryLabel[recommended.category]}</span><h3>{recommended.title}</h3>
+            <span>{MARKETPLACE_CATEGORIES[recommended.category].label}</span><h3>{recommended.title}</h3>
             <p>Por {recommended.author_display_name}</p><strong>{formatCLP(recommended.price_minor)} ↗</strong>
           </Link>)}</div>
       </section>}

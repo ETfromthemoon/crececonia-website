@@ -8,19 +8,18 @@ import { marketplaceDemoAvailable, marketplacePublicAvailable } from "@/lib/mark
 import { getLiveCatalogEntries } from "@/lib/ebook-catalog";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
 import { computeEbookTotal } from "@/lib/ebook-promotion";
+import { MARKETPLACE_CATEGORIES, type MarketplaceCategory } from "@/lib/marketplace/categories";
 import "./demo.css";
 import "./real.css";
 
 export const dynamic = "force-dynamic";
 export const metadata = createPageMetadata({
   title: "Marketplace de ebooks | CrececonIA",
-  description: "Libros digitales de IA, tecnología y negocios escritos por especialistas y revisados antes de publicarse.",
+  description: "Libros digitales sobre IA, tecnología, negocios y bienestar, revisados antes de publicarse.",
   path: "/ebooks/mercado",
 });
 
-const categoryLabel = { ia: "Inteligencia artificial", tecnologia: "Tecnología", negocios: "Negocios" };
-const coverTone = { ia: "violet", tecnologia: "blue", negocios: "lime" };
-function crececoniaCategory(resource: string): keyof typeof categoryLabel {
+function crececoniaCategory(resource: string): MarketplaceCategory {
   if (resource.includes("webs")) return "tecnologia";
   if (resource.includes("agentes")) return "negocios";
   return "ia";
@@ -33,7 +32,7 @@ export default async function MarketplaceCatalogPage({ searchParams }: {
   searchParams: Promise<{ page?: string | string[]; q?: string | string[]; category?: string | string[] }>;
 }) {
   const preview = marketplaceDemoAvailable();
-  if (!marketplacePublicAvailable()) return <><Navbar /><main className="md-shop"><section className="md-hero"><div className="md-wrap"><div className="md-kicker">CRECECONIA / MARKETPLACE</div><h1>Pronto, nuevas<br /><em>voces para aprender.</em></h1><p>Estamos preparando una biblioteca de ebooks de autores independientes sobre IA, tecnología y negocios. Cada libro pasará por revisión antes de publicarse.</p><Link className="md-button" href="/ebooks">Explorar ebooks de CrececonIA ↗</Link></div></section></main><Footer /></>;
+  if (!marketplacePublicAvailable()) return <><Navbar /><main className="md-shop"><section className="md-hero"><div className="md-wrap"><div className="md-kicker">CRECECONIA / MARKETPLACE</div><h1>Pronto, nuevas<br /><em>voces para aprender.</em></h1><p>Estamos preparando una biblioteca de ebooks de autores independientes sobre IA, tecnología, negocios y bienestar. Cada libro pasará por revisión antes de publicarse.</p><Link className="md-button" href="/ebooks">Explorar ebooks de CrececonIA ↗</Link></div></section></main><Footer /></>;
   const filters = await searchParams;
   const rawPage = filters.page;
   const requestedPage = typeof rawPage === "string" && /^[1-9]\d*$/.test(rawPage) ? Number(rawPage) : 1;
@@ -46,7 +45,7 @@ export default async function MarketplaceCatalogPage({ searchParams }: {
     return [];
   });
   const available = new Set([...ownEntries.map(({ resource }) => crececoniaCategory(resource)), ...publishedCategories]);
-  const categories = (Object.keys(categoryLabel) as Array<keyof typeof categoryLabel>).filter((key) => available.has(key));
+  const categories = (Object.keys(MARKETPLACE_CATEGORIES) as MarketplaceCategory[]).filter((key) => available.has(key));
   const category = categories.find((key) => key === filters.category);
   const results = await listPublishedMarketplaceBooks(page, { query, category }).catch((error) => {
     if (!preview) throw error;
@@ -79,7 +78,7 @@ export default async function MarketplaceCatalogPage({ searchParams }: {
       <section className="md-hero mr-hero"><div className="md-wrap">
         <p className="md-kicker">CRECECONIA / MARKETPLACE</p>
         <h1>Ideas para leer.<br /><em>Herramientas para hacer.</em></h1>
-        <p>Libros digitales de CrececonIA y autores independientes sobre inteligencia artificial, tecnología y negocios. Cada título de otro autor pasa por revisión antes de publicarse.</p>
+        <p>Libros digitales de CrececonIA y autores independientes sobre inteligencia artificial, tecnología, negocios y bienestar. Cada título de otro autor pasa por revisión antes de publicarse.</p>
         <nav className="mr-links" aria-label="Ebooks"><Link href="/ebooks">Rutas de ebooks CrececonIA</Link><Link href="/ebooks/vender">Publicar mi ebook ↗</Link></nav>
         <InviteAuthor />
       </div></section>
@@ -87,7 +86,7 @@ export default async function MarketplaceCatalogPage({ searchParams }: {
         <div className="md-section-head"><div><p className="md-kicker">CRECECONIA Y AUTORES</p><h2 id="marketplace-results-title">Encuentra tu<br /><em>próximo paso.</em></h2></div><p>Busca un tema o filtra por categoría. Cada ficha indica lo que aprenderás antes de elegir.</p></div>
         {categories.length > 0 && <nav className="mr-categories" aria-label="Categorías de ebooks">
           <Link href={pageHref(1, "")} aria-current={!category ? "true" : undefined}>Todas las categorías</Link>
-          {categories.map((key) => <Link href={pageHref(1, key)} aria-current={category === key ? "true" : undefined} key={key}>{categoryLabel[key]}</Link>)}
+          {categories.map((key) => <Link href={pageHref(1, key)} aria-current={category === key ? "true" : undefined} key={key}>{MARKETPLACE_CATEGORIES[key].label}</Link>)}
         </nav>}
         <form className="mr-filters" action="/ebooks/mercado" method="get" role="search">
           <label htmlFor="marketplace-search">Buscar por libro, autor o tema<input id="marketplace-search" type="search" name="q" maxLength={100} defaultValue={query} placeholder="Ej.: agentes de IA" /></label>
@@ -99,14 +98,14 @@ export default async function MarketplaceCatalogPage({ searchParams }: {
         {books.length + crececoniaBooks.length === 0 ? <p className="md-empty">{page > 1 ? "No hay más libros en esta página." : "Aún no hay libros que coincidan con estos filtros."}</p> : <div className="md-grid">
           {crececoniaBooks.map(({ entry, category: bookCategory, price }) => <article className="md-card" key={entry.resource}>
             <Link className="md-card-cover-link" href={bookHref(entry.href)} aria-label={`Ver ${entry.title}`}><img className="mr-cover-image" src={entry.coverSrc} alt={`Portada de ${entry.title}`} loading="lazy" /></Link>
-            <div className="md-card-info"><span className="md-card-meta">{categoryLabel[bookCategory]} · CrececonIA</span><h3>{entry.title}</h3><p>Por CrececonIA</p><div className="md-card-bottom"><strong>{formatCLP(String(price))}</strong><Link className="md-card-action" href={bookHref(entry.href)}>Ver libro ↗</Link></div></div>
+            <div className="md-card-info"><span className="md-card-meta">{MARKETPLACE_CATEGORIES[bookCategory].label} · CrececonIA</span><h3>{entry.title}</h3><p>Por CrececonIA</p><div className="md-card-bottom"><strong>{formatCLP(String(price))}</strong><Link className="md-card-action" href={bookHref(entry.href)}>Ver libro ↗</Link></div></div>
           </article>)}
           {books.map((book) => <article className="md-card" key={book.id}>
             <Link className="md-card-cover-link" href={bookHref(`/ebooks/mercado/${book.slug}`)} aria-label={`Ver ${book.title}`}>
               {book.has_cover ? <img className="mr-cover-image" src={`/api/marketplace/covers/${book.id}`} alt={`Portada de ${book.title}`} loading="lazy" />
-                : <div className={`md-cover md-cover-${coverTone[book.category]}`} aria-hidden="true"><span>CRECECONIA / AUTORES</span><strong>{book.title}</strong><small>{book.author_display_name.toUpperCase()}</small></div>}
+                : <div className={`md-cover md-cover-${MARKETPLACE_CATEGORIES[book.category].coverTone}`} aria-hidden="true"><span>CRECECONIA / AUTORES</span><strong>{book.title}</strong><small>{book.author_display_name.toUpperCase()}</small></div>}
             </Link>
-            <div className="md-card-info"><span className="md-card-meta">{categoryLabel[book.category]}</span><h3>{book.title}</h3><p>Por {book.author_display_name}</p><div className="md-card-bottom"><strong>{formatCLP(book.price_minor)}</strong><Link className="md-card-action" href={bookHref(`/ebooks/mercado/${book.slug}`)}>Ver libro ↗</Link></div></div>
+            <div className="md-card-info"><span className="md-card-meta">{MARKETPLACE_CATEGORIES[book.category].label}</span><h3>{book.title}</h3><p>Por {book.author_display_name}</p><div className="md-card-bottom"><strong>{formatCLP(book.price_minor)}</strong><Link className="md-card-action" href={bookHref(`/ebooks/mercado/${book.slug}`)}>Ver libro ↗</Link></div></div>
           </article>)}
         </div>}
         {(page > 1 || hasNext) && <nav className="mr-pagination" aria-label="Páginas del marketplace">

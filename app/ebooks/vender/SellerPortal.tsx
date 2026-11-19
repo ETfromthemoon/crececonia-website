@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import PayoutCalculator from "@/components/marketplace/PayoutCalculator";
 import InviteAuthor from "@/components/marketplace/InviteAuthor";
+import { MARKETPLACE_CATEGORIES } from "@/lib/marketplace/categories";
 import SellerDemo from "./SellerDemo";
 import styles from "./seller-panel.module.css";
 
@@ -166,7 +167,7 @@ export default function SellerPortal({ demoAvailable, showRegistration = false, 
     <Link href="/ebooks/mercado" className={styles.back}>← Volver al Marketplace</Link>
     <p className="eyebrow">Marketplace de ebooks</p>
     <h1>Espacio de autores</h1>
-    <p>Publica ebooks sobre IA, tecnología y negocios. Tu perfil y cada libro pasan por revisión antes de aparecer en la tienda.</p>
+    <p>Publica ebooks sobre IA, tecnología, negocios o bienestar. Tu perfil y cada libro pasan por revisión antes de aparecer en la tienda.</p>
     {message && <p role="status" style={{ padding: 16, border: "1px solid var(--border)" }}>{message}</p>}
     {loading ? <p>Cargando…</p> : !loggedIn ? <form onSubmit={requestAccess}>
       <h2>Crea tu cuenta o inicia sesión</h2>
@@ -266,7 +267,7 @@ export default function SellerPortal({ demoAvailable, showRegistration = false, 
           <p>Al guardar se crea una versión nueva. Después deberás subir su PDF y portada, aunque ya hayas subido archivos a la versión anterior.</p>
           <label>Título <input name="title" defaultValue={book.title} required minLength={3} maxLength={180} style={inputStyle} /></label>
           <label>Descripción <textarea name="description" defaultValue={book.description} required minLength={20} maxLength={10000} rows={6} style={inputStyle} /></label>
-          <label>Categoría <select name="category" defaultValue={book.category} style={inputStyle}><option value="ia">IA</option><option value="tecnologia">Tecnología</option><option value="negocios">Negocios</option></select></label>
+          <label>Categoría <select name="category" defaultValue={book.category} style={inputStyle}>{Object.entries(MARKETPLACE_CATEGORIES).map(([value, category]) => <option key={value} value={value}>{category.sellerLabel}</option>)}</select></label>
           <label>Precio en CLP <input name="priceClp" type="number" value={revisionPrices[book.id] ?? String(book.price_minor)} onChange={(event) => setRevisionPrices((prices) => ({ ...prices, [book.id]: event.target.value }))} min={500} max={10000000} step={1} required style={inputStyle} /></label>
           <PayoutCalculator priceValue={revisionPrices[book.id] ?? String(book.price_minor)} />
           <label><input name="declareRights" type="checkbox" required /> Confirmo que tengo los derechos de la versión corregida.</label>
@@ -283,7 +284,7 @@ export default function SellerPortal({ demoAvailable, showRegistration = false, 
         <label htmlFor="book-title">Título</label><input id="book-title" name="title" required minLength={3} maxLength={180} style={inputStyle} />
         <label htmlFor="book-slug">Identificador del libro</label><input id="book-slug" name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxLength={120} style={inputStyle} />
         <label htmlFor="book-description">Descripción (mínimo 20 caracteres)</label><textarea id="book-description" name="description" required minLength={20} maxLength={10000} rows={6} style={inputStyle} />
-        <label htmlFor="book-category">Categoría</label><select id="book-category" name="category" style={inputStyle}><option value="ia">IA</option><option value="tecnologia">Tecnología</option><option value="negocios">Negocios</option></select>
+        <label htmlFor="book-category">Categoría</label><select id="book-category" name="category" style={inputStyle}>{Object.entries(MARKETPLACE_CATEGORIES).map(([value, category]) => <option key={value} value={value}>{category.sellerLabel}</option>)}</select>
         <label htmlFor="book-price">Precio en pesos chilenos, IVA por definir en revisión</label><input id="book-price" name="priceClp" type="number" min={500} max={10000000} step={1} required value={pricePreview} onChange={(event) => setPricePreview(event.target.value)} aria-describedby="book-price-help" style={inputStyle} />
         <p id="book-price-help">El cálculo siguiente usa supuestos ilustrativos. El tratamiento tributario aplicable se confirma durante la revisión.</p>
         <PayoutCalculator priceValue={pricePreview} />

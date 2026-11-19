@@ -4,7 +4,7 @@ import { useState } from "react";
 import styles from "./InviteAuthor.module.css";
 
 const subject = "Te invito a vender tus ebooks en CrececonIA";
-const message = "¡Hola! Te invito a publicar y vender tus ebooks de IA, tecnología o negocios en el Marketplace de CrececonIA. Puedes inscribirte como autor aquí: https://www.crececonia.cl/ebooks/vender";
+const message = "¡Hola! Te invito a publicar y vender tus ebooks de IA, tecnología, negocios o bienestar en el Marketplace de CrececonIA. Puedes inscribirte como autor aquí: https://www.crececonia.cl/ebooks/vender";
 const whatsapp = `https://wa.me/?text=${encodeURIComponent(message)}`;
 const email = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
 

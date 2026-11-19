@@ -8,6 +8,7 @@ import { queryDatabase } from "@/lib/database";
 import { sellerIdentityFromRequest, sellerMutationAllowed } from "@/lib/marketplace-seller-auth";
 import { GET } from "../app/api/marketplace/seller/dashboard/route";
 import { PATCH } from "../app/api/marketplace/seller/books/[id]/route";
+import { POST } from "../app/api/marketplace/seller/books/route";
 
 const database = vi.mocked(queryDatabase);
 const identity = vi.mocked(sellerIdentityFromRequest);
@@ -23,6 +24,30 @@ beforeEach(() => {
 });
 
 describe("panel real del autor", () => {
+  it("acepta un borrador de vida y bienestar sin aceptar categorías desconocidas", async () => {
+    database.mockResolvedValueOnce([{ id: sellerId }]);
+    database.mockResolvedValueOnce([{ book_id: bookId }]);
+    const input = { slug: "femenina-a-tu-manera", title: "Femenina a tu manera", description: "Una guía de feminidad, hogar y fe cristiana.", category: "bienestar", priceClp: 26900, declareRights: true };
+    const request = (body: typeof input) => new Request("https://crececonia.cl/api/marketplace/seller/books", {
+      method: "POST", body: JSON.stringify(body),
+    });
+    expect((await POST(request(input))).status).toBe(201);
+    expect(database.mock.calls[1][1]).toEqual([identityId, input.slug, input.title, input.description, "bienestar", 26900]);
+
+    database.mockClear();
+    expect((await POST(request({ ...input, category: "sin-categoria" }))).status).toBe(400);
+    expect(database).not.toHaveBeenCalled();
+  });
+
+  it("permite corregir un borrador en vida y bienestar", async () => {
+    database.mockResolvedValueOnce([{ revision_id: bookId }]);
+    const response = await PATCH(new Request(`https://crececonia.cl/api/marketplace/seller/books/${bookId}`, {
+      method: "PATCH", body: JSON.stringify({ title: "Femenina a tu manera", description: "Una guía de feminidad, hogar y fe cristiana.", category: "bienestar", priceClp: 26900, declareRights: true }),
+    }), { params: Promise.resolve({ id: bookId }) });
+    expect(response.status).toBe(200);
+    expect(database.mock.calls[0][1]).toEqual([identityId, bookId, "Femenina a tu manera", "Una guía de feminidad, hogar y fe cristiana.", "bienestar", 26900]);
+  });
+
   it("rechaza identidad ausente antes de consultar datos", async () => {
     identity.mockReturnValue(null);
     const response = await GET(new Request("https://crececonia.cl/api/marketplace/seller/dashboard"));

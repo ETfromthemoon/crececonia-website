@@ -1,5 +1,11 @@
 # Operación del marketplace de ebooks
 
+## Ampliación preparada: Vida y bienestar
+
+La categoría `bienestar` incorpora libros de vida cotidiana, incluidos los de feminidad, hogar y fe. La migración reversible `20261119_001_marketplace_bienestar` amplía la restricción de categorías de `marketplace_book_revisions`; su reversa se detiene si ya existen libros en esa categoría. Antes de desplegar el código que muestra la nueva opción, probar la migración en una rama aislada de Neon, aplicarla a producción con la autorización correspondiente y verificar la restricción. Fusionar la rama de aplicación antes de migrar dejaría el formulario aceptando una categoría que la base de datos rechaza.
+
+La ampliación no crea vendedores ni libros por sí sola. Cada persona vendedora debe verificar su correo, aportar nombre legal, RUT y situación tributaria, aceptar las condiciones vigentes y pasar la revisión editorial y fiscal. Un personaje digital puede figurar como identidad pública si su naturaleza se declara con claridad; el titular que cobra debe ser real.
+
 Actualizado: 19 de noviembre de 2026. Alcance inicial: autores de Chile, precios CLP y ebooks de IA, tecnología y negocios. CrececonIA cobra en su cuenta Flow existente, descuenta una comisión del 9 % sobre el precio sin IVA de la venta, más el IVA de la comisión y carga el costo real de Flow al vendedor. Las boletas o vouchers se emiten o validan manualmente y su referencia se registra en el panel.
 
 ## Estado técnico comprobado

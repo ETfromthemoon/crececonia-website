@@ -109,7 +109,7 @@ export default async function EbooksPage() {
             <h2>Conocimiento que encuentra a su próxima persona.</h2>
           </div>
           <div>
-            <p>Explora libros de IA, tecnología y negocios de autores invitados. Si tienes un ebook propio, conoce el espacio para publicarlo, revisar tus ventas y calcular tus ingresos.</p>
+            <p>Explora libros de IA, tecnología, negocios y bienestar de autores invitados. Si tienes un ebook propio, conoce el espacio para publicarlo, revisar tus ventas y calcular tus ingresos.</p>
             <div className="ebook-marketplace-actions">
               <a href="/ebooks/mercado">Explorar marketplace <span aria-hidden="true">→</span></a>
               <a href="/ebooks/vender">{demoAvailable ? "Probar espacio de autores" : "Vender mi ebook"} <span aria-hidden="true">→</span></a>

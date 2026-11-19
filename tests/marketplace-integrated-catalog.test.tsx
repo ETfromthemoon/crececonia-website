@@ -65,4 +65,19 @@ describe("catálogo integrado del marketplace", () => {
     expect(html).toContain('href="/ebooks/mercado?q=sin+resultados&amp;category=negocios"');
     expect(html).not.toContain('category=tecnologia');
   });
+
+  it("muestra y filtra libros de vida y bienestar cuando están publicados", async () => {
+    listPublishedMarketplaceCategories.mockResolvedValueOnce(["bienestar"]);
+    listPublishedMarketplaceBooks.mockResolvedValueOnce([{
+      id: "luna-book", slug: "femenina-a-tu-manera", title: "Femenina a tu manera",
+      category: "bienestar", author_display_name: "Luna Maren · personaje digital",
+      price_minor: "26900", has_cover: false,
+    }]);
+    const page = await MarketplaceCatalogPage({ searchParams: Promise.resolve({ category: "bienestar" }) });
+    const html = renderToStaticMarkup(page);
+    expect(listPublishedMarketplaceBooks).toHaveBeenCalledWith(1, { query: "", category: "bienestar" });
+    expect(html).toContain("Vida y bienestar");
+    expect(html).toContain('href="/ebooks/mercado/femenina-a-tu-manera"');
+    expect(html).not.toContain("De cero a Claude en una semana");
+  });
 });
