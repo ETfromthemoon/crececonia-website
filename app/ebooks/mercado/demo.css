@@ -2,3 +2,10 @@
 
 .md-feature-cover .md-cover strong { font-size: clamp(1.7rem, 2.5vw, 2.8rem); overflow-wrap: normal; }
 .md-author-cta h2 { color: #f4f2e9; }
+.md-author-entry { display: inline-flex; align-items: center; min-height: 44px; margin-inline-start: 16px; color: #245034; text-decoration: underline; text-underline-offset: 4px; font-size: .9rem; font-weight: 700; }
+.md-catalog[id] { scroll-margin-top: 80px; }
+.md-empty .md-button { margin-top: 14px; }
+
+@media (max-width: 680px) {
+  .md-author-entry { display: flex; width: fit-content; margin: 8px 0 0; }
+}

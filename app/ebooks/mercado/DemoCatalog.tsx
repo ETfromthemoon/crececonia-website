@@ -27,6 +27,7 @@ export default function DemoCatalog({ crececoniaBooks = [] }: { crececoniaBooks?
           <h1>Ideas para leer.<br /><em>Herramientas para hacer.</em></h1>
           <p>Libros de CrececonIA y ejemplos de autores independientes sobre IA, tecnología y negocios. Explora el catálogo y recorre la experiencia de compra.</p>
           <a className="md-button" href="#explorar">Explorar ebooks <span aria-hidden>↗</span></a>
+          <Link className="md-author-entry" href="/ebooks/vender?registro=demo">Publicar mi ebook ↗</Link>
         </div>
         <div className="md-feature-cover" aria-label="Portada de muestra: IA para equipos">
           <div className="md-cover md-cover-violet"><span>CRECECONIA / AUTORES</span><strong>IA para<br />equipos.</strong><small>ANDREA MUÑOZ</small></div>
@@ -51,7 +52,10 @@ export default function DemoCatalog({ crececoniaBooks = [] }: { crececoniaBooks?
           <Link className="md-card-cover-link" href={`/ebooks/mercado/${book.slug}`} aria-label={`Ver ${book.title}`}><div className={`md-cover md-cover-${book.cover}`} aria-hidden="true"><span>CRECECONIA / AUTORES</span><strong>{book.title}</strong><small>{book.author.toUpperCase()}</small></div></Link>
           <div className="md-card-info"><span className="md-card-meta">{names[book.category]} · {book.level}</span><h3>{book.title}</h3><p>{book.subtitle}</p><div className="md-card-bottom"><strong>{money(book.price)} CLP</strong><Link className="md-card-action" href={`/ebooks/mercado/${book.slug}`}>Ver libro ↗</Link></div></div>
           {index === 0 && <span className="md-card-tag">DESTACADO</span>}
-        </article>)}</div> : <p className="md-empty">No encontramos libros con esos filtros. Prueba otro tema.</p>}
+        </article>)}</div> : <div className="md-empty">
+          <p>No encontramos libros con esos filtros.</p>
+          <button type="button" className="md-button" onClick={() => { setQuery(""); setCategory("todos"); }}>Limpiar filtros</button>
+        </div>}
     </section>
     <section className="md-author-cta"><div className="md-wrap"><div className="md-kicker">02 / PUBLICA CON NOSOTROS</div><h2>Tu conocimiento<br /><em>merece lectores.</em></h2><p>Presenta tu ebook, revisa tus ingresos estimados y sigue el estado de revisión desde tu espacio de autor.</p><Link className="md-button md-button-light" href="/ebooks/vender">Explorar espacio de autores <span aria-hidden>↗</span></Link></div></section>
     <div className="md-demo-note">Demo visual: los autores invitados son ficticios y aquí no se procesan pagos. Los ebooks de CrececonIA son reales; sus enlaces abren el sitio público.</div>

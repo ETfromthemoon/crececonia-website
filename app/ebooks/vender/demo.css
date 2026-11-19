@@ -6,3 +6,28 @@
 
 .seller-demo-banner h2 { color: #f3f8ee; }
 @media(prefers-reduced-motion:reduce){.seller-demo *{scroll-behavior:auto!important;transition:none!important}}
+
+@media (max-width: 760px) {
+  .seller-demo-sidebar nav {
+    flex-wrap: wrap;
+  }
+
+  .seller-demo-sidebar-bottom > button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+  }
+
+  .seller-demo-topbar {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 10px 17px;
+  }
+
+  .seller-demo-topbar > div {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    min-width: 0;
+  }
+}
