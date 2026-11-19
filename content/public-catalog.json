@@ -152,6 +152,23 @@
       "creado_en": "",
       "contenido_recuperado": true,
       "contenido_completo": true
+    },
+    {
+      "id": 11,
+      "slug": "como-usar-refero-styles-para-definir-el-diseno-de-tu-web",
+      "titulo": "Cómo usar Refero Styles para definir el diseño de tu web con IA",
+      "categoria": "Guías",
+      "descripcion": "Guía práctica para convertir referencias de Refero Styles y DESIGN.md en reglas visuales propias y comprobarlas en tu web.",
+      "contenido_md": "Una referencia visual sirve cuando puedes explicar **qué decisión tomarías para tu proyecto**. Refero Styles reúne fichas de estilos de sitios web con paletas, tipografía, espaciado, componentes y un `DESIGN.md` que puedes usar como punto de partida. Es una biblioteca de referencias, no una prueba de que un diseño vaya a funcionar para tu negocio.\n\n## Para quién sirve\n\nPara quien está creando o renovando una web y se atasca al pedirle a una IA «hazla moderna». También para equipos que necesitan acordar un lenguaje visual antes de diseñar cada pantalla. Puedes explorar el recurso sin programar; llevar las decisiones a una web sí requiere adaptarlas y comprobar el resultado.\n\n## 1. Empieza por la tarea de la página\n\nAntes de abrir la biblioteca, escribe una frase: «Esta página debe ayudar a [persona] a entender [oferta] y hacer [acción]». Define además dos restricciones reales, por ejemplo lectura cómoda en celular y uso de los colores de tu marca. Sin eso, es fácil elegir una referencia bonita que compita con el objetivo.\n\n## 2. Compara dos fichas, no veinte capturas\n\nEn [Refero Styles](https://styles.refero.design/) busca dos estilos próximos a la sensación que necesitas. Abre cada ficha y anota cuatro decisiones observables:\n\n| Decisión | Qué mirar | Pregunta para tu web |\n| --- | --- | --- |\n| Color | Fondo, texto, acento y botones | ¿El botón principal destaca y el texto se lee bien? |\n| Tipografía | Tamaños, pesos y jerarquía | ¿Se entiende la oferta antes de leer los detalles? |\n| Espaciado | Separación entre secciones y elementos | ¿El contenido respira también en celular? |\n| Componentes | Tarjetas, navegación y llamados a la acción | ¿Ayudan a tomar la siguiente decisión? |\n\nLas fichas muestran valores y recomendaciones interpretadas a partir de sitios. El `DESIGN.md` generado por Refero no es una guía oficial de la marca que aparece en la ficha. Úsalo como referencia de decisiones, sin asumir que puedes copiar logos, textos o imágenes.\n\n## 3. Convierte la referencia en reglas propias\n\nElige **una dirección** y redacta una ficha breve para tu proyecto. Cambia lo que no corresponda a tu marca o a la tarea de la página. Por ejemplo:\n\n```text\nObjetivo de la página: [qué debe entender y hacer la persona]\nAudiencia: [para quién]\nDirección visual: [dos o tres adjetivos concretos]\nFondo y texto: [roles y colores de mi marca]\nAcento: [dónde se usa y dónde no]\nTipografía: [jerarquía de titular, subtítulo y cuerpo]\nEspaciado: [regla para secciones y tarjetas]\nCTA principal: [texto y posición]\nRestricciones: [lectura en celular, contraste, velocidad]\nReferencia: [enlace a la ficha consultada]\n```\n\nSi trabajas con Codex, Claude Code u otra herramienta, puedes adjuntar el `DESIGN.md` de la ficha junto con esta adaptación y pedir: «Propón un solo bloque para esta página. Respeta mi contenido y estas reglas. Señala qué decisiones tomaste de la referencia y cuáles cambiaste. No uses logos ni imágenes de terceros».\n\n## 4. Comprueba el resultado con contenido real\n\nRevisa la propuesta en escritorio y celular con tus títulos, imágenes y CTA reales. Haz tres comprobaciones: ¿se entiende la oferta en el primer bloque?, ¿el texto y los controles se leen y usan sin esfuerzo?, ¿la acción principal sigue siendo evidente? Si falla, corrige la regla concreta que causó el problema y vuelve a revisar. Un `DESIGN.md` ayuda a dar contexto a la IA; no sustituye la revisión del sitio terminado.\n\n**Primer ejercicio:** elige una página propia, compara dos fichas y escribe cinco reglas visuales aplicables. Rediseña sólo el bloque inicial y decide si mejoró la claridad antes de extenderlo al resto.\n\nFuentes: [Refero Styles](https://styles.refero.design/) y sus [ejemplos de DESIGN.md](https://styles.refero.design/ai-agents/design-md-examples), consultados el 19 de noviembre de 2026.\n",
+      "tags": [
+        "diseño web",
+        "Refero Styles",
+        "IA"
+      ],
+      "vistas": 0,
+      "creado_en": "2026-11-19",
+      "contenido_recuperado": true,
+      "contenido_completo": true
     }
   ],
   "skills": [
