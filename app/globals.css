@@ -508,6 +508,8 @@ p, span, li {
 .marketplace-calculator-intro p { margin-top:18px; }
 .marketplace-calculator-panel { padding:clamp(22px,5vw,48px); border:1px solid rgba(21,22,24,.17); background:#f8f6f0; }
 .marketplace-calculator-panel>label { display:block; font-weight:600; }
+.marketplace-calculator-panel select { display:block; width:min(100%,410px); margin:8px 0; padding:10px 12px; border:1px solid rgba(21,22,24,.3); background:white; color:#151618; }
+.marketplace-price-input+label { margin-top:18px; }
 .marketplace-price-input { display:flex; align-items:center; gap:12px; max-width:410px; margin-top:12px; padding:10px 14px; border:1px solid rgba(21,22,24,.3); background:white; }
 .marketplace-price-input input { min-width:0; flex:1; border:0; background:transparent; color:#151618; font-size:1.2rem; }
 .marketplace-price-input input:focus-visible { outline:2px solid #64783a; outline-offset:3px; }

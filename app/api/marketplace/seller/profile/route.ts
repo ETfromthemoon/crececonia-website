@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { queryDatabase } from "@/lib/database";
 import { sellerIdentityFromRequest, sellerMutationAllowed } from "@/lib/marketplace-seller-auth";
 import { normalizeChileanRut } from "@/lib/marketplace-seller-tax";
+import { MARKETPLACE_SELLER_TERMS_VERSION } from "@/lib/marketplace/commission";
 
 export async function POST(request: Request) {
   if (!sellerMutationAllowed(request)) return new Response("Acceso denegado", { status: 403 });
@@ -22,13 +23,13 @@ export async function POST(request: Request) {
   try {
     const rows = await queryDatabase<{ id: string }>(`with seller as (insert into marketplace_sellers
       (owner_user_id, public_slug, display_name, bio, status, terms_version, terms_accepted_at)
-      values ($1, $2, $3, $4, 'pending_verification', 'marketplace-v1', now())
+      values ($1, $2, $3, $4, 'pending_verification', $8, now())
       on conflict (owner_user_id) do nothing returning id), tax as (
       insert into marketplace_seller_tax_profiles (seller_id, rut, legal_name, declared_vat_status)
       select id, $5, $6, $7 from seller returning seller_id), audit as (
       insert into marketplace_audit_log (actor_user_id, action, entity_type, entity_id)
       select $1, 'seller_registered', 'seller', seller_id from tax returning entity_id as id)
-      select id from audit`, [identityId, slug, name, bio, rut, legalName, vatStatus]);
+      select id from audit`, [identityId, slug, name, bio, rut, legalName, vatStatus, MARKETPLACE_SELLER_TERMS_VERSION]);
     if (!rows[0]) return new Response("Ya tienes un perfil de autor", { status: 409 });
     return NextResponse.json({ ok: true, sellerId: rows[0].id }, { status: 201 });
   } catch (error) {
@@ -56,7 +57,7 @@ export async function PATCH(request: Request) {
     const [changed] = await queryDatabase<{ id: string }>(`with seller as (
       update marketplace_sellers s
       set public_slug=$2, display_name=$3, bio=$4, status='pending_verification',
-        terms_version='marketplace-v1', terms_accepted_at=now(), updated_at=now()
+        terms_version=$8, terms_accepted_at=now(), updated_at=now()
       where s.owner_user_id=$1 and s.status in ('pending_verification','rejected')
         and exists (select 1 from marketplace_seller_tax_profiles t
           where t.seller_id=s.id and t.review_status='rejected')
@@ -70,7 +71,7 @@ export async function PATCH(request: Request) {
       insert into marketplace_audit_log (actor_user_id, action, entity_type, entity_id)
       select $1,'seller_tax_resubmitted','seller',seller_id from tax
       returning entity_id as id
-    ) select id from audit`, [identityId, slug, name, bio, rut, legalName, vatStatus]);
+    ) select id from audit`, [identityId, slug, name, bio, rut, legalName, vatStatus, MARKETPLACE_SELLER_TERMS_VERSION]);
     if (!changed) return new Response("El perfil no está disponible para corrección", { status: 409 });
     return NextResponse.json({ ok: true });
   } catch (error) {

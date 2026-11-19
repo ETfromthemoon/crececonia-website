@@ -31,7 +31,7 @@ inicia un cobro. Requiere `20261116_001_marketplace_checkout_limits.up.sql`.
 `expectedAmount` es el precio entero en CLP y la discordancia devuelve 409.
 La orden conserva el ID del PDF verificado; la entrega debe usar ese mismo
 archivo aunque se publique otra revisión después. El ítem, comisión estimada
-del 5% sobre precio bruto y desglose
+del 9 % sobre precio sin IVA de venta, IVA de la comisión y desglose
 tributario se congelan antes de llamar a Flow. La respuesta entrega el destino
 de pago de Flow; no representa una compra confirmada.
 

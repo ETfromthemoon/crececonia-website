@@ -12,11 +12,14 @@ import {
 } from "../lib/marketplace-checkout";
 
 describe("cobro marketplace", () => {
-  it("calcula 5% de comisión sobre el precio CLP y desglosa IVA incluido", () => {
+  it("calcula 9% sobre la base sin IVA de la venta y grava la comisión por separado", () => {
     expect(marketplacePriceSnapshot(11_900, "tax_inclusive")).toEqual({
-      price: 11_900, taxMode: "tax_inclusive", tax: 1_900, taxRateBps: 1_900, commission: 595,
+      price: 11_900, taxMode: "tax_inclusive", tax: 1_900, taxRateBps: 1_900,
+      commissionBasis: 10_000, commissionNet: 900, commissionTax: 171, commission: 1_071,
     });
-    expect(marketplacePriceSnapshot(10_000, "exempt")?.tax).toBe(0);
+    expect(marketplacePriceSnapshot(11_900, "exempt")).toMatchObject({
+      tax: 0, commissionBasis: 11_900, commissionNet: 1_071, commissionTax: 203, commission: 1_274,
+    });
     expect(marketplacePriceSnapshot(10_000, "pending_review")).toBeNull();
     expect(marketplacePriceSnapshot(1.5, "tax_inclusive")).toBeNull();
   });
