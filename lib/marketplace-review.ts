@@ -284,7 +284,7 @@ export async function listMarketplaceReviews(): Promise<ReviewRow[]> {
   `);
 }
 
-type PublishedBookFilters = { query?: string; category?: "ia" | "tecnologia" | "negocios" };
+type PublishedBookFilters = { query?: string; category?: PublishedBook["category"] };
 
 const verifiedPublicationSql = `exists (
   select 1 from marketplace_publication_checks v
@@ -298,6 +298,26 @@ const verifiedPublicationSql = `exists (
     and t.reviewed_at >= now() - interval '6 months'
     and v.verified_at >= greatest(r.reviewed_at, t.reviewed_at)
 )`;
+
+const publishedCatalogSql = `
+    from marketplace_books b
+    join marketplace_sellers s on s.id = b.seller_id and s.status = 'active'
+    join marketplace_seller_tax_profiles t on t.seller_id = s.id and t.review_status = 'verified'
+    join marketplace_book_revisions r on r.id = b.published_revision_id
+      and r.book_id = b.id and r.moderation_status = 'approved'
+    where b.status = 'published'
+      and r.rights_declared_at is not null
+      and r.price_tax_mode in ('tax_inclusive', 'exempt')
+      and ${verifiedPublicationSql}
+`;
+
+export async function listPublishedMarketplaceCategories(): Promise<PublishedBook["category"][]> {
+  const rows = await queryDatabase<{ category: PublishedBook["category"] }>(`
+    select distinct r.category
+    ${publishedCatalogSql}
+  `);
+  return rows.map(({ category }) => category);
+}
 
 export async function listPublishedMarketplaceBooks(page = 1, filters: PublishedBookFilters = {}): Promise<PublishedBook[]> {
   if (!Number.isSafeInteger(page) || page < 1 || page > Math.floor(Number.MAX_SAFE_INTEGER / 24)) throw new Error("Página inválida.");
@@ -315,15 +335,7 @@ export async function listPublishedMarketplaceBooks(page = 1, filters: Published
       exists (select 1 from marketplace_assets cover where cover.book_id = b.id
         and cover.revision_id = r.id and cover.asset_kind = 'cover'
         and cover.scan_status = 'ready') as has_cover
-    from marketplace_books b
-    join marketplace_sellers s on s.id = b.seller_id and s.status = 'active'
-    join marketplace_seller_tax_profiles t on t.seller_id = s.id and t.review_status = 'verified'
-    join marketplace_book_revisions r on r.id = b.published_revision_id
-      and r.book_id = b.id and r.moderation_status = 'approved'
-    where b.status = 'published'
-      and r.rights_declared_at is not null
-      and r.price_tax_mode in ('tax_inclusive', 'exempt')
-      and ${verifiedPublicationSql}
+    ${publishedCatalogSql}
     ${searchCondition}
     ${categoryCondition}
     order by b.published_at desc, b.id desc
