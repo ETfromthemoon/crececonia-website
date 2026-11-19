@@ -1,0 +1,51 @@
+.page {
+  display: grid;
+  align-items: center;
+  min-height: 100svh;
+  padding: 28px 18px;
+  color: #192d28;
+  color-scheme: light;
+  background: radial-gradient(ellipse at 25% 15%, #dcebe0, transparent 55%), #eef3ef;
+}
+.card {
+  width: min(100%, 490px);
+  margin-inline: auto;
+  padding: clamp(23px, 6vw, 44px);
+  border: 1px solid #c9d9cf;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 16px 46px #233e2d12;
+}
+.label { color: #275e4a; font-size: .78rem; font-weight: 750; }
+.card h1 {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(2rem, 5vw, 2.85rem);
+  font-weight: 500;
+  line-height: 1.1;
+  margin: 10px 0 14px;
+}
+.intro { color: #4c615a; }
+.form { display: grid; gap: 10px; margin-top: 24px; }
+.form label { font-size: .88rem; font-weight: 650; }
+.form input:not([type="hidden"]) {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 13px;
+  color: #192d28;
+  background: #fff;
+  border: 1px solid #a7bdb1;
+  border-radius: 8px;
+}
+.form button {
+  min-height: 46px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  color: #fff;
+  background: #205f4f;
+  font-weight: 700;
+  cursor: pointer;
+}
+.form button:hover { background: #174a3c; }
+.card :is(input, button, a):focus-visible { outline: 3px solid #308a70; outline-offset: 3px; }
+.error { margin-top: 14px; padding: 10px 12px; border-radius: 7px; color: #8b3028; background: #fff1ed; }
+.back { display: inline-block; margin-top: 20px; color: #275e4a; text-decoration: underline; text-underline-offset: 3px; font-size: .85rem; }

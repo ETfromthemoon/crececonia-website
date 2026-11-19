@@ -4,8 +4,9 @@ import { readFileSync } from "node:fs";
 
 const requireAdminSession = vi.hoisted(() => vi.fn());
 const queryDatabase = vi.hoisted(() => vi.fn());
+const marketplaceDemoAvailable = vi.hoisted(() => vi.fn(() => false));
 vi.mock("@/lib/admin-auth", () => ({ requireAdminSession }));
-vi.mock("@/lib/marketplace-demo", () => ({ marketplaceDemoAvailable: () => false }));
+vi.mock("@/lib/marketplace-demo", () => ({ marketplaceDemoAvailable }));
 vi.mock("@/lib/marketplace-review", () => ({
   listMarketplaceReviews: () => Promise.resolve([]),
   listSellerReviews: () => Promise.resolve([]),
@@ -24,6 +25,7 @@ let orders: Record<string, unknown>[];
 describe("operación administrativa del marketplace", () => {
   beforeEach(() => {
     requireAdminSession.mockReset().mockResolvedValue(undefined);
+    marketplaceDemoAvailable.mockReset().mockReturnValue(false);
     orders = [{ id: "order", buyer_email: "comprador@example.cl", total_minor: "11900", commission_minor: "595", status: "paid", created_at: "2026-11-15T12:00:00Z", paid_at: "2026-11-15T12:10:00Z", title: "Libro IA", seller_name: "Autora", payment_id: "payment", payment_status: "confirmed", gateway_fee_actual_minor: null, gateway_fee_reconciled: false, delivery_status: "succeeded", document_kind: null, document_reference: null }];
     queryDatabase.mockReset().mockImplementation(async (sql: string) => {
       if (sql.includes("as fiscal_pending")) return [{ sellers: "1", books: "1", buyers: "1", orders: "1", paid: "1", fiscal_pending: "1", paid_sales_minor: "11900", net_commission_minor: "595" }];
@@ -37,6 +39,17 @@ describe("operación administrativa del marketplace", () => {
   it("exige sesión antes de consultar datos personales", async () => {
     requireAdminSession.mockRejectedValueOnce(new Error("sin sesión"));
     await expect(MarketplaceReviewPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("sin sesión");
+    expect(requireAdminSession).toHaveBeenCalledWith("/admin/marketplace");
+    expect(queryDatabase).not.toHaveBeenCalled();
+  });
+
+  it("muestra el panel del preview sin consultar datos ni ofrecer acciones reales", async () => {
+    marketplaceDemoAvailable.mockReturnValue(true);
+    const html = renderToStaticMarkup(await MarketplaceReviewPage({ searchParams: Promise.resolve({}) }));
+    expect(html).toContain("Administración del Marketplace");
+    expect(html).toContain("Aún no hay órdenes.");
+    expect(html).not.toContain("Comprobar servicios");
+    expect(requireAdminSession).not.toHaveBeenCalled();
     expect(queryDatabase).not.toHaveBeenCalled();
   });
 
@@ -51,7 +64,7 @@ describe("operación administrativa del marketplace", () => {
     expect(html).toContain("Formulario reverso");
     expect(html).toContain("Formulario tarifa");
     expect(html).toContain("Boletas o vouchers pendientes");
-    expect(html).toContain("$595</strong>Comisión CrececonIA tras reversos");
+    expect(html).toContain("Comisión CrececonIA tras reversos</p><strong>$595</strong>");
     expect(html).toContain("Comisión CrececonIA de la venta: $595");
     expect(html).toContain("Tarifa Flow observada: por conciliar");
     expect(queryDatabase.mock.calls.some(([sql]) => String(sql).includes("o.status in ('paid', 'refunded', 'disputed')") && String(sql).includes("o.paid_at is not null"))).toBe(true);

@@ -7,6 +7,9 @@ import FiscalEvidenceForm from "./FiscalEvidenceForm";
 import SettlementForm from "./SettlementForm";
 import RefundForm from "./RefundForm";
 import FeeEvidenceForm from "./FeeEvidenceForm";
+import MarketplaceHealth from "./MarketplaceHealth";
+import layout from "./demo.module.css";
+import styles from "./panel.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -33,11 +36,13 @@ type SellerBalance = { seller_id: string; display_name: string; ledger_net_minor
 export default async function MarketplaceReviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ resultado?: string }>;
+  searchParams: Promise<{ resultado?: string; vista?: string }>;
 }) {
-  if (marketplaceDemoAvailable()) return <DemoMarketplaceAdmin />;
-  await requireAdminSession();
-  const [rows, sellers, assets, counts, contacts, orders, balances] = await Promise.all([
+  const preview = marketplaceDemoAvailable();
+  const { resultado, vista } = await searchParams;
+  if (preview && vista === "demo") return <DemoMarketplaceAdmin />;
+  if (!preview) await requireAdminSession("/admin/marketplace");
+  const [rows, sellers, assets, counts, contacts, orders, balances] = preview ? [[], [], [], [], [], [], []] : await Promise.all([
     listMarketplaceReviews(), listSellerReviews(), listMarketplaceReviewAssets(),
     queryDatabase<MarketplaceCounts>(`
       select (select count(*) from marketplace_sellers)::text as sellers,
@@ -100,63 +105,47 @@ export default async function MarketplaceReviewPage({
       from public.marketplace_seller_payout_balances
       order by display_name, seller_id limit 100`),
   ]);
-  const { resultado } = await searchParams;
-  return <main style={{ maxWidth: 1000, margin: "0 auto", padding: "48px 24px", color: "var(--bone)" }}>
-    <p className="eyebrow">Administración</p>
-    <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", marginBottom: 12 }}>Revisión del marketplace</h1>
-    <p>La aprobación editorial, la verificación final y la publicación son pasos separados. Un cambio de versión vuelve a requerirlos.</p>
-    <p><a href="/api/admin/marketplace/health">Comprobar base de datos y almacenamiento privado</a> (lectura, sin mostrar nombres de archivos)</p>
-    {resultado === "guardado" && <p role="status" style={{ color: "var(--champagne)" }}>Cambio guardado.</p>}
-    <nav aria-label="Secciones de administración" style={{ display: "flex", flexWrap: "wrap", gap: 16, marginTop: 20 }}>
-      <a href="#resumen">Resumen</a><a href="#usuarios">Usuarios</a><a href="#ventas">Ventas y boletas</a>
-      <a href="#liquidaciones">Liquidaciones</a>
-      <a href="#seller-review-title">Verificaciones</a><a href="#libros">Libros</a>
-    </nav>
-    <section id="resumen" aria-labelledby="resumen-title" style={{ marginTop: 40 }}>
-      <h2 id="resumen-title" style={{ fontSize: "2rem" }}>Resumen de operación</h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))", gap: 12, marginTop: 16 }}>
+  return <div className={`${layout.shell} ${styles.workspace}`}>
+    <aside className={`${layout.sidebar} ${styles.sidebar}`}>
+      <a className={layout.brand} href="/ebooks/mercado">
+        <span className={layout.brandMark} aria-hidden="true">C</span>
+        <span>CRECECONIA<small>MARKETPLACE</small></span>
+      </a>
+      <nav className={styles.navigation} aria-label="Secciones de administración">
+        <a href="#resumen">Resumen</a><a href="#ventas">Ventas y boletas</a>
+        <a href="#liquidaciones">Liquidaciones</a><a href="#usuarios">Usuarios</a>
+        <a href="#verificaciones">Verificaciones</a><a href="#libros">Libros</a><a href="#servicios">Servicios</a>
+      </nav>
+    </aside>
+    <main className={layout.main}>
+    <div className={layout.topbar}><span className={layout.breadcrumb}>Marketplace / Administración</span><span>{preview ? "Vista previa" : "Operación en vivo"}</span></div>
+    <div className={`${layout.content} ${styles.content}`}>
+    <header className={layout.heading}>
+      <div><h1>Administración del Marketplace</h1><p>Revisa autores, publicaciones, ventas y liquidaciones en un solo lugar.</p></div>
+      <a className={layout.outlineButton} href="/ebooks/mercado">Ver tienda ↗</a>
+    </header>
+    {preview && <div className={layout.notice}><p>Este preview muestra el panel sin datos. <a href="?vista=demo">Explorar con datos de ejemplo</a></p></div>}
+    {!preview && resultado === "guardado" && <p role="status" className={layout.notice}>Cambio guardado.</p>}
+    <section id="resumen" aria-labelledby="resumen-title" className={styles.section}>
+      <h2 id="resumen-title">Resumen de operación</h2>
+      <div className={layout.metrics}>
         {([ ["Autores", counts[0]?.sellers], ["Libros", counts[0]?.books],
           ["Compradores", counts[0]?.buyers], ["Órdenes", counts[0]?.orders],
           ["Pagadas", counts[0]?.paid],
           ["Ventas pagadas", formatCLP(counts[0]?.paid_sales_minor ?? "0")],
           ["Comisión CrececonIA tras reversos", formatCLP(counts[0]?.net_commission_minor ?? "0")],
           ["Boletas o vouchers pendientes", counts[0]?.fiscal_pending] ] as const).map(([label, value]) =>
-          <div key={label} style={{ border: "1px solid var(--border)", borderRadius: 12, padding: 16 }}>
-            <strong style={{ display: "block", fontSize: "1.5rem" }}>{value ?? "0"}</strong>{label}
+          <div key={label} className={layout.metric}>
+            <p>{label}</p><strong>{value ?? "0"}</strong>
           </div>)}
       </div>
     </section>
-    <section id="liquidaciones" aria-labelledby="liquidaciones-title" style={{ marginTop: 48 }}>
-      <h2 id="liquidaciones-title" style={{ fontSize: "2rem" }}>Liquidaciones a autores</h2>
-      <p>Saldo según libro contable menos transferencias registradas. Se bloquea si falta la boleta, la tarifa Flow conciliada o hay una devolución o disputa pendiente.</p>
-      {balances.length === 0 ? <p>Aún no hay autores para liquidar.</p> :
-        <div style={{ display: "grid", gap: 14, marginTop: 16 }}>
-          {balances.map((balance) => <article key={balance.seller_id} style={{ border: "1px solid var(--border)", borderRadius: 12, padding: 18 }}>
-            <h3 style={{ fontSize: "1.2rem" }}>{balance.display_name}</h3>
-            <p>Devengado: {formatCLP(balance.ledger_net_minor)} · Ya transferido: {formatCLP(balance.settled_minor)}</p>
-            <p>Saldo: {formatCLP(balance.available_minor)} · {balance.blocked ? "Bloqueado para revisión" : "Conciliado"}</p>
-            {balance.blocked ? <p>Revisa boletas, tarifa Flow, reembolsos, disputas y órdenes antes de transferir.</p> :
-              BigInt(balance.available_minor) > BigInt(0) && <SettlementForm sellerId={balance.seller_id} maxMinor={balance.available_minor} />}
-          </article>)}
-        </div>}
-    </section>
-    <section id="usuarios" aria-labelledby="usuarios-title" style={{ marginTop: 48 }}>
-      <h2 id="usuarios-title" style={{ fontSize: "2rem" }}>Usuarios vendedores</h2>
-      <p>Últimos 100 perfiles. El correo se muestra solo en este panel protegido.</p>
-      {contacts.length === 0 ? <p>Aún no hay perfiles de vendedores.</p> :
-        <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
-          {contacts.map((contact) => <div key={contact.id} style={{ border: "1px solid var(--border)", borderRadius: 12, padding: 14 }}>
-            <strong>{contact.display_name}</strong> · {contact.status}<br />
-            <span>{contact.email ?? "Sin correo asociado"} · /{contact.public_slug}</span>
-          </div>)}
-        </div>}
-    </section>
-    <section id="ventas" aria-labelledby="ventas-title" style={{ marginTop: 48 }}>
-      <h2 id="ventas-title" style={{ fontSize: "2rem" }}>Compradores, ventas y comprobantes</h2>
+    <section id="ventas" aria-labelledby="ventas-title" className={`${layout.panel} ${styles.section}`}>
+      <h2 id="ventas-title">Compradores, ventas y comprobantes</h2>
       <p>Hasta 100 órdenes, con los comprobantes pendientes primero. Registra el folio de la boleta emitida manualmente o la referencia del voucher correspondiente.</p>
-      {orders.length === 0 ? <p>Aún no hay órdenes.</p> :
-        <div style={{ display: "grid", gap: 14, marginTop: 16 }}>
-          {orders.map((order) => <article key={order.id} style={{ border: "1px solid var(--border)", borderRadius: 12, padding: 18 }}>
+      {orders.length === 0 ? <p className={styles.empty}>Aún no hay órdenes. Las compras y comprobantes aparecerán aquí.</p> :
+        <div className={styles.records}>
+          {orders.map((order) => <article key={order.id} className={styles.record}>
             <h3 style={{ fontSize: "1.2rem" }}>{order.title ?? "Libro pendiente"} · {formatCLP(order.total_minor)}</h3>
             <p>Comprador: {order.buyer_email} · Autor: {order.seller_name ?? "Pendiente"}</p>
             <p>Orden: {order.id} · {order.status} · Pago: {order.payment_status ?? "pendiente"} · Entrega: {order.delivery_status ?? "pendiente"}</p>
@@ -179,12 +168,37 @@ export default async function MarketplaceReviewPage({
           </article>)}
         </div>}
     </section>
-    <section aria-labelledby="seller-review-title" style={{ marginTop: 48 }}>
-      <h2 id="seller-review-title" style={{ fontSize: "2rem" }}>Autores</h2>
+    <section id="liquidaciones" aria-labelledby="liquidaciones-title" className={`${layout.panel} ${styles.section}`}>
+      <h2 id="liquidaciones-title">Liquidaciones a autores</h2>
+      <p>Saldo según libro contable menos transferencias registradas. Se bloquea si falta la boleta, la tarifa Flow conciliada o hay una devolución o disputa pendiente.</p>
+      {balances.length === 0 ? <p className={styles.empty}>Aún no hay autores para liquidar.</p> :
+        <div className={styles.records}>
+          {balances.map((balance) => <article key={balance.seller_id} className={styles.record}>
+            <h3 style={{ fontSize: "1.2rem" }}>{balance.display_name}</h3>
+            <p>Devengado: {formatCLP(balance.ledger_net_minor)} · Ya transferido: {formatCLP(balance.settled_minor)}</p>
+            <p>Saldo: {formatCLP(balance.available_minor)} · {balance.blocked ? "Bloqueado para revisión" : "Conciliado"}</p>
+            {balance.blocked ? <p>Revisa boletas, tarifa Flow, reembolsos, disputas y órdenes antes de transferir.</p> :
+              BigInt(balance.available_minor) > BigInt(0) && <SettlementForm sellerId={balance.seller_id} maxMinor={balance.available_minor} />}
+          </article>)}
+        </div>}
+    </section>
+    <section id="usuarios" aria-labelledby="usuarios-title" className={`${layout.panel} ${styles.section}`}>
+      <h2 id="usuarios-title">Usuarios vendedores</h2>
+      <p>Últimos 100 perfiles. El correo se muestra solo en este panel protegido.</p>
+      {contacts.length === 0 ? <p className={styles.empty}>Aún no hay perfiles de vendedores.</p> :
+        <div className={styles.records}>
+          {contacts.map((contact) => <div key={contact.id} className={styles.record}>
+            <strong>{contact.display_name}</strong> · {contact.status}<br />
+            <span>{contact.email ?? "Sin correo asociado"} · /{contact.public_slug}</span>
+          </div>)}
+        </div>}
+    </section>
+    <section id="verificaciones" aria-labelledby="seller-review-title" className={`${layout.panel} ${styles.section}`}>
+      <h2 id="seller-review-title">Verificación de autores</h2>
       <p>Verifica identidad, contenido y condiciones antes de activar una cuenta. Cada libro requiere revisión y publicación antes de recibir pagos.</p>
-      {sellers.length === 0 && <p>No hay autores en revisión.</p>}
-      <div style={{ display: "grid", gap: 18, marginTop: 20 }}>
-        {sellers.map((seller) => <article key={seller.id} style={{ border: "1px solid var(--border)", borderRadius: 16, padding: 22 }}>
+      {sellers.length === 0 && <p className={styles.empty}>No hay autores en revisión.</p>}
+      {sellers.length > 0 && <div className={styles.records}>
+        {sellers.map((seller) => <article key={seller.id} className={styles.record}>
           <h3 style={{ fontSize: "1.35rem" }}>{seller.display_name}</h3>
           <p>/{seller.public_slug} · {seller.status} · Términos {seller.terms_version ?? "pendientes"}</p>
           <p>{seller.bio}</p>
@@ -212,14 +226,15 @@ export default async function MarketplaceReviewPage({
               </button>
             </form>}
         </article>)}
-      </div>
+      </div>}
     </section>
-    <h2 id="libros" style={{ fontSize: "2rem", marginTop: 60 }}>Libros</h2>
-    {rows.length === 0 && <p style={{ marginTop: 40 }}>No hay libros pendientes de revisión.</p>}
-    <div style={{ display: "grid", gap: 24, marginTop: 40 }}>
+    <section id="libros" aria-labelledby="libros-title" className={`${layout.panel} ${styles.section}`}>
+    <h2 id="libros-title">Libros</h2>
+    {rows.length === 0 && <p className={styles.empty}>No hay libros pendientes de revisión.</p>}
+    {rows.length > 0 && <div className={styles.records}>
       {rows.map((row) => {
         const ready = Boolean(row.rights_declared_at && row.ready_pdf && row.ready_cover && row.price_tax_mode !== "pending_review");
-        return <article key={row.book_id} style={{ border: "1px solid var(--border)", borderRadius: 16, padding: 24 }}>
+        return <article key={row.book_id} className={styles.record}>
           <p className="eyebrow">{row.seller_name} · {row.seller_status}</p>
           <h2 style={{ fontSize: "1.5rem", margin: "10px 0" }}>{row.title}</h2>
           {row.subtitle && <p>{row.subtitle}</p>}
@@ -307,6 +322,14 @@ export default async function MarketplaceReviewPage({
           </form>}
         </article>;
       })}
+    </div>}
+    </section>
+    <section id="servicios" aria-labelledby="servicios-title" className={`${layout.panel} ${styles.section}`}>
+      <h2 id="servicios-title">Estado de los servicios</h2>
+      <p>Consulta la conexión de la base de datos y el almacenamiento privado.</p>
+      {preview ? <p className={styles.empty}>La comprobación está disponible en producción con sesión de administrador.</p> : <MarketplaceHealth />}
+    </section>
     </div>
-  </main>;
+    </main>
+  </div>;
 }
