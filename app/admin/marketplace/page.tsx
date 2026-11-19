@@ -24,6 +24,7 @@ type MarketplaceOrder = {
   id: string; buyer_email: string; total_minor: string; status: string; created_at: string;
   paid_at: string | null; title: string | null; seller_name: string | null;
   commission_minor: string;
+  tax_minor: string;
   payment_status: string | null; gateway_fee_actual_minor: string | null;
   gateway_fee_reconciled: boolean | null;
   payment_id: string | null;
@@ -63,7 +64,7 @@ export default async function MarketplaceReviewPage({
       order by s.created_at desc, s.id desc limit 100`),
     queryDatabase<MarketplaceOrder>(`
       select o.id, o.buyer_email, o.total_minor::text, o.status, o.created_at::text,
-        o.paid_at::text, items.title, items.seller_name, items.commission_minor, p.status as payment_status,
+        o.paid_at::text, items.title, items.seller_name, items.commission_minor, items.tax_minor, p.status as payment_status,
         p.id as payment_id, p.gateway_fee_actual_minor::text, p.gateway_fee_reconciled,
         delivery.status as delivery_status,
         e.document_kind, e.document_reference
@@ -71,7 +72,8 @@ export default async function MarketplaceReviewPage({
       left join lateral (
         select string_agg(r.title, ', ' order by r.title) as title,
           string_agg(s.display_name, ', ' order by s.display_name) as seller_name,
-          coalesce(sum(oi.commission_minor), 0)::text as commission_minor
+          coalesce(sum(oi.commission_minor), 0)::text as commission_minor,
+          coalesce(sum(oi.tax_minor), 0)::text as tax_minor
         from marketplace_order_items oi
         join marketplace_book_revisions r on r.id=oi.revision_id
         join marketplace_sellers s on s.id=oi.seller_id
@@ -151,8 +153,11 @@ export default async function MarketplaceReviewPage({
             <p>Orden: {order.id} · {order.status} · Pago: {order.payment_status ?? "pendiente"} · Entrega: {order.delivery_status ?? "pendiente"}</p>
             <p>Creada: {new Date(order.created_at).toLocaleString("es-CL", { timeZone: "America/Santiago" })}
               {order.paid_at && ` · Pagada: ${new Date(order.paid_at).toLocaleString("es-CL", { timeZone: "America/Santiago" })}`}</p>
-            {order.paid_at && <p>Comisión CrececonIA de la venta: {formatCLP(order.commission_minor)}
-              {["refunded", "disputed"].includes(order.status) && " · Reversada"}</p>}
+            {order.paid_at && <>
+              <p>Total cobrado al comprador: <strong>{formatCLP(order.total_minor)}</strong> · IVA registrado en la venta: <strong>{formatCLP(order.tax_minor)}</strong></p>
+              <p>Comisión CrececonIA de la venta: {formatCLP(order.commission_minor)}
+                {["refunded", "disputed"].includes(order.status) && " · Reversada"}</p>
+            </>}
             <p>Tarifa Flow observada: {order.gateway_fee_actual_minor === null ? "por conciliar" : formatCLP(order.gateway_fee_actual_minor)}
               {order.gateway_fee_actual_minor !== null && !order.gateway_fee_reconciled && " · asiento pendiente"}</p>
             {["paid", "refunded", "disputed"].includes(order.status)

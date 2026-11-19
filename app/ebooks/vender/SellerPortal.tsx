@@ -1,9 +1,11 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 import PayoutCalculator from "@/components/marketplace/PayoutCalculator";
 import InviteAuthor from "@/components/marketplace/InviteAuthor";
 import SellerDemo from "./SellerDemo";
+import styles from "./seller-panel.module.css";
 
 type Seller = { id: string; display_name: string; public_slug: string; bio: string; status: string };
 type TaxProfile = { rut: string; legal_name: string; declared_vat_status: string; review_status: string };
@@ -12,6 +14,21 @@ type SalesSummary = { sale_count: number; gross_minor: string; commission_minor:
 type PayoutBalance = { ledger_net_minor: string; settled_minor: string; available_minor: string; blocked: boolean };
 type SellerSale = { order_item_id: string; order_id: string; title: string; price_minor: string; commission_minor: string; gateway_fee_actual_minor: string | null; seller_net_minor: string | null; paid_at: string };
 const formatCLP = (amount: string | bigint) => `$${new Intl.NumberFormat("es-CL").format(BigInt(amount))} CLP`;
+const bookStates: Record<string, string> = {
+  draft: "Borrador", in_review: "En revisión", changes_requested: "Cambios solicitados",
+  approved: "Aprobado", published: "Publicado", paused: "Pausado", archived: "Archivado",
+};
+const tabs = [
+  ["libros", "Mis ebooks", "▤"], ["ventas", "Ventas", "▥"],
+  ["liquidaciones", "Liquidaciones", "◈"], ["perfil", "Mi perfil", "◎"],
+] as const;
+type View = (typeof tabs)[number][0];
+const sampleSeller: Seller = { id: "sample", display_name: "Andrea Muñoz", public_slug: "andrea", bio: "Autora de ejemplo", status: "active" };
+const sampleBook: Book = { id: "sample", slug: "ia-para-equipos", status: "published", title: "IA para equipos", description: "Ejemplo de un ebook publicado.", category: "ia", price_minor: 11900, has_pdf: true, has_cover: true };
+const sampleSummary: SalesSummary = { sale_count: 1, gross_minor: "11900", commission_minor: "595" };
+const emptySummary: SalesSummary = { sale_count: 0, gross_minor: "0", commission_minor: "0" };
+const sampleSale: SellerSale = { order_item_id: "sample", order_id: "sample", title: sampleBook.title, price_minor: "11900", commission_minor: "595", gateway_fee_actual_minor: "350", seller_net_minor: "10955", paid_at: "2026-11-18T15:00:00Z" };
+const sampleBalance: PayoutBalance = { ledger_net_minor: "10955", settled_minor: "0", available_minor: "10955", blocked: false };
 
 const inputStyle = { display: "block", width: "100%", margin: "8px 0 18px", padding: 12, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--ink)" };
 
@@ -20,18 +37,22 @@ async function post(path: string, body: Record<string, unknown>, method: "POST" 
   if (!response.ok) throw new Error(await response.text());
 }
 
-export default function SellerPortal({ demoAvailable, showRegistration = false }: { demoAvailable: boolean; showRegistration?: boolean }) {
-  const [loading, setLoading] = useState(true);
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [demoMode, setDemoMode] = useState(demoAvailable && !showRegistration);
+export default function SellerPortal({ demoAvailable, showRegistration = false, showPanelPreview = false }: {
+  demoAvailable: boolean; showRegistration?: boolean; showPanelPreview?: boolean;
+}) {
+  const panelPreview = demoAvailable && showPanelPreview;
+  const [loading, setLoading] = useState(!demoAvailable);
+  const [loggedIn, setLoggedIn] = useState(panelPreview);
+  const [demoMode, setDemoMode] = useState(demoAvailable && !showRegistration && !panelPreview);
+  const [view, setView] = useState<View>("libros");
   const [requestingAccess, setRequestingAccess] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState("");
-  const [seller, setSeller] = useState<Seller | null>(null);
+  const [seller, setSeller] = useState<Seller | null>(panelPreview ? sampleSeller : null);
   const [taxProfile, setTaxProfile] = useState<TaxProfile | null>(null);
-  const [books, setBooks] = useState<Book[]>([]);
-  const [salesSummary, setSalesSummary] = useState<SalesSummary>({ sale_count: 0, gross_minor: "0", commission_minor: "0" });
-  const [recentSales, setRecentSales] = useState<SellerSale[]>([]);
-  const [payoutBalance, setPayoutBalance] = useState<PayoutBalance | null>(null);
+  const [books, setBooks] = useState<Book[]>(panelPreview ? [sampleBook] : []);
+  const [salesSummary, setSalesSummary] = useState<SalesSummary>(panelPreview ? sampleSummary : emptySummary);
+  const [recentSales, setRecentSales] = useState<SellerSale[]>(panelPreview ? [sampleSale] : []);
+  const [payoutBalance, setPayoutBalance] = useState<PayoutBalance | null>(panelPreview ? sampleBalance : null);
   const [message, setMessage] = useState("");
   const [pricePreview, setPricePreview] = useState("");
   const [revisionPrices, setRevisionPrices] = useState<Record<string, string>>({});
@@ -133,9 +154,16 @@ export default function SellerPortal({ demoAvailable, showRegistration = false }
     } catch { setMessage("No pudimos enviar el libro a revisión."); }
   }
 
+  function signOut() {
+    void post("/api/marketplace/seller/logout", {}).then(() => window.location.reload())
+      .catch(() => setMessage("No pudimos cerrar la sesión. Inténtalo de nuevo."));
+  }
+
   if (demoMode) return <SellerDemo onExit={() => { setDemoMode(false); setLoggedIn(false); setSeller(null); setTaxProfile(null); setBooks([]); }} />;
 
-  return <main className="site-container" style={{ maxWidth: 800, paddingTop: 100, paddingBottom: 100 }}>
+  if (loading || !loggedIn || !seller) return <main className={styles.access}>
+    <div className={styles.accessCard}>
+    <Link href="/ebooks/mercado" className={styles.back}>← Volver al Marketplace</Link>
     <p className="eyebrow">Marketplace de ebooks</p>
     <h1>Espacio de autores</h1>
     <p>Publica ebooks sobre IA, tecnología y negocios. Tu perfil y cada libro pasan por revisión antes de aparecer en la tienda.</p>
@@ -169,11 +197,47 @@ export default function SellerPortal({ demoAvailable, showRegistration = false }
         <label><input name="acceptTerms" type="checkbox" required /> Leí y acepto las <a href="/ebooks/vender/condiciones" target="_blank" rel="noopener noreferrer">condiciones para autores</a> y declaro que mis datos son correctos.</label>
         <p><button type="submit" className="button button-dark">Crear perfil</button></p>
       </form>
-    </section> : <>
-      {demoMode && <p role="status">Estás viendo datos de ejemplo. <a href="/ebooks/vender/simulador">Prueba el simulador de ingresos</a>. La publicación y los cobros no están activos en esta demo.</p>}
-      <p><strong>{seller.display_name}</strong> · Estado: {seller.status === "active" ? "Verificado" : seller.status === "rejected" ? "Rechazado" : "En verificación"}</p>
+      <button type="button" className={styles.back} onClick={signOut}>Cerrar sesión</button>
+    </section> : null}
+    </div>
+  </main>;
+
+  const sellerStatus = seller.status === "active" ? "Verificado" : seller.status === "rejected" ? "Rechazado" : seller.status === "suspended" ? "Suspendido" : "En verificación";
+  const activeTab = tabs.find(([id]) => id === view)?.[1];
+  function changeView(next: View) {
+    setView(next);
+    window.scrollTo(0, 0);
+  }
+
+  return <main className={`seller-demo ${styles.workspace}`}>
+    <aside className={`seller-demo-sidebar ${styles.sidebar}`}>
+      <Link href="/ebooks/mercado" className="seller-demo-brand">
+        <span className="seller-demo-brand-icon" aria-hidden="true">C</span>
+        <span>CRECECONIA<small>MARKETPLACE</small></span>
+      </Link>
+      <div className={styles.identity}><strong>{seller.display_name}</strong><span>{sellerStatus}</span></div>
+      <nav className={styles.navigation} aria-label="Secciones del panel de autores">
+        {tabs.map(([id, label, icon]) => <button key={id} type="button" aria-pressed={view === id} onClick={() => changeView(id)}>
+          <span aria-hidden="true">{icon}</span>{label}
+        </button>)}
+      </nav>
+      <div className={styles.sidebarActions}>
+        <Link href="/ebooks/mercado">Ver tienda ↗</Link>
+        {panelPreview ? <Link href="/ebooks/vender">Volver a la demo</Link>
+          : <button type="button" onClick={signOut}>Cerrar sesión</button>}
+      </div>
+    </aside>
+    <div className="seller-demo-main">
+      <div className={styles.topbar}>Marketplace / {activeTab}</div>
+      <div className={`seller-demo-content ${styles.content}`}>
+      {panelPreview && <p className={styles.notice}>Vista previa con datos de ejemplo. Las cifras y el ebook son ilustrativos.</p>}
+      {message && <p role="status" className={styles.notice}>{message}</p>}
+      <section hidden={view !== "perfil"} className={styles.section} aria-labelledby="perfil-title">
+      <header className={styles.heading}><h1 id="perfil-title">Mi perfil</h1><p>Identidad, estado de verificación y datos tributarios.</p></header>
+      <div className={styles.panel}>
+      <p><strong>{seller.display_name}</strong> · {sellerStatus}</p>
       <InviteAuthor />
-      <p>Revisión tributaria: {taxProfile?.review_status === "verified" ? "Verificada" : taxProfile?.review_status === "rejected" ? "Rechazada: corrige tus datos para volver a solicitar revisión" : "Pendiente"}</p>
+      <p>Revisión tributaria: {panelPreview || taxProfile?.review_status === "verified" ? "Verificada" : taxProfile?.review_status === "rejected" ? "Rechazada: corrige tus datos para volver a solicitar revisión" : "Pendiente"}</p>
       {taxProfile?.review_status === "rejected" && <section>
         <h2>Corregir perfil tributario</h2>
         <form onSubmit={(event) => void submit(event, "/api/marketplace/seller/profile", "Datos tributarios reenviados para verificación.", "PATCH")}>
@@ -187,9 +251,15 @@ export default function SellerPortal({ demoAvailable, showRegistration = false }
           <p><button type="submit">Enviar corrección</button></p>
         </form>
       </section>}
-      <h2>Mis ebooks</h2>
-      {books.length ? <ul>{books.map((book) => <li key={book.id} style={{ marginBottom: 28 }}>
-        <strong>{book.title ?? book.slug}</strong> · {book.status} · ${Number(book.price_minor).toLocaleString("es-CL")} CLP
+      </div>
+      </section>
+      <section hidden={view !== "libros"} className={styles.section} aria-labelledby="ebooks-title">
+      <header className={styles.heading}><div><h1 id="ebooks-title">Mis ebooks</h1><p>Crea borradores, carga archivos y sigue el estado de cada libro.</p></div>
+        {!panelPreview && <a className="seller-demo-primary" href="#nuevo-ebook">Crear ebook</a>}
+      </header>
+      {books.length ? <ul className={styles.records}>{books.map((book) => <li key={book.id} className={styles.panel}>
+        <div className={styles.bookTitle}><h2>{book.title ?? book.slug}</h2><span className={styles.badge}>{bookStates[book.status] ?? book.status}</span></div>
+        <p>{book.price_minor == null ? "Precio pendiente" : formatCLP(String(book.price_minor))} · {book.has_pdf ? "PDF cargado" : "Falta PDF"} · {book.has_cover ? "Portada cargada" : "Falta portada"}</p>
         {(book.status === "draft" || book.status === "changes_requested") && <details open={book.status === "changes_requested"}>
           <summary>{book.status === "draft" ? "Editar borrador" : "Responder a la revisión"}</summary>
           <form key={`${book.id}:${book.revision_id}`} onSubmit={(event) => void submit(event, `/api/marketplace/seller/books/${book.id}`, "Nueva revisión guardada. Sube el PDF y la portada a esta versión antes de enviarla.", "PATCH")}>
@@ -207,32 +277,8 @@ export default function SellerPortal({ demoAvailable, showRegistration = false }
           <form onSubmit={(event) => void upload(event, book.id, "cover")}><input type="hidden" name="kind" value="cover" /><label>Portada JPG o PNG (hasta 4 MiB) <input name="file" type="file" accept="image/jpeg,image/png" required /></label> <button type="submit">{book.has_cover ? "Reemplazar portada" : "Subir portada"}</button></form>
           <button type="button" disabled={!book.has_pdf || !book.has_cover} onClick={() => void sendForReview(book.id)}>Enviar a revisión</button>
         </div>}
-      </li>)}</ul> : <p>Aún no tienes borradores.</p>}
-      <section aria-labelledby="seller-sales-heading" style={{ marginTop: 40, borderTop: "1px solid var(--border)", paddingTop: 28 }}>
-        <h2 id="seller-sales-heading">Ventas confirmadas</h2>
-        <p>Las ventas pagadas muestran el precio cobrado. Los saldos para transferir se calculan con los movimientos contables y la comisión real de Flow cuando esté disponible.</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, margin: "24px 0" }}>
-          <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{salesSummary.sale_count}</strong><span>Ventas pagadas</span></div>
-          <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{formatCLP(salesSummary.gross_minor)}</strong><span>Total bruto pagado</span></div>
-          <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{formatCLP(salesSummary.commission_minor)}</strong><span>Comisión CrececonIA</span></div>
-          <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{formatCLP(BigInt(salesSummary.gross_minor) - BigInt(salesSummary.commission_minor))}</strong><span>Tras comisión, antes de otros cargos</span></div>
-          <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{payoutBalance ? formatCLP(payoutBalance.settled_minor) : "—"}</strong><span>Ya transferido</span></div>
-          <div><strong style={{ display: "block", fontSize: "1.8rem" }}>{payoutBalance && !payoutBalance.blocked && BigInt(payoutBalance.available_minor) >= BigInt(0) ? formatCLP(payoutBalance.available_minor) : "En conciliación"}</strong><span>Saldo disponible para transferir</span></div>
-        </div>
-        {payoutBalance?.blocked && <p role="status">Hay cargos de Flow, reembolsos u otras incidencias pendientes de conciliación. El saldo disponible se mostrará cuando termine la revisión.</p>}
-        {payoutBalance && BigInt(payoutBalance.available_minor) < BigInt(0) && <p role="status">El saldo requiere revisión por ajustes o reembolsos anteriores a una transferencia.</p>}
-        <p>Los importes de transferencia no descuentan automáticamente el IVA de la venta. La emisión de boletas y su tratamiento tributario se revisan por separado.</p>
-        {recentSales.length > 0 ? <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", minWidth: 550 }}>
-          <thead><tr><th scope="col">Ebook</th><th scope="col">Fecha de pago</th><th scope="col">Precio</th><th scope="col">Comisión</th><th scope="col">Pasarela</th><th scope="col">Neto contable</th></tr></thead>
-          <tbody>{recentSales.map((sale) => <tr key={sale.order_item_id}>
-            <td>{sale.title}</td><td><time dateTime={sale.paid_at}>{new Date(sale.paid_at).toLocaleDateString("es-CL")}</time></td>
-            <td>{formatCLP(sale.price_minor)}</td><td>{formatCLP(sale.commission_minor)}</td>
-            <td>{sale.gateway_fee_actual_minor === null ? "Por conciliar" : formatCLP(sale.gateway_fee_actual_minor)}</td>
-            <td>{sale.seller_net_minor === null ? "Por conciliar" : formatCLP(sale.seller_net_minor)}</td>
-          </tr>)}</tbody>
-        </table></div> : <p>Aún no hay ventas confirmadas de tus ebooks.</p>}
-      </section>
-      {!demoMode && <><h2>Crear borrador</h2>
+      </li>)}</ul> : <p className={styles.panel}>Aún no tienes ebooks. Puedes empezar con un borrador.</p>}
+      {!panelPreview && <section id="nuevo-ebook" className={styles.panel}><h2>Crear borrador</h2>
       <form onSubmit={(event) => void submit(event, "/api/marketplace/seller/books", "Borrador guardado. La publicación requiere portada, PDF y aprobación editorial.")}>
         <label htmlFor="book-title">Título</label><input id="book-title" name="title" required minLength={3} maxLength={180} style={inputStyle} />
         <label htmlFor="book-slug">Identificador del libro</label><input id="book-slug" name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxLength={120} style={inputStyle} />
@@ -243,9 +289,40 @@ export default function SellerPortal({ demoAvailable, showRegistration = false }
         <PayoutCalculator priceValue={pricePreview} />
         <label><input name="declareRights" type="checkbox" required /> Declaro que tengo los derechos para vender este ebook.</label>
         <p><button type="submit" className="button button-dark">Guardar borrador</button></p>
-      </form></>}
-      {demoMode ? <button type="button" onClick={() => { setDemoMode(false); setLoggedIn(false); setSeller(null); setTaxProfile(null); setBooks([]); }}>Salir de la demo</button>
-        : <button type="button" onClick={() => { void post("/api/marketplace/seller/logout", {}).then(() => window.location.reload()); }}>Salir</button>}
-    </>}
+      </form>
+      </section>}
+      </section>
+      <section hidden={view !== "ventas"} className={styles.section} aria-labelledby="seller-sales-heading">
+        <header className={styles.heading}><h1 id="seller-sales-heading">Ventas confirmadas</h1><p>Últimas 20 ventas pagadas de tus ebooks.</p></header>
+        <dl className={styles.metrics}>
+          <div><dt>Ventas pagadas</dt><dd>{salesSummary.sale_count}</dd></div>
+          <div><dt>Total bruto pagado</dt><dd>{formatCLP(salesSummary.gross_minor)}</dd></div>
+          <div><dt>Comisión CrececonIA</dt><dd>{formatCLP(salesSummary.commission_minor)}</dd></div>
+          <div><dt>Después de comisión, antes de otros cargos</dt><dd>{formatCLP(BigInt(salesSummary.gross_minor) - BigInt(salesSummary.commission_minor))}</dd></div>
+        </dl>
+        {recentSales.length > 0 ? <div className={styles.records}>{recentSales.map((sale) => <article className={styles.panel} key={sale.order_item_id}>
+          <div className={styles.bookTitle}><h2>{sale.title}</h2><time dateTime={sale.paid_at}>{new Date(sale.paid_at).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })}</time></div>
+          <dl className={styles.saleDetails}>
+            <div><dt>Precio cobrado</dt><dd>{formatCLP(sale.price_minor)}</dd></div>
+            <div><dt>Comisión CrececonIA</dt><dd>{formatCLP(sale.commission_minor)}</dd></div>
+            <div><dt>Tarifa Flow</dt><dd>{sale.gateway_fee_actual_minor === null ? "Por conciliar" : formatCLP(sale.gateway_fee_actual_minor)}</dd></div>
+            <div><dt>Neto contable</dt><dd>{sale.seller_net_minor === null ? "Por conciliar" : formatCLP(sale.seller_net_minor)}</dd></div>
+          </dl>
+        </article>)}</div> : <p className={styles.panel}>Aún no hay ventas confirmadas de tus ebooks.</p>}
+      </section>
+      <section hidden={view !== "liquidaciones"} className={styles.section} aria-labelledby="seller-payout-heading">
+        <header className={styles.heading}><h1 id="seller-payout-heading">Liquidaciones</h1><p>Revisa tus ingresos devengados, transferencias registradas y saldo disponible.</p></header>
+        <dl className={styles.metrics}>
+          <div><dt>Devengado</dt><dd>{payoutBalance ? formatCLP(payoutBalance.ledger_net_minor) : "—"}</dd></div>
+          <div><dt>Ya transferido</dt><dd>{payoutBalance ? formatCLP(payoutBalance.settled_minor) : "—"}</dd></div>
+          <div><dt>Disponible para transferir</dt><dd>{payoutBalance && !payoutBalance.blocked && BigInt(payoutBalance.available_minor) >= BigInt(0) ? formatCLP(payoutBalance.available_minor) : "—"}</dd></div>
+        </dl>
+        {!payoutBalance && <p className={styles.panel}>Todavía no hay liquidaciones para esta cuenta.</p>}
+        {payoutBalance?.blocked && <p role="status" className={styles.notice}>Saldo en conciliación. Puede haber comprobantes, cargos de Flow o reembolsos pendientes.</p>}
+        {payoutBalance && BigInt(payoutBalance.available_minor) < BigInt(0) && <p role="status" className={styles.notice}>El saldo requiere revisión por ajustes o reembolsos.</p>}
+        <p className={styles.panel}>El equipo registra manualmente las transferencias. El saldo contable no descuenta automáticamente el IVA de la venta.</p>
+      </section>
+      </div>
+    </div>
   </main>;
 }
