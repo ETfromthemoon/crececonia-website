@@ -2,14 +2,20 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 const listPublishedMarketplaceBooks = vi.hoisted(() => vi.fn());
+const listPublishedMarketplaceCategories = vi.hoisted(() => vi.fn(async () => [] as string[]));
 const marketplaceDemoAvailable = vi.hoisted(() => vi.fn(() => false));
 vi.mock("@/components/Navbar", () => ({ default: () => null }));
 vi.mock("@/components/Footer", () => ({ default: () => null }));
-vi.mock("@/lib/marketplace-review", () => ({ listPublishedMarketplaceBooks }));
+vi.mock("@/lib/marketplace-review", () => ({ listPublishedMarketplaceBooks, listPublishedMarketplaceCategories }));
+vi.mock("@/lib/ebook-catalog", async (importOriginal) => {
+  const catalog = await importOriginal<typeof import("@/lib/ebook-catalog")>();
+  return { ...catalog, getLiveCatalogEntries: vi.fn(catalog.getLiveCatalogEntries) };
+});
 vi.mock("@/lib/marketplace-demo", () => ({ marketplaceDemoAvailable, marketplacePublicAvailable: () => true }));
 vi.mock("@/lib/ebook-pricing", () => ({ getCurrentPrice: async () => ({ price: 11900 }) }));
 
 import MarketplaceCatalogPage from "@/app/ebooks/mercado/page";
+import { getLiveCatalogEntries } from "@/lib/ebook-catalog";
 
 describe("catálogo integrado del marketplace", () => {
   it("muestra libros propios y de autores con su destino de compra correspondiente", async () => {
@@ -37,12 +43,26 @@ describe("catálogo integrado del marketplace", () => {
     expect(html).toContain("1 libro en esta página");
   });
 
-  it("incluye los ebooks reales en la vista previa sin dirigir a un checkout de preview", async () => {
+  it("solo incluye ebooks reales en la vista previa y enlaza a las fichas públicas", async () => {
     marketplaceDemoAvailable.mockReturnValueOnce(true);
+    listPublishedMarketplaceBooks.mockResolvedValueOnce([]);
     const page = await MarketplaceCatalogPage({ searchParams: Promise.resolve({}) });
     const html = renderToStaticMarkup(page);
     expect(html).toContain("De cero a Claude en una semana");
     expect(html).toContain('href="https://www.crececonia.cl/ebook/de-cero-a-claude-en-una-semana"');
-    expect(html).toContain("Los ebooks de CrececonIA son reales");
+    expect(html).not.toContain("/ebooks/mercado/demo-");
+    expect(html.match(/class="md-card-action"/g)).toHaveLength(7);
+  });
+
+  it("muestra las categorías publicadas aunque no estén en los resultados de la página actual", async () => {
+    const ownBook = getLiveCatalogEntries().find((entry) => entry.resource === "ebook:de-cero-a-claude-en-una-semana")!;
+    vi.mocked(getLiveCatalogEntries).mockReturnValueOnce([ownBook]);
+    listPublishedMarketplaceCategories.mockResolvedValueOnce(["negocios"]);
+    listPublishedMarketplaceBooks.mockResolvedValueOnce([]);
+    const page = await MarketplaceCatalogPage({ searchParams: Promise.resolve({ page: "2", q: "sin resultados" }) });
+    const html = renderToStaticMarkup(page);
+    expect(html).toContain('href="/ebooks/mercado?q=sin+resultados&amp;category=ia"');
+    expect(html).toContain('href="/ebooks/mercado?q=sin+resultados&amp;category=negocios"');
+    expect(html).not.toContain('category=tecnologia');
   });
 });
