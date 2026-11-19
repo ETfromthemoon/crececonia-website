@@ -6,7 +6,7 @@ import { marketplaceDemoAvailable, marketplacePublicAvailable } from "@/lib/mark
 
 export const dynamic = "force-dynamic";
 
-export default function SellerPortalPage() {
+export default async function SellerPortalPage({ searchParams }: { searchParams: Promise<{ registro?: string }> }) {
   if (!marketplacePublicAvailable()) return <>
     <Navbar />
     <main className="site-container" style={{ minHeight: "70vh", maxWidth: 800, paddingTop: 150, paddingBottom: 100 }}>
@@ -17,5 +17,5 @@ export default function SellerPortalPage() {
     </main>
     <Footer />
   </>;
-  return <SellerPortal demoAvailable={marketplaceDemoAvailable()} />;
+  return <SellerPortal demoAvailable={marketplaceDemoAvailable()} showRegistration={(await searchParams).registro === "demo"} />;
 }
