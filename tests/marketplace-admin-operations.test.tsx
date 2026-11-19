@@ -24,9 +24,9 @@ let orders: Record<string, unknown>[];
 describe("operación administrativa del marketplace", () => {
   beforeEach(() => {
     requireAdminSession.mockReset().mockResolvedValue(undefined);
-    orders = [{ id: "order", buyer_email: "comprador@example.cl", total_minor: "11900", status: "paid", created_at: "2026-11-15T12:00:00Z", paid_at: "2026-11-15T12:10:00Z", title: "Libro IA", seller_name: "Autora", payment_id: "payment", payment_status: "confirmed", gateway_fee_actual_minor: null, gateway_fee_reconciled: false, delivery_status: "succeeded", document_kind: null, document_reference: null }];
+    orders = [{ id: "order", buyer_email: "comprador@example.cl", total_minor: "11900", commission_minor: "595", status: "paid", created_at: "2026-11-15T12:00:00Z", paid_at: "2026-11-15T12:10:00Z", title: "Libro IA", seller_name: "Autora", payment_id: "payment", payment_status: "confirmed", gateway_fee_actual_minor: null, gateway_fee_reconciled: false, delivery_status: "succeeded", document_kind: null, document_reference: null }];
     queryDatabase.mockReset().mockImplementation(async (sql: string) => {
-      if (sql.includes("as fiscal_pending")) return [{ sellers: "1", books: "1", buyers: "1", orders: "1", paid: "1", fiscal_pending: "1" }];
+      if (sql.includes("as fiscal_pending")) return [{ sellers: "1", books: "1", buyers: "1", orders: "1", paid: "1", fiscal_pending: "1", paid_sales_minor: "11900", net_commission_minor: "595" }];
       if (sql.includes("from marketplace_sellers s")) return [{ id: "seller", email: "autor@example.cl", display_name: "Autora", public_slug: "autora", status: "active", created_at: "2026-11-15T12:00:00Z" }];
       if (sql.includes("from marketplace_orders o")) return orders;
       if (sql.includes("from public.marketplace_seller_payout_balances")) return [{ seller_id: "seller", display_name: "Autora", ledger_net_minor: "10955", settled_minor: "0", available_minor: "10955", blocked: false }];
@@ -50,9 +50,19 @@ describe("operación administrativa del marketplace", () => {
     expect(html).toContain("Formulario liquidación");
     expect(html).toContain("Formulario reverso");
     expect(html).toContain("Formulario tarifa");
-    expect(html).toContain("Boletas pendientes");
+    expect(html).toContain("Boletas o vouchers pendientes");
+    expect(html).toContain("$595</strong>Comisión CrececonIA tras reversos");
+    expect(html).toContain("Comisión CrececonIA de la venta: $595");
+    expect(html).toContain("Tarifa Flow observada: por conciliar");
     expect(queryDatabase.mock.calls.some(([sql]) => String(sql).includes("o.status in ('paid', 'refunded', 'disputed')") && String(sql).includes("o.paid_at is not null"))).toBe(true);
     expect(queryDatabase.mock.calls.some(([sql]) => String(sql).includes("aggregate_type='order'"))).toBe(true);
+  });
+
+  it("muestra el folio registrado en lugar del formulario tributario", async () => {
+    orders = [{ ...orders[0], document_kind: "boleta", document_reference: "F-123" }];
+    const html = renderToStaticMarkup(await MarketplaceReviewPage({ searchParams: Promise.resolve({}) }));
+    expect(html).toContain("F-123");
+    expect(html).not.toContain("Formulario tributario");
   });
 
   it("ofrece conciliación si la tarifa existe pero falta el asiento, incluso tras reembolso", async () => {

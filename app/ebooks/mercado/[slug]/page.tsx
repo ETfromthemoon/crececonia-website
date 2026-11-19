@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getMarketplaceRecommendations, getPublishedMarketplaceBook } from "@/lib/marketplace-review";
-import MarketplaceSandboxCheckout from "./sandbox-checkout";
+import MarketplaceCheckout from "./MarketplaceCheckout";
+import { marketplaceCheckoutMode } from "@/lib/marketplace-checkout";
 import { marketplacePublicAvailable } from "@/lib/marketplace-demo";
 import "../demo.css";
 import "../real.css";
@@ -27,9 +28,7 @@ export default async function MarketplaceBookPage({ params }: { params: Promise<
   } catch (error) {
     console.error("marketplace_recommendations_unavailable", error instanceof Error ? error.message : "unknown");
   }
-  const sandboxCheckout = process.env.MARKETPLACE_FLOW_SANDBOX_ENABLED === "true"
-    && process.env.FLOW_SANDBOX === "true"
-    && (process.env.VERCEL_ENV === "preview" || process.env.NODE_ENV === "development");
+  const checkoutMode = marketplaceCheckoutMode();
   return <>
     <Navbar />
     <main className="md-shop"><div className="md-wrap md-detail mr-detail">
@@ -44,9 +43,9 @@ export default async function MarketplaceBookPage({ params }: { params: Promise<
           <p className="md-detail-author">Por <strong>{book.author_display_name}</strong> · {book.seller_name}</p>
           <p className="md-detail-description mr-description">{book.description}</p>
           <div className="md-detail-purchase"><div><span>PRECIO FINAL</span><strong>{formatCLP(book.price_minor)}</strong></div>
-            {sandboxCheckout ? <MarketplaceSandboxCheckout bookId={book.id} priceMinor={book.price_minor} /> : <span>Compra disponible próximamente</span>}
+            {checkoutMode && <MarketplaceCheckout bookId={book.id} priceMinor={book.price_minor} mode={checkoutMode} />}
           </div>
-          {!sandboxCheckout && <p className="md-detail-disclaimer">Este título todavía no admite pagos en línea.</p>}
+          {!checkoutMode && <p className="md-detail-disclaimer">Este título todavía no admite pagos en línea.</p>}
         </div>
       </div>
       {recommendations.length > 0 && <section className="mr-related" aria-labelledby="related-books">

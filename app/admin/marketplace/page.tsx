@@ -14,11 +14,13 @@ const formatCLP = (value: string) => new Intl.NumberFormat("es-CL", {
   style: "currency", currency: "CLP", maximumFractionDigits: 0,
 }).format(BigInt(value));
 
-type MarketplaceCounts = { sellers: string; books: string; buyers: string; orders: string; paid: string; fiscal_pending: string };
+type MarketplaceCounts = { sellers: string; books: string; buyers: string; orders: string; paid: string;
+  fiscal_pending: string; paid_sales_minor: string; net_commission_minor: string };
 type SellerContact = { id: string; email: string | null; display_name: string; public_slug: string; status: string; created_at: string };
 type MarketplaceOrder = {
   id: string; buyer_email: string; total_minor: string; status: string; created_at: string;
   paid_at: string | null; title: string | null; seller_name: string | null;
+  commission_minor: string;
   payment_status: string | null; gateway_fee_actual_minor: string | null;
   gateway_fee_reconciled: boolean | null;
   payment_id: string | null;
@@ -43,6 +45,9 @@ export default async function MarketplaceReviewPage({
         (select count(distinct buyer_email) from marketplace_orders)::text as buyers,
         (select count(*) from marketplace_orders)::text as orders,
         (select count(*) from marketplace_orders where status='paid')::text as paid,
+        (select coalesce(sum(total_minor), 0) from marketplace_orders where status='paid')::text as paid_sales_minor,
+        (select coalesce(sum(credit_minor - debit_minor), 0) from marketplace_ledger_entries
+          where account_code='platform_commission')::text as net_commission_minor,
         (select count(*) from marketplace_orders o where o.status in ('paid', 'refunded', 'disputed')
           and o.paid_at is not null and not exists
           (select 1 from marketplace_fiscal_evidence e where e.order_id=o.id))::text as fiscal_pending`),
@@ -53,14 +58,15 @@ export default async function MarketplaceReviewPage({
       order by s.created_at desc, s.id desc limit 100`),
     queryDatabase<MarketplaceOrder>(`
       select o.id, o.buyer_email, o.total_minor::text, o.status, o.created_at::text,
-        o.paid_at::text, items.title, items.seller_name, p.status as payment_status,
+        o.paid_at::text, items.title, items.seller_name, items.commission_minor, p.status as payment_status,
         p.id as payment_id, p.gateway_fee_actual_minor::text, p.gateway_fee_reconciled,
         delivery.status as delivery_status,
         e.document_kind, e.document_reference
       from marketplace_orders o
       left join lateral (
         select string_agg(r.title, ', ' order by r.title) as title,
-          string_agg(s.display_name, ', ' order by s.display_name) as seller_name
+          string_agg(s.display_name, ', ' order by s.display_name) as seller_name,
+          coalesce(sum(oi.commission_minor), 0)::text as commission_minor
         from marketplace_order_items oi
         join marketplace_book_revisions r on r.id=oi.revision_id
         join marketplace_sellers s on s.id=oi.seller_id
@@ -86,7 +92,8 @@ export default async function MarketplaceReviewPage({
         order by created_at desc, id desc limit 1
       ) delivery on true
       left join marketplace_fiscal_evidence e on e.order_id=o.id
-      order by o.created_at desc, o.id desc limit 100`),
+      order by (o.status in ('paid', 'refunded', 'disputed') and o.paid_at is not null and e.order_id is null) desc,
+        o.created_at desc, o.id desc limit 100`),
     queryDatabase<SellerBalance>(`
       select seller_id, display_name, ledger_net_minor::text, settled_minor::text,
         available_minor::text, blocked
@@ -110,7 +117,10 @@ export default async function MarketplaceReviewPage({
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))", gap: 12, marginTop: 16 }}>
         {([ ["Autores", counts[0]?.sellers], ["Libros", counts[0]?.books],
           ["Compradores", counts[0]?.buyers], ["Órdenes", counts[0]?.orders],
-          ["Pagadas", counts[0]?.paid], ["Boletas pendientes", counts[0]?.fiscal_pending] ] as const).map(([label, value]) =>
+          ["Pagadas", counts[0]?.paid],
+          ["Ventas pagadas", formatCLP(counts[0]?.paid_sales_minor ?? "0")],
+          ["Comisión CrececonIA tras reversos", formatCLP(counts[0]?.net_commission_minor ?? "0")],
+          ["Boletas o vouchers pendientes", counts[0]?.fiscal_pending] ] as const).map(([label, value]) =>
           <div key={label} style={{ border: "1px solid var(--border)", borderRadius: 12, padding: 16 }}>
             <strong style={{ display: "block", fontSize: "1.5rem" }}>{value ?? "0"}</strong>{label}
           </div>)}
@@ -143,7 +153,7 @@ export default async function MarketplaceReviewPage({
     </section>
     <section id="ventas" aria-labelledby="ventas-title" style={{ marginTop: 48 }}>
       <h2 id="ventas-title" style={{ fontSize: "2rem" }}>Compradores, ventas y comprobantes</h2>
-      <p>Últimas 100 órdenes. Registra aquí el folio de la boleta emitida manualmente o la referencia del voucher correspondiente.</p>
+      <p>Hasta 100 órdenes, con los comprobantes pendientes primero. Registra el folio de la boleta emitida manualmente o la referencia del voucher correspondiente.</p>
       {orders.length === 0 ? <p>Aún no hay órdenes.</p> :
         <div style={{ display: "grid", gap: 14, marginTop: 16 }}>
           {orders.map((order) => <article key={order.id} style={{ border: "1px solid var(--border)", borderRadius: 12, padding: 18 }}>
@@ -152,7 +162,9 @@ export default async function MarketplaceReviewPage({
             <p>Orden: {order.id} · {order.status} · Pago: {order.payment_status ?? "pendiente"} · Entrega: {order.delivery_status ?? "pendiente"}</p>
             <p>Creada: {new Date(order.created_at).toLocaleString("es-CL", { timeZone: "America/Santiago" })}
               {order.paid_at && ` · Pagada: ${new Date(order.paid_at).toLocaleString("es-CL", { timeZone: "America/Santiago" })}`}</p>
-            <p>Comisión Flow observada: {order.gateway_fee_actual_minor === null ? "por conciliar" : formatCLP(order.gateway_fee_actual_minor)}
+            {order.paid_at && <p>Comisión CrececonIA de la venta: {formatCLP(order.commission_minor)}
+              {["refunded", "disputed"].includes(order.status) && " · Reversada"}</p>}
+            <p>Tarifa Flow observada: {order.gateway_fee_actual_minor === null ? "por conciliar" : formatCLP(order.gateway_fee_actual_minor)}
               {order.gateway_fee_actual_minor !== null && !order.gateway_fee_reconciled && " · asiento pendiente"}</p>
             {["paid", "refunded", "disputed"].includes(order.status)
               && ["confirmed", "refunded", "disputed"].includes(order.payment_status ?? "")
