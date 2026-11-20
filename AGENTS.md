@@ -235,6 +235,15 @@ copy/precio sigue siendo una decisión manual del usuario — nunca se genera un
 
 ## Conventions
 
+### Publicar repositorios y skills
+
+Cuando Sergio pida «publica este repo/skill en CrececonIA», seguir
+`docs/publicacion-recursos.md`. Basta la URL del repositorio o la carpeta de la
+skill; obtener de la fuente los datos verificables de la ficha y pedir solo
+una decisión editorial que falte. El catálogo público es
+`content/public-catalog.json`. Preparar PR con Preview para revisión; no
+fusionar sin aprobación de Sergio.
+
 - **Language**: All copy in Spanish (Chilean). Title/meta in `app/layout.tsx` sets OG/Twitter/JSON-LD.
 - **Import alias**: `@/` → project root (configured in `tsconfig.json` paths).
 - **Component naming**: Components are imported with names that differ from filenames in `page.tsx` (e.g., `import Hero from "@/components/Hero"` but file is `Hero.tsx`). Aliases in page.tsx: `Beliefs = ProblemBar`, `BPIProtocol = HowItWorks`, `SergioStory = UseCases`, `Investment = Services`.
