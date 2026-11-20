@@ -63,7 +63,7 @@ export function isAdminPath(path: string): boolean {
 export function isPrivateAnalyticsUrl(value: string, publishedLaunchPath?: string): boolean {
   try {
     const url = new URL(value, "https://www.crececonia.cl");
-    if (isAdminPath(url.pathname) || url.pathname.startsWith("/api/")
+    if (isAdminPath(url.pathname) || url.pathname === "/biblioteca" || url.pathname.startsWith("/biblioteca/") || url.pathname.startsWith("/api/")
         || url.pathname === "/solicitar-llamada" || /\/(success|aula|sala)(\/|$)/.test(url.pathname)) return true;
     for (const key of url.searchParams.keys()) if (PRIVATE_QUERY.test(key)) return true;
     return url.pathname.startsWith("/lanzamientos/") && publishedLaunchPath !== url.pathname;

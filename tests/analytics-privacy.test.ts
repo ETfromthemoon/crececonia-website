@@ -97,6 +97,8 @@ describe("analytics privacy boundary", () => {
     expect(config.before_send(event).properties.$current_url).toBe("https://example.test/a?utm_medium=email");
     expect(config.before_send(event).properties.token).toBe("synthetic");
     expect(config.before_send(event).properties.nested).toEqual({});
+    href = "https://www.crececonia.cl/biblioteca/confirmar#token=secret";
+    expect(config.before_send(event)).toBeNull();
     href = "https://www.crececonia.cl/admin/ebook";
     expect(config.before_send(event)).toBeNull();
     trackEvent("private"); expect(sdk.capture).not.toHaveBeenCalled();
@@ -115,7 +117,7 @@ describe("analytics privacy boundary", () => {
     trackEvent("qualification_saved", { service: "mentoria" });
     expect(sdk.capture).toHaveBeenCalledWith("qualification_saved", expect.objectContaining({ service: "mentoria", route: "/ebooks", utm_source: "launch" }));
   });
-  it.each(["/ebooks", "/admin", "/lanzamientos/private", "/ebook/book/success?token=secret"])("never loads or invokes Meta on %s even if an old fbq is present", (path) => {
+  it.each(["/ebooks", "/admin", "/biblioteca", "/biblioteca/confirmar#token=secret", "/lanzamientos/private", "/ebook/book/success?token=secret"])("never loads or invokes Meta on %s even if an old fbq is present", (path) => {
     href = new URL(path, href).href;
     expect(MetaPixel()).toBeNull();
     trackMetaEvent("Purchase", { value: 1000 });
