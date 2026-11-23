@@ -1,19 +1,12 @@
+import { requireAdminSession } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getCatalogEntry, DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
-import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminEbookPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ key?: string }>;
-}) {
-  const { key } = await searchParams;
+export default async function AdminEbookPage() {
+  await requireAdminSession();
 
-  if (!process.env.ADMIN_SECRET || key !== process.env.ADMIN_SECRET) {
-    notFound();
-  }
 
   const db = getSupabaseAdmin();
 

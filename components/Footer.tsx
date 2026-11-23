@@ -1,3 +1,5 @@
+import { marketplacePublicAvailable } from "@/lib/marketplace-demo";
+
 export default function Footer() {
   return (
     <footer className="site-footer">
@@ -11,8 +13,8 @@ export default function Footer() {
           <a href="/mentoria">Mentoría</a>
           <a href="/implementacion">Implementación</a>
           <a href="/ebooks">Ebooks</a>
+          {marketplacePublicAvailable() && <a href="/ebooks/mercado">Marketplace de ebooks</a>}
           <a href="/centro">Centro de conocimiento</a>
-          <a href="/protocolo-bpi">Método BPI</a>
           <a href="/ia">Elegir mi ruta</a>
         </div>
         <div className="footer-contact">

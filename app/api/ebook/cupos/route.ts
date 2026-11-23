@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentPrice } from "@/lib/ebook-pricing";
+import { computeEbookTotal, isEbookFlashEligible, EBOOK_FLASH_END } from "@/lib/ebook-promotion";
 import {
   DEFAULT_EBOOK_RESOURCE,
   getCatalogEntry,
@@ -23,23 +24,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No disponible." }, { status: 404 });
   }
 
-  const priceInfo = await getCurrentPrice(resource).catch(() => null);
-
-  if (!priceInfo) {
-    return NextResponse.json(
-      {
-        price: entry.tierPrices.regular,
-        tier: "regular",
-        remaining: null,
-        originalPrice: entry.tierPrices.regular,
-      },
-      {
-        status: 200,
-        headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" },
-      }
-    );
-  }
-  return NextResponse.json(priceInfo, {
-    headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" },
+  const priceInfo = await getCurrentPrice(resource).catch(() => ({
+    price: entry.tierPrices.regular,
+    tier: "regular",
+    remaining: null,
+    originalPrice: entry.tierPrices.regular,
+  }));
+  const pricingTime = Date.now();
+  const quote = computeEbookTotal([{ resource, price: priceInfo.price }], pricingTime);
+  return NextResponse.json({
+    ...priceInfo,
+    salePrice: quote.total,
+    previousPrice: quote.subtotal,
+    pricingTime,
+    promotionEndsAt: isEbookFlashEligible([resource], pricingTime) ? EBOOK_FLASH_END : null,
+  }, {
+    headers: { "Cache-Control": "no-store" },
   });
 }

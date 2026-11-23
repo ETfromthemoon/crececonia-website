@@ -1,5 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-catalog";
+
+// Las pruebas habituales no dependen del día en que se ejecuta la suite.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-11-06T12:00:00-03:00"));
+});
+afterEach(() => vi.useRealTimers());
 
 const { mockGetCurrentPrice } = vi.hoisted(() => ({
   mockGetCurrentPrice: vi.fn().mockResolvedValue({
@@ -256,16 +263,35 @@ describe("POST /api/flow/create — 1 solo libro (comportamiento existente)", ()
 
   it("captura una orden de checkout canónica con resource, monto y cantidad de items", async () => {
     flowOk();
-    await POST(postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE] }));
+    const attribution = {
+      utm_source: "instagram", utm_medium: "social", utm_campaign: "ebook-launch",
+      utm_content: "creator-1", utm_term: "automatizacion", fbclid: "private-click-id",
+      gclid: "private-google-click-id", email: "buyer@example.com",
+    };
+    await POST(postJson({ email: "user@test.com", resources: [DEFAULT_EBOOK_RESOURCE], analyticsDistinctId: "Sergio Pérez", analyticsAttribution: attribution }));
+    expect(mockPendingInsert).toHaveBeenCalledWith(expect.objectContaining({
+      resources: [expect.objectContaining({
+        resource: DEFAULT_EBOOK_RESOURCE,
+        utm_source: "instagram", utm_medium: "social", utm_campaign: "ebook-launch",
+        utm_content: "creator-1", utm_term: "automatizacion",
+      })],
+    }));
+    const saved = mockPendingInsert.mock.calls.at(-1)?.[0]?.resources?.[0] as Record<string, unknown>;
+    expect(saved).not.toHaveProperty("fbclid");
+    expect(saved).not.toHaveProperty("gclid");
+    expect(saved).not.toHaveProperty("email");
+    expect(saved).not.toHaveProperty("analytics_distinct_id");
     expect(mockCaptureServerEvent).toHaveBeenCalledWith(
       "ebook_checkout_created",
-      "user@test.com",
+      expect.stringMatching(/^ebook-order:ebook-/),
       expect.objectContaining({
         resource: DEFAULT_EBOOK_RESOURCE,
         item_count: 1,
         has_discount_code: false,
         amount: 10800,
         order_id: expect.stringMatching(/^ebook-/),
+        utm_source: "instagram",
+        utm_campaign: "ebook-launch",
       })
     );
   });
@@ -452,6 +478,51 @@ describe("POST /api/flow/create — combos", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe("POST /api/flow/create — promoción de noviembre", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.setSystemTime(new Date("2026-11-15T23:59:59-03:00"));
+    mockGetCurrentPrice.mockResolvedValue({ price: 19700, tier: "regular", remaining: null, originalPrice: 19700 });
+    flowOk();
+  });
+
+  it.each([
+    [[DEFAULT_EBOOK_RESOURCE], 13790],
+    [[DEFAULT_EBOOK_RESOURCE, "ebook:agentes-de-ia"], 24822],
+    [["ebook:creacion-de-webs-con-ia", "ebook:creacion-de-webs-con-ia-parte-2", "ebook:creacion-de-webs-con-ia-parte-3", "ebook:creacion-de-webs-con-ia-parte-4"], 41370],
+  ])("Flow y el manifiesto coinciden con el total publicado de %s", async (resources, total) => {
+    const res = await POST(postJson({ email: "user@test.com", resources, expectedAmount: total }));
+    expect(res.status).toBe(200);
+    expect(Number(flowBody().get("amount"))).toBe(total);
+    const pending = mockPendingInsert.mock.calls[0][0];
+    expect(pending.resources.reduce((sum: number, item: { amount: number }) => sum + item.amount, 0)).toBe(total);
+    expect(pending.discount_code).toBeNull();
+  });
+
+  it("rechaza un cupón adicional sin crear orden ni canjearlo", async () => {
+    const res = await POST(postJson({ email: "user@test.com", discountCode: "EXTRA" }));
+    expect(res.status).toBe(400);
+    expect(mockValidateDiscount).not.toHaveBeenCalled();
+    expect(mockPendingInsert).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("a medianoche rechaza el total antiguo antes de crear un cobro", async () => {
+    vi.setSystemTime(new Date("2026-11-16T00:00:00-03:00"));
+    const res = await POST(postJson({ email: "user@test.com", expectedAmount: 8950 }));
+    expect(res.status).toBe(409);
+    expect(mockPendingInsert).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("a medianoche permite pagar el nuevo precio una vez revisado", async () => {
+    vi.setSystemTime(new Date("2026-11-16T00:00:00-03:00"));
+    const res = await POST(postJson({ email: "user@test.com", expectedAmount: 19700 }));
+    expect(res.status).toBe(200);
+    expect(flowBody().get("amount")).toBe("19700");
   });
 });
 

@@ -4,8 +4,6 @@ import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import PostHogProvider from "@/components/PostHogProvider";
 import MetaPixel from "@/components/MetaPixel";
-import { EvaluacionProvider } from "@/components/EvaluacionProvider";
-import EvaluacionModal from "@/components/EvaluacionModal";
 import ChatWidget from "@/components/ChatWidget";
 import { organizationJsonLd, serializeJsonLd, SITE_URL } from "@/lib/seo";
 import "@/components/PopupSurfaces.css";
@@ -33,5 +31,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="es-CL" data-theme="light" className={`${inter.variable} ${fraunces.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${sourceSerif4.variable} antialiased`}><head><meta name="facebook-domain-verification" content="yv8r0z7loiesxg7kevissyb0owb7hm" /><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationJsonLd) }} /></head><body className="flex flex-col min-h-screen"><MetaPixel /><PostHogProvider><EvaluacionProvider><SmoothScroll />{children}<EvaluacionModal /><ChatWidget /></EvaluacionProvider></PostHogProvider></body></html>;
+  return <html lang="es-CL" data-theme="light" className={`${inter.variable} ${fraunces.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${sourceSerif4.variable} antialiased`}><head><meta name="facebook-domain-verification" content="yv8r0z7loiesxg7kevissyb0owb7hm" /><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationJsonLd) }} /></head><body className="flex flex-col min-h-screen"><MetaPixel /><PostHogProvider><SmoothScroll />{children}<ChatWidget /></PostHogProvider></body></html>;
 }

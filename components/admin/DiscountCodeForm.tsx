@@ -2,10 +2,6 @@
 
 import { useState, type CSSProperties, type FormEvent } from "react";
 
-type Props = {
-  adminKey: string;
-};
-
 const inputStyle: CSSProperties = {
   width: "100%",
   background: "var(--carbon)",
@@ -28,7 +24,7 @@ const labelStyle: CSSProperties = {
   fontFamily: "var(--font-mono)",
 };
 
-export default function DiscountCodeForm({ adminKey }: Props) {
+export default function DiscountCodeForm() {
   const [type, setType] = useState<"percent" | "fixed">("percent");
   const [amount, setAmount] = useState("20");
   const [quantity, setQuantity] = useState("1");
@@ -53,7 +49,7 @@ export default function DiscountCodeForm({ adminKey }: Props) {
 
     const res = await fetch("/api/admin/discount-codes", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type,
         amount: Number(amount),

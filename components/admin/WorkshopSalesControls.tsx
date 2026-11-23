@@ -5,7 +5,7 @@ import { useState, type FormEvent } from "react";
 type Availability = { label: string; amount: number; nextAmount: number; remaining: number; mode: "live" | "recording" };
 const clp = (value: number) => `$${value.toLocaleString("es-CL")}`;
 
-export default function WorkshopSalesControls({ adminKey, initial, availabilityError }: { adminKey: string; initial: Availability | null; availabilityError?: string | null }) {
+export default function WorkshopSalesControls({ initial, availabilityError }: { initial: Availability | null; availabilityError?: string | null }) {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState<"advance" | "manual" | "resend-resources" | null>(null);
   const [message, setMessage] = useState("");
@@ -14,7 +14,7 @@ export default function WorkshopSalesControls({ adminKey, initial, availabilityE
   async function mutate(action: "advance" | "manual" | "resend-resources", payload: Record<string, string> = {}) {
     setBusy(action); setMessage(""); setError("");
     try {
-      const response = await fetch("/api/admin/workshop-sales", { method: "POST", headers: { "Content-Type": "application/json", "x-admin-key": adminKey }, body: JSON.stringify({ action, ...payload }) });
+      const response = await fetch("/api/admin/workshop-sales", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, ...payload }) });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error ?? "No se pudo completar la operación.");
       setMessage(data.message);

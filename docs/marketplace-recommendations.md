@@ -1,0 +1,7 @@
+# Recomendaciones de libros del marketplace
+
+El motor `recommendMarketplaceBooks` usa únicamente libros que el servidor confirme como publicados, descargables, con vendedor y cuenta de cobro activos. No revela borradores, libros pausados ni publicaciones futuras. Excluye el libro actual y compras conocidas; si el comprador no consintió o no está identificado, la lista de compras queda vacía y la selección es editorial, no personalizada.
+
+En una ficha prioriza la categoría relacionada, luego autores distintos y novedades. Reparte la primera ronda entre autores distintos para que un solo catálogo no ocupe todas las posiciones. Los libros avanzados requieren una señal explícita de experiencia; visitar la ficha no basta. No hay ranking pagado ni afirmaciones de popularidad sin datos.
+
+Integración posterior: consultar solo datos públicos aprobados y aplicar el motor del lado servidor en ficha, carrito y confirmación de compra, con tope de cuatro sugerencias. Los mensajes de posventa requieren consentimiento separado y una cola con deduplicación, frecuencia máxima y cancelación de suscripción. Medir impresiones, clics, ventas atribuibles y reembolsos sin enviar emails o identificadores personales a PostHog. Comparar contra grupo de control antes de cambiar el orden; con tráfico escaso, mantener la regla editorial. Ninguna sugerencia cambia precio ni agrega productos a una orden sin acción del comprador.

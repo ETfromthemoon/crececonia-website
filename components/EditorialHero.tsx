@@ -7,7 +7,7 @@ export default function EditorialHero() {
       <span className={styles.label}>CrececonIA / Inteligencia aplicada</span>
       <h1 id="home-title">Menos probar.<br />Más <em>hacer.</em></h1>
       <p>IA aplicada a tu negocio, sin herramientas de más. Aprende con una guía, avanza con mentoría o delega la implementación.</p>
-      <div className={styles.actions}><a className="button button-dark" href="/ia">Encuentra tu ruta <span>↗</span></a><a className="text-link" href="#biblioteca">Explorar recursos ↓</a></div>
+      <div className={styles.actions}><a className="button button-dark" href="/ia" data-analytics-cta="home_route" data-analytics-source="home_hero">Encuentra tu ruta <span>↗</span></a><a className="text-link" href="#biblioteca">Explorar recursos ↓</a></div>
       <div className={styles.heroNote}><span aria-hidden="true">↳</span> Del conocimiento a tu próxima solución.</div>
     </div>
     <div className={styles.stage} aria-label="Una biblioteca para pasar de aprender a aplicar">

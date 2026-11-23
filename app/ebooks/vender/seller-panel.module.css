@@ -1,0 +1,99 @@
+.workspace,
+.access {
+  --bg: #fff;
+  --ink: #1c2d23;
+  --border: #bbd0c0;
+  color-scheme: light;
+}
+.workspace .sidebar {
+  position: sticky;
+  align-self: start;
+  min-height: 0;
+  height: 100svh;
+  overflow-y: auto;
+}
+.identity { display: grid; gap: 3px; margin-bottom: 20px; padding: 12px; border-radius: 8px; background: #263f31; overflow-wrap: anywhere; }
+.identity span { font-size: .76rem; color: #c6d6c9; }
+.workspace .navigation button { min-height: 44px; font-size: .86rem; }
+.workspace .navigation button[aria-pressed="true"] { background: #31513a; color: #fff; }
+.sidebarActions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+.sidebarActions :is(a, button) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #d3e6d6;
+  font-size: .81rem;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  min-height: 60px;
+  padding: 12px clamp(18px, 4vw, 62px);
+  background: #fff;
+  border-bottom: 1px solid #d9e5dc;
+  color: #3e5a49;
+  font-size: .85rem;
+  font-weight: 700;
+}
+.content { min-width: 0; overflow-wrap: anywhere; }
+.section[hidden] { display: none; }
+.heading { display: flex; justify-content: space-between; align-items: end; gap: 14px; flex-wrap: wrap; margin-bottom: 22px; }
+.heading p { margin: 6px 0 0; color: #486052; }
+.heading h1, .access h1 { font: 500 clamp(2.1rem, 5vw, 3.6rem)/1.08 var(--font-display), Georgia, serif; }
+.panel, .metrics > div {
+  min-width: 0;
+  border: 1px solid #d9e5dc;
+  border-radius: 12px;
+  background: #fff;
+  padding: clamp(14px, 3vw, 23px);
+}
+.panel h2 { font: 600 1.35rem/1.2 var(--font-display), Georgia, serif; }
+.panel p { margin-block: 8px; color: #41584a; }
+.panel form, .panel details, .access section > form { margin-top: 16px; }
+.panel summary { min-height: 44px; padding-block: 10px; font-weight: 650; cursor: pointer; }
+.records { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
+.records + .panel, .panel + .panel { margin-top: 16px; }
+.bookTitle { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.bookTitle time { font-size: .84rem; color: #4f6656; }
+.badge { padding: 4px 9px; border-radius: 16px; color: #254a32; background: #e6f1e4; font-size: .8rem; font-weight: 650; }
+.metrics, .saleDetails { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0 0 16px; }
+.metrics dt, .saleDetails dt { color: #486052; font-size: .83rem; }
+.metrics dd { margin: 6px 0 0; font-size: clamp(1rem, 2.1vw, 1.55rem); font-weight: 750; }
+.saleDetails { margin: 14px 0 0; }
+.saleDetails dd { margin: 4px 0 0; font-weight: 650; }
+.notice { padding: 12px 15px; margin-bottom: 16px; border: 1px solid #b6d1bc; border-radius: 8px; color: #285039; background: #edf6eb; }
+.uploads { display: grid; gap: 10px; }
+.uploads input[type="file"] { display: block; width: 100%; margin: 6px 0; max-width: 100%; }
+.panel form :is(input:not([type="checkbox"],[type="hidden"]), textarea, select),
+.access form :is(input:not([type="checkbox"]), textarea, select) { max-width: 100%; border-radius: 7px; }
+.content :is(form button[type="submit"], .uploads > button) {
+  min-height: 44px;
+  padding: 8px 13px;
+  border-radius: 8px;
+  color: #fff;
+  background: #254a32;
+  font-weight: 700;
+}
+.content button:disabled { opacity: .55; cursor: not-allowed; }
+.workspace :is(a, button, summary, input, select, textarea):focus-visible,
+.access :is(a, button, input, select, textarea):focus-visible { outline: 3px solid #6da17b; outline-offset: 3px; }
+.access { min-height: 100svh; padding: clamp(24px, 7vw, 88px) 16px; color: #1c2d23; background: #eef3ed; }
+.accessCard { width: min(100%, 760px); margin: auto; padding: clamp(20px, 5vw, 40px); border-radius: 15px; background: #fff; border: 1px solid #d9e5dc; overflow-wrap: anywhere; }
+.accessCard h1 { margin-block: 10px; }
+.accessCard h2 { margin-block: 18px 8px; font-size: 1.3rem; font-weight: 700; }
+.accessCard p { margin-block: 8px; }
+.back { display: inline-block; margin-bottom: 18px; color: #254a32; text-decoration: underline; text-underline-offset: 3px; }
+
+@media (max-width: 1000px) {
+  .metrics, .saleDetails { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 760px) {
+  .workspace .sidebar { position: static; height: auto; overflow: visible; }
+  .identity { margin-bottom: 8px; }
+  .workspace .navigation { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); overflow: visible; }
+  .workspace .navigation button { width: 100%; white-space: normal; }
+  .sidebarActions { margin-top: 8px; }
+  .topbar { min-height: 44px; }
+}

@@ -1,13 +1,11 @@
+import { isAdminRequest } from "@/lib/admin-session";
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getClassAulaSettings } from "@/lib/class-aula-settings";
 
 export const dynamic = "force-dynamic";
 
-function isAuthorized(request: Request): boolean {
-  const key = request.headers.get("x-admin-key") ?? new URL(request.url).searchParams.get("key");
-  return Boolean(process.env.ADMIN_SECRET) && key === process.env.ADMIN_SECRET;
-}
+const isAuthorized = isAdminRequest;
 
 function optionalHttpsUrl(value: unknown, label: string): string | null {
   const text = typeof value === "string" ? value.trim() : "";

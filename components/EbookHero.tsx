@@ -1,11 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEbookDisplayPrice } from "./useEbookDisplayPrice";
+import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-resource-ids";
 import Link from "next/link";
 import EbookPreview from "./EbookPreview";
 import EbookSoldCounter from "./EbookSoldCounter";
-import type { PriceInfo } from "@/lib/ebook-pricing";
 import { EBOOK_ACCENT as ACCENT, EBOOK_COLD_BG as BG } from "@/lib/ebook-theme";
 
 const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
@@ -23,16 +23,8 @@ const blurIn = (delay = 0) => ({
 });
 
 export default function EbookHero() {
-  const [priceInfo, setPriceInfo] = useState<PriceInfo | null>(null);
-
-  useEffect(() => {
-    fetch("/api/ebook/cupos")
-      .then((r) => r.json())
-      .then(setPriceInfo)
-      .catch(() => {});
-  }, []);
-
-  const price = priceInfo?.price ?? null;
+  const priceInfo = useEbookDisplayPrice(DEFAULT_EBOOK_RESOURCE);
+  const price = priceInfo?.salePrice ?? priceInfo?.price ?? null;
   const formattedPrice = price ? price.toLocaleString("es-CL") : null;
 
   function scrollToComprar() {
@@ -155,30 +147,7 @@ export default function EbookHero() {
                   : "Comprar ahora"}
               </button>
 
-              {priceInfo?.tier === "super-early" && (
-                <p
-                  style={{
-                    color: ACCENT,
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "0.72rem",
-                    letterSpacing: "0.08em",
-                  }}
-                >
-                  Super Early — 60% off
-                </p>
-              )}
-              {priceInfo?.tier === "early" && (
-                <p
-                  style={{
-                    color: ACCENT,
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "0.72rem",
-                    letterSpacing: "0.08em",
-                  }}
-                >
-                  Early Adopters — 33% off
-                </p>
-              )}
+              {priceInfo?.promotionEndsAt && <p style={{ color: ACCENT }}>Antes <s>${priceInfo.previousPrice?.toLocaleString("es-CL")} CLP</s><br /><strong>30% de descuento · Solo por hoy hasta las 23:59</strong></p>}
               <EbookSoldCounter />
             </motion.div>
 

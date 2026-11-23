@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { requireAdminSession } from "@/lib/admin-auth";
 import WorkshopDashboardLive from "@/components/admin/WorkshopDashboardLive";
 import WorkshopSettingsForm from "@/components/admin/WorkshopSettingsForm";
 import WorkshopSalesControls from "@/components/admin/WorkshopSalesControls";
@@ -11,12 +11,12 @@ export const dynamic="force-dynamic";
 
 const emptyDashboard={generatedAt:new Date().toISOString(),metrics:{paid:0,revenue:0,salesToday:0,revenueToday:0,averageTicket:0,paymentConversion:0,landingViews:0,checkoutStarts:0,checkoutRate:0,visitorConversion:0,salesLastHour:0,activeReservations:0,deliveryRate:0,bounceRate:0,deliveryFailures:0},orders:[],deliveries:[],channels:[]};
 
-export default async function WorkshopAdminPage({searchParams}:{searchParams:Promise<{key?:string}>}){
-  const{key}=await searchParams;if(!process.env.ADMIN_SECRET||key!==process.env.ADMIN_SECRET)notFound();
+export default async function WorkshopAdminPage(){
+  await requireAdminSession();
   const[settings,dashboardResult,availabilityResult]=await Promise.all([getWorkshopSettings(),getSupabaseAdmin().rpc("workshop_admin_dashboard",{p_product_key:WORKSHOP_PRODUCT_KEY}),getSupabaseAdmin().rpc("workshop_product_availability",{p_product_key:WORKSHOP_PRODUCT_KEY})]);
   const dashboard=dashboardResult.error?emptyDashboard:dashboardResult.data;
   const offer=(availabilityResult.data?.[0]??null) as WorkshopAvailabilityRow|null;
   const availability=offer?{label:offer.label,amount:offer.amount_minor,nextAmount:offer.next_amount_minor,remaining:Math.max(offer.total_cupos-offer.sold_cupos-offer.reserved_cupos,0),mode:(offer.offer_key==="recording"?"recording":"live") as "live"|"recording"}:null;
   const availabilityError=availabilityResult.error?.message??(!offer?"No se recibió una oferta vigente.":null);
-  return <main className="workshop-admin"><header><div><p>Admin · workshop en vivo</p><h1>{WORKSHOP_TITLE}</h1><span>{WORKSHOP_SESSION_LABEL}</span></div><a href="/workshop-en-vivo-2026-09-06" target="_blank">Ver página ↗</a></header><div className="workshop-admin-live"><WorkshopHealthPanel adminKey={key}/><WorkshopSalesControls adminKey={key} initial={availability} availabilityError={availabilityError}/></div><WorkshopDashboardLive adminKey={key} initial={dashboard}/><section className="workshop-admin-operation"><div><p>Operación de la sala</p><h2>Publica cada recurso cuando esté listo.</h2><span>Agrega aquí la grabación y SKOOL. Slides, hoja de trabajo y skills se suben juntos con <code>npm run workshop:subir-recursos</code>.</span></div><WorkshopSettingsForm adminKey={key} initial={settings}/></section></main>;
+  return <main className="workshop-admin"><header><div><p>Admin · workshop en vivo</p><h1>{WORKSHOP_TITLE}</h1><span>{WORKSHOP_SESSION_LABEL}</span></div><a href="/workshop-en-vivo-2026-09-06" target="_blank">Ver página ↗</a></header><div className="workshop-admin-live"><WorkshopHealthPanel/><WorkshopSalesControls initial={availability} availabilityError={availabilityError}/></div><WorkshopDashboardLive initial={dashboard}/><section className="workshop-admin-operation"><div><p>Operación de la sala</p><h2>Publica cada recurso cuando esté listo.</h2><span>Agrega aquí la grabación y SKOOL. Slides, hoja de trabajo y skills se suben juntos con <code>npm run workshop:subir-recursos</code>.</span></div><WorkshopSettingsForm initial={settings}/></section></main>;
 }

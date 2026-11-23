@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { PriceInfo } from "@/lib/ebook-pricing";
 import { DEFAULT_EBOOK_RESOURCE } from "@/lib/ebook-resource-ids";
 import type { EbookCatalogEntry } from "@/lib/ebook-catalog";
-import { computeBundleTotal } from "@/lib/ebook-bundles";
+import { computeEbookTotal } from "@/lib/ebook-promotion";
+import EbookFlashBanner from "./EbookFlashBanner";
 import type { EbookBundleOffer } from "@/lib/ebook-offers";
-import { getEbookAnalyticsDistinctId, trackEbookEvent } from "@/lib/analytics";
+import { getEbookAnalyticsAttribution, getEbookAnalyticsDistinctId, trackEbookEvent } from "@/lib/analytics";
 import { useFeatureFlagVariantKey } from "posthog-js/react";
 import EbookSectionHeading from "./EbookSectionHeading";
 import EbookSoldCounter from "./EbookSoldCounter";
@@ -60,12 +62,6 @@ type EbookPricingProps = {
   previewKey?: string;
 };
 
-const TIER_LABELS: Record<string, { badge: string; discount: string }> = {
-  "super-early": { badge: "Super Early", discount: "60% OFF" },
-  early: { badge: "Early Adopters", discount: "33% OFF" },
-  regular: { badge: "", discount: "" },
-};
-
 function CheckIcon() {
   return (
     <svg
@@ -96,9 +92,10 @@ export default function EbookPricing({
   initialPromoCode,
   previewKey,
 }: EbookPricingProps) {
+  const router = useRouter();
   const otherActiveEbooks = crossSellEntries;
   const pricingVariant = useFeatureFlagVariantKey("ebook-pricing-variant") ?? "control";
-  const [priceInfo, setPriceInfo] = useState<PriceInfo | null>(null);
+  const [priceInfo, setPriceInfo] = useState<(PriceInfo & { pricingTime?: number; promotionEndsAt?: string | null }) | null>(null);
   const [priceError, setPriceError] = useState(false);
   const [priceRetry, setPriceRetry] = useState(0);
   const [email, setEmail] = useState("");
@@ -172,16 +169,27 @@ export default function EbookPricing({
 
   useEffect(() => {
     let cancelled = false;
+    let expiryTimer: ReturnType<typeof setTimeout> | undefined;
     const previewQs = previewKey ? `&preview=${encodeURIComponent(previewKey)}` : "";
     const load = () =>
-      fetch(`/api/ebook/cupos?resource=${resource}${previewQs}`)
+      fetch(`/api/ebook/cupos?resource=${resource}${previewQs}`, { cache: "no-store" })
         .then((r) => {
           if (!r.ok) throw new Error("No se pudo cargar el precio");
           return r.json();
         })
         .then((data) => {
           if (!Number.isFinite(data.price) || data.price <= 0) throw new Error("Precio no disponible");
-          if (!cancelled) { setPriceInfo(data); setPriceError(false); }
+          if (!cancelled) {
+            setPriceInfo(data);
+            setPriceError(false);
+            clearTimeout(expiryTimer);
+            if (data.promotionEndsAt && data.pricingTime) {
+              expiryTimer = setTimeout(() => {
+                setPriceInfo(null);
+                load();
+              }, Math.max(0, Date.parse(data.promotionEndsAt) - data.pricingTime));
+            }
+          }
         })
         .catch(() => { if (!cancelled) setPriceError(true); });
 
@@ -189,7 +197,7 @@ export default function EbookPricing({
     setPriceError(false);
     load();
     const id = setInterval(load, 30000);
-    return () => { cancelled = true; clearInterval(id); };
+    return () => { cancelled = true; clearInterval(id); clearTimeout(expiryTimer); };
   }, [resource, previewKey, priceRetry]);
 
   useEffect(() => {
@@ -209,7 +217,6 @@ export default function EbookPricing({
   }, [bundleOffers, pricingVariant, resource]);
 
   const tier = priceInfo?.tier ?? "regular";
-  const tierInfo = TIER_LABELS[tier] ?? TIER_LABELS.regular;
   const basePrice = priceInfo?.price ?? 27000;
 
   // `selectedExtras` normalmente solo se llena tocando los checkboxes de
@@ -229,28 +236,22 @@ export default function EbookPricing({
   // recalcula todo desde cero en /api/flow/create y nunca confía en este
   // número.
   const bundlePreview = isCombo
-    ? computeBundleTotal(
+    ? computeEbookTotal(
         selectedResources.map((itemResource) => ({
           resource: itemResource,
           price:
             itemResource === resource
               ? basePrice
               : crossSellPrices[itemResource] ?? otherActiveByResource.get(itemResource)!.tierPrices.regular,
-        }))
+        })), priceInfo?.pricingTime,
       )
     : null;
 
-  const displayPrice = isCombo ? bundlePreview!.total : appliedDiscount?.finalPrice ?? basePrice;
+  const singlePreview = computeEbookTotal([{ resource, price: basePrice }], priceInfo?.pricingTime);
+  const flashActive = Boolean(priceInfo?.promotionEndsAt);
+  const displayPrice = isCombo ? bundlePreview!.total : appliedDiscount?.finalPrice ?? singlePreview.total;
   const formattedPrice = displayPrice.toLocaleString("es-CL");
   const formattedBasePrice = basePrice.toLocaleString("es-CL");
-  // Antes esto era un `27000` fijo, de cuando EbookPricing solo se usaba en
-  // el libro 1 (cuyo precio regular es, por coincidencia, ese mismo número).
-  // Al reusar el componente en libros con otro precio regular (9700/13700/
-  // 19700), el hardcode mostraba el "antes" equivocado. `priceInfo.originalPrice`
-  // ya lo devuelve la API por resource — solo faltaba usarlo.
-  const formattedOriginal = (priceInfo?.originalPrice ?? basePrice).toLocaleString("es-CL");
-  const hasDiscount = tier !== "regular";
-
   function toggleExtra(extraResource: string, checked: boolean) {
     setSelectedExtras((prev) =>
       checked ? [...prev, extraResource] : prev.filter((r) => r !== extraResource)
@@ -305,13 +306,20 @@ export default function EbookPricing({
         discountCode: isCombo ? undefined : appliedDiscount?.code,
         previewKey,
         analyticsDistinctId: getEbookAnalyticsDistinctId(),
+        analyticsAttribution: getEbookAnalyticsAttribution(),
         pricingVariant,
+        expectedAmount: displayPrice,
       }),
     });
 
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok || data.error) {
+      if (res.status === 409) {
+        setAppliedDiscount(null);
+        setPriceRetry((value) => value + 1);
+        router.refresh();
+      }
       setErrorMsg(data.error ?? "Error al procesar el pago. Intentá nuevamente.");
       setStatus("error");
       return;
@@ -332,6 +340,7 @@ export default function EbookPricing({
           className={`${styles.glass} ${styles.glassSheen}`}
           style={{ borderRadius: 40, overflow: "hidden" }}
         >
+          <EbookFlashBanner active={flashActive} />
           {/* Price header */}
           <div
             style={{
@@ -339,36 +348,6 @@ export default function EbookPricing({
               borderBottom: "1px solid rgba(0,0,0,0.1)",
             }}
           >
-            {hasDiscount && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                <span
-                  style={{
-                    background: "#242424",
-                    color: "#f6f3f1",
-                    padding: "3px 10px",
-                    borderRadius: 100,
-                    fontSize: 11,
-                    fontFamily: "var(--font-mono)",
-                    letterSpacing: "0.08em",
-                  }}
-                >
-                  {tierInfo.badge}
-                </span>
-                <span
-                  style={{
-                    background: "rgba(0,0,0,0.08)",
-                    color: "#242424",
-                    padding: "3px 10px",
-                    borderRadius: 100,
-                    fontSize: 11,
-                    fontFamily: "var(--font-mono)",
-                  }}
-                >
-                  {tierInfo.discount}
-                </span>
-              </div>
-            )}
-
             {!priceInfo || priceError ? <div className="price-status" role="status">
               {priceError ? <span>No pudimos actualizar el precio. <button type="button" onClick={() => setPriceRetry(value => value + 1)} style={{ textDecoration: "underline" }}>Reintentar</button></span> : "Consultando precio vigente…"}
             </div> : <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
@@ -391,8 +370,9 @@ export default function EbookPricing({
               >
                 CLP
               </span>
-              {(hasDiscount || appliedDiscount) && (
+              {(appliedDiscount || flashActive || isCombo) && (
                 <span
+                  aria-label="Precio anterior"
                   style={{
                     color: "#4e4d4d",
                     fontSize: "0.9rem",
@@ -400,7 +380,7 @@ export default function EbookPricing({
                     fontFamily: "var(--font-mono)",
                   }}
                 >
-                  ${appliedDiscount ? formattedBasePrice : formattedOriginal}
+                  ${isCombo ? bundlePreview!.subtotal.toLocaleString("es-CL") : flashActive ? singlePreview.subtotal.toLocaleString("es-CL") : formattedBasePrice}
                 </span>
               )}
             </div>}
@@ -505,14 +485,14 @@ export default function EbookPricing({
                 ))}
                 {isCombo && (
                   <p style={{ color: "#2e7d32", fontSize: "0.75rem", fontFamily: "var(--font-mono)", marginTop: 6 }}>
-                    {bundlePreview!.discountPercent}% de descuento por combo aplicado ✓
+                    {flashActive ? "30% de descuento adicional aplicado al precio del combo" : `${bundlePreview!.discountPercent}% de descuento por combo aplicado`} ✓
                   </p>
                 )}
               </div>
             )}
             </details>}
 
-            {!appliedDiscount && !isCombo && isDiscountOpen && (
+            {!flashActive && !appliedDiscount && !isCombo && isDiscountOpen && (
               <div id="ebook-discount-panel" style={{ marginBottom: 18, order: 3 }}>
                 <label
                   htmlFor="ebook-discount"
@@ -622,7 +602,7 @@ export default function EbookPricing({
               }}
             />
 
-            {!appliedDiscount && !isCombo && !isDiscountOpen && (
+            {!flashActive && !appliedDiscount && !isCombo && !isDiscountOpen && (
               <button
                 type="button"
                 onClick={() => setIsDiscountOpen(true)}

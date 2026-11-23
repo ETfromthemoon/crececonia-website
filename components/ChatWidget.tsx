@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { whatsappUrl } from "@/lib/contact";
 import { trackEvent } from "@/lib/analytics";
+import { isAdminPath } from "@/lib/analytics-privacy";
 
 type Message = {
   id: string;
@@ -77,7 +78,7 @@ function buildReply(message: string): Pick<Message, "content" | "nextStep"> {
   if (/(cu[aá]nto|precio|costo|vale|valor|presupuesto)/.test(text)) {
     return {
       content:
-        "Las referencias vigentes son: mentoría desde 400.000 CLP mensuales; diagnóstico BPI, 200.000 CLP netos más IVA; implementación desde 500.000 CLP y mantención desde 100.000 CLP mensuales. La propuesta concreta define alcance, impuestos aplicables y pagos; ningún SLA se presume. Los e-books muestran su precio final en la biblioteca.",
+        "Las referencias vigentes son: mentoría desde 400.000 CLP mensuales; implementación desde 500.000 CLP y mantención desde 100.000 CLP mensuales. La propuesta concreta define alcance, impuestos aplicables y pagos; ningún SLA se presume. Los e-books muestran su precio final en la biblioteca.",
       nextStep: "selector",
     };
   }
@@ -101,7 +102,7 @@ function buildReply(message: string): Pick<Message, "content" | "nextStep"> {
   if (/(cu[aá]ndo|tiempo|demora|r[aá]pido|48)/.test(text)) {
     return {
       content:
-        "El diagnóstico BPI toma dos semanas desde que están completos los accesos y la información. Para implementación, el plazo se define en la propuesta porque depende del proceso, datos, sistemas, controles y pruebas requeridas.",
+        "Para implementación, el plazo se define en la propuesta porque depende del proceso, datos, sistemas, controles y pruebas requeridas.",
       nextStep: "implementacion",
     };
   }
@@ -109,7 +110,7 @@ function buildReply(message: string): Pick<Message, "content" | "nextStep"> {
   if (/(sirve|negocio|empresa|rubro|industria|funciona|calza|encaja|proceso|diagn[oó]stico|auditor[ií]a|hoja de ruta)/.test(text)) {
     return {
       content:
-        "El diagnóstico BPI sirve para procesos manuales, fragmentados o poco observables donde hay una oportunidad concreta de automatización o asistencia. Mapeamos el proceso, priorizamos oportunidades y riesgos, estimamos el trabajo y dejamos una hoja de ruta; no compromete una implementación automática.",
+        "Podemos evaluar una implementación para un proceso manual, fragmentado o poco observable. Describe cómo funciona hoy, dónde se pierde tiempo o calidad y quién puede validar la mejora. La evaluación de tu solicitud no reserva una sesión ni compromete una implementación.",
       nextStep: "implementacion",
     };
   }
@@ -235,7 +236,7 @@ export default function ChatWidget() {
     selector: { href: "/ia", label: "Ver todas las alternativas" },
   };
 
-  if (pathname === "/ia") return null;
+  if (pathname === "/ia" || isAdminPath(pathname)) return null;
 
   return (
     <>

@@ -4,12 +4,25 @@ import ResourceNav from "@/components/ResourceNav";
 import Navbar from "@/components/Navbar";
 import HubCard from "@/components/HubCard";
 import EbookPricing from "@/components/EbookPricing";
+import EbookCard from "@/components/EbookCard";
+import EbookFlashBanner from "@/components/EbookFlashBanner";
 
 const route = vi.hoisted(() => ({ pathname: "/" }));
-vi.mock("next/navigation", () => ({ usePathname: () => route.pathname }));
+vi.mock("next/navigation", () => ({ usePathname: () => route.pathname, useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("posthog-js/react", () => ({ useFeatureFlagVariantKey: () => "control" }));
 
 describe("public resource interface", () => {
+  it.each(["book", "route"] as const)("muestra el antes tachado, el precio de hoy y el 30%% en %s", (variant) => {
+    const html = renderToStaticMarkup(<EbookCard title="Ebook" description="Descripción" href="/ebooks" coverSrc="/ebooks/de-cero-a-claude-en-una-semana.jpg" status="available" variant={variant} previousPriceLabel="$17.900 CLP" priceLabel="$8.950 CLP" />);
+    expect(html).toContain("<s>$17.900 CLP</s>");
+    expect(html).toContain("Hoy $8.950 CLP");
+    expect(html).toContain("30% de descuento · Solo por hoy");
+  });
+
+  it("retira el anuncio cuando la promoción termina", () => {
+    expect(renderToStaticMarkup(<EbookFlashBanner active={false} />)).toBe("");
+    expect(renderToStaticMarkup(<EbookFlashBanner active />)).toContain("Hasta las 23:59, hora de Santiago");
+  });
   beforeEach(() => { route.pathname = "/"; });
 
   it.each([
@@ -23,7 +36,20 @@ describe("public resource interface", () => {
     const html = renderToStaticMarkup(<ResourceNav />);
     expect(html).toMatch(new RegExp(`aria-current="page"[^>]*>${label}</a>`));
     expect(html.match(/aria-current="page"/g)).toHaveLength(1);
-    expect(renderToStaticMarkup(<Navbar />)).toContain('href="/centro" aria-current="page">Recursos');
+    expect(renderToStaticMarkup(<Navbar />)).toContain('>Marketplace</a>');
+  });
+
+  it("destaca Marketplace en el encabezado y lo ubica antes de elegir ruta", () => {
+    route.pathname = "/ebooks/mercado/un-libro";
+    const html = renderToStaticMarkup(<Navbar />);
+    expect(html).toContain('href="/ebooks/mercado" aria-current="page">Marketplace');
+    expect(html).not.toContain('>Recursos</a>');
+    expect(html.indexOf('>Marketplace</a>')).toBeLessThan(html.indexOf('>Elegir mi ruta</a>'));
+  });
+
+  it.each(["/ebooks", "/ebook/de-cero-a-claude-en-una-semana"])("mantiene Marketplace activo al abrir %s", (pathname) => {
+    route.pathname = pathname;
+    expect(renderToStaticMarkup(<Navbar />)).toContain('href="/ebooks/mercado" aria-current="page">Marketplace');
   });
 
   it("keeps external resource links safe and explicit", () => {

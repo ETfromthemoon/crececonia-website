@@ -1,3 +1,4 @@
+import { isAdminRequest } from "@/lib/admin-session";
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { WORKSHOP_PRODUCT_KEY } from "@/lib/workshop-product";
@@ -5,7 +6,7 @@ import { getWorkshopFulfillmentReadiness } from "@/lib/workshop-readiness";
 import { getWorkshopEmailHealth } from "@/lib/workshop-email-health";
 
 export const dynamic = "force-dynamic";
-const authorized = (request: Request) => Boolean(process.env.ADMIN_SECRET) && request.headers.get("x-admin-key") === process.env.ADMIN_SECRET;
+const authorized = isAdminRequest;
 
 type Check = { key: string; label: string; ok: boolean; detail: string; blocking?: boolean };
 

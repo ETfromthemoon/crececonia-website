@@ -10,9 +10,10 @@ import {
   DEFAULT_EBOOK_RESOURCE,
   EBOOK_CATALOG,
 } from "@/lib/ebook-catalog";
-import { computeBundleTotal } from "@/lib/ebook-bundles";
+import { computeEbookTotal, isEbookFlashEligible, EBOOK_FLASH_ID } from "@/lib/ebook-promotion";
 import { getOfferIdForResources } from "@/lib/ebook-offers";
 import { captureServerEvent } from "@/lib/posthog-server";
+import { sanitizeAnalyticsAttribution, sanitizeAnalyticsDistinctId } from "@/lib/analytics-privacy";
 
 const SITE_URL = process.env.SITE_URL ?? "https://www.crececonia.cl";
 
@@ -56,14 +57,12 @@ export async function POST(request: Request) {
   const email: string = body?.email ?? "";
   const discountCode: string | undefined = body?.discountCode || undefined;
   const previewKey: string | undefined = body?.previewKey || undefined;
-  const analyticsDistinctId =
-    typeof body?.analyticsDistinctId === "string" && body.analyticsDistinctId.length <= 200
-      ? body.analyticsDistinctId
-      : undefined;
+  const analyticsDistinctId = sanitizeAnalyticsDistinctId(body?.analyticsDistinctId);
   const pricingVariant =
     typeof body?.pricingVariant === "string" && body.pricingVariant.length <= 80
       ? body.pricingVariant
       : undefined;
+  const analyticsAttribution = sanitizeAnalyticsAttribution(body?.analyticsAttribution);
   const resources: string[] =
     Array.isArray(body?.resources) && body.resources.length > 0
       ? body.resources
@@ -123,8 +122,13 @@ export async function POST(request: Request) {
     );
   }
 
-  const bundle = computeBundleTotal(
-    resources.map((resource, i) => ({ resource, price: priceInfos[i].price }))
+  const pricingTime = Date.now();
+  const flashActive = isEbookFlashEligible(resources, pricingTime);
+  if (flashActive && discountCode) {
+    return NextResponse.json({ error: "La promoción de hoy se aplica automáticamente y no se acumula con códigos." }, { status: 400 });
+  }
+  const bundle = computeEbookTotal(
+    resources.map((resource, i) => ({ resource, price: priceInfos[i].price })), pricingTime,
   );
 
   let finalAmount = bundle.total;
@@ -138,6 +142,11 @@ export async function POST(request: Request) {
     }
     finalAmount = result.finalPrice;
     appliedCode = result.code;
+  }
+
+  // Evita abrir una orden con un importe distinto al aceptado en una pestaña antigua.
+  if (body?.expectedAmount !== undefined && body.expectedAmount !== finalAmount) {
+    return NextResponse.json({ error: "El precio cambió. Actualiza la página y revisa el total antes de pagar." }, { status: 409 });
   }
 
   const apiKey = process.env.FLOW_API_KEY!;
@@ -154,8 +163,9 @@ export async function POST(request: Request) {
     resource,
     tier: priceInfos[i].tier,
     amount: discountCode ? finalAmount : bundle.items[i].amount,
-    analytics_distinct_id: analyticsDistinctId,
+    ...(analyticsDistinctId ? { analytics_distinct_id: analyticsDistinctId } : {}),
     pricing_variant: pricingVariant,
+    ...analyticsAttribution,
   }));
 
   // El manifiesto es la fuente de verdad de entrega del combo. Si no puede
@@ -245,7 +255,7 @@ export async function POST(request: Request) {
 
   const offerId = getOfferIdForResources(resources);
   try {
-    await captureServerEvent("ebook_checkout_created", analyticsDistinctId ?? email, {
+    await captureServerEvent("ebook_checkout_created", analyticsDistinctId ?? `ebook-order:${commerceOrder}`, {
       resource: resources[0],
       tier: priceInfos[0].tier,
       item_count: resources.length,
@@ -253,8 +263,10 @@ export async function POST(request: Request) {
       resources,
       offer_id: offerId,
       amount: finalAmount,
+      promotion_id: flashActive ? EBOOK_FLASH_ID : undefined,
       order_id: commerceOrder,
       pricing_variant: pricingVariant,
+      ...analyticsAttribution,
     });
   } catch (err) {
     console.error("[flow/create] falló el evento de PostHog:", err);

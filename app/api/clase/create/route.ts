@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { CLASS_PATH, CLASS_TITLE, type ClassAvailabilityRow } from "@/lib/class-product";
+import { CLASS_PATH, CLASS_TITLE, isClassSaleClosed, type ClassAvailabilityRow } from "@/lib/class-product";
 import { flowSign, getFlowBase } from "@/lib/flow";
 
 const SITE_URL = process.env.SITE_URL ?? "https://www.crececonia.cl";
@@ -18,6 +18,9 @@ async function releaseOrder(commerceOrder: string) {
 }
 
 export async function POST(request: Request) {
+  if (isClassSaleClosed()) {
+    return NextResponse.json({ error: "Esta clase ya finalizó y no acepta nuevas reservas." }, { status: 410 });
+  }
   const body = await request.json().catch(() => null);
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
   const offerKey = typeof body?.offerKey === "string" ? body.offerKey : "";

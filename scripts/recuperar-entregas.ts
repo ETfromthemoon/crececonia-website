@@ -2,9 +2,10 @@
 import { getSupabaseAdmin } from "../lib/supabase";
 import { getFlowBase } from "../lib/flow";
 import { listPaidFlowPaymentsForDay, planEbookRecovery, type RecoveryManifest, type RecoveryPayment, type RecoveryPurchase } from "../lib/ebook-recovery";
-import { sendEbookDeliveryEmail } from "../lib/ebook-delivery-email";
-import { sendPurchaseNotification } from "../lib/purchase-notification-email";
+import { neon } from "@neondatabase/serverless";
+import { finalizeEbookPaymentWithQuery, isEbookFinalizationEnabled, type FinalizationQuery } from "../lib/ebook-payment-finalization-core";
 import { pathToFileURL } from "node:url";
+import { randomBytes } from "node:crypto";
 
 const PRIMERA_VENTA = "2026-06-18";
 
@@ -12,12 +13,11 @@ export async function recoverDeliveries(args: string[] = []) {
   const aplicar = args.includes("--aplicar");
   const enviarEmail = args.includes("--enviar-email");
   if (enviarEmail && !aplicar) throw new Error("--enviar-email requiere --aplicar.");
+  if (aplicar && !isEbookFinalizationEnabled()) throw new Error("--aplicar requiere el corte coordinado y EBOOK_PAYMENT_FINALIZATION_ENABLED=true.");
   const apiKey = process.env.FLOW_API_KEY;
   const secretKey = process.env.FLOW_SECRET_KEY;
   if (!apiKey || !secretKey) throw new Error("Faltan FLOW_API_KEY y/o FLOW_SECRET_KEY.");
-  if (!process.env.DATABASE_URL && !(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)) {
-    throw new Error("Falta DATABASE_URL (o la configuración legacy de Supabase).");
-  }
+  if (!process.env.DATABASE_URL) throw new Error("Falta DATABASE_URL: la conciliación requiere la base vigente de Neon.");
   const db = getSupabaseAdmin();
   const [purchases, manifests] = await Promise.all([
     db.from("ebook_purchases").select("flow_order, resource"),
@@ -50,22 +50,24 @@ export async function recoverDeliveries(args: string[] = []) {
     console.log("(dry-run) Nada se escribió ni envió. Casos sin manifiesto o con descuento requieren revisión manual.");
     return;
   }
+  const client = neon(process.env.DATABASE_URL!);
+  const databaseQuery: FinalizationQuery = async <T extends Record<string, unknown>>(sql: string, values: unknown[]) => {
+    const response = await client.query(sql, values, { fullResults: true });
+    return (response.rows ?? []) as T[];
+  };
+  if (enviarEmail) console.log("--enviar-email no envía directamente: las recuperaciones quedan en revisión en el outbox.");
   for (const { payment, plan } of plans) {
     if (plan.kind !== "recoverable") continue;
-    const token = `recuperado-${payment.flowOrder}`;
-    for (const item of plan.items) {
-      const { error } = await db.from("ebook_purchases").insert({
-        email: payment.payer, resource: item.resource, amount: item.amount, tier: item.tier,
-        flow_order: payment.flowOrder, flow_token: token, discount_code: null,
+    const token = `recuperado-${randomBytes(32).toString("base64url")}`;
+    try {
+      await finalizeEbookPaymentWithQuery(databaseQuery, {
+        flowOrder: String(payment.flowOrder), commerceOrder: payment.commerceOrder,
+        email: payment.payer!, amount: Number(payment.amount), token, source: "recovery",
       });
-      if (error) throw new Error(`Falló la recuperación de flowOrder ${payment.flowOrder}; revisar antes de reintentar.`);
+    } catch {
+      throw new Error(`Falló la finalización de flowOrder ${payment.flowOrder}; no se intentó escritura legacy ni envío.`);
     }
-    console.log(`REGISTRADA flowOrder ${payment.flowOrder}. Cupos y descuentos requieren conciliación manual.`);
-    if (enviarEmail) {
-      await sendEbookDeliveryEmail({ email: payment.payer!, grants: plan.items.map((item) => ({ resource: item.resource, token })), recovery: true });
-      console.log(`EMAIL aceptado por Resend para flowOrder ${payment.flowOrder}.`);
-      await sendPurchaseNotification({ kind: "Ebook", buyerEmail: payment.payer!, amount: Number(payment.amount), orderId: payment.commerceOrder, items: plan.items.map((item) => item.resource) });
-    }
+    console.log(`FINALIZADA flowOrder ${payment.flowOrder}; revisar estado durable del outbox antes de cualquier envío.`);
   }
 }
 

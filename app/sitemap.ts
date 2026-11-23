@@ -14,7 +14,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/aprender", changeFrequency: "monthly", priority: 0.9 },
     { path: "/mentoria", changeFrequency: "monthly", priority: 0.9 },
     { path: "/implementacion", changeFrequency: "monthly", priority: 0.9 },
-    { path: "/protocolo-bpi", changeFrequency: "monthly", priority: 0.8 },
     { path: "/centro", changeFrequency: "weekly", priority: 0.8 },
     { path: "/centro/guias", changeFrequency: "weekly", priority: 0.7 },
     { path: "/centro/skills", changeFrequency: "weekly", priority: 0.7 },

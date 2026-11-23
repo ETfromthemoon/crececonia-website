@@ -12,6 +12,7 @@ import {
   CLASS_SESSION_LABEL,
   CLASS_START,
   CLASS_TITLE,
+  isClassSaleClosed,
 } from "@/lib/class-product";
 import { absoluteUrl, createPageMetadata } from "@/lib/seo";
 
@@ -33,18 +34,9 @@ const classJsonLd = {
   url: absoluteUrl(CLASS_PATH),
   startDate: CLASS_START,
   endDate: CLASS_END,
-  eventStatus: "https://schema.org/EventScheduled",
+  eventStatus: "https://schema.org/EventCompleted",
   eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
   organizer: { "@type": "Organization", name: "CrececonIA", url: absoluteUrl("/") },
-  offers: {
-    "@type": "AggregateOffer",
-    lowPrice: "20000",
-    highPrice: "35000",
-    offerCount: "4",
-    priceCurrency: "CLP",
-    availability: "https://schema.org/InStock",
-    url: absoluteUrl(`${CLASS_PATH}#reservar`),
-  },
 };
 
 const TOPICS = [
@@ -97,6 +89,7 @@ export default async function ClassPage({
   searchParams: Promise<{ success?: string }>;
 }) {
   const { success } = await searchParams;
+  const saleClosed = isClassSaleClosed();
   return (
     <>
       <Navbar />
@@ -122,10 +115,10 @@ export default async function ClassPage({
           <div className="class-stream-glow" aria-hidden />
           <section className="class-hero site-container">
             <div className="class-hero-copy">
-              <span className="class-live-pill"><i /> CrececonIA · Clase práctica en vivo</span>
+              <span className="class-live-pill"><i /> CrececonIA · Clase realizada</span>
               <h1>Construye una página desde cero <em>con inteligencia artificial.</em></h1>
               <p className="hero-lead">
-                Vamos a partir desde cero y convertir una referencia —una web, redes sociales, screenshots o un mapa de información— en una primera versión funcional. Después la conectaremos a GitHub, la desarrollaremos en Vercel y la iremos editando hasta dejar una web completa.
+                En esta clase partimos desde una referencia y construimos una primera versión funcional con un agente de código, GitHub y Vercel.
               </p>
               <div className="class-meta" aria-label="Detalles de la clase">
                 <div><span>Fecha</span><strong>{CLASS_DATE_LABEL}</strong></div>
@@ -133,8 +126,8 @@ export default async function ClassPage({
                 <div><span>Modalidad</span><strong>Online · 2 a 3 horas</strong></div>
               </div>
               <div className="class-hero-actions">
-                <a className="class-primary-cta" href="#reservar">Reservar mi cupo <span>↘</span></a>
-                <p className="class-note">Máximo 3 horas para que puedas planificar tu domingo.</p>
+                <p className="class-note">Esta sesión ya finalizó. No hay nuevas reservas disponibles.</p>
+                <a className="class-primary-cta" href="/ebooks">Explorar los libros <span>↗</span></a>
               </div>
             </div>
             <div className="class-hero-foot" aria-hidden="true"><span>DESDE LA REFERENCIA</span><span>HASTA UNA WEB PUBLICADA</span></div>
@@ -165,7 +158,7 @@ export default async function ClassPage({
           </div>
         </section>
 
-        <section className="class-preparation">
+        {!saleClosed && <section className="class-preparation">
           <div className="site-container class-preparation-layout">
             <div className="class-preparation-heading">
               <span className="eyebrow">Antes de la clase</span>
@@ -177,9 +170,9 @@ export default async function ClassPage({
               <aside><span>MODALIDAD PRÁCTICA</span><p>Si quieres, puedes ir construyendo a la par con nosotros y hacer preguntas durante todo el proceso.</p></aside>
             </div>
           </div>
-        </section>
+        </section>}
 
-        <ClassCheckout />
+        {!saleClosed && <ClassCheckout />}
 
         <section className="class-bottom-band">
           <div className="site-container class-bottom-inner"><span>{CLASS_SESSION_LABEL}</span><span>CrececonIA / aprendizaje aplicado</span></div>

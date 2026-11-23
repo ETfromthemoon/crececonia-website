@@ -1,3 +1,5 @@
+import { isAllowedSemanticCta, SEMANTIC_CTA_PAIRS } from "@/lib/analytics-privacy";
+
 const PROJECT_ID = "533562"; // Settings → General → Project ID en el dashboard de PostHog
 
 export type FunnelStep =
@@ -17,12 +19,19 @@ export interface VariantComparison {
   pageViews: number;
   checkoutsStarted: number;
   purchasesConfirmed: number;
+  /** Legacy field: aggregate purchase-event/pageview ratio, not person conversion. */
   conversionRate: number;
 }
 
 export interface PageTypeCount {
   pageType: string;
   pageViews: number;
+}
+
+export interface SemanticCtaCount {
+  cta: string;
+  source: string;
+  clicks: number;
 }
 
 export interface EcosystemMetrics {
@@ -46,10 +55,30 @@ export interface EcosystemMetrics {
   ebookCheckoutFailures: number;
   ebookCheckouts: number;
   purchases: number;
+  marketplaceSearches: number;
+  marketplaceFilters: number;
+  marketplaceBookSelections: number;
   appointmentSubmissions: number;
   appointmentSuccesses: number;
   qualificationSubmissions: number;
+  qualificationSaved?: number;
+  qualificationWhatsappClicks?: number;
   scrollDepth90: number;
+}
+
+export interface PurchaseCoverage {
+  product: "ebook" | "class" | "workshop";
+  eventCount: number;
+  uniqueOrders: number;
+  eventsWithoutOrderId: number;
+}
+
+export interface EbookOrderConversion {
+  maturityDays: number;
+  eligibleCheckouts: number;
+  confirmedWithinWindow: number;
+  checkoutEventsWithoutOrderId: number;
+  conversionRate: number | null;
 }
 
 export interface AnalyticsReport {
@@ -58,9 +87,18 @@ export interface AnalyticsReport {
   byVariant: VariantComparison[];
   offerSelectionRate: number;
   ecosystem?: EcosystemMetrics;
+  semanticCtaBreakdown?: SemanticCtaCount[];
   byPageType?: PageTypeCount[];
   recommendations?: string[];
   generatedAt: string;
+  measurement?: {
+    basis: "aggregate_events";
+    sequentialFunnel: false;
+    windowStart: string;
+    windowEndExclusive: string;
+  };
+  purchasesByProduct?: PurchaseCoverage[];
+  ebookOrderConversion?: EbookOrderConversion;
 }
 
 const EVENT_TO_STEP: Record<string, FunnelStep> = {
@@ -106,16 +144,23 @@ const ECOSYSTEM_EVENTS = [
   "ebook_combo_toggle",
   "ebook_checkout_created",
   "ebook_purchase_confirmed",
+  "marketplace_catalog_search",
+  "marketplace_catalog_filter",
+  "marketplace_book_selected",
+  "class_purchase_confirmed",
+  "workshop_purchase_confirmed",
   "appointment_submitted",
   "appointment_submit_succeeded",
   "appointment_submit_failed",
   "qualification_not_ready",
   "qualification_submitted",
+  "qualification_saved",
+  "qualification_whatsapp_clicked",
   "ecosystem_scroll_depth",
   ...Object.keys(EVENT_TO_STEP),
 ];
 
-type HogQlRow = [event: string, variant: string | null, pageType: string | null, depthPercent: number | null, total: number];
+type HogQlRow = [event: string, variant: string | null, pageType: string | null, depthPercent: number | null, cta: string | null, source: string | null, total: number];
 
 function createEmptyMetrics(): EcosystemMetrics {
   return {
@@ -139,9 +184,14 @@ function createEmptyMetrics(): EcosystemMetrics {
     ebookCheckoutFailures: 0,
     ebookCheckouts: 0,
     purchases: 0,
+    marketplaceSearches: 0,
+    marketplaceFilters: 0,
+    marketplaceBookSelections: 0,
     appointmentSubmissions: 0,
     appointmentSuccesses: 0,
     qualificationSubmissions: 0,
+    qualificationSaved: 0,
+    qualificationWhatsappClicks: 0,
     scrollDepth90: 0,
   };
 }
@@ -166,24 +216,34 @@ const EVENT_TO_METRIC: Record<string, keyof EcosystemMetrics> = {
   ebook_checkout_failed: "ebookCheckoutFailures",
   ebook_checkout_created: "ebookCheckouts",
   ebook_purchase_confirmed: "purchases",
+  marketplace_catalog_search: "marketplaceSearches",
+  marketplace_catalog_filter: "marketplaceFilters",
+  marketplace_book_selected: "marketplaceBookSelections",
   appointment_submitted: "appointmentSubmissions",
   appointment_submit_succeeded: "appointmentSuccesses",
   qualification_submitted: "qualificationSubmissions",
+  qualification_saved: "qualificationSaved",
+  qualification_whatsapp_clicked: "qualificationWhatsappClicks",
 };
 
-async function runHogQlQuery(apiKey: string, host: string, sinceIso: string): Promise<HogQlRow[]> {
+async function runHogQlQuery(apiKey: string, host: string, sinceIso: string, untilIso: string): Promise<HogQlRow[]> {
   const eventList = ECOSYSTEM_EVENTS.map((event) => `'${event}'`).join(", ");
+  const ctaFilter = SEMANTIC_CTA_PAIRS.map(({ cta, source }) => `(JSONExtractString(properties, 'cta') = '${cta}' AND JSONExtractString(properties, 'source') = '${source}')`).join(" OR ");
   const query = `
     SELECT
       event,
       JSONExtractString(properties, 'pricing_variant') AS variant,
       JSONExtractString(properties, 'page_type') AS page_type,
       JSONExtractInt(properties, 'depth_percent') AS depth_percent,
+      if(event = 'ecosystem_cta_clicked', JSONExtractString(properties, 'cta'), '') AS cta,
+      if(event = 'ecosystem_cta_clicked', JSONExtractString(properties, 'source'), '') AS source,
       count() AS total
     FROM events
     WHERE event IN (${eventList})
       AND timestamp >= '${sinceIso}'
-    GROUP BY event, variant, page_type, depth_percent
+      AND timestamp < '${untilIso}'
+      AND (event != 'ecosystem_cta_clicked' OR (${ctaFilter}))
+    GROUP BY event, variant, page_type, depth_percent, cta, source
   `;
 
   const res = await fetch(`${host}/api/projects/${PROJECT_ID}/query/`, {
@@ -204,19 +264,132 @@ async function runHogQlQuery(apiKey: string, host: string, sinceIso: string): Pr
     // Compatibilidad con respuestas guardadas de la primera versión del reporte.
     if (row.length === 3) {
       const [event, variant, total] = row as unknown as [string, string | null, number];
-      return [event, variant, null, null, total] as HogQlRow;
+      return [event, variant, null, null, null, null, total] as HogQlRow;
     }
     if (row.length === 4) {
       const [event, variant, pageType, total] = row as unknown as [string, string | null, string | null, number];
-      return [event, variant, pageType, null, total] as HogQlRow;
+      return [event, variant, pageType, null, null, null, total] as HogQlRow;
+    }
+    if (row.length === 5) {
+      const [event, variant, pageType, depthPercent, total] = row as unknown as [string, string | null, string | null, number | null, number];
+      return [event, variant, pageType, depthPercent, null, null, total] as HogQlRow;
     }
     return row as HogQlRow;
   });
 }
 
+// Group only by product event: order counts must not be summed across variant/page breakdowns.
+// Missing identifiers remain separate; treating each legacy event as a sale would hide retries.
+async function fetchPurchaseCoverage(apiKey: string, host: string, sinceIso: string, untilIso: string): Promise<PurchaseCoverage[]> {
+  const productEvents = {
+    ebook_purchase_confirmed: "ebook",
+    class_purchase_confirmed: "class",
+    workshop_purchase_confirmed: "workshop",
+  } as const;
+  const query = `
+    SELECT event, count() AS event_count,
+      uniqExact(nullif(trim(JSONExtractString(properties, 'order_id')), '')) AS unique_orders,
+      sum(if(empty(trim(JSONExtractString(properties, 'order_id'))), 1, 0)) AS missing_order_events
+    FROM events
+    WHERE event IN (${Object.keys(productEvents).map((event) => `'${event}'`).join(", ")})
+      AND timestamp >= '${sinceIso}' AND timestamp < '${untilIso}'
+    GROUP BY event
+  `;
+  const res = await fetch(`${host}/api/projects/${PROJECT_ID}/query/`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ query: { kind: "HogQLQuery", query } }),
+  });
+  if (!res.ok) throw new Error(`PostHog purchase coverage query falló (${res.status})`);
+  const data = await res.json();
+  if (!Array.isArray(data.results)) throw new Error("PostHog: cobertura de compras inválida");
+  const coverage: PurchaseCoverage[] = Object.values(productEvents).map((product) => ({
+    product, eventCount: 0, uniqueOrders: 0, eventsWithoutOrderId: 0,
+  }));
+  for (const row of data.results) {
+    if (!Array.isArray(row) || row.length !== 4 || typeof row[0] !== "string" || !Object.hasOwn(productEvents, row[0])
+      || !row.slice(1).every((value: unknown) => typeof value === "number" && Number.isSafeInteger(value) && value >= 0)
+      || row[2] + row[3] > row[1]) throw new Error("PostHog: cobertura de compras inválida");
+    const product = productEvents[row[0] as keyof typeof productEvents];
+    Object.assign(coverage.find((item) => item.product === product)!, {
+      eventCount: row[1], uniqueOrders: row[2], eventsWithoutOrderId: row[3],
+    });
+  }
+  return coverage;
+}
+
+const EBOOK_ORDER_MATURITY_DAYS = 14;
+
+async function fetchEbookOrderConversion(
+  apiKey: string,
+  host: string,
+  sinceIso: string,
+  untilIso: string,
+): Promise<EbookOrderConversion> {
+  const query = `
+    WITH
+      checkout_orders AS (
+        SELECT
+          trim(JSONExtractString(properties, 'order_id')) AS order_id,
+          min(timestamp) AS checkout_at
+        FROM events
+        WHERE event = 'ebook_checkout_created'
+          AND timestamp >= '${sinceIso}'
+          AND timestamp <= '${untilIso}' - INTERVAL ${EBOOK_ORDER_MATURITY_DAYS} DAY
+          AND notEmpty(trim(JSONExtractString(properties, 'order_id')))
+        GROUP BY order_id
+      ),
+      purchase_events AS (
+        SELECT
+          trim(JSONExtractString(properties, 'order_id')) AS order_id,
+          timestamp AS purchased_at
+        FROM events
+        WHERE event = 'ebook_purchase_confirmed'
+          AND timestamp >= '${sinceIso}'
+          AND timestamp < '${untilIso}'
+          AND notEmpty(trim(JSONExtractString(properties, 'order_id')))
+      ),
+      missing_checkout_ids AS (
+        SELECT count() AS total
+        FROM events
+        WHERE event = 'ebook_checkout_created'
+          AND timestamp >= '${sinceIso}'
+          AND timestamp <= '${untilIso}' - INTERVAL ${EBOOK_ORDER_MATURITY_DAYS} DAY
+          AND empty(trim(JSONExtractString(properties, 'order_id')))
+      )
+    SELECT
+      uniqExact(c.order_id) AS eligible_checkouts,
+      uniqExactIf(c.order_id, p.purchased_at >= c.checkout_at
+        AND p.purchased_at < c.checkout_at + INTERVAL ${EBOOK_ORDER_MATURITY_DAYS} DAY) AS confirmed_within_window,
+      (SELECT total FROM missing_checkout_ids) AS checkout_events_without_order_id
+    FROM checkout_orders c
+    LEFT JOIN purchase_events p ON p.order_id = c.order_id
+  `;
+  const res = await fetch(`${host}/api/projects/${PROJECT_ID}/query/`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ query: { kind: "HogQLQuery", query } }),
+  });
+  if (!res.ok) throw new Error(`PostHog ebook order conversion query falló (${res.status})`);
+  const data = await res.json();
+  const row = Array.isArray(data.results) && data.results.length === 1 ? data.results[0] : null;
+  if (!Array.isArray(row) || row.length !== 3
+    || !row.every((value: unknown) => typeof value === "number" && Number.isSafeInteger(value) && value >= 0)
+    || row[1] > row[0]) {
+    throw new Error("PostHog: conversión de órdenes de ebook inválida");
+  }
+  return {
+    maturityDays: EBOOK_ORDER_MATURITY_DAYS,
+    eligibleCheckouts: row[0],
+    confirmedWithinWindow: row[1],
+    checkoutEventsWithoutOrderId: row[2],
+    conversionRate: row[0] > 0 ? row[1] / row[0] : null,
+  };
+}
+
 export function buildAnalyticsRecommendations(
   metrics: EcosystemMetrics,
-  byPageType: PageTypeCount[]
+  _byPageType: PageTypeCount[]
 ): string[] {
   const recommendations: string[] = [];
 
@@ -230,11 +403,11 @@ export function buildAnalyticsRecommendations(
   }
 
   if (metrics.evaluationOpened >= 10 && metrics.evaluationSucceeded / metrics.evaluationOpened < 0.25) {
-    recommendations.push("El formulario de evaluación pierde más del 75% de sus aperturas: revisar longitud, fricción y claridad de los tres pasos antes de cambiar el copy de adquisición.");
+    recommendations.push("La relación agregada de confirmaciones/aperturas de evaluación es menor al 25% (no mide abandono por persona): verificar identidad y secuencia antes de atribuir abandono o cambiar el formulario.");
   }
 
   if (metrics.chatMessages >= 10 && metrics.chatFallbacks / metrics.chatMessages >= 0.25) {
-    recommendations.push("El chat cae a fallback en al menos 25% de los mensajes: priorizar estabilidad del endpoint y medir las preguntas que activan el fallback.");
+    recommendations.push("La relación agregada fallbacks/mensajes es al menos 25%; verificar correspondencia por conversación antes de atribuir una tasa de fallo y revisar estabilidad del endpoint.");
   }
 
   if (metrics.ebookCheckoutRequests > 0 && metrics.ebookCheckouts === 0) {
@@ -249,22 +422,24 @@ export function buildAnalyticsRecommendations(
     recommendations.push("Hay checkouts creados pero ninguna compra confirmada: revisar webhook/confirmación de Flow y la entrega posterior antes de optimizar precios.");
   }
 
+  if (metrics.marketplaceSearches >= 20 && metrics.marketplaceBookSelections === 0) {
+    recommendations.push("Hay búsquedas en el catálogo pero ninguna selección de libro registrada: revisar resultados y enlaces antes de cambiar ofertas. Son conteos de eventos, no una tasa de conversión por persona.");
+  }
+
   if (metrics.skillViews >= 20 && metrics.skillDownloads / metrics.skillViews < 0.1) {
-    recommendations.push("Las skills reciben visitas pero pocas descargas: probar un CTA de descarga más temprano y una explicación más concreta del beneficio.");
+    recommendations.push("La relación agregada descargas/vistas de skills es menor al 10%; verificar identidad y secuencia antes de atribuir abandono o cambiar el CTA.");
   }
 
   if (metrics.newsletterPrompts >= 20 && metrics.newsletterSignups / metrics.newsletterPrompts < 0.03) {
-    recommendations.push("La conversión del popup de newsletter es menor al 3%: probar momento de aparición, promesa y fricción del formulario.");
+    recommendations.push("La relación agregada suscripciones/prompts es menor al 3% (no es conversión por persona): verificar exposición e identidad antes de modificar el popup.");
   }
 
   if (metrics.pageViews >= 50 && metrics.scrollDepth90 / metrics.pageViews < 0.15) {
-    recommendations.push("Pocos visitantes llegan al 90% de las páginas: revisar jerarquía del primer viewport y mover el CTA más importante hacia arriba.");
+    recommendations.push("Hay pocos eventos de scroll al 90% respecto de pageviews (no mide visitantes únicos): verificar cobertura de scroll por sesión antes de modificar la jerarquía visual.");
   }
 
-  const topPage = [...byPageType].sort((a, b) => b.pageViews - a.pageViews)[0];
-  if (topPage && topPage.pageViews >= 50 && metrics.ctaClicks / topPage.pageViews < 0.01) {
-    recommendations.push(`La categoría ${topPage.pageType} concentra tráfico pero casi no genera CTA: revisar su siguiente paso y enlazado interno.`);
-  }
+  // Page-category conversion needs CTA counts attributed to that same category.
+  // A global CTA numerator cannot support a recommendation about one page type.
 
   return recommendations;
 }
@@ -282,9 +457,15 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
   }
   const host = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
 
-  const since = new Date(now);
-  since.setDate(since.getDate() - windowDays);
-  const rows = await runHogQlQuery(apiKey, host, since.toISOString());
+  if (!Number.isFinite(windowDays) || windowDays <= 0 || !Number.isFinite(now.getTime())) {
+    throw new Error("La ventana y la fecha del reporte deben ser válidas.");
+  }
+  const since = new Date(now.getTime() - windowDays * 86_400_000);
+  const [rows, purchasesByProduct, ebookOrderConversion] = await Promise.all([
+    runHogQlQuery(apiKey, host, since.toISOString(), now.toISOString()),
+    fetchPurchaseCoverage(apiKey, host, since.toISOString(), now.toISOString()),
+    fetchEbookOrderConversion(apiKey, host, since.toISOString(), now.toISOString()),
+  ]);
 
   const funnelTotals: Record<FunnelStep, number> = {
     page_view: 0,
@@ -295,11 +476,15 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
   };
   const metrics = createEmptyMetrics();
   const pageTypeTotals = new Map<string, number>();
+  const semanticCtaTotals = new Map<string, SemanticCtaCount>();
   const variantTotals = new Map<string, { pageViews: number; checkoutsStarted: number; purchasesConfirmed: number }>();
   const legacyCheckoutByVariant = new Map<string, number>();
   let legacyCheckoutTotal = 0;
 
-  for (const [event, variant, pageType, depthPercent, total] of rows) {
+  for (const [event, variant, pageType, depthPercent, cta, source, total] of rows) {
+    if (event === "ecosystem_cta_clicked" && (cta !== null || source !== null)
+      && (!cta || !source || !isAllowedSemanticCta(cta, source))) continue;
+
     if (event === LEGACY_CHECKOUT_EVENT) {
       legacyCheckoutTotal += total;
       if (variant) legacyCheckoutByVariant.set(variant, (legacyCheckoutByVariant.get(variant) ?? 0) + total);
@@ -310,8 +495,14 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
 
     metrics.eventCount += total;
     const metric = EVENT_TO_METRIC[event];
-    if (metric) metrics[metric] += total;
+    if (metric) metrics[metric] = (metrics[metric] ?? 0) + total;
     if (event === "ecosystem_scroll_depth" && depthPercent === 90) metrics.scrollDepth90 += total;
+    if (event === "ecosystem_cta_clicked" && cta && source && isAllowedSemanticCta(cta, source)) {
+      const key = `${cta}\u0000${source}`;
+      const entry = semanticCtaTotals.get(key) ?? { cta, source, clicks: 0 };
+      entry.clicks += total;
+      semanticCtaTotals.set(key, entry);
+    }
 
     if (event === "ecosystem_page_view" && pageType) {
       pageTypeTotals.set(pageType, (pageTypeTotals.get(pageType) ?? 0) + total);
@@ -359,8 +550,13 @@ export async function fetchAnalyticsReport(windowDays: number, now: Date): Promi
     byVariant,
     offerSelectionRate,
     ecosystem: metrics,
+    semanticCtaBreakdown: Array.from(semanticCtaTotals.values()).sort((a, b) => b.clicks - a.clicks || a.cta.localeCompare(b.cta) || a.source.localeCompare(b.source)),
     byPageType,
     recommendations: buildAnalyticsRecommendations(metrics, byPageType),
     generatedAt: now.toISOString(),
+    measurement: { basis: "aggregate_events", sequentialFunnel: false,
+      windowStart: since.toISOString(), windowEndExclusive: now.toISOString() },
+    purchasesByProduct,
+    ebookOrderConversion,
   };
 }

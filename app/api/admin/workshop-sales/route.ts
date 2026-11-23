@@ -1,3 +1,4 @@
+import { isAdminRequest } from "@/lib/admin-session";
 import { NextResponse } from "next/server";
 import { deliverLateWorkshopAccessIfNeeded, deliverWorkshopOrders } from "@/lib/workshop-delivery";
 import { getSupabaseAdmin } from "@/lib/supabase";
@@ -5,7 +6,7 @@ import { WORKSHOP_PRODUCT_KEY } from "@/lib/workshop-product";
 import { getWorkshopFulfillmentReadiness } from "@/lib/workshop-readiness";
 
 export const dynamic = "force-dynamic";
-const authorized = (request: Request) => Boolean(process.env.ADMIN_SECRET) && request.headers.get("x-admin-key") === process.env.ADMIN_SECRET;
+const authorized = isAdminRequest;
 const validEmail = (value: unknown): value is string => typeof value === "string" && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 export async function POST(request: Request) {
