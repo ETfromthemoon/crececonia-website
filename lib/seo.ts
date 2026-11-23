@@ -16,14 +16,22 @@ export function absoluteUrl(path = "/") {
   return new URL(path, SITE_URL).toString();
 }
 
+export function socialImageUrl(path: string): string {
+  const previewHost = process.env.VERCEL_ENV === "preview" ? process.env.VERCEL_URL : undefined;
+  const image = new URL("/api/social-image", previewHost ? `https://${previewHost}` : SITE_URL);
+  image.searchParams.set("path", path);
+  return image.toString();
+}
+
 export function createPageMetadata({
   title,
   description,
   path,
   type = "website",
-  image = "/opengraph-image",
+  image,
 }: PageMetadataOptions): Metadata {
   const url = absoluteUrl(path);
+  const previewImage = image ?? socialImageUrl(path);
 
   return {
     title,
@@ -36,13 +44,13 @@ export function createPageMetadata({
       siteName: SITE_NAME,
       locale: "es_CL",
       type,
-      images: [{ url: image, width: 1200, height: 630, alt: title }],
+      images: [{ url: previewImage, width: 1200, height: 630, alt: title }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [image],
+      images: [previewImage],
     },
   };
 }

@@ -1,4 +1,11 @@
 import { MARKETPLACE_COMMISSION_BPS, MARKETPLACE_SELLER_TERMS_VERSION } from "@/lib/marketplace/commission";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({
+  title: "Condiciones para autores — CrececonIA",
+  description: "Condiciones de publicación y venta de ebooks para autores en el Marketplace de CrececonIA.",
+  path: "/ebooks/vender/condiciones",
+});
 
 export default function SellerConditions() {
   return <main className="site-container" style={{ maxWidth: 760, paddingTop: 100, paddingBottom: 100 }}>

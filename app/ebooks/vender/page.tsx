@@ -3,8 +3,14 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { marketplaceDemoAvailable, marketplacePublicAvailable } from "@/lib/marketplace-demo";
+import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+export const metadata = createPageMetadata({
+  title: "Publica tu ebook en CrececonIA",
+  description: "Un espacio para autores de libros prácticos sobre IA, tecnología y negocios.",
+  path: "/ebooks/vender",
+});
 
 export default async function SellerPortalPage({ searchParams }: { searchParams: Promise<{ registro?: string; panel?: string }> }) {
   if (!marketplacePublicAvailable()) return <>

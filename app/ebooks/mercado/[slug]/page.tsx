@@ -6,10 +6,24 @@ import { getMarketplaceRecommendations, getPublishedMarketplaceBook } from "@/li
 import MarketplaceCheckout from "./MarketplaceCheckout";
 import { marketplaceCheckoutMode } from "@/lib/marketplace-checkout";
 import { marketplacePublicAvailable } from "@/lib/marketplace-demo";
+import { createPageMetadata } from "@/lib/seo";
+import type { Metadata } from "next";
 import "../demo.css";
 import "../real.css";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  if (!marketplacePublicAvailable()) return { title: "Libro no disponible", robots: { index: false } };
+  const book = await getPublishedMarketplaceBook(slug);
+  if (!book) return { title: "Libro no disponible", robots: { index: false } };
+  return createPageMetadata({
+    title: `${book.title} — Marketplace CrececonIA`,
+    description: book.subtitle || book.description.slice(0, 160),
+    path: `/ebooks/mercado/${slug}`,
+  });
+}
 
 const categoryLabel = { ia: "Inteligencia artificial", tecnologia: "Tecnología", negocios: "Negocios" };
 const coverTone = { ia: "violet", tecnologia: "blue", negocios: "lime" };

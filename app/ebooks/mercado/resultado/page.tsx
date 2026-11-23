@@ -1,6 +1,9 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Confirmando pago | CrececonIA", robots: { index: false, follow: false } };
 
 export default function MarketplacePaymentReturnPage() {
   return <>
