@@ -3,6 +3,10 @@
 Sitio web de CrececonIA, construido con Next.js y desplegado mediante la
 integracion GitHub -> Vercel.
 
+El catálogo público de guías, skills y repositorios está en
+`content/public-catalog.json`. Para añadir un recurso, seguir
+[`docs/publicacion-recursos.md`](docs/publicacion-recursos.md).
+
 ## Flujo de revision
 
 La revision visual se realiza unicamente desde el Pull Request en GitHub,

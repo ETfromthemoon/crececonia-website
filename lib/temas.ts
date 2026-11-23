@@ -1,6 +1,6 @@
 // ── Temas / objetivos del Centro de Conocimiento ───────────────────────────
 // Eje principal de navegación: el usuario busca por OBJETIVO, no por tipo.
-// Cada item (skill/guía/enlace) se asigna a uno o más temas vía:
+// Cada item (skill/guía/enlace/repositorio) se asigna a uno o más temas vía:
 //   1. slugs curados (asignación manual precisa)
 //   2. matchers por categoria/tags (clasifica items futuros automáticamente)
 
