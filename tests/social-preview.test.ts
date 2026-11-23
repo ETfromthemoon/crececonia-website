@@ -61,4 +61,15 @@ describe("vistas previas contextuales", () => {
     const forged = await GET(new Request("https://www.crececonia.cl/api/social-image?path=%2Fno-existe&title=Texto+falso"));
     expect(forged.status).toBe(404);
   });
+
+  it("compone la portada vertical de la clase en una tarjeta horizontal", async () => {
+    const cover = await readFile(join(process.cwd(), "public/clases/clase-construye-pagina-portada.png"));
+    const fetch = vi.fn(async () => new Response(cover, { status: 200 }));
+    vi.stubGlobal("fetch", fetch);
+    const response = await GET(new Request("https://www.crececonia.cl/api/social-image?path=%2Fclase-en-vivo-2026-08-23"));
+    expect(response.status).toBe(200);
+    expect(fetch).toHaveBeenCalledWith("https://www.crececonia.cl/clases/clase-construye-pagina-portada.png");
+    expect(response.headers.get("content-type")).toContain("image/png");
+    expect((await response.arrayBuffer()).byteLength).toBeGreaterThan(10_000);
+  });
 });

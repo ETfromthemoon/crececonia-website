@@ -7,6 +7,7 @@ import { getLaunch } from "@/lib/launches";
 import { getPublishedMarketplaceBook } from "@/lib/marketplace-review";
 import { marketplacePublicAvailable } from "@/lib/marketplace-demo";
 import { WORKSHOP_TITLE } from "@/lib/workshop-product";
+import { CLASS_PATH, CLASS_TITLE } from "@/lib/class-product";
 
 export const runtime = "nodejs";
 
@@ -31,6 +32,7 @@ const STATIC_PREVIEWS: Record<string, Preview> = {
   "/publicador-drive": { title: "Publicador de videos desde Google Drive", section: "Automatización" },
   "/publicador-drive/privacidad": { title: "Privacidad del publicador de Drive", section: "Privacidad" },
   "/workshop-en-vivo-2026-09-06": { title: WORKSHOP_TITLE, section: "Workshop" },
+  [CLASS_PATH]: { title: CLASS_TITLE, section: "Clase online", cover: "/clases/clase-construye-pagina-portada.png" },
 };
 
 async function previewForPath(path: string): Promise<Preview | null> {
