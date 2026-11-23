@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Publicador de videos desde Google Drive | CrececonIA",
   description: "Cómo el automatizador de CrececonIA prepara y programa videos desde una carpeta autorizada de Google Drive.",
-  alternates: { canonical: "https://www.crececonia.cl/publicador-drive" },
-};
+  path: "/publicador-drive",
+});
 
 export default function PublicadorDrivePage() {
   return (

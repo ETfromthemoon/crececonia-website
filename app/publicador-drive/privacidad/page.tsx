@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Privacidad del publicador de Google Drive | CrececonIA",
   description: "Tratamiento de datos de Google Drive por el automatizador de videos de CrececonIA.",
-  alternates: { canonical: "https://www.crececonia.cl/publicador-drive/privacidad" },
-};
+  path: "/publicador-drive/privacidad",
+});
 
 export default function PrivacidadPublicadorDrivePage() {
   return (

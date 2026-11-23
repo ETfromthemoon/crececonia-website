@@ -3,8 +3,20 @@ import Image from "next/image";
 import { getCatalogEntry, isAdminPreviewKey } from "@/lib/ebook-catalog";
 import { getLaunch, launchDefaultCta } from "@/lib/launches";
 import { hasAdminSession } from "@/lib/admin-auth";
+import { createPageMetadata } from "@/lib/seo";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const launch = await getLaunch(slug);
+  if (!launch || launch.status !== "published") return { title: "Lanzamiento no disponible", robots: { index: false } };
+  return createPageMetadata({
+    title: `${launch.headline} — CrececonIA`,
+    description: launch.description || "Una experiencia de CrececonIA para convertir ideas en resultados concretos.",
+    path: `/lanzamientos/${slug}`,
+  });
+}
 const money = (value: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(value);
 
 export default async function LaunchPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ key?: string }> }) {

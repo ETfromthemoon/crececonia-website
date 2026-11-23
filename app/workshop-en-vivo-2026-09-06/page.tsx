@@ -21,7 +21,6 @@ export const metadata: Metadata = createPageMetadata({
   title: `${WORKSHOP_TITLE} | CrececonIA`,
   description: `${WORKSHOP_OUTCOME} En vivo el ${WORKSHOP_DATE_LABEL.toLowerCase()} a las 17:00.`,
   path: WORKSHOP_PATH,
-  image: "/og-image.png",
 });
 
 const eventJsonLd = {
