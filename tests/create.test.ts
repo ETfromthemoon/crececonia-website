@@ -203,6 +203,7 @@ describe("POST /api/flow/create — 1 solo libro (comportamiento existente)", ()
     );
     expect(res.status).toBe(200);
     expect(flowBody().get("amount")).toBe("5400");
+    expect(mockValidateDiscount).toHaveBeenCalledWith("promo-abc", 10800, DEFAULT_EBOOK_RESOURCE);
   });
 
   it("400 y no llama a Flow cuando el código es inválido", async () => {

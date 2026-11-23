@@ -52,6 +52,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = await validateDiscountCode(code, priceInfo.price);
+  const result = await validateDiscountCode(code, priceInfo.price, resource);
   return NextResponse.json(result, { status: result.valid ? 200 : 400 });
 }

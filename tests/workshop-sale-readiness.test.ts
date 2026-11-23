@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockRpc, mockReadiness } = vi.hoisted(() => ({ mockRpc: vi.fn(), mockReadiness: vi.fn() }));
+const { mockRpc, mockReadiness, mockDiscount } = vi.hoisted(() => ({ mockRpc: vi.fn(), mockReadiness: vi.fn(), mockDiscount: vi.fn() }));
 vi.mock("@/lib/supabase", () => ({ getSupabaseAdmin: () => ({ rpc: mockRpc }) }));
 vi.mock("@/lib/workshop-readiness", () => ({ getWorkshopFulfillmentReadiness: mockReadiness }));
-vi.mock("@/lib/discount-codes", () => ({ validateDiscountCode: vi.fn() }));
+vi.mock("@/lib/discount-codes", () => ({ validateDiscountCode: mockDiscount }));
 vi.mock("@/lib/flow", () => ({ flowSign: vi.fn(), getFlowBase: () => "https://flow.test" }));
 
 import { GET } from "@/app/api/workshop/availability/route";
@@ -76,5 +76,18 @@ describe("workshop evergreen sale readiness", () => {
       p_email: "alumno@test.com",
       p_amount_minor: 20_000,
     }));
+  });
+
+  it("no abre una orden con un cupón que sólo aplica al ebook", async () => {
+    mockReadiness.mockResolvedValue({ ready: true, missing: [] });
+    mockDiscount.mockResolvedValue({ valid: false, reason: "Este código no aplica a este producto." });
+    const response = await POST(new Request("https://crececonia.cl/api/workshop/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "alumno@test.com", offerKey: "recording", discountCode: "CLAUDE25" }),
+    }));
+    expect(response.status).toBe(400);
+    expect(mockDiscount).toHaveBeenCalledWith("CLAUDE25", 20_000);
+    expect(mockRpc).not.toHaveBeenCalledWith("create_class_order", expect.anything());
   });
 });

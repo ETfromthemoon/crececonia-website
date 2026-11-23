@@ -5,6 +5,7 @@ export type DiscountType = "percent" | "fixed";
 
 export interface DiscountCode {
   code: string;
+  resource: string | null; // null = código heredado o general
   type: DiscountType;
   amount: number;
   max_uses: number | null; // null = ilimitado
@@ -48,8 +49,9 @@ export async function generateDiscountCodes(params: {
   expiresAt: string | null;
   maxUses: number | null;
   prefix?: string;
+  resource?: string | null;
 }): Promise<string[]> {
-  const { type, amount, quantity, expiresAt, maxUses, prefix } = params;
+  const { type, amount, quantity, expiresAt, maxUses, prefix, resource = null } = params;
   const db = getSupabaseAdmin();
   const cleanPrefix = prefix ? sanitizePrefix(prefix) : "";
   const codes = Array.from({ length: quantity }, () => {
@@ -60,6 +62,7 @@ export async function generateDiscountCodes(params: {
   const { error } = await db.from("discount_codes").insert(
     codes.map((code) => ({
       code,
+      ...(resource ? { resource } : {}),
       type,
       amount,
       max_uses: maxUses,
@@ -89,7 +92,8 @@ function computeFinalPrice(currentPrice: number, type: DiscountType, amount: num
  */
 export async function validateDiscountCode(
   rawCode: string,
-  currentPrice: number
+  currentPrice: number,
+  resource?: string
 ): Promise<DiscountValidation> {
   const code = rawCode.trim().toUpperCase();
   if (!code) return { valid: false, reason: "Ingresa un código." };
@@ -105,6 +109,9 @@ export async function validateDiscountCode(
 
   const row = data as DiscountCode;
 
+  if (row.resource && row.resource !== resource) {
+    return { valid: false, reason: "Este código no aplica a este producto." };
+  }
   if (!row.active) return { valid: false, reason: "Este código ya no está activo." };
   if (row.expires_at && new Date(row.expires_at).getTime() < Date.now()) {
     return { valid: false, reason: "Este código venció." };

@@ -22,6 +22,6 @@ describe("Códigos durante y después de la venta flash", () => {
     vi.setSystemTime(new Date("2026-11-16T00:00:00-03:00"));
     validate.mockResolvedValue({ valid: true, code: "EXTRA", finalPrice: 16110 });
     expect((await POST(request())).status).toBe(200);
-    expect(validate).toHaveBeenCalledWith("EXTRA", 17900);
+    expect(validate).toHaveBeenCalledWith("EXTRA", 17900, "ebook:de-cero-a-claude-en-una-semana");
   });
 });

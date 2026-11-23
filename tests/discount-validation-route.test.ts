@@ -36,11 +36,12 @@ describe("validación pública de descuentos", () => {
     const response = await POST(request({ code: " TEST " }));
     expect(response.status).toBe(200);
     expect(price).toHaveBeenCalledWith("ebook:de-cero-a-claude-en-una-semana");
-    expect(validate).toHaveBeenCalledWith("TEST", 17_900);
+    expect(validate).toHaveBeenCalledWith("TEST", 17_900, "ebook:de-cero-a-claude-en-una-semana");
   });
 
   it("valida contra el recurso solicitado", async () => {
     await POST(request({ code: "TEST", resource: "ebook:claude-nivel-experto" }));
     expect(price).toHaveBeenCalledWith("ebook:claude-nivel-experto");
+    expect(validate).toHaveBeenCalledWith("TEST", 17_900, "ebook:claude-nivel-experto");
   });
 });
