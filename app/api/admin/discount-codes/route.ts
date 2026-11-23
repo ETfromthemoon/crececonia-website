@@ -2,6 +2,7 @@ import { isAdminRequest } from "@/lib/admin-session";
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { generateDiscountCodes, type DiscountType } from "@/lib/discount-codes";
+import { getCatalogEntry } from "@/lib/ebook-catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
       ? null
       : Number(body.maxUses);
   const prefix: string | undefined = body?.prefix || undefined;
+  const resource: string | null = body?.resource == null || body.resource === "" ? null : body.resource;
 
   if (type !== "percent" && type !== "fixed") {
     return NextResponse.json({ error: "type debe ser 'percent' o 'fixed'." }, { status: 400 });
@@ -61,9 +63,12 @@ export async function POST(request: Request) {
   if (maxUses !== null && (!Number.isInteger(maxUses) || maxUses < 1)) {
     return NextResponse.json({ error: "maxUses debe ser un entero positivo, o vacío para ilimitado." }, { status: 400 });
   }
+  if (resource !== null && (typeof resource !== "string" || !getCatalogEntry(resource)?.active)) {
+    return NextResponse.json({ error: "resource debe identificar un ebook activo." }, { status: 400 });
+  }
 
   try {
-    const codes = await generateDiscountCodes({ type, amount, quantity, expiresAt, maxUses, prefix });
+    const codes = await generateDiscountCodes({ type, amount, quantity, expiresAt, maxUses, prefix, resource });
     return NextResponse.json({ codes });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error al generar códigos.";

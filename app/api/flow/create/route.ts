@@ -136,7 +136,7 @@ export async function POST(request: Request) {
 
   if (discountCode) {
     // Solo llega acá si resources.length === 1 (ver validación arriba).
-    const result = await validateDiscountCode(discountCode, priceInfos[0].price);
+    const result = await validateDiscountCode(discountCode, priceInfos[0].price, resources[0]);
     if (!result.valid) {
       return NextResponse.json({ error: result.reason }, { status: 400 });
     }

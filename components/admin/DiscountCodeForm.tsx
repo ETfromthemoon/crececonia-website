@@ -24,7 +24,7 @@ const labelStyle: CSSProperties = {
   fontFamily: "var(--font-mono)",
 };
 
-export default function DiscountCodeForm() {
+export default function DiscountCodeForm({ resources }: { resources: { resource: string; title: string }[] }) {
   const [type, setType] = useState<"percent" | "fixed">("percent");
   const [amount, setAmount] = useState("20");
   const [quantity, setQuantity] = useState("1");
@@ -33,6 +33,7 @@ export default function DiscountCodeForm() {
   const [maxUses, setMaxUses] = useState("1");
   const [unlimitedUses, setUnlimitedUses] = useState(false);
   const [prefix, setPrefix] = useState("");
+  const [resource, setResource] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [generated, setGenerated] = useState<string[]>([]);
@@ -57,6 +58,7 @@ export default function DiscountCodeForm() {
         expiresAt,
         maxUses: unlimitedUses ? null : Number(maxUses),
         prefix: prefix || undefined,
+        resource: resource || null,
       }),
     });
 
@@ -202,6 +204,14 @@ export default function DiscountCodeForm() {
               />
               Usos ilimitados
             </label>
+          </div>
+
+          <div>
+            <label style={labelStyle} htmlFor="disc-resource">Producto aplicable</label>
+            <select id="disc-resource" value={resource} onChange={(event) => setResource(event.target.value)} style={inputStyle}>
+              <option value="">General (ebooks y workshop)</option>
+              {resources.map((entry) => <option key={entry.resource} value={entry.resource}>{entry.title}</option>)}
+            </select>
           </div>
 
           <div>

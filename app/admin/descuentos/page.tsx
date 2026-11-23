@@ -1,6 +1,7 @@
 import { requireAdminSession } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import DiscountCodeForm from "@/components/admin/DiscountCodeForm";
+import { getLiveCatalogEntries } from "@/lib/ebook-catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -69,7 +70,7 @@ export default async function AdminDiscountCodesPage() {
           Códigos de descuento — Ebook
         </h1>
 
-        <DiscountCodeForm />
+        <DiscountCodeForm resources={getLiveCatalogEntries().map(({ resource, title }) => ({ resource, title }))} />
 
         <h2
           style={{
@@ -92,7 +93,7 @@ export default async function AdminDiscountCodesPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--smoke)", textAlign: "left" }}>
-                  {["Código", "Tipo", "Valor", "Usos", "Vence", "Estado"].map((h) => (
+                  {["Código", "Libro", "Tipo", "Valor", "Usos", "Vence", "Estado"].map((h) => (
                     <th
                       key={h}
                       style={{
@@ -121,6 +122,9 @@ export default async function AdminDiscountCodesPage() {
                     >
                       <td style={{ padding: "10px 12px", color: "var(--bone)", fontFamily: "var(--font-mono)" }}>
                         {row.code}
+                      </td>
+                      <td style={{ padding: "10px 12px", color: "var(--smoke)" }}>
+                        {row.resource ? getLiveCatalogEntries().find((entry) => entry.resource === row.resource)?.title ?? row.resource : "General"}
                       </td>
                       <td style={{ padding: "10px 12px", color: "var(--smoke)" }}>
                         {row.type === "percent" ? "%" : "$"}
