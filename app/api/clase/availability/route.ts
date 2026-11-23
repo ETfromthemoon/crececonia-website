@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import type { ClassAvailabilityRow } from "@/lib/class-product";
+import { isClassSaleClosed, type ClassAvailabilityRow } from "@/lib/class-product";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  if (isClassSaleClosed()) {
+    return NextResponse.json({ error: "Esta clase ya finalizó y no acepta nuevas reservas.", offers: [] }, { status: 410, headers: { "Cache-Control": "no-store" } });
+  }
   const db = getSupabaseAdmin();
   await db.rpc("release_expired_class_reservations");
   const { data: rows, error: availabilityError } = await db.rpc("class_product_availability");

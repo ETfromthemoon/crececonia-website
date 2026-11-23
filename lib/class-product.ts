@@ -6,6 +6,9 @@ export const CLASS_TITLE = "Construye una página desde cero con inteligencia ar
 export const CLASS_DATE_LABEL = "Domingo 23 de agosto";
 export const CLASS_START = "2026-08-23T18:00:00-04:00";
 export const CLASS_END = "2026-08-23T20:30:00-04:00";
+export function isClassSaleClosed(now = Date.now()): boolean {
+  return now >= Date.parse(CLASS_END);
+}
 export const CLASS_SESSION_LABEL = "Domingo 23 de agosto · 18:00 a 20:30 h";
 export const CLASS_BOOK_RESOURCES = [
   "ebook:creacion-de-webs-con-ia",
