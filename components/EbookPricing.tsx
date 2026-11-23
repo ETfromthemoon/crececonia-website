@@ -62,12 +62,6 @@ type EbookPricingProps = {
   previewKey?: string;
 };
 
-const TIER_LABELS: Record<string, { badge: string; discount: string }> = {
-  "super-early": { badge: "Super Early", discount: "60% OFF" },
-  early: { badge: "Early Adopters", discount: "33% OFF" },
-  regular: { badge: "", discount: "" },
-};
-
 function CheckIcon() {
   return (
     <svg
@@ -223,7 +217,6 @@ export default function EbookPricing({
   }, [bundleOffers, pricingVariant, resource]);
 
   const tier = priceInfo?.tier ?? "regular";
-  const tierInfo = TIER_LABELS[tier] ?? TIER_LABELS.regular;
   const basePrice = priceInfo?.price ?? 27000;
 
   // `selectedExtras` normalmente solo se llena tocando los checkboxes de
@@ -259,14 +252,6 @@ export default function EbookPricing({
   const displayPrice = isCombo ? bundlePreview!.total : appliedDiscount?.finalPrice ?? singlePreview.total;
   const formattedPrice = displayPrice.toLocaleString("es-CL");
   const formattedBasePrice = basePrice.toLocaleString("es-CL");
-  // Antes esto era un `27000` fijo, de cuando EbookPricing solo se usaba en
-  // el libro 1 (cuyo precio regular es, por coincidencia, ese mismo número).
-  // Al reusar el componente en libros con otro precio regular (9700/13700/
-  // 19700), el hardcode mostraba el "antes" equivocado. `priceInfo.originalPrice`
-  // ya lo devuelve la API por resource — solo faltaba usarlo.
-  const formattedOriginal = (priceInfo?.originalPrice ?? basePrice).toLocaleString("es-CL");
-  const hasDiscount = tier !== "regular";
-
   function toggleExtra(extraResource: string, checked: boolean) {
     setSelectedExtras((prev) =>
       checked ? [...prev, extraResource] : prev.filter((r) => r !== extraResource)
@@ -363,36 +348,6 @@ export default function EbookPricing({
               borderBottom: "1px solid rgba(0,0,0,0.1)",
             }}
           >
-            {hasDiscount && !flashActive && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                <span
-                  style={{
-                    background: "#242424",
-                    color: "#f6f3f1",
-                    padding: "3px 10px",
-                    borderRadius: 100,
-                    fontSize: 11,
-                    fontFamily: "var(--font-mono)",
-                    letterSpacing: "0.08em",
-                  }}
-                >
-                  {tierInfo.badge}
-                </span>
-                <span
-                  style={{
-                    background: "rgba(0,0,0,0.08)",
-                    color: "#242424",
-                    padding: "3px 10px",
-                    borderRadius: 100,
-                    fontSize: 11,
-                    fontFamily: "var(--font-mono)",
-                  }}
-                >
-                  {tierInfo.discount}
-                </span>
-              </div>
-            )}
-
             {!priceInfo || priceError ? <div className="price-status" role="status">
               {priceError ? <span>No pudimos actualizar el precio. <button type="button" onClick={() => setPriceRetry(value => value + 1)} style={{ textDecoration: "underline" }}>Reintentar</button></span> : "Consultando precio vigente…"}
             </div> : <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
@@ -415,7 +370,7 @@ export default function EbookPricing({
               >
                 CLP
               </span>
-              {(hasDiscount || appliedDiscount || flashActive || isCombo) && (
+              {(appliedDiscount || flashActive || isCombo) && (
                 <span
                   aria-label="Precio anterior"
                   style={{
@@ -425,7 +380,7 @@ export default function EbookPricing({
                     fontFamily: "var(--font-mono)",
                   }}
                 >
-                  ${isCombo ? bundlePreview!.subtotal.toLocaleString("es-CL") : flashActive ? singlePreview.subtotal.toLocaleString("es-CL") : appliedDiscount ? formattedBasePrice : formattedOriginal}
+                  ${isCombo ? bundlePreview!.subtotal.toLocaleString("es-CL") : flashActive ? singlePreview.subtotal.toLocaleString("es-CL") : formattedBasePrice}
                 </span>
               )}
             </div>}
