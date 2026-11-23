@@ -44,10 +44,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/ebook-og.png",
+        url: `/ebook/${SLUG}/opengraph-image`,
         width: 1200,
         height: 630,
-        alt: "Portada del ebook De cero a Claude en una semana",
+        alt: "De cero a Claude en una semana, guía práctica de CrececonIA",
       },
     ],
   },
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     title: "De cero a Claude en una semana — Ebook",
     description:
       "Guía práctica para dominar Claude Code en una semana.",
-    images: ["/ebook-og.png"],
+    images: [`/ebook/${SLUG}/opengraph-image`],
   },
 };
 
