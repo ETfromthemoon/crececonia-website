@@ -23,7 +23,6 @@ export const metadata: Metadata = createPageMetadata({
   title: `${CLASS_TITLE} | CrececonIA`,
   description: DESCRIPTION,
   path: CLASS_PATH,
-  image: "/clases/clase-construye-pagina-portada.png",
 });
 
 const classJsonLd = {
