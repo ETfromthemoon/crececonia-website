@@ -20,35 +20,8 @@ function getActiveEntryOrThrow(resource: string) {
 
 export async function getCurrentPrice(resource: string): Promise<PriceInfo> {
   const entry = getActiveEntryOrThrow(resource);
-  const db = getSupabaseAdmin();
-  const { data, error } = await db.from("ebook_cupos").select("*").eq("resource", resource);
-  if (error) {
-    throw new Error(`No se pudo leer los cupos de ${resource}: ${error.message}`);
-  }
-  const cupos: Record<string, { total: number; used: number }> =
-    Object.fromEntries((data ?? []).map((r) => [r.tier, r]));
-
-  const superEarlyLeft =
-    (cupos["super-early"]?.total ?? 0) - (cupos["super-early"]?.used ?? 0);
-  if (superEarlyLeft > 0) {
-    return {
-      price: entry.tierPrices.superEarly,
-      tier: "super-early",
-      remaining: superEarlyLeft,
-      originalPrice: entry.tierPrices.regular,
-    };
-  }
-
-  const earlyLeft = (cupos["early"]?.total ?? 0) - (cupos["early"]?.used ?? 0);
-  if (earlyLeft > 0) {
-    return {
-      price: entry.tierPrices.early,
-      tier: "early",
-      remaining: earlyLeft,
-      originalPrice: entry.tierPrices.regular,
-    };
-  }
-
+  // Los tramos de lanzamiento quedan sólo como datos históricos para compras
+  // anteriores. El precio vigente de todos los libros es el regular.
   return {
     price: entry.tierPrices.regular,
     tier: "regular",
