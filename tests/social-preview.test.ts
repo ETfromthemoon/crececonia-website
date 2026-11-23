@@ -7,7 +7,7 @@ import { join } from "node:path";
 vi.mock("@/lib/launches", () => ({ getLaunch: vi.fn() }));
 vi.mock("@/lib/marketplace-review", () => ({ getPublishedMarketplaceBook: vi.fn() }));
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 describe("vistas previas contextuales", () => {
   it("genera una imagen distinta para cada contenido y conserva la portada de los ebooks", () => {
@@ -19,6 +19,12 @@ describe("vistas previas contextuales", () => {
     expect(guide.searchParams.get("path")).toBe("/guias/como-usar-ia");
     expect(ebook.searchParams.get("title")).toBeNull();
     expect(ebook.toString()).not.toBe(guide.toString());
+  });
+
+  it("usa el dominio del despliegue para revisar imágenes en preview", () => {
+    vi.stubEnv("VERCEL_ENV", "preview");
+    vi.stubEnv("VERCEL_URL", "preview.example.vercel.app");
+    expect(socialImageUrl("/mentoria")).toBe("https://preview.example.vercel.app/api/social-image?path=%2Fmentoria");
   });
 
   it("usa la misma imagen contextual para Open Graph y Twitter", () => {

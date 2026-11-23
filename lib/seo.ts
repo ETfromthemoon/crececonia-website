@@ -17,7 +17,8 @@ export function absoluteUrl(path = "/") {
 }
 
 export function socialImageUrl(path: string): string {
-  const image = new URL("/api/social-image", SITE_URL);
+  const previewHost = process.env.VERCEL_ENV === "preview" ? process.env.VERCEL_URL : undefined;
+  const image = new URL("/api/social-image", previewHost ? `https://${previewHost}` : SITE_URL);
   image.searchParams.set("path", path);
   return image.toString();
 }
