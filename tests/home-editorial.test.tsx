@@ -1,12 +1,15 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import EditorialHero from "@/components/EditorialHero";
 import FeaturedResources from "@/components/FeaturedResources";
 import SkillShowcase from "@/components/SkillShowcase";
 import { getPublicGuide, getPublicSkill } from "@/lib/public-catalog";
 
 describe("editorial homepage", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
   it("links the visual composition to published resources", () => {
+    vi.stubEnv("MARKETPLACE_PUBLIC_ENABLED", "true");
     expect(getPublicGuide("guia-completa-para-usar-claude-code")).toBeTruthy();
     expect(getPublicSkill("captaclientes")).toBeTruthy();
     const hero = renderToStaticMarkup(<EditorialHero />);
@@ -15,6 +18,14 @@ describe("editorial homepage", () => {
     const library = renderToStaticMarkup(<FeaturedResources />);
     expect(library).toContain('id="biblioteca"');
     expect(library).toContain('href="/ebooks/mercado"');
+  });
+  it("keeps CrececonIA ebooks available during the marketplace pause", () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("MARKETPLACE_PUBLIC_ENABLED", "false");
+    const library = renderToStaticMarkup(<FeaturedResources />);
+    expect(library).toContain('href="/ebooks"');
+    expect(library).not.toContain("/ebooks/mercado");
+    expect(library).not.toContain("Invitar a vender");
   });
   it("labels the simulation and exposes three real selection buttons", () => {
     const html = renderToStaticMarkup(<SkillShowcase />);

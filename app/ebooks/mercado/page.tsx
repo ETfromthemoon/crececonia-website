@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import InviteAuthor from "@/components/marketplace/InviteAuthor";
@@ -33,7 +34,7 @@ export default async function MarketplaceCatalogPage({ searchParams }: {
   searchParams: Promise<{ page?: string | string[]; q?: string | string[]; category?: string | string[] }>;
 }) {
   const preview = marketplaceDemoAvailable();
-  if (!marketplacePublicAvailable()) return <><Navbar /><main className="md-shop"><section className="md-hero"><div className="md-wrap"><div className="md-kicker">CRECECONIA / MARKETPLACE</div><h1>Pronto, nuevas<br /><em>voces para aprender.</em></h1><p>Estamos preparando una biblioteca de ebooks de autores independientes sobre IA, tecnología y negocios. Cada libro pasará por revisión antes de publicarse.</p><Link className="md-button" href="/ebooks">Explorar ebooks de CrececonIA ↗</Link></div></section></main><Footer /></>;
+  if (!marketplacePublicAvailable()) redirect("/ebooks");
   const filters = await searchParams;
   const rawPage = filters.page;
   const requestedPage = typeof rawPage === "string" && /^[1-9]\d*$/.test(rawPage) ? Number(rawPage) : 1;

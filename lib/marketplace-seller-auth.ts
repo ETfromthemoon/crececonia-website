@@ -52,7 +52,8 @@ export function sellerIdentityFromRequest(request: Request): string | null {
 }
 
 export function sellerMutationAllowed(request: Request): boolean {
-  return request.headers.get("origin") === new URL(request.url).origin && Boolean(sellerIdentityFromRequest(request));
+  return process.env.MARKETPLACE_PUBLIC_ENABLED !== "false" &&
+    request.headers.get("origin") === new URL(request.url).origin && Boolean(sellerIdentityFromRequest(request));
 }
 
 export async function requestSellerLogin(email: string, ip: string): Promise<string | null> {

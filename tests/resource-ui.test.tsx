@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ResourceNav from "@/components/ResourceNav";
 import Navbar from "@/components/Navbar";
 import HubCard from "@/components/HubCard";
@@ -23,7 +23,19 @@ describe("public resource interface", () => {
     expect(renderToStaticMarkup(<EbookFlashBanner active={false} />)).toBe("");
     expect(renderToStaticMarkup(<EbookFlashBanner active />)).toContain("Hasta las 23:59, hora de Santiago");
   });
-  beforeEach(() => { route.pathname = "/"; });
+  beforeEach(() => {
+    route.pathname = "/";
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("MARKETPLACE_PUBLIC_ENABLED", "true");
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("oculta Marketplace del encabezado durante la pausa", () => {
+    vi.stubEnv("MARKETPLACE_PUBLIC_ENABLED", "false");
+    const html = renderToStaticMarkup(<Navbar />);
+    expect(html).not.toContain("/ebooks/mercado");
+    expect(html).toContain("Elegir mi ruta");
+  });
 
   it.each([
     ["/ebook/de-cero-a-claude-en-una-semana", "Ebooks"],

@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   if (process.env.VERCEL_ENV === "preview") return new Response("El envío está deshabilitado en el preview", { status: 404 });
+  if (process.env.MARKETPLACE_PUBLIC_ENABLED === "false") return new Response("El registro de autores está en pausa", { status: 503 });
   if (request.headers.get("origin") !== new URL(request.url).origin) return new Response("Origen inválido", { status: 403 });
   let body: unknown;
   try { body = await request.json(); } catch { return new Response("Solicitud inválida", { status: 400 }); }
