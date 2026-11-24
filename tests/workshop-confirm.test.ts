@@ -68,7 +68,7 @@ describe("POST /api/workshop/confirm", () => {
       ["admin-notification", payment.commerceOrder],
     ]);
     expect(mockLate).toHaveBeenCalledWith(payment.commerceOrder);
-    expect(mockCapture).toHaveBeenCalledWith("workshop_purchase_confirmed", payment.payer, expect.objectContaining({ amount: 20_000 }));
+    expect(mockCapture).toHaveBeenCalledWith("workshop_purchase_confirmed", `workshop-order:${payment.commerceOrder}`, expect.objectContaining({ amount: 20_000 }));
   });
 
   it("rechaza una respuesta cuyo pagador no coincide con la orden", async () => {
