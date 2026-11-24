@@ -4,6 +4,8 @@ Actualizado: 19 de noviembre de 2026. Alcance inicial: autores de Chile, precios
 
 ## Estado técnico comprobado
 
+- Desde el 23 de noviembre de 2026, el marketplace está en pausa en producción con `MARKETPLACE_PUBLIC_ENABLED=false` y `MARKETPLACE_LIVE_ENABLED=false`. Los enlaces públicos de promoción se ocultan, la tienda y el ingreso de autores redirigen a `/ebooks`, y se rechazan registros y checkouts nuevos. Se conservan los datos, el panel administrativo y el procesamiento de pagos ya iniciados.
+
 - Neon producción tiene las migraciones `20261112_001`, `20261113_001`–`003`, `20261115_001`–`006` y `20261116_001`–`006`. Las migraciones financieras se probaron primero en una rama aislada con compras, reembolsos y liquidaciones sintéticos revertidos. No había pedidos ni autores de terceros previos a la apertura.
 - Respaldo previo: snapshot `snap-noisy-poetry-ack3ftal` de la rama principal, creado el 19 de noviembre de 2026. Neon rechazó un segundo snapshot por límite de cuota; conservar el primero y las migraciones reversibles versionadas.
 - La tienda y el checkout se activan por separado mediante `MARKETPLACE_PUBLIC_ENABLED` y `MARKETPLACE_LIVE_ENABLED` en Vercel. `FLOW_SANDBOX=false`, `MARKETPLACE_SITE_URL=https://www.crececonia.cl`, `MARKETPLACE_DOWNLOAD_SECRET`, `MARKETPLACE_SESSION_SECRET` y `MARKETPLACE_HEALTH_SECRET` están configurados para producción. No guardar sus valores en Git.

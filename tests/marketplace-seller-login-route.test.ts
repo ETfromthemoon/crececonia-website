@@ -20,6 +20,7 @@ beforeEach(() => {
   vi.stubEnv("RESEND_API_KEY", "test");
   vi.stubEnv("MARKETPLACE_SESSION_SECRET", "x".repeat(32));
   vi.stubEnv("MARKETPLACE_SITE_URL", site);
+  vi.stubEnv("MARKETPLACE_PUBLIC_ENABLED", "true");
   vi.stubEnv("SITE_URL", "https://other.example.cl");
   queryDatabase.mockResolvedValue([{ attempts: 1 }]);
   vi.spyOn(console, "info").mockImplementation(() => {});
@@ -57,6 +58,13 @@ it("reports an unavailable service when Resend rejects the message", async () =>
 it("keeps preview registration isolated from the database and email service", async () => {
   vi.stubEnv("VERCEL_ENV", "preview");
   expect((await POST(request())).status).toBe(404);
+  expect(queryDatabase).not.toHaveBeenCalled();
+  expect(send).not.toHaveBeenCalled();
+});
+
+it("blocks new seller login requests during the marketplace pause", async () => {
+  vi.stubEnv("MARKETPLACE_PUBLIC_ENABLED", "false");
+  expect((await POST(request())).status).toBe(503);
   expect(queryDatabase).not.toHaveBeenCalled();
   expect(send).not.toHaveBeenCalled();
 });
