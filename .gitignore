@@ -47,6 +47,9 @@ next-env.d.ts
 # private assets (PDFs, etc.) — never commit
 /private
 
+# Registro local del aviso de nueva edición (emails de compradores) — never commit
+/.avisos-nueva-edicion
+
 # Database migration exports contain production data and must never be committed.
 /.migration-private
 
