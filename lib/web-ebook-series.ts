@@ -23,7 +23,7 @@ export const WEB_EBOOK_PARTS: Record<string, WebEbookPart> = {
     eyebrow: "Ebook · CrececonIA · Colección Web · Parte 2",
     title: "Sitios Corporativos",
     titleAccent: "con IA.",
-    description: "Construye sitios corporativos completos con Astro, CMS y multi-idioma. 113 páginas y un proyecto real con Ardenza.",
+    description: "Construye sitios corporativos completos con Astro, CMS y multi-idioma. 123 páginas y un proyecto real con Ardenza.",
     introTitle: "El sitio que el cliente puede editar solo.",
     intro: "Parte 2 toma la metodología de construcción con IA y la lleva a sitios corporativos reales: arquitectura de información, contenido editable, SEO local, formularios, migraciones y entrega profesional.",
     stats: [
@@ -32,7 +32,7 @@ export const WEB_EBOOK_PARTS: Record<string, WebEbookPart> = {
       { value: "4", label: "partes" },
       { value: "1", label: "proyecto real" },
     ],
-    tocTitle: "21 capítulos para pasar de una referencia a un sitio corporativo que se puede mantener.",
+    tocTitle: "22 capítulos para pasar de una referencia a un sitio corporativo que se puede mantener.",
     sections: [
       { heading: "Parte I · Fundamentos", chapters: [
         { title: "Setup y dirección de arte", desc: "Configura el entorno y define una marca con criterio antes de generar componentes." },
@@ -74,7 +74,7 @@ export const WEB_EBOOK_PARTS: Record<string, WebEbookPart> = {
     eyebrow: "Ebook · CrececonIA · Colección Web · Parte 3",
     title: "eCommerce",
     titleAccent: "con IA.",
-    description: "Construye una tienda online con catálogo, carrito, checkout y pagos reales usando Next.js y ClaudeCode. 129 páginas y un proyecto real.",
+    description: "Construye una tienda online con catálogo, carrito, checkout y pagos reales usando Next.js y ClaudeCode. 138 páginas y un proyecto real.",
     introTitle: "Los flujos donde un bug cuesta dinero.",
     intro: "Parte 3 documenta la construcción de TechStore: catálogo, filtros, carrito, checkout, inventario, pagos, webhooks, emails, métricas y operación de una tienda que debe funcionar de verdad.",
     stats: [
@@ -83,7 +83,7 @@ export const WEB_EBOOK_PARTS: Record<string, WebEbookPart> = {
       { value: "4", label: "partes" },
       { value: "1", label: "proyecto real" },
     ],
-    tocTitle: "23 capítulos para construir una tienda, cobrar y operar después del lanzamiento.",
+    tocTitle: "24 capítulos para construir una tienda, cobrar y operar después del lanzamiento.",
     sections: [
       { heading: "Parte I · Fundamentos", chapters: [
         { title: "Setup, prompting y dirección de arte", desc: "Define el sistema visual y el entorno antes de entrar en los flujos de dinero." },
@@ -125,7 +125,7 @@ export const WEB_EBOOK_PARTS: Record<string, WebEbookPart> = {
     eyebrow: "Ebook · CrececonIA · Colección Web · Parte 4",
     title: "SaaS y Dashboards",
     titleAccent: "con IA.",
-    description: "Construye aplicaciones SaaS con autenticación, datos en vivo y multi-tenancy usando Next.js y ClaudeCode. 114 páginas y un proyecto real.",
+    description: "Construye aplicaciones SaaS con autenticación, datos en vivo y multi-tenancy usando Next.js y ClaudeCode. 125 páginas y un proyecto real.",
     introTitle: "Cuando una web se convierte en producto.",
     intro: "Parte 4 lleva la metodología a una aplicación con usuarios, roles, datos privados, dashboards, actualizaciones en tiempo real, límites y seguridad multi-tenant.",
     stats: [
@@ -134,7 +134,7 @@ export const WEB_EBOOK_PARTS: Record<string, WebEbookPart> = {
       { value: "3", label: "partes" },
       { value: "1", label: "proyecto real" },
     ],
-    tocTitle: "21 capítulos para pasar de una interfaz bonita a un producto SaaS seguro y operable.",
+    tocTitle: "22 capítulos para pasar de una interfaz bonita a un producto SaaS seguro y operable.",
     sections: [
       { heading: "Parte I · Fundamentos", chapters: [
         { title: "Setup y arquitectura de producto", desc: "Decide qué pertenece a una app SaaS y qué debe quedar fuera del MVP." },
