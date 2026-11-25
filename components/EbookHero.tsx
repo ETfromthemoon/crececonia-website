@@ -124,7 +124,7 @@ export default function EbookHero() {
             >
               La guía práctica para dominar Claude Code sin perder semanas
               probando. Desde la instalación hasta prompts que generan código
-              en producción — todo en 150+ páginas.
+              en producción — todo en 190 páginas.
             </motion.p>
 
             <motion.div

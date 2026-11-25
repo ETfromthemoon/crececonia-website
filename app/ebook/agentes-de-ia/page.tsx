@@ -86,7 +86,7 @@ const FAQS = [
   },
   {
     q: "¿Qué trae además de los capítulos?",
-    a: "21 capítulos en 7 partes, 7 anexos, y un caso de negocio completo documentado de punta a punta.",
+    a: "22 capítulos en 7 partes, 7 anexos, y un caso de negocio completo documentado de punta a punta.",
   },
   {
     q: "¿En qué formato viene?",
@@ -149,7 +149,7 @@ export default async function AgentesDeIAPage({
         eyebrow="Ebook · CrececonIA · Aplicación al negocio"
         title="Agentes de IA"
         titleAccent="para tu negocio."
-        description="Automatiza tareas con agentes inteligentes que aprenden a trabajar por ti dentro de Claude. 137 páginas, para dueños de negocio, sin programar."
+        description="Automatiza tareas con agentes inteligentes que aprenden a trabajar por ti dentro de Claude. 146 páginas, para dueños de negocio, sin programar."
         coverSrc={entry.coverSrc}
         coverAlt="Portada del ebook Agentes de IA para tu Negocio"
       />
@@ -186,7 +186,7 @@ export default async function AgentesDeIAPage({
       />
 
       <EbookGenericTOC
-        title={<>7 partes, 21 capítulos,{" "}<em style={{ fontStyle: "italic" }}>un caso real de punta a punta.</em></>}
+        title={<>7 partes, 22 capítulos,{" "}<em style={{ fontStyle: "italic" }}>un caso real de punta a punta.</em></>}
         sections={SECTIONS}
       />
 

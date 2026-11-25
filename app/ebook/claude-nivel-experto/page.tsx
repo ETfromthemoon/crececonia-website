@@ -107,7 +107,7 @@ export default async function ClaudeNivelExpertoPage({
         eyebrow="Ebook · CrececonIA · Upgrade"
         title="Claude a Nivel"
         titleAccent="Experto."
-        description="Las técnicas que usan los power users para dejar de conversar con Claude y ponerlo a trabajar solo. 71 páginas directas, sin relleno."
+        description="Las técnicas que usan los power users para dejar de conversar con Claude y ponerlo a trabajar solo. 73 páginas directas, sin relleno."
         coverSrc={entry.coverSrc}
         coverAlt="Portada del ebook Claude a Nivel Experto"
       />

@@ -20,8 +20,8 @@ export type EbookProductTheaterContent = {
 export const EBOOK_PRODUCT_THEATER_CONTENT: Record<string, EbookProductTheaterContent> = {
   "ebook:de-cero-a-claude-en-una-semana": {
     stats: [
-      { value: "150+", label: "páginas" },
-      { value: "25", label: "capítulos" },
+      { value: "190", label: "páginas" },
+      { value: "26", label: "capítulos" },
       { value: "4", label: "niveles" },
       { value: "1", label: "ruta completa" },
     ],
@@ -31,7 +31,7 @@ export const EBOOK_PRODUCT_THEATER_CONTENT: Record<string, EbookProductTheaterCo
       description: "El contenido avanza desde los fundamentos de Claude.ai hasta Claude Code, agentes y API, con explicaciones prácticas y puntos de verificación.",
     },
     previews: [
-      { src: "/ebooks/previews/de-cero-claude/mapa.webp", alt: "Página real del índice de De cero a Claude en una semana", label: "El mapa completo", detail: "25 capítulos ordenados en cuatro niveles.", width: 923, height: 1305 },
+      { src: "/ebooks/previews/de-cero-claude/mapa.webp", alt: "Página real del índice de De cero a Claude en una semana", label: "El mapa completo", detail: "26 capítulos ordenados en cuatro niveles.", width: 923, height: 1305 },
       { src: "/ebooks/previews/de-cero-claude/claude-code.webp", alt: "Página real del capítulo Empezar con Claude Code", label: "Del navegador a la terminal", detail: "Instalación, requisitos y primera ejecución.", width: 923, height: 1305 },
       { src: "/ebooks/previews/de-cero-claude/api.webp", alt: "Página real del capítulo sobre la API de Claude", label: "Construir con Claude", detail: "API, streaming, herramientas, visión y SDKs.", width: 923, height: 1305 },
       { src: "/ebooks/previews/de-cero-claude/troubleshooting.webp", alt: "Página real de troubleshooting y mejores prácticas", label: "Resolver con criterio", detail: "Errores, límites, costes y buenas prácticas.", width: 923, height: 1305 },
@@ -54,7 +54,7 @@ export const EBOOK_PRODUCT_THEATER_CONTENT: Record<string, EbookProductTheaterCo
   },
   "ebook:claude-nivel-experto": {
     stats: [
-      { value: "71", label: "páginas" },
+      { value: "73", label: "páginas" },
       { value: "12", label: "capítulos" },
       { value: "3", label: "bonos" },
       { value: "16", label: "prompts" },
@@ -88,8 +88,8 @@ export const EBOOK_PRODUCT_THEATER_CONTENT: Record<string, EbookProductTheaterCo
   },
   "ebook:agentes-de-ia": {
     stats: [
-      { value: "137", label: "páginas" },
-      { value: "21", label: "capítulos" },
+      { value: "146", label: "páginas" },
+      { value: "22", label: "capítulos" },
       { value: "7", label: "partes" },
       { value: "1", label: "caso completo" },
     ],
@@ -122,8 +122,8 @@ export const EBOOK_PRODUCT_THEATER_CONTENT: Record<string, EbookProductTheaterCo
   },
   "ebook:creacion-de-webs-con-ia": {
     stats: [
-      { value: "70", label: "páginas" },
-      { value: "16", label: "capítulos" },
+      { value: "81", label: "páginas" },
+      { value: "17", label: "capítulos" },
       { value: "3", label: "partes" },
       { value: "1", label: "proyecto real" },
     ],
@@ -133,7 +133,7 @@ export const EBOOK_PRODUCT_THEATER_CONTENT: Record<string, EbookProductTheaterCo
       description: "Cada parte convierte una decisión abstracta en un paso ejecutable: qué pedir, qué revisar y cómo saber si el resultado está listo para avanzar.",
     },
     previews: [
-      { src: "/ebooks/previews/creacion-webs/indice.webp", alt: "Página real del índice del ebook Creación de Webs con IA", label: "El mapa completo", detail: "16 capítulos organizados en tres partes.", width: 923, height: 1305 },
+      { src: "/ebooks/previews/creacion-webs/indice.webp", alt: "Página real del índice del ebook Creación de Webs con IA", label: "El mapa completo", detail: "17 capítulos organizados en tres partes.", width: 923, height: 1305 },
       { src: "/ebooks/previews/creacion-webs/metodologia-8-iteraciones.webp", alt: "Página real sobre la metodología de ocho iteraciones del ebook", label: "Un método ejecutable", detail: "Ocho fases con checkpoints y verificación.", width: 923, height: 1305 },
       { src: "/ebooks/previews/creacion-webs/proyecto-appflow.webp", alt: "Página real del proyecto AppFlow desarrollado en el ebook", label: "Código y decisiones reales", detail: "AppFlow pasa del setup al MVP visual.", width: 923, height: 1305 },
       { src: "/ebooks/previews/creacion-webs/seo-core-web-vitals.webp", alt: "Página real del capítulo de SEO y Core Web Vitals del ebook", label: "Lanzamiento verificable", detail: "SEO, rendimiento y métricas explicadas con criterio.", width: 923, height: 1305 },

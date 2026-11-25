@@ -122,7 +122,7 @@ export const EBOOK_BUNDLES: EbookBundle[] = [
   {
     slug: "coleccion-web",
     title: "Colección Web Completa",
-    pitch: "Las cuatro partes para construir sitios, tiendas y productos web con IA. 426 páginas de proyectos reales con descuento por colección.",
+    pitch: "Las cuatro partes para construir sitios, tiendas y productos web con IA. 467 páginas de proyectos reales con descuento por colección.",
     resources: [
       "ebook:creacion-de-webs-con-ia",
       "ebook:creacion-de-webs-con-ia-parte-2",
@@ -133,19 +133,19 @@ export const EBOOK_BUNDLES: EbookBundle[] = [
   {
     slug: "ruta-operador",
     title: "Ruta Operador",
-    pitch: "Dominar la herramienta de principio a fin. 245 páginas, la progresión más limpia del catálogo.",
+    pitch: "Dominar la herramienta de principio a fin. 263 páginas, la progresión más limpia del catálogo.",
     resources: ["ebook:de-cero-a-claude-en-una-semana", "ebook:claude-nivel-experto"],
   },
   {
     slug: "ruta-negocio",
     title: "Ruta Negocio",
-    pitch: "Para dueños de negocio, sin programar. 311 páginas de la base más su aplicación directa.",
+    pitch: "Para dueños de negocio, sin programar. 336 páginas de la base más su aplicación directa.",
     resources: ["ebook:de-cero-a-claude-en-una-semana", "ebook:agentes-de-ia"],
   },
   {
     slug: "ruta-constructor",
     title: "Ruta Constructor",
-    pitch: "Para quien quiere construir y lanzar sitios. 244 páginas, de los fundamentos al proyecto real.",
+    pitch: "Para quien quiere construir y lanzar sitios. 271 páginas, de los fundamentos al proyecto real.",
     resources: ["ebook:de-cero-a-claude-en-una-semana", "ebook:creacion-de-webs-con-ia"],
   },
   {

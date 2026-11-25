@@ -24,7 +24,7 @@ import { EBOOK_ACCENT, EBOOK_COLD_BG } from "@/lib/ebook-theme";
 const LINES: [string, string, string] = [
   "Este ebook condensa 6 meses",
   "de experimentación real con Claude Code",
-  "en 150+ páginas.",
+  "en 190 páginas.",
 ];
 const DETAIL = "PDF · Descarga inmediata · Garantía de devolución";
 const ACCENT = EBOOK_ACCENT;

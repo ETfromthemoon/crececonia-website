@@ -131,7 +131,7 @@ export default async function CreacionDeWebsConIAPage({
         eyebrow="Ebook · CrececonIA · Vertical técnica · Parte 1"
         title="Creación de Webs"
         titleAccent="con IA."
-        description="Una metodología de ocho iteraciones para diseñar, construir y publicar una web con Claude Code. 70 páginas y un proyecto real, desde el setup hasta el lanzamiento."
+        description="Una metodología de ocho iteraciones para diseñar, construir y publicar una web con Claude Code. 81 páginas y un proyecto real, desde el setup hasta el lanzamiento."
         coverSrc={entry.coverSrc}
         coverAlt="Portada del ebook Creación de Webs con IA"
       />
@@ -170,7 +170,7 @@ export default async function CreacionDeWebsConIAPage({
       />
 
       <EbookGenericTOC
-        title={<>16 capítulos, 3 partes,{" "}<em style={{ fontStyle: "italic" }}>un proyecto real de punta a punta.</em></>}
+        title={<>17 capítulos, 3 partes,{" "}<em style={{ fontStyle: "italic" }}>un proyecto real de punta a punta.</em></>}
         sections={SECTIONS}
       />
 
