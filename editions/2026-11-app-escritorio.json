@@ -1,0 +1,15 @@
+{
+  "id": "2026-11-app-escritorio",
+  "subjectSingular": "Nueva edición de tu ebook: ahora con la app de escritorio de Claude",
+  "subjectPlural": "Nueva edición de tus ebooks: ahora con la app de escritorio de Claude",
+  "intro": "Actualicé los ebooks que compraste para incorporar la app de escritorio de Claude. Esta edición es gratis para vos por haberlos comprado.",
+  "books": [
+    { "resource": "ebook:de-cero-a-claude-en-una-semana", "change": "Nuevo capítulo Claude Code sin terminal, Cowork y tareas programadas.", "sha256": { "a4": "d362c3cd25cb2d9e7d332e7760f18d8ee3d33f60a7eafd52eb9ff76d95cd01c3", "movil": "64fb88a7f16d019d54dea27f7810d1369a94867db08aa1a7b3cf6652b222196a" } },
+    { "resource": "ebook:claude-nivel-experto", "change": "Orquestación y verificación desde la app de escritorio.", "sha256": { "a4": "2960d1e5d3256051dd006c17407ceda1d26e260155c43304ce6e6e1c94c37759", "movil": "f841ba65ce702424ff85da85f2c9ba22613ee3616556afd3119d4041784c7e06" } },
+    { "resource": "ebook:agentes-de-ia", "change": "Nuevo capítulo 11B sobre Cowork y tareas programadas.", "sha256": { "a4": "d651d7a2f63e700c5cbd821a0c798daa18492901fb5a9994bf1a2872065600eb", "movil": "ffb2691a6ada7f6d62fc46df2e51848e4cbb4edbff990202cda5c314b1e7f3ab" } },
+    { "resource": "ebook:creacion-de-webs-con-ia", "change": "Nuevo capítulo de configuración en Claude Desktop.", "sha256": { "a4": "7f9f5cabc1ae6507854024158ff9c463514536bfc7263a097ef34297447bdf6a", "movil": "5ed5015fb02f5943c1481ccca543a79b2bce59f2adc094d0fee583a52a5185d2" } },
+    { "resource": "ebook:creacion-de-webs-con-ia-parte-2", "change": "Configuración en Claude Desktop y mejoras de testing y despliegue.", "sha256": { "a4": "0b0179eacd2582cc8b882474b17cacca2413071b27a5166ebe08d0bf5aaf2039", "movil": "006202adb7f7096b190e6725772863cb0092180fadce687250c70500bfdc2b84" } },
+    { "resource": "ebook:creacion-de-webs-con-ia-parte-3", "change": "Configuración en Claude Desktop y mejoras de testing y despliegue.", "sha256": { "a4": "6339c5a04ace66e38e46a9eae1313f7bd633259012f114214e4e4f799b146604", "movil": "59fc4a5e232e24ff2f668f810ba186777ef47d6e1f767fdae9ce1d30d42e749a" } },
+    { "resource": "ebook:creacion-de-webs-con-ia-parte-4", "change": "Configuración en Claude Desktop y mejoras de testing y despliegue.", "sha256": { "a4": "55fdfb9988ec68671b418e1bc69e8662fb1ac96b3a8d3f12e09e94d62651decc", "movil": "1f36d793f7475f1e3c39ae209b5a050279abce0aa9280d65a7eea457d6f5c504" } }
+  ]
+}
