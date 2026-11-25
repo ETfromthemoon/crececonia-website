@@ -1,0 +1,50 @@
+name: Avisar edición de ebooks
+
+on:
+  workflow_dispatch:
+    inputs:
+      edition:
+        description: ID del manifiesto en editions/
+        required: true
+        type: string
+      mode:
+        description: preview, test o send
+        required: true
+        type: choice
+        options: [preview, test, send]
+      test_email:
+        description: Correo propio para mode=test
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  notice:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: ebook-edition-${{ inputs.edition }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Verificar y ejecutar
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EDITION: ${{ inputs.edition }}
+          MODE: ${{ inputs.mode }}
+          TEST_EMAIL: ${{ inputs.test_email }}
+        run: |
+          if [[ ! "$EDITION" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then echo 'ID inválido'; exit 1; fi
+          if [[ "$MODE" == test ]]; then
+            npm run ebook:avisar-edicion -- "editions/$EDITION.json" test "$TEST_EMAIL"
+          else
+            npm run ebook:avisar-edicion -- "editions/$EDITION.json" "$MODE"
+          fi
