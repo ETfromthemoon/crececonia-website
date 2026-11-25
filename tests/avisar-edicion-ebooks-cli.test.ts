@@ -30,7 +30,7 @@ beforeEach(() => {
     if (query.includes("insert into commerce.ebook_edition_notices")) return Promise.resolve([{ email: "buyer@example.com" }]);
     return Promise.resolve([]);
   });
-  vi.stubGlobal("fetch", vi.fn(async (input: string | URL) => String(input).includes("api.resend.com")
+  vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request) => String(input).includes("api.resend.com")
     ? { ok: true, status: 200, json: async () => ({ id: "re_1" }) }
     : { ok: true, status: 200, arrayBuffer: async () => bytes }));
 });
@@ -52,7 +52,7 @@ describe("script de avisos", () => {
   it("si Resend acepta, registra el envío; si falla, queda para revisión", async () => {
     await runEdition([`editions/${id}.json`, "send"]);
     expect(sql.mock.calls.some(([parts]) => parts.join("?").includes("status='accepted'"))).toBe(true);
-    vi.mocked(fetch).mockImplementation(async (input: string | URL) => String(input).includes("api.resend.com")
+    vi.mocked(fetch).mockImplementation(async (input: string | URL | Request) => String(input).includes("api.resend.com")
       ? { ok: false, status: 500, json: async () => ({ message: "error" }) } as Response
       : { ok: true, status: 200, arrayBuffer: async () => bytes } as unknown as Response);
     await expect(runEdition([`editions/${id}.json`, "send"])).rejects.toThrow("revisar el estado");
