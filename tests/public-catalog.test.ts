@@ -7,9 +7,9 @@ import catalog from "@/content/public-catalog.json";
 import { getHubItems } from "@/lib/hub";
 
 describe("catálogo público sin VPS", () => {
-  it("publica solo las 10 guías completas y los 5 skills sin duplicados", () => {
-    expect(catalog.guides).toHaveLength(10);
-    expect(new Set(catalog.guides.map((item) => item.slug)).size).toBe(10);
+  it("publica solo las 11 guías completas y los 5 skills sin duplicados", () => {
+    expect(catalog.guides).toHaveLength(11);
+    expect(new Set(catalog.guides.map((item) => item.slug)).size).toBe(11);
     expect(catalog.skills).toHaveLength(5);
     expect(new Set(catalog.skills.map((item) => item.slug)).size).toBe(5);
   });
