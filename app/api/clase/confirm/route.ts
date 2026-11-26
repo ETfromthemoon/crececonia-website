@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     }
 
     try {
-      await captureServerEvent("class_purchase_confirmed", payment.payer.toLowerCase(), {
+      await captureServerEvent("class_purchase_confirmed", `class-order:${commerceOrder}`, {
         product: CLASS_PRODUCT_KEY,
         amount: paidAmount,
         order_id: commerceOrder,

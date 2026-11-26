@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     }
     try { await deliverWorkshopOrders("welcome", commerceOrder); await deliverWorkshopOrders("ebooks", commerceOrder); await deliverWorkshopOrders("admin-notification", commerceOrder); await deliverLateWorkshopAccessIfNeeded(commerceOrder); }
     catch (reason) { return retry("No se pudo completar la entrega", reason); }
-    captureServerEvent("workshop_purchase_confirmed", payment.payer.toLowerCase(), { product: WORKSHOP_PRODUCT_KEY, amount: paidAmount, order_id: commerceOrder, flow_order: payment.flowOrder }).catch((reason) => console.error("[workshop/confirm] analytics", reason));
+    captureServerEvent("workshop_purchase_confirmed", `workshop-order:${commerceOrder}`, { product: WORKSHOP_PRODUCT_KEY, amount: paidAmount, order_id: commerceOrder, flow_order: payment.flowOrder }).catch((reason) => console.error("[workshop/confirm] analytics", reason));
     try {
       await captureMetaPurchase({
         email: payment.payer,
