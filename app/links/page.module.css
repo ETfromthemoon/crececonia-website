@@ -7,6 +7,8 @@
 .card,.socials a{display:grid;grid-template-columns:40px minmax(0,1fr) 24px;gap:18px;align-items:center;width:100%;min-height:78px;padding:19px 24px;border:1px solid var(--line-warm);background:var(--paper-deep);color:var(--ink-deep);text-align:left;transition:transform .2s ease,background .2s ease,border-color .2s ease}
 .card:hover,.socials a:hover{transform:translateY(-2px);background:#e3e8d7;border-color:#8a9c37}
 .card strong,.socials strong{font:400 clamp(1.25rem,2.6vw,1.65rem)/1.2 var(--font-display)}
+.linkCopy{display:flex;flex-direction:column;gap:4px;min-width:0}
+.linkCopy small{color:var(--ink-soft);font-size:13px;line-height:1.4}
 .arrow{font:22px var(--font-mono);color:#526327;text-align:right}
 .socialBlock{margin-top:58px}
 .socials{margin-top:16px}

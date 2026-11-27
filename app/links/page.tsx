@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getWorkshopSettings } from "@/lib/workshop-settings";
+import { listPublicGuides, listPublicSkills } from "@/lib/public-catalog";
 import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
 
@@ -11,15 +11,20 @@ export const metadata: Metadata = {
   alternates: { canonical: "/links" },
 };
 
-const links = [
-  { title: "Claude a Nivel Experto", href: "/ebook/claude-nivel-experto" },
-  { title: "Todos los ebooks", href: "/ebooks" },
-  { title: "Conoce CrececonIA", href: "/" },
-];
+const SKOOL_URL = "https://www.skool.com/crececonia-4683/about";
 
-export default async function LinksPage() {
-  const { skoolUrl } = await getWorkshopSettings();
-  const communityUrl = /^https:\/\//i.test(skoolUrl) ? skoolUrl : "";
+export default function LinksPage() {
+  const freeResources = [
+    ...listPublicGuides().filter((guide) => guide.contenido_completo).map((guide) => ({ title: guide.titulo, href: `/guias/${guide.slug}`, date: Date.parse(guide.creado_en) })),
+    ...listPublicSkills().filter((skill) => skill.publicada === 1).map((skill) => ({ title: skill.titulo, href: `/skills/${skill.slug}`, date: Date.parse(skill.creado_en) })),
+  ];
+  const latestFree = freeResources.filter((resource) => Number.isFinite(resource.date)).sort((a, b) => b.date - a.date)[0];
+  const links = [
+    { title: "Claude a Nivel Experto", href: "/ebook/claude-nivel-experto" },
+    { title: "Empieza gratis", href: latestFree?.href ?? "/centro", detail: latestFree?.title },
+    { title: "Todos los ebooks", href: "/ebooks" },
+    { title: "Comunidad Skool", href: SKOOL_URL, external: true },
+  ];
 
   return (
     <><Navbar /><main className={styles.page}>
@@ -28,17 +33,12 @@ export default async function LinksPage() {
         <h1>Todo en <em>un lugar.</em></h1>
         <nav className={styles.links} aria-label="Enlaces destacados">
           {links.map((link, index) => (
-            <a className={styles.card} href={link.href} key={link.href}>
+            <a className={styles.card} href={link.href} key={link.href} target={link.external ? "_blank" : undefined} rel={link.external ? "noopener noreferrer" : undefined}>
               <span className={styles.number}>0{index + 1}</span>
-              <strong>{link.title}</strong>
+              <span className={styles.linkCopy}><strong>{link.title}</strong>{link.detail ? <small>{link.detail}</small> : null}</span>
               <span className={styles.arrow} aria-hidden="true">↗</span>
             </a>
           ))}
-          {communityUrl ? (
-            <a className={styles.card} href={communityUrl} target="_blank" rel="noopener noreferrer">
-              <span className={styles.number}>04</span><strong>Comunidad Skool</strong><span className={styles.arrow} aria-hidden="true">↗</span>
-            </a>
-          ) : null}
         </nav>
 
         <section className={styles.socialBlock} aria-label="Redes sociales">
