@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { getWorkshopSettings } from "@/lib/workshop-settings";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -21,16 +23,17 @@ export default async function LinksPage() {
   const communityUrl = /^https:\/\//i.test(skoolUrl) ? skoolUrl : "";
 
   return (
-    <main className={styles.page}>
-      <div className={styles.glow} aria-hidden="true" />
-      <div className={styles.shell}>
-        <a className={styles.wordmark} href="/" aria-label="CrececonIA, ir al inicio">Crece<span>con</span>IA<span className={styles.period}>.</span></a>
-        <div className={styles.mark} aria-hidden="true">C<span>IA</span></div>
-        <p className={styles.kicker}>TU PUNTO DE PARTIDA</p>
-        <h1>Una idea puede<br /><em>cambiar tu forma de trabajar.</em></h1>
-        <p className={styles.intro}>Recursos prácticos y una comunidad para aplicar inteligencia artificial con criterio.</p>
+    <><Navbar /><main className={styles.page}>
+      <header className={`${styles.intro} site-container`}>
+        <span className={styles.label}>CrececonIA / Enlaces</span>
+        <h1>Elige por dónde<br /><em>empezar.</em></h1>
+        <p>Recursos prácticos y una comunidad para aplicar inteligencia artificial con criterio.</p>
+      </header>
 
-        <nav className={styles.links} aria-label="Enlaces destacados">
+      <section className={styles.content} aria-labelledby="links-heading">
+        <div className="site-container">
+          <div className={styles.sectionHeading}><span className={styles.label}>Accesos directos</span><h2 id="links-heading">Todo lo importante,<br /><em>en un solo lugar.</em></h2></div>
+          <nav className={styles.links} aria-label="Enlaces destacados">
           {links.map((link, index) => (
             <a className={styles.card} href={link.href} key={link.href}>
               <span className={styles.number}>0{index + 1}</span>
@@ -43,10 +46,14 @@ export default async function LinksPage() {
               <span className={styles.number}>04</span><span className={styles.cardCopy}><span className={styles.eyebrow}>COMUNIDAD</span><strong>Únete a Skool</strong><span className={styles.detail}>Sigue aprendiendo junto a la comunidad.</span></span><span className={styles.arrow} aria-hidden="true">↗</span>
             </a>
           ) : null}
-        </nav>
+          </nav>
+        </div>
+      </section>
 
-        <div className={styles.socialBlock}>
-          <p>SÍGUENOS EN REDES</p>
+      <section className={styles.socialBlock} aria-label="Redes sociales">
+        <div className="site-container">
+          <span className={styles.label}>Sigamos conectados</span>
+          <h2>CrececonIA <em>en redes.</em></h2>
           <div className={styles.socials}>
             <a href="https://www.instagram.com/crececoniacl/" target="_blank" rel="noopener noreferrer" aria-label="Instagram de CrececonIA">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.8" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
@@ -56,8 +63,7 @@ export default async function LinksPage() {
             </a>
           </div>
         </div>
-        <p className={styles.footer}>© 2026 CrececonIA <span>·</span> Santiago, Chile</p>
-      </div>
-    </main>
+      </section>
+    </main><Footer /></>
   );
 }
