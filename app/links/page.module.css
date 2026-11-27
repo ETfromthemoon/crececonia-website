@@ -3,16 +3,14 @@
 .label,.number{font:11px/1.5 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#526327}
 .page h1{font-family:var(--font-display);font-size:clamp(3.2rem,7vw,5.8rem);font-weight:500;line-height:1;letter-spacing:-.065em;margin:22px 0 48px}
 .page h1 em{font-family:var(--font-editorial);font-weight:400;color:#526327}
-.links{border-top:1px solid var(--line-warm)}
-.card{display:grid;grid-template-columns:40px minmax(0,1fr) 24px;gap:18px;align-items:center;padding:24px 0;border-bottom:1px solid var(--line-warm);color:var(--ink-deep);transition:padding .2s ease,background .2s ease}
-.card:hover{padding-left:12px;padding-right:12px;background:var(--paper-deep)}
-.card strong{font:400 clamp(1.25rem,2.6vw,1.65rem)/1.2 var(--font-display)}
+.links,.socials{display:grid;gap:12px}
+.card,.socials a{display:grid;grid-template-columns:40px minmax(0,1fr) 24px;gap:18px;align-items:center;width:100%;min-height:78px;padding:19px 24px;border:1px solid var(--line-warm);background:var(--paper-deep);color:var(--ink-deep);text-align:left;transition:transform .2s ease,background .2s ease,border-color .2s ease}
+.card:hover,.socials a:hover{transform:translateY(-2px);background:#e3e8d7;border-color:#8a9c37}
+.card strong,.socials strong{font:400 clamp(1.25rem,2.6vw,1.65rem)/1.2 var(--font-display)}
 .arrow{font:22px var(--font-mono);color:#526327;text-align:right}
 .socialBlock{margin-top:58px}
-.socials{display:flex;gap:12px;margin-top:16px}
-.socials a{display:grid;place-items:center;width:48px;height:48px;border:1px solid var(--line-warm);color:var(--ink-deep);transition:background .2s ease,color .2s ease}
-.socials a:hover{background:var(--ink-deep);color:var(--paper)}
+.socials{margin-top:16px}
 .socials svg{width:21px;height:21px}
 .page a:focus-visible{outline:3px solid #718641;outline-offset:4px}
-@media(max-width:700px){.shell{padding-top:120px;padding-bottom:64px}.page h1{margin-bottom:38px}.card{gap:12px;padding:21px 0}.socialBlock{margin-top:46px}}
-@media(prefers-reduced-motion:reduce){.card,.socials a{transition:none}}
+@media(max-width:700px){.shell{width:calc(100% - 32px);padding-top:120px;padding-bottom:64px}.page h1{margin-bottom:38px}.card,.socials a{grid-template-columns:30px minmax(0,1fr) 24px;gap:12px;min-height:76px;padding:16px}.socialBlock{margin-top:46px}}
+@media(prefers-reduced-motion:reduce){.card,.socials a{transition:none}.card:hover,.socials a:hover{transform:none}}
