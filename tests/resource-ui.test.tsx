@@ -48,20 +48,20 @@ describe("public resource interface", () => {
     const html = renderToStaticMarkup(<ResourceNav />);
     expect(html).toMatch(new RegExp(`aria-current="page"[^>]*>${label}</a>`));
     expect(html.match(/aria-current="page"/g)).toHaveLength(1);
-    expect(renderToStaticMarkup(<Navbar />)).toContain('>Marketplace</a>');
+    expect(renderToStaticMarkup(<Navbar />)).toContain('>Ebooks</a>');
   });
 
-  it("destaca Marketplace en el encabezado y lo ubica antes de elegir ruta", () => {
+  it("destaca Ebooks en el encabezado y lo ubica antes de elegir ruta", () => {
     route.pathname = "/ebooks/mercado/un-libro";
     const html = renderToStaticMarkup(<Navbar />);
-    expect(html).toContain('href="/ebooks/mercado" aria-current="page">Marketplace');
+    expect(html).toContain('href="/ebooks" aria-current="page">Ebooks');
     expect(html).not.toContain('>Recursos</a>');
-    expect(html.indexOf('>Marketplace</a>')).toBeLessThan(html.indexOf('>Elegir mi ruta</a>'));
+    expect(html.indexOf('>Ebooks</a>')).toBeLessThan(html.indexOf('>Elegir mi ruta</a>'));
   });
 
-  it.each(["/ebooks", "/ebook/de-cero-a-claude-en-una-semana"])("mantiene Marketplace activo al abrir %s", (pathname) => {
+  it.each(["/ebooks", "/ebook/de-cero-a-claude-en-una-semana"])("mantiene Ebooks activo al abrir %s", (pathname) => {
     route.pathname = pathname;
-    expect(renderToStaticMarkup(<Navbar />)).toContain('href="/ebooks/mercado" aria-current="page">Marketplace');
+    expect(renderToStaticMarkup(<Navbar />)).toContain('href="/ebooks" aria-current="page">Ebooks');
   });
 
   it("keeps external resource links safe and explicit", () => {

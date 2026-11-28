@@ -1,13 +1,9 @@
 import Image from "next/image";
-import InviteAuthor from "@/components/marketplace/InviteAuthor";
-import { marketplacePublicAvailable } from "@/lib/marketplace-demo";
 import styles from "./HomeEditorial.module.css";
 
 export default function FeaturedResources() {
-  const showMarketplace = marketplacePublicAvailable();
   return <section id="biblioteca" className={`${styles.library} site-container`} aria-labelledby="resources-title">
-    <div className={styles.sectionHeading}><div><span className={styles.label}>{showMarketplace ? "Marketplace" : "Biblioteca"} / Para trabajar mejor</span><h2 id="resources-title">Conocimiento que<br /><em>sale del papel.</em></h2></div>{showMarketplace ? <a className="text-link" href="/ebooks/mercado">Explorar marketplace ↗</a> : <a className="text-link" href="/ebooks">Explorar ebooks ↗</a>}</div>
-    {showMarketplace && <InviteAuthor />}
+    <div className={styles.sectionHeading}><div><span className={styles.label}>Biblioteca / Para trabajar mejor</span><h2 id="resources-title">Conocimiento que<br /><em>sale del papel.</em></h2></div><a className="text-link" href="/ebooks">Explorar ebooks ↗</a></div>
     <div className={styles.libraryGrid}>
       <article className={styles.featuredBook}><div className={styles.featuredCopy}><span className={styles.label}>Empieza por aquí / Ebook</span><h3>De cero a Claude<br />en una semana.</h3><p>Una ruta práctica para entender la herramienta y empezar a construir con ella.</p><a href="/ebook/de-cero-a-claude-en-una-semana" className="button button-dark">Ver el ebook y sus muestras ↗</a></div><div className={styles.pagePreview}><Image src="/ebooks/previews/de-cero-claude/claude-code.webp" alt="Página real del ebook: empezar con Claude Code" fill sizes="(max-width: 640px) 65vw, 300px" /></div><span className={styles.previewCaption}>Una página real. Un primer paso concreto.</span></article>
       <div className={styles.sideResources}>

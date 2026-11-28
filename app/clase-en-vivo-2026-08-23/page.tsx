@@ -17,7 +17,7 @@ import {
 import { absoluteUrl, createPageMetadata } from "@/lib/seo";
 
 const DESCRIPTION =
-  "Clase online en vivo para construir una página desde cero con inteligencia artificial usando Claude Code o Codex, GitHub y Vercel. Incluye skills, guía completa y pack de cuatro libros.";
+  "Clase del 23 de agosto de 2026 sobre cómo construir una página desde cero con inteligencia artificial usando Claude Code o Codex, GitHub y Vercel. Incluye skills, guía completa y pack de cuatro libros.";
 
 export const metadata: Metadata = createPageMetadata({
   title: `${CLASS_TITLE} | CrececonIA`,
@@ -33,7 +33,6 @@ const classJsonLd = {
   url: absoluteUrl(CLASS_PATH),
   startDate: CLASS_START,
   endDate: CLASS_END,
-  eventStatus: "https://schema.org/EventCompleted",
   eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
   organizer: { "@type": "Organization", name: "CrececonIA", url: absoluteUrl("/") },
 };

@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = createPageMetadata({
   title: `${WORKSHOP_TITLE} | CrececonIA`,
-  description: `${WORKSHOP_OUTCOME} En vivo el ${WORKSHOP_DATE_LABEL.toLowerCase()} a las 17:00.`,
+  description: `${WORKSHOP_OUTCOME} Clase grabada con materiales de apoyo.`,
   path: WORKSHOP_PATH,
 });
 
@@ -43,10 +43,10 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
   const included = isRecording ? WORKSHOP_RECORDING_INCLUDED : WORKSHOP_INCLUDED;
   return (
     <main className="workshop-page">
-      <JsonLd data={eventJsonLd} />
+      {!isRecording && <JsonLd data={eventJsonLd} />}
       <header className="workshop-brand">
         <a href="/">Crececon<span>IA</span></a>
-        <div className="workshop-brand-actions"><span>Dom. 06.09 · 17:00 h</span><a href={isRecording ? `${WORKSHOP_PATH}/acceso` : "#comprar"}>{isRecording ? "Recuperar acceso" : "Reservar cupo"}</a></div>
+        <div className="workshop-brand-actions"><span>{isRecording ? "Workshop grabado" : "Dom. 06.09 · 17:00 h"}</span><a href={isRecording ? `${WORKSHOP_PATH}/acceso` : "#comprar"}>{isRecording ? "Recuperar acceso" : "Reservar cupo"}</a></div>
       </header>
       {success === "1" && <div className="workshop-success" role="status"><strong>Estamos verificando tu pago.</strong> La confirmación y el acceso personal llegarán a tu correo en unos instantes.</div>}
 
@@ -59,7 +59,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
           <ul className="workshop-quick-value">
             <li>Claude Chat</li><li>Claude Cowork</li><li>Claude Code</li><li>Web + CRM</li>{!isRecording && <li>Máx. 3 horas</li>}
           </ul>
-          <a className="workshop-mobile-cta" href="#comprar">Ver precio y reservar <span>↓</span></a>
+          <a className="workshop-mobile-cta" href="#comprar">Ver precio y acceso <span>↓</span></a>
         </div>
         <WorkshopCheckout showTestDiscount={metaTest === "1"} />
       </section>
@@ -101,13 +101,13 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
           <li><strong>Ya pruebas herramientas de IA</strong><span>pero todavía trabajas de forma aislada o improvisada.</span></li>
           <li><strong>Eres profesional o emprendedor</strong><span>y quieres ahorrar tiempo o crear nuevas soluciones con IA.</span></li>
         </ul>
-        <a className="workshop-inline-cta" href="#comprar">Quiero reservar mi cupo <span>↑</span></a>
+        <a className="workshop-inline-cta" href="#comprar">{isRecording ? "Acceder a la grabación" : "Quiero reservar mi cupo"} <span>↑</span></a>
       </section>
 
       <section className="workshop-process">
         <div className="workshop-section-index">04 / CÓMO FUNCIONA</div>
         <div className="workshop-process-grid">
-          <article><span>01 · RESERVA</span><h3>Inscríbete en un minuto.</h3><p>Ingresa tu correo, paga de forma segura con Flow y recibe tu acceso personal.</p></article>
+          <article><span>01 · ACCESO</span><h3>Inscríbete en un minuto.</h3><p>Ingresa tu correo, paga de forma segura con Flow y recibe tu acceso personal.</p></article>
           <article><span>02 · {isRecording ? "APRENDE" : "CONECTA"}</span><h3>{isRecording ? "Avanza a tu ritmo." : "Entra este domingo."}</h3><p>{isRecording ? "Reproduce, pausa y aplica cada decisión en tu propio contexto." : "Conéctate a las 17:00 h. La sesión dura un máximo de tres horas."}</p></article>
           <article><span>03 · APLICA</span><h3>Vuelve cuando quieras.</h3><p>La grabación, los ebooks, las skills y la comunidad quedan reunidos en tu sala privada.</p></article>
         </div>
@@ -123,7 +123,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
           <div className="workshop-faq-list">
             <details>
               <summary>¿Qué versiones de Claude veremos?<b>+</b></summary>
-              <p>Trabajaremos con Claude Chat, Claude Cowork y Claude Code. Verás para qué sirve cada uno y cómo combinarlos mientras construimos una página web y un CRM en vivo.</p>
+              <p>Trabajaremos con Claude Chat, Claude Cowork y Claude Code. Verás para qué sirve cada uno y cómo combinarlos mientras construimos una página web y un CRM.</p>
             </details>
             <details>
               <summary>{isRecording ? "¿Por cuánto tiempo puedo ver la clase?" : "¿Qué pasa si no puedo asistir en vivo?"}<b>+</b></summary>

@@ -17,7 +17,7 @@ describe("editorial homepage", () => {
     expect(hero).toContain('href="/ia"');
     const library = renderToStaticMarkup(<FeaturedResources />);
     expect(library).toContain('id="biblioteca"');
-    expect(library).toContain('href="/ebooks/mercado"');
+    expect(library).not.toContain('/ebooks/mercado');
   });
   it("keeps CrececonIA ebooks available during the marketplace pause", () => {
     vi.stubEnv("VERCEL_ENV", "production");
