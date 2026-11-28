@@ -40,10 +40,10 @@ export default async function MarketplaceReviewPage({
 }: {
   searchParams: Promise<{ resultado?: string; vista?: string }>;
 }) {
+  await requireAdminSession("/admin/marketplace");
   const preview = marketplaceDemoAvailable();
   const { resultado, vista } = await searchParams;
   if (preview && vista === "demo") return <DemoMarketplaceAdmin />;
-  if (!preview) await requireAdminSession("/admin/marketplace");
   const [rows, sellers, assets, counts, contacts, orders, balances] = preview ? [[], [], [], [], [], [], []] : await Promise.all([
     listMarketplaceReviews(), listSellerReviews(), listMarketplaceReviewAssets(),
     queryDatabase<MarketplaceCounts>(`

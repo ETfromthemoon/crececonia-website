@@ -4,8 +4,6 @@ import { absoluteUrl } from "@/lib/seo";
 import { getPublicGuide, getPublicSkill } from "@/lib/public-catalog";
 import { TEMAS_POR_ID } from "@/lib/temas";
 import { getLaunch } from "@/lib/launches";
-import { getPublishedMarketplaceBook } from "@/lib/marketplace-review";
-import { marketplacePublicAvailable } from "@/lib/marketplace-demo";
 import { WORKSHOP_TITLE } from "@/lib/workshop-product";
 import { CLASS_PATH, CLASS_TITLE } from "@/lib/class-product";
 
@@ -20,10 +18,6 @@ const STATIC_PREVIEWS: Record<string, Preview> = {
   "/implementacion": { title: "Implementación de IA", section: "Implementación" },
   "/ia": { title: "IA aplicada a tu negocio", section: "Inteligencia artificial" },
   "/ebooks": { title: "Ebooks prácticos de IA", section: "Biblioteca digital" },
-  "/ebooks/mercado": { title: "Marketplace de ebooks", section: "Libros de autores" },
-  "/ebooks/vender": { title: "Publica tu ebook", section: "Autores" },
-  "/ebooks/vender/condiciones": { title: "Condiciones para autores", section: "Autores" },
-  "/ebooks/vender/simulador": { title: "Simula tu liquidación", section: "Autores" },
   "/centro": { title: "Centro de conocimiento", section: "Recursos prácticos" },
   "/centro/guias": { title: "Guías para aplicar IA", section: "Centro de conocimiento" },
   "/centro/skills": { title: "Skills para trabajar mejor", section: "Centro de conocimiento" },
@@ -52,10 +46,6 @@ async function previewForPath(path: string): Promise<Preview | null> {
   if (path.startsWith("/skills/")) {
     const skill = getPublicSkill(path.slice("/skills/".length));
     if (skill) return { title: skill.titulo, section: "Skill descargable" };
-  }
-  if (path.startsWith("/ebooks/mercado/") && marketplacePublicAvailable()) {
-    const book = await getPublishedMarketplaceBook(path.slice("/ebooks/mercado/".length));
-    if (book) return { title: book.title, section: "Marketplace · Ebook" };
   }
   if (path.startsWith("/lanzamientos/")) {
     const launch = await getLaunch(path.slice("/lanzamientos/".length));

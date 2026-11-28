@@ -8,17 +8,16 @@ const NAV_LINKS = [
   { label: "Aprender", href: "/aprender" },
   { label: "Mentoría", href: "/mentoria" },
   { label: "Implementación", href: "/implementacion" },
-  { label: "Marketplace", href: "/ebooks/mercado" },
+  { label: "Ebooks", href: "/ebooks" },
 ] as const;
 
 function isCurrentLink(pathname: string, href: (typeof NAV_LINKS)[number]["href"]) {
-  if (href === "/ebooks/mercado") return /^\/ebooks?(\/|$)/.test(pathname);
+  if (href === "/ebooks") return /^\/ebooks?(\/|$)/.test(pathname);
   return pathname === href;
 }
 
-export default function NavbarClient({ showMarketplace }: { showMarketplace: boolean }) {
+export default function NavbarClient() {
   const pathname = usePathname();
-  const links = NAV_LINKS.filter((link) => showMarketplace || link.href !== "/ebooks/mercado");
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -51,7 +50,7 @@ export default function NavbarClient({ showMarketplace }: { showMarketplace: boo
           Crece<span>con</span>IA
         </a>
         <nav className="desktop-nav" aria-label="Navegación principal">
-          {links.map((link) => {
+          {NAV_LINKS.map((link) => {
             const isCurrent = isCurrentLink(pathname, link.href);
             return <a key={link.href} href={link.href} aria-current={isCurrent ? "page" : undefined}>{link.label}</a>;
           })}
@@ -79,7 +78,7 @@ export default function NavbarClient({ showMarketplace }: { showMarketplace: boo
             className="mobile-nav"
             aria-label="Navegación móvil"
           >
-            {links.map((link) => {
+            {NAV_LINKS.map((link) => {
               const isCurrent = isCurrentLink(pathname, link.href);
               return <a key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)} aria-current={isCurrent ? "page" : undefined}>{link.label}</a>;
             })}

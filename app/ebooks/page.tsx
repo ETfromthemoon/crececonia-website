@@ -9,7 +9,6 @@ import { EBOOK_BUNDLES } from "@/lib/ebook-bundles";
 import { computeEbookTotal, isEbookFlashActive } from "@/lib/ebook-promotion";
 import EbookFlashBanner from "@/components/EbookFlashBanner";
 import { createPageMetadata } from "@/lib/seo";
-import { marketplaceDemoAvailable, marketplacePublicAvailable } from "@/lib/marketplace-demo";
 
 export const dynamic = "force-dynamic";
 
@@ -20,8 +19,6 @@ export const metadata = createPageMetadata({
 });
 
 export default async function EbooksPage() {
-  const demoAvailable = marketplaceDemoAvailable();
-  const marketplaceAvailable = marketplacePublicAvailable();
   const pricingTime = Date.now();
   const bookCards = await Promise.all(EBOOK_CATALOG.map(async (entry) => {
     const live = entry.active && isCatalogEntryLive(entry);
@@ -101,23 +98,6 @@ export default async function EbooksPage() {
           <EbookCatalogBrowser books={bookCards} />
         </div>
       </section>
-
-      {marketplaceAvailable && <section id="vender" className="ebook-marketplace-seller">
-        <div className="ebook-store-shell ebook-marketplace-seller-inner">
-          <div>
-            <span>Marketplace · Autores independientes</span>
-            <h2>Conocimiento que encuentra a su próxima persona.</h2>
-          </div>
-          <div>
-            <p>Explora libros de IA, tecnología y negocios de autores invitados. Si tienes un ebook propio, conoce el espacio para publicarlo, revisar tus ventas y calcular tus ingresos.</p>
-            <div className="ebook-marketplace-actions">
-              <a href="/ebooks/mercado">Explorar marketplace <span aria-hidden="true">→</span></a>
-              <a href="/ebooks/vender">{demoAvailable ? "Probar espacio de autores" : "Vender mi ebook"} <span aria-hidden="true">→</span></a>
-            </div>
-            <p className="ebook-marketplace-seller-note">{demoAvailable ? "Demo interactiva con datos de ejemplo · Sin cobros reales" : "Publicaciones sujetas a revisión y aprobación"}</p>
-          </div>
-        </div>
-      </section>}
 
       <section id="elegir" className="ebook-store-decision">
         <div className="ebook-store-shell ebook-store-decision-grid">

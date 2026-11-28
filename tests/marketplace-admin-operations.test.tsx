@@ -49,7 +49,7 @@ describe("operación administrativa del marketplace", () => {
     expect(html).toContain("Administración del Marketplace");
     expect(html).toContain("Aún no hay órdenes.");
     expect(html).not.toContain("Comprobar servicios");
-    expect(requireAdminSession).not.toHaveBeenCalled();
+    expect(requireAdminSession).toHaveBeenCalledWith("/admin/marketplace");
     expect(queryDatabase).not.toHaveBeenCalled();
   });
 
